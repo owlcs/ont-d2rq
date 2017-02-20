@@ -1,5 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
+import org.junit.Ignore;
+
 import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
 
 /**
@@ -7,6 +9,7 @@ import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
  * 
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@Ignore // temporary ignore it, see AllTests
 public class MySQLDatatypeTest extends DatatypeTestBase {
 	
 	public void setUp() throws Exception {

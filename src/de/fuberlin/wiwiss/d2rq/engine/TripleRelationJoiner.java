@@ -25,6 +25,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationImpl;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
 import de.fuberlin.wiwiss.d2rq.expr.Conjunction;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
@@ -62,21 +63,22 @@ class TripleRelationJoiner {
 		}
 		return results;
 	}
-	
-	private static boolean isUnique(ConnectedDB database, RelationName originalName, 
-			Set<String> attributeNames)
-	{
-		Map<String,List<String>> uniqueKeys = database.getUniqueKeyColumns(originalName);
+
+	private static boolean isUnique(ConnectedDB database, RelationName originalName,
+									Set<String> attributeNames) {
+		Map<String, List<String>> uniqueKeys = database.getUniqueKeyColumns(originalName);
 		if (uniqueKeys != null) {
-		for (List<String> indexColumns: uniqueKeys.values()) {
+			for (List<String> indexColumns : uniqueKeys.values()) {
 				if (attributeNames.containsAll(indexColumns)) {
 					return true;
 				}
 			}
 		}
-		List<Attribute> primaryKeys = database.schemaInspector().primaryKeyColumns(originalName);
+		DatabaseSchemaInspector schemaInspector = database.schemaInspector();
+		if (schemaInspector == null) return false;
+		List<Attribute> primaryKeys = schemaInspector.primaryKeyColumns(originalName);
 		if (primaryKeys != null) {
-			for (Attribute attr: primaryKeys) {
+			for (Attribute attr : primaryKeys) {
 				if (!attributeNames.contains(attr.attributeName()))
 					return false;
 			}

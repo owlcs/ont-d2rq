@@ -20,7 +20,7 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 /**
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class FindTestFramework extends TestCase {
+public abstract class FindTestFramework extends TestCase {
     protected static final Model m = ModelFactory.createDefaultModel();
 
     private GraphD2RQ graph;
