@@ -25,9 +25,6 @@ import de.fuberlin.wiwiss.d2rq.mapgen.Filter;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import de.fuberlin.wiwiss.d2rq.mapgen.W3CMappingGenerator;
 import de.fuberlin.wiwiss.d2rq.parser.MapParser;
-import de.fuberlin.wiwiss.d2rq.server.ConfigLoader;
-import de.fuberlin.wiwiss.d2rq.server.D2RServer;
-import de.fuberlin.wiwiss.d2rq.server.JettyLauncher;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 
@@ -39,7 +36,7 @@ import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
  * and configured correctly. This class helps setting everything
  * up correctly.
  * 
- * TODO: {@link MapParser#absolutizeURI(String)} and {@link ConfigLoader#toAbsoluteURI(String)} and {WebappInitListener#absolutize} need to be consolidated and/or folded into this class
+ * TODO: {@link MapParser#absolutizeURI(String)} and {WebappInitListener#absolutize} need to be consolidated and/or folded into this class
  * 
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -78,9 +75,6 @@ public class SystemLoader {
 	private Mapping mapping = null;
 	private ModelD2RQ dataModel = null;
 	private GraphD2RQ dataGraph = null;
-	private JettyLauncher jettyLauncher = null;
-	private ConfigLoader serverConfig = null;
-	private D2RServer d2rServer = null;
 	private ClassMapLister classMapLister = null;
 	
 	public void setUsername(String username) {
@@ -150,9 +144,6 @@ public class SystemLoader {
 		if (baseURI != null) {
 			return MapParser.absolutizeURI(baseURI);
 		}
-		if (getServerConfig() != null && serverConfig.baseURI() != null) {
-			return serverConfig.baseURI();
-		}
 		if (getPort() == 80) {
 			return DEFAULT_PROTOCOL + "://" + DEFAULT_HOST + "/";
 		}
@@ -171,14 +162,10 @@ public class SystemLoader {
 	}
 	
 	public int getPort() {
-		int effectivePort = port;
-		if (effectivePort == -1 && getServerConfig() != null) {
-			effectivePort = getServerConfig().port();
-		}
-		if (effectivePort == -1) {
+		if (port == -1) {
 			return DEFAULT_PORT;
 		}
-		return effectivePort;
+		return port;
 	}
 	
 	public void setFastMode(boolean flag) {
@@ -338,35 +325,7 @@ public class SystemLoader {
 		}
 		return classMapLister;
 	}
-	
-	public JettyLauncher getJettyLauncher() {
-		if (jettyLauncher == null) {
-			jettyLauncher = new JettyLauncher(this, getPort());
-		}
-		return jettyLauncher;
-	}
-	
-	public ConfigLoader getServerConfig() {
-		if (serverConfig == null) {
-			// TODO Use mapModel instead of parsing RDF again
-			serverConfig = new ConfigLoader(
-					mappingFile == null ? null : ConfigLoader.toAbsoluteURI(mappingFile));
-			serverConfig.load();
-		}
-		return serverConfig;
-	}
-	
-	public D2RServer getD2RServer() {
-		if (d2rServer == null) {
-			d2rServer = new D2RServer(this);
-			if (baseURI != null || 
-					(getServerConfig() != null && getServerConfig().baseURI() == null)) {
-				d2rServer.overrideBaseURI(getSystemBaseURI());
-			}
-		}
-		return d2rServer;
-	}
-	
+
 	public void resetMappingFile() {
 		mapModel = null;
 		mapping = null;

@@ -2,6 +2,8 @@ package de.fuberlin.wiwiss.d2rq.engine;
 
 import java.util.Collection;
 
+import org.apache.log4j.Logger;
+
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -22,6 +24,8 @@ import de.fuberlin.wiwiss.d2rq.vocab.Test;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class MapFixture {
+	private static final Logger LOGGER = Logger.getLogger(MapFixture.class);
+
 	private final static PrefixMapping prefixes = new PrefixMappingImpl() {{
 		setNsPrefixes(PrefixMapping.Standard);
 		setNsPrefix("d2rq", "http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#");
@@ -36,6 +40,7 @@ public class MapFixture {
 	}
 	
 	public static Collection<TripleRelation> loadPropertyBridges(String mappingFileName) {
+		LOGGER.debug("Mapping file " + mappingFileName);
 		Model m = ModelFactory.createDefaultModel();
 		Resource dummyDB = m.getResource(Test.DummyDatabase.getURI());
 		dummyDB.addProperty(RDF.type, D2RQ.Database);
