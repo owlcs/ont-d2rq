@@ -32,50 +32,69 @@ import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
  * ValueSources are used by <tt>NodeMaker</tt>s. A node maker
  * wraps the strings into Jena nodes, thus creating a description
  * of a set of RDF nodes.
- * 
+ *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public interface ValueMaker {
-    
-	/**
-	 * A value maker that never produces a value.
-	 */
-	public static final ValueMaker NULL = new ValueMaker() {
-		public Expression valueExpression(String value) {return Expression.FALSE;} 
-		public Set<ProjectionSpec> projectionSpecs() {return Collections.emptySet();}
-		public String makeValue(ResultRow row) {return null;}
-		public void describeSelf(NodeSetFilter c) {c.limitToEmptySet();}
-		public ValueMaker renameAttributes(ColumnRenamer renamer) {return this;}
-		public List<OrderSpec> orderSpecs(boolean ascending) {return Collections.emptyList();}
-	};
-	
-	/** 
-	 * A SQL expression that selects only rows where this value maker
-	 * produces the specified value. {@link Expression#FALSE} if this
-	 * value maker is incapable of producing the value.
-	 * 
-	 * @param value A value 
-	 * @return An expression that selects rows that produce this value
-	 */
-	Expression valueExpression(String value);
 
-	/**
-	 * Returns a set of all {@link ProjectionSpec}s containing data necessary
-	 * for this ValueSource.
-	 * @return a set of {@link ProjectionSpec}s
-	 */
-	Set<ProjectionSpec> projectionSpecs();
+    /**
+     * A value maker that never produces a value.
+     */
+    ValueMaker NULL = new ValueMaker() {
+        public Expression valueExpression(String value) {
+            return Expression.FALSE;
+        }
 
-	/**
-	 * Retrieves a value from a database row according to some rule or pattern.
-	 * @param row the database row
-	 * @return a value created from the row
-	 */
-	String makeValue(ResultRow row);
-	
-	void describeSelf(NodeSetFilter c);
+        public Set<ProjectionSpec> projectionSpecs() {
+            return Collections.emptySet();
+        }
 
-	ValueMaker renameAttributes(ColumnRenamer renamer);
-	
-	List<OrderSpec> orderSpecs(boolean ascending);
+        public String makeValue(ResultRow row) {
+            return null;
+        }
+
+        public void describeSelf(NodeSetFilter c) {
+            c.limitToEmptySet();
+        }
+
+        public ValueMaker renameAttributes(ColumnRenamer renamer) {
+            return this;
+        }
+
+        public List<OrderSpec> orderSpecs(boolean ascending) {
+            return Collections.emptyList();
+        }
+    };
+
+    /**
+     * A SQL expression that selects only rows where this value maker
+     * produces the specified value. {@link Expression#FALSE} if this
+     * value maker is incapable of producing the value.
+     *
+     * @param value A value
+     * @return An expression that selects rows that produce this value
+     */
+    Expression valueExpression(String value);
+
+    /**
+     * Returns a set of all {@link ProjectionSpec}s containing data necessary
+     * for this ValueSource.
+     *
+     * @return a set of {@link ProjectionSpec}s
+     */
+    Set<ProjectionSpec> projectionSpecs();
+
+    /**
+     * Retrieves a value from a database row according to some rule or pattern.
+     *
+     * @param row the database row
+     * @return a value created from the row
+     */
+    String makeValue(ResultRow row);
+
+    void describeSelf(NodeSetFilter c);
+
+    ValueMaker renameAttributes(ColumnRenamer renamer);
+
+    List<OrderSpec> orderSpecs(boolean ascending);
 }

@@ -7,31 +7,31 @@ import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
 import junit.framework.TestCase;
 
 public class RelationTest extends TestCase {
-	private ConnectedDB db;
-	private Relation rel1;
-	
-	public void setUp() {
-		db = new DummyDB();
-		rel1 = Relation.createSimpleRelation(db, 
-				new Attribute[]{new Attribute(null, "foo", "bar")});
-	}
-	
-	public void testSelectFalseIsEmptyRelation() {
-		assertEquals(Relation.EMPTY, rel1.select(Expression.FALSE));
-	}
-	
-	public void testTrueRelationIsTrivial() {
-		assertTrue(Relation.TRUE.isTrivial());
-	}
-	
-	public void testConditionWithNoSelectColumnsIsNotTrivial() {
-		assertFalse(
-				Relation
-					.createSimpleRelation(db, new Attribute[]{})
-					.select(SQLExpression.create("foo.bar = 1")).isTrivial());
-	}
+    private ConnectedDB db;
+    private Relation rel1;
 
-	public void testQueryWithSelectColumnsIsNotTrivial() {
-		assertFalse(rel1.isTrivial());
-	}
+    public void setUp() {
+        db = new DummyDB();
+        rel1 = Relation.createSimpleRelation(db,
+                new Attribute[]{new Attribute(null, "foo", "bar")});
+    }
+
+    public void testSelectFalseIsEmptyRelation() {
+        assertEquals(Relation.EMPTY, rel1.select(Expression.FALSE));
+    }
+
+    public void testTrueRelationIsTrivial() {
+        assertTrue(Relation.TRUE.isTrivial());
+    }
+
+    public void testConditionWithNoSelectColumnsIsNotTrivial() {
+        assertFalse(
+                Relation
+                        .createSimpleRelation(db, new Attribute[]{})
+                        .select(SQLExpression.create("foo.bar = 1")).isTrivial());
+    }
+
+    public void testQueryWithSelectColumnsIsNotTrivial() {
+        assertFalse(rel1.isTrivial());
+    }
 }

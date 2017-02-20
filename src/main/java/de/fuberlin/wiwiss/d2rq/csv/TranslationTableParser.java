@@ -23,45 +23,45 @@ import de.fuberlin.wiwiss.d2rq.map.TranslationTable.Translation;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class TranslationTableParser {
-	private Log log = LogFactory.getLog(TranslationTableParser.class);
-	private BufferedReader reader;
-	private CSV csvLineParser = new CSV();
-	private String url;
+    private Log log = LogFactory.getLog(TranslationTableParser.class);
+    private BufferedReader reader;
+    private CSV csvLineParser = new CSV();
+    private String url;
 
-	public TranslationTableParser(Reader reader) {
-		this.reader = new BufferedReader(reader);
-	}
-	
-	public TranslationTableParser(String url) {
-		try {
-			this.url = new IRIResolver().resolve(url);;
-			this.reader = new BufferedReader(new FileReader(new File(new URI(this.url))));
-		} catch (FileNotFoundException fnfex) {
-			throw new D2RQException("File not found at URL: " + this.url);
-		} catch (URISyntaxException usynex) {
-			throw new D2RQException("Malformed URI: " + this.url);
-		}
-	}
-	
-	public Collection<Translation> parseTranslations() {
-		try {
-			List<Translation> result = new ArrayList<Translation>();
-			while (true) {
-				String line = this.reader.readLine();
-				if (line == null) {
-					break;
-				}
-				String[] fields = this.csvLineParser.parse(line);
-				if (fields.length != 2) {
-					this.log.warn("Skipping line with " +
-							fields.length + " instead of 2 columns in CSV file " + this.url);
-					continue;
-				}
-				result.add(new Translation(fields[0], fields[1]));
-			}
-			return result;
-		} catch (IOException iex) {
-			throw new D2RQException(iex);
-		}
-	}
+    public TranslationTableParser(Reader reader) {
+        this.reader = new BufferedReader(reader);
+    }
+
+    public TranslationTableParser(String url) {
+        try {
+            this.url = new IRIResolver().resolve(url);
+            this.reader = new BufferedReader(new FileReader(new File(new URI(this.url))));
+        } catch (FileNotFoundException fnfex) {
+            throw new D2RQException("File not found at URL: " + this.url);
+        } catch (URISyntaxException usynex) {
+            throw new D2RQException("Malformed URI: " + this.url);
+        }
+    }
+
+    public Collection<Translation> parseTranslations() {
+        try {
+            List<Translation> result = new ArrayList<Translation>();
+            while (true) {
+                String line = this.reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                String[] fields = this.csvLineParser.parse(line);
+                if (fields.length != 2) {
+                    this.log.warn("Skipping line with " +
+                            fields.length + " instead of 2 columns in CSV file " + this.url);
+                    continue;
+                }
+                result.add(new Translation(fields[0], fields[1]));
+            }
+            return result;
+        } catch (IOException iex) {
+            throw new D2RQException(iex);
+        }
+    }
 }

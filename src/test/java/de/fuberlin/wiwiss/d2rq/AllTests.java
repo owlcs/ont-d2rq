@@ -9,12 +9,12 @@ import junit.framework.TestSuite;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class AllTests {
-	public static Test suite() {
-		TestSuite suite = new TestSuite("Test for de.fuberlin.wiwiss.d2rq");
-		//$JUnit-BEGIN$
-		suite.addTestSuite(JenaAPITest.class);
-		suite.addTestSuite(DBConnectionTest.class);
-		//$JUnit-END$
-		return suite;
-	}
+    public static Test suite() {
+        TestSuite suite = new TestSuite("Test for de.fuberlin.wiwiss.d2rq");
+        //$JUnit-BEGIN$
+        suite.addTestSuite(JenaAPITest.class);
+        suite.addTestSuite(DBConnectionTest.class);
+        //$JUnit-END$
+        return suite;
+    }
 }

@@ -14,37 +14,57 @@ import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
 
 /**
  * A specification for creating RDF nodes out of a database relation.
- * 
+ *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public interface NodeMaker {
 
-	static NodeMaker EMPTY = new NodeMaker() {
-		public boolean isUnique() { return true; }
-		public Node makeNode(ResultRow tuple) { return null; }
-		public void describeSelf(NodeSetFilter c) { c.limitToEmptySet(); }
-		public Set<ProjectionSpec> projectionSpecs() { return Collections.<ProjectionSpec>emptySet(); }
-		public NodeMaker selectNode(Node node, RelationalOperators sideEffects) { return this; }
-		public NodeMaker renameAttributes(ColumnRenamer renamer) { return this; }
-		public List<OrderSpec> orderSpecs(boolean ascending) { return Collections.<OrderSpec>emptyList(); }
-	};
-	
-	Set<ProjectionSpec> projectionSpecs();
+    NodeMaker EMPTY = new NodeMaker() {
+        public boolean isUnique() {
+            return true;
+        }
 
-	boolean isUnique();
+        public Node makeNode(ResultRow tuple) {
+            return null;
+        }
 
-	void describeSelf(NodeSetFilter c);
-	
-	Node makeNode(ResultRow tuple);
+        public void describeSelf(NodeSetFilter c) {
+            c.limitToEmptySet();
+        }
 
-	NodeMaker selectNode(Node node, RelationalOperators sideEffects);
+        public Set<ProjectionSpec> projectionSpecs() {
+            return Collections.emptySet();
+        }
 
-	NodeMaker renameAttributes(ColumnRenamer renamer);
-	
-	/**
-	 * Returns expressions (with possible ASC/DESC marker) that re necessary
-	 * for ordering a relation by the nodes in this NodeMaker. Uses SPARQL
-	 * semantics for ordering.
-	 */
-	List<OrderSpec> orderSpecs(boolean ascending);
+        public NodeMaker selectNode(Node node, RelationalOperators sideEffects) {
+            return this;
+        }
+
+        public NodeMaker renameAttributes(ColumnRenamer renamer) {
+            return this;
+        }
+
+        public List<OrderSpec> orderSpecs(boolean ascending) {
+            return Collections.emptyList();
+        }
+    };
+
+    Set<ProjectionSpec> projectionSpecs();
+
+    boolean isUnique();
+
+    void describeSelf(NodeSetFilter c);
+
+    Node makeNode(ResultRow tuple);
+
+    NodeMaker selectNode(Node node, RelationalOperators sideEffects);
+
+    NodeMaker renameAttributes(ColumnRenamer renamer);
+
+    /**
+     * Returns expressions (with possible ASC/DESC marker) that re necessary
+     * for ordering a relation by the nodes in this NodeMaker. Uses SPARQL
+     * semantics for ordering.
+     */
+    List<OrderSpec> orderSpecs(boolean ascending);
 }

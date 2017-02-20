@@ -25,106 +25,106 @@ import de.fuberlin.wiwiss.d2rq.map.Mapping;
  * An ARQ query engine for D2RQ-mapped graphs. Allows evaluation of SPARQL
  * queries (or programmatically created operator trees) over a D2RQ-mapped
  * graph.
- * 
+ *
  * @author Richard Cyganiak (richard@cyganiak.de)
  * @author Herwig Leimer
  */
 public class QueryEngineD2RQ extends QueryEngineMain {
-	private static final Log log = LogFactory.getLog(QueryEngineD2RQ.class);
+    private static final Log log = LogFactory.getLog(QueryEngineD2RQ.class);
 
-	private final Mapping mapping;
-	private final Binding inputBinding;
+    private final Mapping mapping;
+    private final Binding inputBinding;
 
-	public QueryEngineD2RQ(GraphD2RQ graph, Query query) {
-		this(graph, query, BindingRoot.create(), null);
-	}
+    public QueryEngineD2RQ(GraphD2RQ graph, Query query) {
+        this(graph, query, BindingRoot.create(), null);
+    }
 
-	public QueryEngineD2RQ(GraphD2RQ graph, Query query, Binding input, Context context) {
-		super(query, DatasetGraphFactory.createOneGraph(graph), input, context);
-		this.mapping = graph.getMapping();
-		this.inputBinding = input;
-	}
+    public QueryEngineD2RQ(GraphD2RQ graph, Query query, Binding input, Context context) {
+        super(query, DatasetGraphFactory.createOneGraph(graph), input, context);
+        this.mapping = graph.getMapping();
+        this.inputBinding = input;
+    }
 
-	public QueryEngineD2RQ(GraphD2RQ graph, Op op, Binding input, Context context) {
-		super(op, DatasetGraphFactory.createOneGraph(graph), input, context);
-		this.mapping = graph.getMapping();
-		this.inputBinding = input;
-	}
+    public QueryEngineD2RQ(GraphD2RQ graph, Op op, Binding input, Context context) {
+        super(op, DatasetGraphFactory.createOneGraph(graph), input, context);
+        this.mapping = graph.getMapping();
+        this.inputBinding = input;
+    }
 
-	@Override
-	protected Op modifyOp(Op op) {
-		// According to ARQ's {@link Optimize#rewrite()} source code,
-		// this has to be done if no other ARQ optimizations are applied
-		op = TransformScopeRename.transform(op);
-		// ARQ is supposed to do this for us
-		// but it happens too late -- we need it now
-		op = Substitute.substitute(op, this.inputBinding);
+    @Override
+    protected Op modifyOp(Op op) {
+        // According to ARQ's {@link Optimize#rewrite()} source code,
+        // this has to be done if no other ARQ optimizations are applied
+        op = TransformScopeRename.transform(op);
+        // ARQ is supposed to do this for us
+        // but it happens too late -- we need it now
+        op = Substitute.substitute(op, this.inputBinding);
 
-		// TODO: Apply all or some of ARQ's standard transforms?
-		// op = super.modifyOp(op);
+        // TODO: Apply all or some of ARQ's standard transforms?
+        // op = super.modifyOp(op);
 
-		return translate(op);
-	}
+        return translate(op);
+    }
 
-	/**
-	 * Method for translating an operator-tree. Move filter conditions as far as
-	 * possible down in the tree. In the optimal way, the filter conditions is
-	 * the parent of an OpBGP.
-	 */
-	private Op translate(Op op) {
-		if (log.isDebugEnabled()) {
-			log.debug("Before translation:\n" + PrintUtils.toString(op));
-		}
-		// Shape filter expressions to maximize opportunities for pushing them
-		// down
-		op = Transformer.transformSkipService(new TransformFilterCNF(), op);
-		// Try to move any filters as far down as possible
-		op = PushDownOpFilterVisitor.transform(op);
-		// Translate BGPs that have a filter immediately above them
-		op = Transformer.transformSkipService(new TransformOpBGP(mapping, true), op);
-		// Translate BGPs that don't have a filter
-		op = Transformer.transformSkipService(new TransformOpBGP(mapping, false), op);
+    /**
+     * Method for translating an operator-tree. Move filter conditions as far as
+     * possible down in the tree. In the optimal way, the filter conditions is
+     * the parent of an OpBGP.
+     */
+    private Op translate(Op op) {
+        if (log.isDebugEnabled()) {
+            log.debug("Before translation:\n" + PrintUtils.toString(op));
+        }
+        // Shape filter expressions to maximize opportunities for pushing them
+        // down
+        op = Transformer.transformSkipService(new TransformFilterCNF(), op);
+        // Try to move any filters as far down as possible
+        op = PushDownOpFilterVisitor.transform(op);
+        // Translate BGPs that have a filter immediately above them
+        op = Transformer.transformSkipService(new TransformOpBGP(mapping, true), op);
+        // Translate BGPs that don't have a filter
+        op = Transformer.transformSkipService(new TransformOpBGP(mapping, false), op);
 
-		if (log.isDebugEnabled()) {
-			log.debug("After translation:\n" + PrintUtils.toString(op));
-		}
-		return op;
-	}
+        if (log.isDebugEnabled()) {
+            log.debug("After translation:\n" + PrintUtils.toString(op));
+        }
+        return op;
+    }
 
-	// Factory stuff
-	private static QueryEngineFactory factory = new QueryEngineFactoryD2RQ();
+    // Factory stuff
+    private static QueryEngineFactory factory = new QueryEngineFactoryD2RQ();
 
-	public static QueryEngineFactory getFactory() {
-		return factory;
-	}
+    public static QueryEngineFactory getFactory() {
+        return factory;
+    }
 
-	public static void register() {
-		QueryEngineRegistry.addFactory(factory);
-	}
+    public static void register() {
+        QueryEngineRegistry.addFactory(factory);
+    }
 
-	public static void unregister() {
-		QueryEngineRegistry.removeFactory(factory);
-	}
+    public static void unregister() {
+        QueryEngineRegistry.removeFactory(factory);
+    }
 
-	private static class QueryEngineFactoryD2RQ implements QueryEngineFactory {
-		public boolean accept(Query query, DatasetGraph dataset, Context context) {
-			return dataset.getDefaultGraph() instanceof GraphD2RQ;
-		}
+    private static class QueryEngineFactoryD2RQ implements QueryEngineFactory {
+        public boolean accept(Query query, DatasetGraph dataset, Context context) {
+            return dataset.getDefaultGraph() instanceof GraphD2RQ;
+        }
 
-		public Plan create(Query query, DatasetGraph dataset,
-				Binding inputBinding, Context context) {
-			return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(),
-					query, inputBinding, context).getPlan();
-		}
+        public Plan create(Query query, DatasetGraph dataset,
+                           Binding inputBinding, Context context) {
+            return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(),
+                    query, inputBinding, context).getPlan();
+        }
 
-		public boolean accept(Op op, DatasetGraph dataset, Context context) {
-			return dataset.getDefaultGraph() instanceof GraphD2RQ;
-		}
+        public boolean accept(Op op, DatasetGraph dataset, Context context) {
+            return dataset.getDefaultGraph() instanceof GraphD2RQ;
+        }
 
-		public Plan create(Op op, DatasetGraph dataset, Binding inputBinding,
-				Context context) {
-			return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(),
-					op, inputBinding, context).getPlan();
-		}
-	}
+        public Plan create(Op op, DatasetGraph dataset, Binding inputBinding,
+                           Context context) {
+            return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(),
+                    op, inputBinding, context).getPlan();
+        }
+    }
 }

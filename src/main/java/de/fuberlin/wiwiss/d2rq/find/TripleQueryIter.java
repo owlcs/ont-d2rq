@@ -12,41 +12,41 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
  * Wraps a {@link QueryIter} over bindings with three s/p/o variables
  * (see {@link TripleRelation}) as an iterator over {@link Triple}s.
  * Also implements a {@link #cancel()} method.
- * 
+ *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class TripleQueryIter extends NiceIterator<Triple> {
-	
-	public static ExtendedIterator<Triple> create(QueryIter wrapped) {
-		return new TripleQueryIter(wrapped);
-	}
-	
-	private final QueryIter wrapped;
 
-	private TripleQueryIter(QueryIter wrapped) {
-		this.wrapped = wrapped;
-	}
+    public static ExtendedIterator<Triple> create(QueryIter wrapped) {
+        return new TripleQueryIter(wrapped);
+    }
 
-	public boolean hasNext() {
-		return wrapped.hasNext();
-	}
+    private final QueryIter wrapped;
 
-	public Triple next() {
-		Binding b = wrapped.next();
-		return new Triple(
-				b.get(TripleRelation.SUBJECT), 
-				b.get(TripleRelation.PREDICATE), 
-				b.get(TripleRelation.OBJECT));
-	}
+    private TripleQueryIter(QueryIter wrapped) {
+        this.wrapped = wrapped;
+    }
 
-	public void close() {
-		wrapped.close();
-	}
-	
-	/**
-	 * Cancels query execution. Can be called asynchronously.
-	 */
-	public void cancel() {
-		wrapped.cancel();
-	}
+    public boolean hasNext() {
+        return wrapped.hasNext();
+    }
+
+    public Triple next() {
+        Binding b = wrapped.next();
+        return new Triple(
+                b.get(TripleRelation.SUBJECT),
+                b.get(TripleRelation.PREDICATE),
+                b.get(TripleRelation.OBJECT));
+    }
+
+    public void close() {
+        wrapped.close();
+    }
+
+    /**
+     * Cancels query execution. Can be called asynchronously.
+     */
+    public void cancel() {
+        wrapped.cancel();
+    }
 }

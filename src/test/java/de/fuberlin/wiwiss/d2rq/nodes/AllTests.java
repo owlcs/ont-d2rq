@@ -5,14 +5,14 @@ import junit.framework.TestSuite;
 
 public class AllTests {
 
-	public static Test suite() {
-		TestSuite suite = new TestSuite(
-				"Test for de.fuberlin.wiwiss.d2rq.nodes");
-		//$JUnit-BEGIN$
-		suite.addTestSuite(NodeSetTest.class);
-		suite.addTestSuite(NodeMakerTest.class);
-		//$JUnit-END$
-		return suite;
-	}
+    public static Test suite() {
+        TestSuite suite = new TestSuite(
+                "Test for de.fuberlin.wiwiss.d2rq.nodes");
+        //$JUnit-BEGIN$
+        suite.addTestSuite(NodeSetTest.class);
+        suite.addTestSuite(NodeMakerTest.class);
+        //$JUnit-END$
+        return suite;
+    }
 
 }

@@ -8,25 +8,25 @@ import de.fuberlin.wiwiss.d2rq.algebra.Relation;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class PropertyMap extends ResourceMap {
-	private Database database;
-	
-	public PropertyMap(String uriPattern, Database database) {
-		super(null, true);
-		setURIPattern(uriPattern);
-		this.database = database;
-	}
+    private Database database;
 
-	@Override
-	protected Relation buildRelation() {
-		return relationBuilder(database.connectedDB()).buildRelation();
-	}
+    public PropertyMap(String uriPattern, Database database) {
+        super(null, true);
+        setURIPattern(uriPattern);
+        this.database = database;
+    }
 
-	@Override
-	public void validate() throws D2RQException {
-		// Nothing to validate
-	}
+    @Override
+    protected Relation buildRelation() {
+        return relationBuilder(database.connectedDB()).buildRelation();
+    }
 
-	public String toString() {
-		return "d2rq:dynamicProperty \"" + this.uriPattern + "\"";		
-	}
+    @Override
+    public void validate() throws D2RQException {
+        // Nothing to validate
+    }
+
+    public String toString() {
+        return "d2rq:dynamicProperty \"" + this.uriPattern + "\"";
+    }
 }

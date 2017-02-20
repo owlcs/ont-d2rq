@@ -16,62 +16,62 @@ import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 
 public class ResourceDescriber {
-	private final Mapping mapping;
-	private final Node node;
-	private final boolean onlyOutgoing;
-	private final int limit;
-	private final long timeout;
-	private final Graph result = new GraphMem();
-	private final ExecutionContext context;
-	private boolean executed = false;
-	
-	public ResourceDescriber(Mapping mapping, Node resource) {
-		this(mapping, resource, false, Relation.NO_LIMIT, -1);
-	}
-	
-	public ResourceDescriber(Mapping mapping, Node resource, boolean onlyOutgoing, int limit, long timeout) {
-		this.mapping = mapping;
-		this.node = resource;
-		this.onlyOutgoing = onlyOutgoing;
-		this.limit = limit;
-		this.timeout = timeout;
-		this.context = null;
-	}
+    private final Mapping mapping;
+    private final Node node;
+    private final boolean onlyOutgoing;
+    private final int limit;
+    private final long timeout;
+    private final Graph result = new GraphMem();
+    private final ExecutionContext context;
+    private boolean executed = false;
 
-	public Graph description() {
-		if (executed) return result;
-		executed = true;
+    public ResourceDescriber(Mapping mapping, Node resource) {
+        this(mapping, resource, false, Relation.NO_LIMIT, -1);
+    }
 
-		final QueryIterConcat qIter = new QueryIterConcat(context);
-		Alarm pingback = null;
-		if (timeout > 0) {
-			pingback = AlarmClock.get().add(qIter::cancel, timeout);
-		}
+    public ResourceDescriber(Mapping mapping, Node resource, boolean onlyOutgoing, int limit, long timeout) {
+        this.mapping = mapping;
+        this.node = resource;
+        this.onlyOutgoing = onlyOutgoing;
+        this.limit = limit;
+        this.timeout = timeout;
+        this.context = null;
+    }
 
-		FindQuery outgoing = new FindQuery(
-				Triple.create(node, Node.ANY, Node.ANY),
-				mapping.compiledPropertyBridges(), limit, context);
-		qIter.add(outgoing.iterator());
+    public Graph description() {
+        if (executed) return result;
+        executed = true;
 
-		if (!onlyOutgoing) {
-			FindQuery incoming = new FindQuery(
-					Triple.create(Node.ANY, Node.ANY, node),
-					mapping.compiledPropertyBridges(), limit, context);
-			qIter.add(incoming.iterator());
+        final QueryIterConcat qIter = new QueryIterConcat(context);
+        Alarm pingback = null;
+        if (timeout > 0) {
+            pingback = AlarmClock.get().add(qIter::cancel, timeout);
+        }
 
-			FindQuery triples = new FindQuery(
-					Triple.create(Node.ANY, node, Node.ANY),
-					mapping.compiledPropertyBridges(), limit, context);
-			qIter.add(triples.iterator());
-		}
-		// todo: no more com.hp.hpl.jena.graph.BulkUpdateHandler. Use org.apache.jena.graph.GraphUtil:
-		//result.getBulkUpdateHandler().add(TripleQueryIter.create(qIter));
-		GraphUtil.add(result, TripleQueryIter.create(qIter));
+        FindQuery outgoing = new FindQuery(
+                Triple.create(node, Node.ANY, Node.ANY),
+                mapping.compiledPropertyBridges(), limit, context);
+        qIter.add(outgoing.iterator());
 
-		if (pingback != null) {
-			AlarmClock.get().cancel(pingback);
-		}
+        if (!onlyOutgoing) {
+            FindQuery incoming = new FindQuery(
+                    Triple.create(Node.ANY, Node.ANY, node),
+                    mapping.compiledPropertyBridges(), limit, context);
+            qIter.add(incoming.iterator());
 
-		return result;
-	}
+            FindQuery triples = new FindQuery(
+                    Triple.create(Node.ANY, node, Node.ANY),
+                    mapping.compiledPropertyBridges(), limit, context);
+            qIter.add(triples.iterator());
+        }
+        // todo: no more com.hp.hpl.jena.graph.BulkUpdateHandler. Use org.apache.jena.graph.GraphUtil:
+        //result.getBulkUpdateHandler().add(TripleQueryIter.create(qIter));
+        GraphUtil.add(result, TripleQueryIter.create(qIter));
+
+        if (pingback != null) {
+            AlarmClock.get().cancel(pingback);
+        }
+
+        return result;
+    }
 }

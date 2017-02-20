@@ -9,38 +9,38 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 
 public class UnaryMinus extends Expression {
 
-	private Expression base;
-	
-	public UnaryMinus(Expression base) {
-		this.base = base;
-	}
-	
-	public Expression getBase() {
-		return base;
-	}
+    private Expression base;
 
-	public Set<Attribute> attributes() {
-		return base.attributes();
-	}
+    public UnaryMinus(Expression base) {
+        this.base = base;
+    }
 
-	public boolean isFalse() {
-		return false;
-	}
+    public Expression getBase() {
+        return base;
+    }
 
-	public boolean isTrue() {
-		return false;
-	}
+    public Set<Attribute> attributes() {
+        return base.attributes();
+    }
 
-	public Expression renameAttributes(ColumnRenamer columnRenamer) {
-		return new UnaryMinus(base.renameAttributes(columnRenamer));
-	}
+    public boolean isFalse() {
+        return false;
+    }
 
-	public String toSQL(ConnectedDB database, AliasMap aliases) {
-		return "- (" + base.toSQL(database, aliases) + ")";
-	}
-	
-	public String toString() {
-		return "- (" + base + ")";
-	}
+    public boolean isTrue() {
+        return false;
+    }
+
+    public Expression renameAttributes(ColumnRenamer columnRenamer) {
+        return new UnaryMinus(base.renameAttributes(columnRenamer));
+    }
+
+    public String toSQL(ConnectedDB database, AliasMap aliases) {
+        return "- (" + base.toSQL(database, aliases) + ")";
+    }
+
+    public String toString() {
+        return "- (" + base + ")";
+    }
 
 }

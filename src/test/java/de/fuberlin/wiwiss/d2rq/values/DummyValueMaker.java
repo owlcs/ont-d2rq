@@ -17,46 +17,46 @@ import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class DummyValueMaker implements ValueMaker {
-	private String returnValue = null;
-	private Set<ProjectionSpec> projectionSpecs;
-	private Expression selectCondition = Expression.TRUE;
+    private String returnValue = null;
+    private Set<ProjectionSpec> projectionSpecs;
+    private Expression selectCondition = Expression.TRUE;
 
-	public DummyValueMaker(String value) {
-		this.returnValue = value;
-	}
+    public DummyValueMaker(String value) {
+        this.returnValue = value;
+    }
 
-	public void describeSelf(NodeSetFilter c) {
-	}
+    public void describeSelf(NodeSetFilter c) {
+    }
 
-	public void setValue(String value) {
-		this.returnValue = value;
-	}
+    public void setValue(String value) {
+        this.returnValue = value;
+    }
 
-	public void setProjectionSpecs(Set<ProjectionSpec> columns) {
-		this.projectionSpecs = columns;
-	}
+    public void setProjectionSpecs(Set<ProjectionSpec> columns) {
+        this.projectionSpecs = columns;
+    }
 
-	public void setSelectCondition(Expression selectCondition) {
-		this.selectCondition = selectCondition;
-	}
+    public void setSelectCondition(Expression selectCondition) {
+        this.selectCondition = selectCondition;
+    }
 
-	public Set<ProjectionSpec> projectionSpecs() {
-		return this.projectionSpecs;
-	}
+    public Set<ProjectionSpec> projectionSpecs() {
+        return this.projectionSpecs;
+    }
 
-	public Expression valueExpression(String value) {
-		return selectCondition;
-	}
+    public Expression valueExpression(String value) {
+        return selectCondition;
+    }
 
-	public String makeValue(ResultRow row) {
-		return this.returnValue;
-	}
-	
-	public ValueMaker renameAttributes(ColumnRenamer renamer) {
-		return this;
-	}
-	
-	public List<OrderSpec> orderSpecs(boolean ascending) {
-		return Collections.emptyList();
-	}
+    public String makeValue(ResultRow row) {
+        return this.returnValue;
+    }
+
+    public ValueMaker renameAttributes(ColumnRenamer renamer) {
+        return this;
+    }
+
+    public List<OrderSpec> orderSpecs(boolean ascending) {
+        return Collections.emptyList();
+    }
 }

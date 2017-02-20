@@ -9,21 +9,20 @@ import junit.framework.TestSuite;
  * A sparql-query will executed to both and the query-results must be the same.
  *
  * @author Herwig Leimer
- * 
  */
 public class AllTests {
 
-	public static void main(String[] args) {
-		junit.textui.TestRunner.run(AllTests.suite());
-	}
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(AllTests.suite());
+    }
 
-	public static Test suite() {
-		TestSuite suite = new TestSuite(
-				"Test for de.fuberlin.wiwiss.d2rq.dr2q_sdb");
-		//$JUnit-BEGIN$
+    public static Test suite() {
+        TestSuite suite = new TestSuite(
+                "Test for de.fuberlin.wiwiss.d2rq.dr2q_sdb");
+        //$JUnit-BEGIN$
 // TODO SDB tests are currently broken
 //		suite.addTestSuite(SdbSqlEqualityTest.class);
-		//$JUnit-END$
-		return suite;
-	}
+        //$JUnit-END$
+        return suite;
+    }
 }

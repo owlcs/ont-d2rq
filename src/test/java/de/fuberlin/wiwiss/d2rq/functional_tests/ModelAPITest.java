@@ -9,50 +9,50 @@ import junit.framework.TestCase;
 
 /**
  * Functional tests that exercise a ModelD2RQ by calling Model API functions. For
- * notes on running the tests, see {@link AllTests}. 
- *
+ * notes on running the tests, see {@link AllTests}.
+ * <p>
  * To see debug information, uncomment the enableDebug() call in the setUp() method.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class ModelAPITest extends TestCase {
-	private ModelD2RQ model;
+    private ModelD2RQ model;
 
-	protected void setUp() throws Exception {
-		this.model = new ModelD2RQ(D2RQTestSuite.ISWC_MAP, "TURTLE", "http://test/");
+    protected void setUp() throws Exception {
+        this.model = new ModelD2RQ(D2RQTestSuite.ISWC_MAP, "TURTLE", "http://test/");
 //		this.model.enableDebug();
-	}
+    }
 
-	protected void tearDown() throws Exception {
-		this.model.close();
-	}
+    protected void tearDown() throws Exception {
+        this.model.close();
+    }
 
-	public void testListStatements() {
-		StmtIterator iter = this.model.listStatements();
-		int count = 0;
-		while (iter.hasNext()) {
-			Statement stmt = iter.nextStatement();
-			stmt.toString();
+    public void testListStatements() {
+        StmtIterator iter = this.model.listStatements();
+        int count = 0;
+        while (iter.hasNext()) {
+            Statement stmt = iter.nextStatement();
+            stmt.toString();
 //			dumpStatement(stmt);
-			count++;
-		}
-		assertEquals(322, count);
-	}
+            count++;
+        }
+        assertEquals(322, count);
+    }
 
-	public void testHasProperty() {
-		assertTrue(this.model.getResource("http://test/papers/1").hasProperty(DC.creator));
-	}
+    public void testHasProperty() {
+        assertTrue(this.model.getResource("http://test/papers/1").hasProperty(DC.creator));
+    }
 
-	void dumpStatement(Statement stmt) {
-		Resource  subject   = stmt.getSubject();
-		Property  predicate = stmt.getPredicate();
-		RDFNode   object    = stmt.getObject();
-		System.out.print(subject + " " + predicate + " ");
-		if (object instanceof Resource) {
-			System.out.print(object);
-		} else { // object is a literal
-			System.out.print(" \"" + object + "\"");
-		}
-		System.out.println(" .");
-	}
+    void dumpStatement(Statement stmt) {
+        Resource subject = stmt.getSubject();
+        Property predicate = stmt.getPredicate();
+        RDFNode object = stmt.getObject();
+        System.out.print(subject + " " + predicate + " ");
+        if (object instanceof Resource) {
+            System.out.print(object);
+        } else { // object is a literal
+            System.out.print(" \"" + object + "\"");
+        }
+        System.out.println(" .");
+    }
 }

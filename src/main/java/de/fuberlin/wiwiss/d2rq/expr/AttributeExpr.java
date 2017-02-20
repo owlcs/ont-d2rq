@@ -9,44 +9,44 @@ import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 
 public class AttributeExpr extends Expression {
-	private final Attribute attribute;
-	
-	public AttributeExpr(Attribute attribute) {
-		this.attribute = attribute;
-	}
-	
-	public Set<Attribute> attributes() {
-		return Collections.singleton(attribute);
-	}
+    private final Attribute attribute;
 
-	public boolean isFalse() {
-		return false;
-	}
+    public AttributeExpr(Attribute attribute) {
+        this.attribute = attribute;
+    }
 
-	public boolean isTrue() {
-		return false;
-	}
+    public Set<Attribute> attributes() {
+        return Collections.singleton(attribute);
+    }
 
-	public Expression renameAttributes(ColumnRenamer columnRenamer) {
-		return new AttributeExpr(columnRenamer.applyTo(attribute));
-	}
+    public boolean isFalse() {
+        return false;
+    }
 
-	public String toSQL(ConnectedDB database, AliasMap aliases) {
-		return database.vendor().quoteAttribute(attribute);
-	}
+    public boolean isTrue() {
+        return false;
+    }
 
-	public String toString() {
-		return "AttributeExpr(" + attribute + ")";
-	}
-	
-	public boolean equals(Object other) {
-		if (!(other instanceof AttributeExpr)) {
-			return false;
-		}
-		return attribute.equals(((AttributeExpr) other).attribute);
-	}
-	
-	public int hashCode() {
-		return this.attribute.hashCode();
-	}
+    public Expression renameAttributes(ColumnRenamer columnRenamer) {
+        return new AttributeExpr(columnRenamer.applyTo(attribute));
+    }
+
+    public String toSQL(ConnectedDB database, AliasMap aliases) {
+        return database.vendor().quoteAttribute(attribute);
+    }
+
+    public String toString() {
+        return "AttributeExpr(" + attribute + ")";
+    }
+
+    public boolean equals(Object other) {
+        if (!(other instanceof AttributeExpr)) {
+            return false;
+        }
+        return attribute.equals(((AttributeExpr) other).attribute);
+    }
+
+    public int hashCode() {
+        return this.attribute.hashCode();
+    }
 }

@@ -9,49 +9,49 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 
 public class NotNull extends Expression {
 
-	public static Expression create(Expression expr) {
-		return new NotNull(expr);
-	}
-	
-	private Expression expr;
-	
-	private NotNull(Expression expr) {
-		this.expr = expr;
-	}
-	
-	public Set<Attribute> attributes() {
-		return expr.attributes();
-	}
+    public static Expression create(Expression expr) {
+        return new NotNull(expr);
+    }
 
-	public boolean isFalse() {
-		return false;
-	}
+    private Expression expr;
 
-	public boolean isTrue() {
-		return false;
-	}
+    private NotNull(Expression expr) {
+        this.expr = expr;
+    }
 
-	public Expression renameAttributes(ColumnRenamer columnRenamer) {
-		return NotNull.create(columnRenamer.applyTo(expr));
-	}
+    public Set<Attribute> attributes() {
+        return expr.attributes();
+    }
 
-	public String toSQL(ConnectedDB database, AliasMap aliases) {
-		return expr.toSQL(database, aliases) + " IS NOT NULL";
-	}
-	
-	public String toString() {
-		return "NotNull(" + this.expr + ")";
-	}
-	
-	public boolean equals(Object other) {
-		if (!(other instanceof NotNull)) {
-			return false;
-		}
-		NotNull otherExpression = (NotNull) other;
-		return expr.equals(otherExpression.expr); 
-	}
-	
-	public int hashCode() {
-		return this.expr.hashCode() ^ 58473;
-	}
+    public boolean isFalse() {
+        return false;
+    }
+
+    public boolean isTrue() {
+        return false;
+    }
+
+    public Expression renameAttributes(ColumnRenamer columnRenamer) {
+        return NotNull.create(columnRenamer.applyTo(expr));
+    }
+
+    public String toSQL(ConnectedDB database, AliasMap aliases) {
+        return expr.toSQL(database, aliases) + " IS NOT NULL";
+    }
+
+    public String toString() {
+        return "NotNull(" + this.expr + ")";
+    }
+
+    public boolean equals(Object other) {
+        if (!(other instanceof NotNull)) {
+            return false;
+        }
+        NotNull otherExpression = (NotNull) other;
+        return expr.equals(otherExpression.expr);
+    }
+
+    public int hashCode() {
+        return this.expr.hashCode() ^ 58473;
+    }
 }

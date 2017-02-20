@@ -20,34 +20,34 @@ import de.fuberlin.wiwiss.d2rq.vocab.Test;
 
 /**
  * Helper for loading mappings as test fixtures from Turtle files.
- * 
+ *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class MapFixture {
-	private static final Logger LOGGER = Logger.getLogger(MapFixture.class);
+    private static final Logger LOGGER = Logger.getLogger(MapFixture.class);
 
-	private final static PrefixMapping prefixes = new PrefixMappingImpl() {{
-		setNsPrefixes(PrefixMapping.Standard);
-		setNsPrefix("d2rq", "http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#");
-		setNsPrefix("jdbc", "http://d2rq.org/terms/jdbc/");
-		setNsPrefix("test", "http://d2rq.org/terms/test#");
-		setNsPrefix("ex", "http://example.org/");
-		setNsPrefix("foaf", "http://xmlns.com/foaf/0.1/");
-	}};
-	
-	public static PrefixMapping prefixes() {
-		return prefixes;
-	}
-	
-	public static Collection<TripleRelation> loadPropertyBridges(String mappingFileName) {
-		LOGGER.debug("Mapping file " + mappingFileName);
-		Model m = ModelFactory.createDefaultModel();
-		Resource dummyDB = m.getResource(Test.DummyDatabase.getURI());
-		dummyDB.addProperty(RDF.type, D2RQ.Database);
-		if (!mappingFileName.startsWith("/")) mappingFileName = "/" + mappingFileName;
-		InputStream is = D2RQTestSuite.class.getResourceAsStream(mappingFileName);
-		m.read(is, null, "TURTLE");
-		Mapping mapping = new MapParser(m, null).parse();
-		return mapping.compiledPropertyBridges();
-	}
+    private final static PrefixMapping prefixes = new PrefixMappingImpl() {{
+        setNsPrefixes(PrefixMapping.Standard);
+        setNsPrefix("d2rq", "http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#");
+        setNsPrefix("jdbc", "http://d2rq.org/terms/jdbc/");
+        setNsPrefix("test", "http://d2rq.org/terms/test#");
+        setNsPrefix("ex", "http://example.org/");
+        setNsPrefix("foaf", "http://xmlns.com/foaf/0.1/");
+    }};
+
+    public static PrefixMapping prefixes() {
+        return prefixes;
+    }
+
+    public static Collection<TripleRelation> loadPropertyBridges(String mappingFileName) {
+        LOGGER.debug("Mapping file " + mappingFileName);
+        Model m = ModelFactory.createDefaultModel();
+        Resource dummyDB = m.getResource(Test.DummyDatabase.getURI());
+        dummyDB.addProperty(RDF.type, D2RQ.Database);
+        if (!mappingFileName.startsWith("/")) mappingFileName = "/" + mappingFileName;
+        InputStream is = D2RQTestSuite.class.getResourceAsStream(mappingFileName);
+        m.read(is, null, "TURTLE");
+        Mapping mapping = new MapParser(m, null).parse();
+        return mapping.compiledPropertyBridges();
+    }
 }

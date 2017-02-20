@@ -7,27 +7,27 @@ import de.fuberlin.wiwiss.d2rq.expr.Constant;
 
 /**
  * Extends a <code>Constant</code> with a <code>Node</code>.
- * 
+ *
  * @author G. Mels
  */
 public class ConstantEx extends Constant {
 
-	private final Node node;
-	
-	public ConstantEx(String value, Attribute attributeForTrackingType, Node node) {
-		super(value, attributeForTrackingType);
-		
-		this.node = node;
-	}
+    private final Node node;
 
-	public ConstantEx(String value, Node node) {
-		super(value);
-		
-		this.node = node;
-	}
+    public ConstantEx(String value, Attribute attributeForTrackingType, Node node) {
+        super(value, attributeForTrackingType);
 
-	public Node getNode() {
-		return node;
-	}
-	
+        this.node = node;
+    }
+
+    public ConstantEx(String value, Node node) {
+        super(value);
+
+        this.node = node;
+    }
+
+    public Node getNode() {
+        return node;
+    }
+
 }
