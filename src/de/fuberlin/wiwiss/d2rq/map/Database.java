@@ -144,8 +144,8 @@ public class Database extends MapObject {
 	}
 	
 	public void setFetchSize(int fetchSize) {
-		checkNotConnected();		
-		this.fetchSize = fetchSize;
+		checkNotConnected();
+		this.fetchSize = fetchSize < 0 ? NO_FETCH_SIZE : fetchSize;
 	}
 	
 	public void setStartupSQLScript(Resource script) {
@@ -168,7 +168,7 @@ public class Database extends MapObject {
 	public void useConnectedDB(ConnectedDB db) {
 		this.connection = db;
 	}
-	
+
 	public ConnectedDB connectedDB() {
 		if (this.connection == null) {
 			if (jdbcDriver != null) {
@@ -180,10 +180,7 @@ public class Database extends MapObject {
 				try {
 					URI url = URI.create(startupSQLScript);
 					SQLScriptLoader.loadURI(url, connection.connection());
-				} catch (IOException ex) {
-					connection.close();
-					throw new D2RQException(ex);
-				} catch (SQLException ex) {
+				} catch (IOException | SQLException ex) {
 					connection.close();
 					throw new D2RQException(ex);
 				}
@@ -201,7 +198,7 @@ public class Database extends MapObject {
 			throw new D2RQException("d2rq:Database must have d2rq:jdbcDSN",
 					D2RQException.DATABASE_MISSING_DSN);
 		}
-		if (this.jdbcDSN != null && this.jdbcDriver == null) {
+		if (this.jdbcDriver == null) {
 			throw new D2RQException("Missing d2rq:jdbcDriver",
 					D2RQException.DATABASE_MISSING_JDBCDRIVER);
 		}

@@ -103,39 +103,25 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
 	public void close() {
 		if (explicitlyClosed) return;
 		log.debug("Closing SQLIterator");
-	    explicitlyClosed = true;
-	    
-	    /* JDBC 4+ requires manual closing of result sets and statements */
-	    if (this.resultSet != null) {
-			try {
+		try {
+            /* JDBC 4+ requires manual closing of result sets and statements */
+			if (this.resultSet != null) {
 				this.resultSet.close();
-			} catch (SQLException ex) {
-				throw new D2RQException(ex.getMessage() + "; query was: " + this.sql);
 			}
-	    }
-	    
-	    if (this.database != null) {
-			try {
+			if (this.database != null) {
 				this.database.vendor().beforeClose(this.database.connection());
-			} catch (SQLException ex) {
-				throw new D2RQException(ex.getMessage() + "; query was: " + this.sql);
 			}
-	    }
-	    if (this.statement != null) {
-			try {
+			if (this.statement != null) {
 				this.statement.close();
-			} catch (SQLException ex) {
-				throw new D2RQException(ex.getMessage() + "; query was: " + this.sql);
 			}
-	    }
-
-	    if (this.database != null) {
-			try {
+			if (this.database != null) {
 				this.database.vendor().afterClose(this.database.connection());
-			} catch (SQLException ex) {
-				throw new D2RQException(ex.getMessage() + "; query was: " + this.sql);
 			}
-	    }
+		} catch (SQLException ex) {
+			throw new D2RQException(ex.getMessage() + "; query was: " + this.sql, ex);
+		} finally {
+			explicitlyClosed = true;
+		}
 	}
 
 	public synchronized void cancel() {
@@ -156,33 +142,33 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
 	}
 
 	private void ensureQueryExecuted() {
-	    if (this.queryExecuted) {
-	    	return;
-	    }
-    	this.queryExecuted = true;
-    	log.info(sql);
-    	BeanCounter.totalNumberOfExecutedSQLQueries++;
-        try {
+		if (this.queryExecuted) {
+			return;
+		}
+		this.queryExecuted = true;
+		log.info(sql);
+		BeanCounter.totalNumberOfExecutedSQLQueries++;
+		try {
 			Connection con = this.database.connection();
 			this.statement = con.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			if (database.fetchSize() != Database.NO_FETCH_SIZE) {
+			if (database.useServerFetch()) {
 				try {
 					this.statement.setFetchSize(database.fetchSize());
+				} catch (SQLException ignored) {
+                    /* Some drivers don't support fetch sizes, e.g. JDBC-ODBC */
 				}
-				catch (SQLException e) {} /* Some drivers don't support fetch sizes, e.g. JDBC-ODBC */
 			}
 			database.vendor().beforeQuery(database.connection());
 			this.resultSet = this.statement.executeQuery(this.sql);
 			database.vendor().afterQuery(database.connection());
-
 			log.debug("SQL result set created");
 			this.numCols = this.resultSet.getMetaData().getColumnCount();
-        } catch (SQLException ex) {
-        	if (cancelled) {
-        		log.debug("SQL query execution cancelled", ex);
-        		throw new QueryCancelledException();
-        	}
-        	throw new D2RQException(ex.getMessage() + ": " + this.sql);
-        }
-    }
+		} catch (SQLException ex) {
+			if (cancelled) {
+				log.debug("SQL query execution cancelled", ex);
+				throw new QueryCancelledException();
+			}
+			throw new D2RQException(ex.getMessage() + ": " + this.sql, ex);
+		}
+	}
 }
