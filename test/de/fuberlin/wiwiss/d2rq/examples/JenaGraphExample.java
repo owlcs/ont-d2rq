@@ -17,7 +17,7 @@ public class JenaGraphExample {
 
 	public static void main(String[] args) {
 		// Load mapping file
-		Model mapModel = FileManager.get().loadModel("doc/example/mapping-iswc.ttl");
+		Model mapModel = FileManager.get().loadModel("doc/example/mapping-iswc.mysql.ttl");
 		
 		// Parse mapping file
 		MapParser parser = new MapParser(mapModel, "http://localhost:2020/");

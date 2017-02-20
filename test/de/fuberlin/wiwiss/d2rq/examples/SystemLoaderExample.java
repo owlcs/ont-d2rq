@@ -43,7 +43,7 @@ public class SystemLoaderExample {
 		// Now let's load an example mapping file that connects to
 		// a MySQL database
 		loader = new SystemLoader();
-		loader.setMappingFileOrJdbcURL("doc/example/mapping-iswc.ttl");
+		loader.setMappingFileOrJdbcURL("doc/example/mapping-iswc.mysql.ttl");
 		loader.setFastMode(true);
 		loader.setSystemBaseURI("http://example.com/");
 
