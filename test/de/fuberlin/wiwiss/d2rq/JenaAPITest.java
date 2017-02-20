@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import com.hp.hpl.jena.util.FileManager;
+import org.apache.jena.util.FileManager;
 
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;

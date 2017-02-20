@@ -1,15 +1,15 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import org.openjena.atlas.lib.AlarmClock;
-import org.openjena.atlas.lib.Callback;
-import org.openjena.atlas.lib.Pingback;
+import org.apache.jena.atlas.lib.Alarm;
+import org.apache.jena.atlas.lib.AlarmClock;
+import org.apache.jena.graph.GraphUtil;
 
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.mem.GraphMem;
-import com.hp.hpl.jena.sparql.engine.ExecutionContext;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIterConcat;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.mem.GraphMem;
+import org.apache.jena.sparql.engine.ExecutionContext;
+import org.apache.jena.sparql.engine.iterator.QueryIterConcat;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.find.FindQuery;
@@ -38,43 +38,41 @@ public class ResourceDescriber {
 		this.timeout = timeout;
 		this.context = null;
 	}
-	
+
 	public Graph description() {
 		if (executed) return result;
 		executed = true;
 
 		final QueryIterConcat qIter = new QueryIterConcat(context);
-		Pingback<?> pingback = null;
+		Alarm pingback = null;
 		if (timeout > 0) {
-			pingback = AlarmClock.get().add(new Callback<Object>() {
-				public void proc(Object ignore) {
-					qIter.cancel();
-				}
-			}, timeout);
+			pingback = AlarmClock.get().add(qIter::cancel, timeout);
 		}
-		
+
 		FindQuery outgoing = new FindQuery(
-				Triple.create(node, Node.ANY, Node.ANY), 
+				Triple.create(node, Node.ANY, Node.ANY),
 				mapping.compiledPropertyBridges(), limit, context);
 		qIter.add(outgoing.iterator());
-		
+
 		if (!onlyOutgoing) {
 			FindQuery incoming = new FindQuery(
-					Triple.create(Node.ANY, Node.ANY, node), 
+					Triple.create(Node.ANY, Node.ANY, node),
 					mapping.compiledPropertyBridges(), limit, context);
 			qIter.add(incoming.iterator());
-	
+
 			FindQuery triples = new FindQuery(
-					Triple.create(Node.ANY, node, Node.ANY), 
+					Triple.create(Node.ANY, node, Node.ANY),
 					mapping.compiledPropertyBridges(), limit, context);
 			qIter.add(triples.iterator());
 		}
-		result.getBulkUpdateHandler().add(TripleQueryIter.create(qIter));
-		
+		// todo: no more com.hp.hpl.jena.graph.BulkUpdateHandler. Use org.apache.jena.graph.GraphUtil:
+		//result.getBulkUpdateHandler().add(TripleQueryIter.create(qIter));
+		GraphUtil.add(result, TripleQueryIter.create(qIter));
+
 		if (pingback != null) {
 			AlarmClock.get().cancel(pingback);
 		}
-		
+
 		return result;
 	}
 }

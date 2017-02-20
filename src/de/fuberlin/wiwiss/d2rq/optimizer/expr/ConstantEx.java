@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.optimizer.expr;
 
-import com.hp.hpl.jena.graph.Node;
+import org.apache.jena.graph.Node;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.expr.Constant;

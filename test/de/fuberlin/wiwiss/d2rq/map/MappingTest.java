@@ -6,8 +6,8 @@ import java.util.HashSet;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 

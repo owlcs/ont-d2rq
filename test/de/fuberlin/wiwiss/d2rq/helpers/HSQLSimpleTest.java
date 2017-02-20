@@ -4,9 +4,10 @@ import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.vocabulary.RDF;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.vocabulary.RDF;
 
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
@@ -64,7 +65,7 @@ public class HSQLSimpleTest extends TestCase {
 	public void testDefaultMappingWithHelloWorld() {
 		db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
 		GraphD2RQ g = generateDefaultGraphD2RQ();
-		assertTrue(g.contains(Node.ANY, Node.ANY, Node.createLiteral("Hello World!")));
+		assertTrue(g.contains(Node.ANY, Node.ANY, NodeFactory.createLiteral("Hello World!")));
 	}
 	
 	public void testGenerateEmptyGraphFromSimpleD2RQMapping() {
@@ -80,7 +81,7 @@ public class HSQLSimpleTest extends TestCase {
 		db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
 		GraphD2RQ g = new GraphD2RQ(m);
 		assertTrue(g.contains(
-				Node.createURI(EX + "test/1"), RDF.Nodes.type, Node.createURI(EX + "Test")));
+				NodeFactory.createURI(EX + "test/1"), RDF.Nodes.type, NodeFactory.createURI(EX + "Test")));
 		assertEquals(1, g.size());
 	}
 	

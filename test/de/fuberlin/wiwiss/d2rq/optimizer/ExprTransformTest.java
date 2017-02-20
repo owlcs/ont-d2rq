@@ -4,8 +4,8 @@ package de.fuberlin.wiwiss.d2rq.optimizer;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.sparql.expr.Expr;
-import com.hp.hpl.jena.sparql.util.ExprUtils;
+import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.util.ExprUtils;
 
 import de.fuberlin.wiwiss.d2rq.engine.TransformFilterCNF.DeMorganLawApplyer;
 import de.fuberlin.wiwiss.d2rq.engine.TransformFilterCNF.DistributiveLawApplyer;

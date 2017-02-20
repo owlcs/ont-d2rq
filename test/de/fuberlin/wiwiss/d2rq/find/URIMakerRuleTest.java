@@ -7,9 +7,10 @@ import java.util.Collections;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.sparql.vocabulary.FOAF;
-import com.hp.hpl.jena.vocabulary.RDF;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.RDF;
 
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
@@ -81,9 +82,9 @@ public class URIMakerRuleTest extends TestCase {
 				new TypedNodeMaker(TypedNodeMaker.URI, 
 						new Column(new Attribute(null, "employees", "homepage")), false));
 		this.employeeChecker = new URIMakerRule().createRuleChecker(
-				Node.createURI("http://test/person1"));
+				NodeFactory.createURI("http://test/person1"));
 		this.foobarChecker = new URIMakerRule().createRuleChecker(
-				Node.createURI("http://test/foobar"));
+				NodeFactory.createURI("http://test/foobar"));
 	}
 	
 	public void testComparator() {

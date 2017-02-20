@@ -1,11 +1,12 @@
 package de.fuberlin.wiwiss.d2rq.optimizer.expr;
 
+import org.apache.jena.graph.NodeFactory;
 import org.apache.xerces.impl.dv.XSSimpleType;
 import org.apache.xerces.xs.XSConstants;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.Node;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
 
 public class XSD {
 
@@ -82,7 +83,7 @@ public class XSD {
 
 	public static Node cast(Node numeric, RDFDatatype datatype)
 	{
-		return  Node.createLiteral(numeric.getLiteralLexicalForm(), null, datatype);
+		return  NodeFactory.createLiteral(numeric.getLiteralLexicalForm(), null, datatype);
 	}
 	
 	public static boolean isSupported(RDFDatatype datatype)

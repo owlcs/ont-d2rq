@@ -7,7 +7,7 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.sparql.core.Var;
+import org.apache.jena.sparql.core.Var;
 
 import de.fuberlin.wiwiss.d2rq.engine.BindingMaker;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;

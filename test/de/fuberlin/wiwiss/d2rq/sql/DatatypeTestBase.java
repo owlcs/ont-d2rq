@@ -10,11 +10,12 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.util.iterator.ExtendedIterator;
 
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
@@ -107,14 +108,14 @@ public abstract class DatatypeTestBase extends TestCase {
 		if (!searchValues) return;
 		for (String value : expectedValues) {
 			assertTrue("Expected literal not in graph: '" + value + "'",
-					graph.contains(Node.ANY, Node.ANY, Node.createLiteral(value)));
+					graph.contains(Node.ANY, Node.ANY, NodeFactory.createLiteral(value)));
 		}
 	}
 
 	protected void assertValuesNotFindable(String[] expectedValues) {
 		for (String value : expectedValues) {
 			assertFalse("Unexpected literal found in graph: '" + value + "'",
-					graph.contains(Node.ANY, Node.ANY, Node.createLiteral(value)));
+					graph.contains(Node.ANY, Node.ANY, NodeFactory.createLiteral(value)));
 		}
 	}
 

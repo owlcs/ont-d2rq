@@ -1,9 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.examples;
 
-import com.hp.hpl.jena.assembler.Assembler;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.util.FileManager;
+import org.apache.jena.assembler.Assembler;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.util.FileManager;
 
 public class AssemblerExample {
 

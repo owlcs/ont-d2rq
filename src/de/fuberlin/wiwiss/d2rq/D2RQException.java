@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import com.hp.hpl.jena.shared.JenaException;
+import org.apache.jena.shared.JenaException;
 
 /**
  * Exception used to signal most D2RQ errors.

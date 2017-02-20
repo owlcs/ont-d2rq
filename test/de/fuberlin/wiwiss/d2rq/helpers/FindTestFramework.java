@@ -5,12 +5,12 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.util.iterator.ExtendedIterator;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
@@ -58,7 +58,7 @@ public abstract class FindTestFramework extends TestCase {
 	}
 
 	protected void assertStatementCount(int count) {
-		assertEquals(count, this.resultTriples.size());
+		assertEquals("Found " + resultTriples, count, this.resultTriples.size());
 	}
 	
 	protected void assertStatement(RDFNode s, RDFNode p, RDFNode o) {

@@ -7,15 +7,14 @@ import java.sql.SQLException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openjena.atlas.AtlasException;
-import org.openjena.riot.RiotException;
-
-import com.hp.hpl.jena.n3.turtle.TurtleParseException;
-import com.hp.hpl.jena.query.ARQ;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.shared.JenaException;
-import com.hp.hpl.jena.util.FileManager;
-import com.hp.hpl.jena.util.FileUtils;
+import org.apache.jena.atlas.AtlasException;
+import org.apache.jena.n3.turtle.TurtleParseException;
+import org.apache.jena.query.ARQ;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RiotException;
+import org.apache.jena.shared.JenaException;
+import org.apache.jena.util.FileManager;
+import org.apache.jena.util.FileUtils;
 
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;

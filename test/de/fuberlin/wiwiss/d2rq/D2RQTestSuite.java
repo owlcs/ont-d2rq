@@ -1,7 +1,7 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -17,8 +17,6 @@ public class D2RQTestSuite {
 	public static final String ISWC_MAP = "file:doc/example/mapping-iswc.mysql.ttl";
 
 	public static void main(String[] args) {
-		// Be quiet and leave error reporting to JUnit
-		Log4jHelper.turnLoggingOff();
 		junit.textui.TestRunner.run(D2RQTestSuite.suite());
 	}
 

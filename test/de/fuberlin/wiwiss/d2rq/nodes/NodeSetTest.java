@@ -4,11 +4,12 @@ import java.util.Collections;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.rdf.model.AnonId;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.vocabulary.RDF;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.rdf.model.AnonId;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.RDF;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.expr.AttributeExpr;
@@ -132,8 +133,8 @@ public class NodeSetTest extends TestCase {
 	}
 	
 	public void testDifferentFixedBlanksEmpty() {
-		nodes.limitTo(Node.createAnon(new AnonId("foo")));
-		nodes.limitTo(Node.createAnon(new AnonId("bar")));
+		nodes.limitTo(NodeFactory.createBlankNode("foo"));
+		nodes.limitTo(NodeFactory.createBlankNode("bar"));
 		assertTrue(nodes.isEmpty());
 	}
 	
@@ -144,14 +145,14 @@ public class NodeSetTest extends TestCase {
 	}
 
 	public void testDifferentFixedLiteralsEmpty() {
-		nodes.limitTo(Node.createLiteral("foo"));
-		nodes.limitTo(Node.createLiteral("bar"));
+		nodes.limitTo(NodeFactory.createLiteral("foo"));
+		nodes.limitTo(NodeFactory.createLiteral("bar"));
 		assertTrue(nodes.isEmpty());
 	}
 	
 	public void testDifferentTypeFixedLiteralsEmpty() {
-		nodes.limitTo(Node.createURI("http://example.org/"));
-		nodes.limitTo(Node.createLiteral("http://example.org/"));
+		nodes.limitTo(NodeFactory.createURI("http://example.org/"));
+		nodes.limitTo(NodeFactory.createLiteral("http://example.org/"));
 		assertTrue(nodes.isEmpty());
 	}
 	
@@ -162,13 +163,13 @@ public class NodeSetTest extends TestCase {
 	}
 	
 	public void testFixedAndConstantEmpty() {
-		nodes.limitTo(Node.createURI("http://example.org/"));
+		nodes.limitTo(NodeFactory.createURI("http://example.org/"));
 		nodes.limitValues("foo");
 		assertTrue(nodes.isEmpty());
 	}
 	
 	public void testFixedAndConstantNotEmpty() {
-		nodes.limitTo(Node.createURI("http://example.org/"));
+		nodes.limitTo(NodeFactory.createURI("http://example.org/"));
 		nodes.limitValues("http://example.org/");
 		assertFalse(nodes.isEmpty());
 	}
@@ -180,8 +181,8 @@ public class NodeSetTest extends TestCase {
 	}
 	
 	public void testDifferentLanguagesFixedEmpty() {
-		nodes.limitTo(Node.createLiteral("foo", "de", null));
-		nodes.limitTo(Node.createLiteral("foo", "en", null));
+		nodes.limitTo(NodeFactory.createLiteral("foo", "de", null));
+		nodes.limitTo(NodeFactory.createLiteral("foo", "en", null));
 		assertTrue(nodes.isEmpty());
 	}
 	
@@ -192,8 +193,8 @@ public class NodeSetTest extends TestCase {
 	}
 	
 	public void testDifferentDatatypesFixedEmpty() {
-		nodes.limitTo(Node.createLiteral("42", null, XSDDatatype.XSDstring));
-		nodes.limitTo(Node.createLiteral("42", null, XSDDatatype.XSDinteger));
+		nodes.limitTo(NodeFactory.createLiteral("42", null, XSDDatatype.XSDstring));
+		nodes.limitTo(NodeFactory.createLiteral("42", null, XSDDatatype.XSDinteger));
 		assertTrue(nodes.isEmpty());
 	}
 	
@@ -235,13 +236,13 @@ public class NodeSetTest extends TestCase {
 	
 	public void testBlankNodeAndConstantMatchNotEmpty() {
 		nodes.limitValuesToBlankNodeID(fooBlankNodeID);
-		nodes.limitTo(Node.createAnon(new AnonId("Foo@@42")));
+		nodes.limitTo(NodeFactory.createBlankNode("Foo@@42"));
 		assertFalse(nodes.isEmpty());
 	}
 	
 	public void testBlankNodeAndConstantNoMatchEmpty() {
 		nodes.limitValuesToBlankNodeID(fooBlankNodeID);
-		nodes.limitTo(Node.createAnon(new AnonId("Bar@@42")));
+		nodes.limitTo(NodeFactory.createBlankNode("Bar@@42"));
 		assertTrue(nodes.isEmpty());
 	}
 	
@@ -308,7 +309,7 @@ public class NodeSetTest extends TestCase {
 	
 	public void testBlankNodeAndConstantMatchExpressionIsEquality() {
 		nodes.limitValuesToBlankNodeID(fooBlankNodeID);
-		nodes.limitTo(Node.createAnon(new AnonId("Foo@@42")));
+		nodes.limitTo(NodeFactory.createBlankNode("Foo@@42"));
 		assertEquals(Equality.createAttributeValue(table1foo, "42"), 
 				nodes.constraint());
 	}
@@ -406,7 +407,7 @@ public class NodeSetTest extends TestCase {
 	}
 	
 	public void testVariableNodeDoesNotLimit() {
-		nodes.limitTo(Node.createVariable("foo"));
+		nodes.limitTo(NodeFactory.createVariable("foo"));
 		nodes.limitTo(RDF.Nodes.type);
 		assertFalse(nodes.isEmpty());
 	}

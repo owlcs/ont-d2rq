@@ -4,9 +4,10 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.rdf.model.AnonId;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.rdf.model.AnonId;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.values.BlankNodeID;
@@ -18,15 +19,15 @@ public class NodeMakerTest extends TestCase {
 	
 	public void testFixedNodeMakerToString() {
 		assertEquals("Fixed(\"foo\")", 
-				new FixedNodeMaker(Node.createLiteral("foo"), true).toString());
+				new FixedNodeMaker(NodeFactory.createLiteral("foo"), true).toString());
 		assertEquals("Fixed(\"foo\"@en)", 
-				new FixedNodeMaker(Node.createLiteral("foo", "en", null), true).toString());
+				new FixedNodeMaker(NodeFactory.createLiteral("foo", "en", null), true).toString());
 		assertEquals("Fixed(\"1\"^^<" + XSDDatatype.XSDint.getURI() + ">)",
-				new FixedNodeMaker(Node.createLiteral("1", null, XSDDatatype.XSDint), true).toString());
+				new FixedNodeMaker(NodeFactory.createLiteral("1", null, XSDDatatype.XSDint), true).toString());
 		assertEquals("Fixed(_:foo)", 
-				new FixedNodeMaker(Node.createAnon(new AnonId("foo")), true).toString());
+				new FixedNodeMaker(NodeFactory.createBlankNode("foo"), true).toString());
 		assertEquals("Fixed(<http://example.org/>)", 
-				new FixedNodeMaker(Node.createURI("http://example.org/"), true).toString());
+				new FixedNodeMaker(NodeFactory.createURI("http://example.org/"), true).toString());
 	}
 	
 	public void testBlankNodeMakerToString() {

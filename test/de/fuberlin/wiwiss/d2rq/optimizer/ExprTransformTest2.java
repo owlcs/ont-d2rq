@@ -6,24 +6,25 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.expr.E_Datatype;
-import com.hp.hpl.jena.sparql.expr.E_Equals;
-import com.hp.hpl.jena.sparql.expr.E_IsBlank;
-import com.hp.hpl.jena.sparql.expr.E_IsIRI;
-import com.hp.hpl.jena.sparql.expr.E_IsLiteral;
-import com.hp.hpl.jena.sparql.expr.E_Lang;
-import com.hp.hpl.jena.sparql.expr.E_LangMatches;
-import com.hp.hpl.jena.sparql.expr.E_LogicalOr;
-import com.hp.hpl.jena.sparql.expr.E_SameTerm;
-import com.hp.hpl.jena.sparql.expr.Expr;
-import com.hp.hpl.jena.sparql.expr.ExprVar;
-import com.hp.hpl.jena.sparql.expr.NodeValue;
-import com.hp.hpl.jena.sparql.expr.nodevalue.NodeValueNode;
-import com.hp.hpl.jena.vocabulary.RDFS;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.expr.E_Datatype;
+import org.apache.jena.sparql.expr.E_Equals;
+import org.apache.jena.sparql.expr.E_IsBlank;
+import org.apache.jena.sparql.expr.E_IsIRI;
+import org.apache.jena.sparql.expr.E_IsLiteral;
+import org.apache.jena.sparql.expr.E_Lang;
+import org.apache.jena.sparql.expr.E_LangMatches;
+import org.apache.jena.sparql.expr.E_LogicalOr;
+import org.apache.jena.sparql.expr.E_SameTerm;
+import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.expr.ExprVar;
+import org.apache.jena.sparql.expr.NodeValue;
+import org.apache.jena.sparql.expr.nodevalue.NodeValueNode;
+import org.apache.jena.vocabulary.RDFS;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
@@ -56,7 +57,7 @@ public class ExprTransformTest2 extends TestCase {
 	public void testLang()
 	{
 		List<Triple> pattern = new ArrayList<Triple>();
-		pattern.add(Triple.create(Node.createVariable("s"), RDFS.label.asNode(), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), RDFS.label.asNode(), NodeFactory.createVariable("o")));
 		NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation label_fr_be  = search("table1", "label_fr_be", rels);
@@ -78,7 +79,7 @@ public class ExprTransformTest2 extends TestCase {
 	public void testLangMatches()
 	{
 		List<Triple> pattern = new ArrayList<Triple>();
-		pattern.add(Triple.create(Node.createVariable("s"), RDFS.label.asNode(), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), RDFS.label.asNode(), NodeFactory.createVariable("o")));
 		NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation label_fr_be = search("table1", "label_fr_be", rels);
@@ -104,14 +105,14 @@ public class ExprTransformTest2 extends TestCase {
 	public void testIsLiteral()
 	{
 		List<Triple> pattern = new ArrayList<Triple>();
-		pattern.add(Triple.create(Node.createVariable("s"), RDFS.label.asNode(), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), RDFS.label.asNode(), NodeFactory.createVariable("o")));
 		NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 				
 		NodeRelation label = search("table1", "label", rels);
 		NodeRelation label_en = search("table1", "label_en", rels);
 		
 		pattern.clear();
-		pattern.add(Triple.create(Node.createVariable("s"), Node.createURI("http://example.org/value"), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
 		rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation intvalue = search("table2", "intvalue", rels);
@@ -129,14 +130,14 @@ public class ExprTransformTest2 extends TestCase {
 	public void testIsIRI()
 	{
 		List<Triple> pattern = new ArrayList<Triple>();
-		pattern.add(Triple.create(Node.createVariable("s"), RDFS.label.asNode(), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), RDFS.label.asNode(), NodeFactory.createVariable("o")));
 		NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 				
 		NodeRelation label = search("table1", "label", rels);
 		NodeRelation label_en = search("table1", "label_en", rels);
 		
 		pattern.clear();
-		pattern.add(Triple.create(Node.createVariable("s"), Node.createURI("http://example.org/value"), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
 		rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation intvalue = search("table2", "intvalue", rels);
@@ -155,14 +156,14 @@ public class ExprTransformTest2 extends TestCase {
 	public void testIsBlank()
 	{
 		List<Triple> pattern = new ArrayList<Triple>();
-		pattern.add(Triple.create(Node.createVariable("s"), RDFS.label.asNode(), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), RDFS.label.asNode(), NodeFactory.createVariable("o")));
 		NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 				
 		NodeRelation label = search("table1", "label", rels);
 		NodeRelation label_en = search("table1", "label_en", rels);
 		
 		pattern.clear();
-		pattern.add(Triple.create(Node.createVariable("s"), Node.createURI("http://example.org/value"), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
 		rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation intvalue = search("table2", "intvalue", rels);
@@ -180,20 +181,20 @@ public class ExprTransformTest2 extends TestCase {
 	public void testDataType()
 	{
 		List<Triple> pattern = new ArrayList<Triple>();
-		pattern.add(Triple.create(Node.createVariable("s"), Node.createURI("http://example.org/value"), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
 		NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation intvalue = search("table2", "intvalue", rels);
 		NodeRelation value = search("table2", "value", rels);
 		
 		pattern.clear();
-		pattern.add(Triple.create(Node.createVariable("s"), RDFS.label.asNode(), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), RDFS.label.asNode(), NodeFactory.createVariable("o")));
 		rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation langliteral = search("table1", "label_en", rels);
 		
-		Expr filterint    = new E_Equals(new E_Datatype(new ExprVar("o")), NodeValueNode.makeNode(Node.createURI(XSDDatatype.XSDint.getURI())));
-		Expr filterstring = new E_Equals(new E_Datatype(new ExprVar("o")), NodeValueNode.makeNode(Node.createURI(XSDDatatype.XSDstring.getURI())));
+		Expr filterint    = new E_Equals(new E_Datatype(new ExprVar("o")), NodeValueNode.makeNode(NodeFactory.createURI(XSDDatatype.XSDint.getURI())));
+		Expr filterstring = new E_Equals(new E_Datatype(new ExprVar("o")), NodeValueNode.makeNode(NodeFactory.createURI(XSDDatatype.XSDstring.getURI())));
 		
 		assertEquals("DATATYPE(intliteral) = xsd:int should be TRUE",       Expression.TRUE, TransformExprToSQLApplyer.convert(filterint, intvalue));
 		assertEquals("DATATYPE(simpleliteral) = xsd:string should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterstring, value));
@@ -203,7 +204,7 @@ public class ExprTransformTest2 extends TestCase {
 	public void testDisjunction()
 	{
 		List<Triple> pattern = new ArrayList<Triple>();
-		pattern.add(Triple.create(Node.createVariable("s"), Node.createURI("http://example.org/value"), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
 		NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation intvalue = search("table2", "intvalue", rels);
@@ -222,7 +223,7 @@ public class ExprTransformTest2 extends TestCase {
 	public void testSameTerm()
 	{
 		List<Triple> pattern = new ArrayList<Triple>();
-		pattern.add(Triple.create(Node.createVariable("s"), Node.createURI("http://example.org/value"), Node.createVariable("o")));
+		pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
 		NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 		
 		NodeRelation intvalue = search("table2", "intvalue", rels);

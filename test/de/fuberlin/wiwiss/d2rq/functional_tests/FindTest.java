@@ -1,12 +1,13 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.rdf.model.AnonId;
-import com.hp.hpl.jena.sparql.vocabulary.FOAF;
-import com.hp.hpl.jena.vocabulary.DC;
-import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RDFS;
-import com.hp.hpl.jena.vocabulary.VCARD;
+import org.apache.jena.JenaRuntime;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.rdf.model.AnonId;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.DC;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.VCARD;
 
 import de.fuberlin.wiwiss.d2rq.helpers.FindTestFramework;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
@@ -81,6 +82,8 @@ public class FindTest extends FindTestFramework {
 	}
 	
 	public void testXSDStringDoesntMatchPlainLiteral() {
+		// in RDF 1.1 plain it is the same
+		if (JenaRuntime.isRDF11) return;
 		find(null, SKOS.prefLabel, m.createLiteral("E-Business"));
 //		dump();
 		assertStatementCount(0);

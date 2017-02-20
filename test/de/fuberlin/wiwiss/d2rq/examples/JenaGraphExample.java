@@ -2,12 +2,13 @@ package de.fuberlin.wiwiss.d2rq.examples;
 
 import java.util.Iterator;
 
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.util.FileManager;
-import com.hp.hpl.jena.vocabulary.DC;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.util.FileManager;
+import org.apache.jena.vocabulary.DC;
 
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -29,7 +30,7 @@ public class JenaGraphExample {
 		// Create a find(spo) pattern 
 		Node subject = Node.ANY;
 		Node predicate = DC.date.asNode();
-		Node object = Node.createLiteral("2003", null, XSDDatatype.XSDgYear);
+		Node object = NodeFactory.createLiteral("2003", null, XSDDatatype.XSDgYear);
 		Triple pattern = new Triple(subject, predicate, object);
 
 		// Query the graph

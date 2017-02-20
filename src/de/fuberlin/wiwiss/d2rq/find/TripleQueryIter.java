@@ -1,10 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.find;
 
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.engine.binding.Binding;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIter;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
-import com.hp.hpl.jena.util.iterator.NiceIterator;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.iterator.QueryIter;
+import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.util.iterator.NiceIterator;
 
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 

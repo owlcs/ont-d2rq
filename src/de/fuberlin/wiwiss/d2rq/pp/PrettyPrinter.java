@@ -1,12 +1,16 @@
 package de.fuberlin.wiwiss.d2rq.pp;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.shared.PrefixMapping;
+import org.apache.jena.JenaRuntime;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.datatypes.xsd.impl.RDFLangString;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.shared.PrefixMapping;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RConfig;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
@@ -33,10 +37,11 @@ public class PrettyPrinter {
 	public static String toString(Node n) {
 		return toString(n, null);
 	}
-	
+
 	/**
 	 * Pretty-prints an RDF node and shortens URIs into QNames according to a
 	 * {@link PrefixMapping}.
+	 *
 	 * @param n An RDF node
 	 * @return An N-Triples style textual representation with URIs shortened to QNames
 	 */
@@ -53,14 +58,24 @@ public class PrettyPrinter {
 		if (Node.ANY.equals(n)) {
 			return "?ANY";
 		}
-		// Literal
+		// should be Literal
+		if (!n.isLiteral()) {
+			throw new D2RQException("Not a literal " + n);
+		}
 		String s = "\"" + n.getLiteralLexicalForm() + "\"";
 		if (!"".equals(n.getLiteralLanguage())) {
 			s += "@" + n.getLiteralLanguage();
 		}
-		if (n.getLiteralDatatype() != null) {
-			s += "^^" + qNameOrURI(n.getLiteralDatatypeURI(), prefixes);
+		RDFDatatype dt = n.getLiteralDatatype();
+		if (JenaRuntime.isRDF11) {
+			if (XSDDatatype.XSDstring.equals(dt) || RDFLangString.rdfLangString.equals(dt))
+				return s;
+		} else if (dt == null) {
+			return s;
 		}
+		if (dt == null)
+			throw new D2RQException("Literal " + n + " has no datatype");
+		s += "^^" + qNameOrURI(dt.getURI(), prefixes);
 		return s;
 	}
 	

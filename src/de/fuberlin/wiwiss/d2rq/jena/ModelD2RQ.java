@@ -1,9 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.jena;
 
-import com.hp.hpl.jena.enhanced.BuiltinPersonalities;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.impl.ModelCom;
-import com.hp.hpl.jena.util.FileManager;
+import org.apache.jena.enhanced.BuiltinPersonalities;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.impl.ModelCom;
+import org.apache.jena.util.FileManager;
 
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.parser.MapParser;

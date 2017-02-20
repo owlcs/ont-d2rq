@@ -1,6 +1,6 @@
 /* CVS $Id: ISWC.java,v 1.1 2006/09/07 21:33:19 cyganiak Exp $ */
 package de.fuberlin.wiwiss.d2rq.vocab; 
-import com.hp.hpl.jena.rdf.model.*;
+import org.apache.jena.rdf.model.*;
  
 /**
  * Vocabulary definitions from http://annotation.semanticweb.org/iswc/iswc.daml 

@@ -7,9 +7,9 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.test.NodeCreateUtils;
-import com.hp.hpl.jena.sparql.core.Var;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.graph.test.NodeCreateUtils;
+import org.apache.jena.sparql.core.Var;
 
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;

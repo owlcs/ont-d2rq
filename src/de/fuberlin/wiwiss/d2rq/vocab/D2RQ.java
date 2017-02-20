@@ -1,6 +1,6 @@
 /* CVS $Id: $ */
 package de.fuberlin.wiwiss.d2rq.vocab; 
-import com.hp.hpl.jena.rdf.model.*;
+import org.apache.jena.rdf.model.*;
  
 /**
  * Vocabulary definitions from file:doc/terms/d2rq.ttl 

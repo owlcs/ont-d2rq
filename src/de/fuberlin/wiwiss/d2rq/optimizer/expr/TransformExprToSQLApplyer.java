@@ -9,47 +9,48 @@ import java.util.Stack;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.expr.E_Add;
-import com.hp.hpl.jena.sparql.expr.E_Datatype;
-import com.hp.hpl.jena.sparql.expr.E_Divide;
-import com.hp.hpl.jena.sparql.expr.E_Equals;
-import com.hp.hpl.jena.sparql.expr.E_GreaterThan;
-import com.hp.hpl.jena.sparql.expr.E_GreaterThanOrEqual;
-import com.hp.hpl.jena.sparql.expr.E_IsBlank;
-import com.hp.hpl.jena.sparql.expr.E_IsIRI;
-import com.hp.hpl.jena.sparql.expr.E_IsLiteral;
-import com.hp.hpl.jena.sparql.expr.E_Lang;
-import com.hp.hpl.jena.sparql.expr.E_LangMatches;
-import com.hp.hpl.jena.sparql.expr.E_LessThan;
-import com.hp.hpl.jena.sparql.expr.E_LessThanOrEqual;
-import com.hp.hpl.jena.sparql.expr.E_LogicalNot;
-import com.hp.hpl.jena.sparql.expr.E_LogicalOr;
-import com.hp.hpl.jena.sparql.expr.E_Multiply;
-import com.hp.hpl.jena.sparql.expr.E_NotEquals;
-import com.hp.hpl.jena.sparql.expr.E_SameTerm;
-import com.hp.hpl.jena.sparql.expr.E_Str;
-import com.hp.hpl.jena.sparql.expr.E_Subtract;
-import com.hp.hpl.jena.sparql.expr.E_UnaryMinus;
-import com.hp.hpl.jena.sparql.expr.E_UnaryPlus;
-import com.hp.hpl.jena.sparql.expr.Expr;
-import com.hp.hpl.jena.sparql.expr.ExprAggregator;
-import com.hp.hpl.jena.sparql.expr.ExprEvalException;
-import com.hp.hpl.jena.sparql.expr.ExprFunction;
-import com.hp.hpl.jena.sparql.expr.ExprFunction0;
-import com.hp.hpl.jena.sparql.expr.ExprFunction1;
-import com.hp.hpl.jena.sparql.expr.ExprFunction2;
-import com.hp.hpl.jena.sparql.expr.ExprFunction3;
-import com.hp.hpl.jena.sparql.expr.ExprFunctionN;
-import com.hp.hpl.jena.sparql.expr.ExprFunctionOp;
-import com.hp.hpl.jena.sparql.expr.ExprVar;
-import com.hp.hpl.jena.sparql.expr.ExprVisitor;
-import com.hp.hpl.jena.sparql.expr.NodeValue;
-import com.hp.hpl.jena.sparql.expr.nodevalue.NodeFunctions;
-import com.hp.hpl.jena.sparql.expr.nodevalue.NodeValueBoolean;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.expr.E_Add;
+import org.apache.jena.sparql.expr.E_Datatype;
+import org.apache.jena.sparql.expr.E_Divide;
+import org.apache.jena.sparql.expr.E_Equals;
+import org.apache.jena.sparql.expr.E_GreaterThan;
+import org.apache.jena.sparql.expr.E_GreaterThanOrEqual;
+import org.apache.jena.sparql.expr.E_IsBlank;
+import org.apache.jena.sparql.expr.E_IsIRI;
+import org.apache.jena.sparql.expr.E_IsLiteral;
+import org.apache.jena.sparql.expr.E_Lang;
+import org.apache.jena.sparql.expr.E_LangMatches;
+import org.apache.jena.sparql.expr.E_LessThan;
+import org.apache.jena.sparql.expr.E_LessThanOrEqual;
+import org.apache.jena.sparql.expr.E_LogicalNot;
+import org.apache.jena.sparql.expr.E_LogicalOr;
+import org.apache.jena.sparql.expr.E_Multiply;
+import org.apache.jena.sparql.expr.E_NotEquals;
+import org.apache.jena.sparql.expr.E_SameTerm;
+import org.apache.jena.sparql.expr.E_Str;
+import org.apache.jena.sparql.expr.E_Subtract;
+import org.apache.jena.sparql.expr.E_UnaryMinus;
+import org.apache.jena.sparql.expr.E_UnaryPlus;
+import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.expr.ExprAggregator;
+import org.apache.jena.sparql.expr.ExprEvalException;
+import org.apache.jena.sparql.expr.ExprFunction;
+import org.apache.jena.sparql.expr.ExprFunction0;
+import org.apache.jena.sparql.expr.ExprFunction1;
+import org.apache.jena.sparql.expr.ExprFunction2;
+import org.apache.jena.sparql.expr.ExprFunction3;
+import org.apache.jena.sparql.expr.ExprFunctionN;
+import org.apache.jena.sparql.expr.ExprFunctionOp;
+import org.apache.jena.sparql.expr.ExprVar;
+import org.apache.jena.sparql.expr.ExprVisitor;
+import org.apache.jena.sparql.expr.NodeValue;
+import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
+import org.apache.jena.sparql.expr.nodevalue.NodeValueBoolean;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ExpressionProjectionSpec;
@@ -837,7 +838,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
 			ConstantEx constant = (ConstantEx) arg;
 			Node node = constant.getNode();
 			String lexicalForm = node.getLiteral().getLexicalForm();
-			node = Node.createLiteral(lexicalForm);
+			node = NodeFactory.createLiteral(lexicalForm);
 			ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
 			logger.debug("pushing " + constantEx);
 			expression.push(constantEx);
@@ -871,7 +872,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
 				lang = ""; 
 			
 			// NodeValue.makeString(lang); TODO better?
-			Node node = Node.createLiteral(lang);
+			Node node = NodeFactory.createLiteral(lang);
 			
 			ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
 			logger.debug("pushing " + constantEx);
@@ -890,7 +891,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
 			if (lang == null)
 				lang = "";
 			
-			node = Node.createLiteral(lang);
+			node = NodeFactory.createLiteral(lang);
 			
 			ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
 			logger.debug("pushing " + constantEx);
@@ -929,7 +930,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
 			RDFDatatype datatype = filter.getDatatype();
 			logger.debug("datatype " + datatype);
 			
-			Node node = Node.createURI((datatype != null) ? datatype.getURI() : XSDDatatype.XSDstring.getURI());
+			Node node = NodeFactory.createURI((datatype != null) ? datatype.getURI() : XSDDatatype.XSDstring.getURI());
 			
 			ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
 			logger.debug("pushing " + constantEx);
@@ -945,7 +946,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
 			}
 			RDFDatatype datatype = node.getLiteralDatatype();
 			logger.debug("datatype " + datatype);
-			node = Node.createURI((datatype != null) ? datatype.getURI() : XSDDatatype.XSDstring.getURI());
+			node = NodeFactory.createURI((datatype != null) ? datatype.getURI() : XSDDatatype.XSDstring.getURI());
 			ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
 			logger.debug("pushing " + constantEx);
 			expression.push(constantEx);

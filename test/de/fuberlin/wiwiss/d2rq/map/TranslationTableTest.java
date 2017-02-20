@@ -2,8 +2,8 @@ package de.fuberlin.wiwiss.d2rq.map;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 import de.fuberlin.wiwiss.d2rq.map.TranslationTable.Translation;
 import de.fuberlin.wiwiss.d2rq.values.Translator;

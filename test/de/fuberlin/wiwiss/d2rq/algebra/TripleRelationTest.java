@@ -7,7 +7,8 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.graph.Node;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
 
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
@@ -29,7 +30,7 @@ public class TripleRelationTest extends TestCase {
 				Collections.<Join>emptySet(), projections, false, OrderSpec.NONE, Relation.NO_LIMIT, Relation.NO_LIMIT);
 		TripleRelation t = new TripleRelation(rel, 
 				new TypedNodeMaker(TypedNodeMaker.URI, new Pattern("http://example.org/original/@@original.id@@"), true),
-				new FixedNodeMaker(Node.createURI("http://example.org/property"), false),
+				new FixedNodeMaker(NodeFactory.createURI("http://example.org/property"), false),
 				new TypedNodeMaker(TypedNodeMaker.PLAIN_LITERAL, new Column(new Attribute(alias, "value")), false));
 		assertEquals("URI(Pattern(http://example.org/original/@@original.id@@))", 
 				t.nodeMaker(TripleRelation.SUBJECT).toString());

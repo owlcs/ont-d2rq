@@ -2,18 +2,19 @@ package de.fuberlin.wiwiss.d2rq.pp;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.datatypes.TypeMapper;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.AnonId;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.shared.PrefixMapping;
-import com.hp.hpl.jena.shared.impl.PrefixMappingImpl;
-import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RDFS;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.TypeMapper;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.AnonId;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.shared.impl.PrefixMappingImpl;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
@@ -21,23 +22,23 @@ public class PrettyPrinterTest extends TestCase {
 	
 	public void testNodePrettyPrinting() {
 		assertEquals("\"foo\"", 
-				PrettyPrinter.toString(Node.createLiteral("foo")));
+				PrettyPrinter.toString(NodeFactory.createLiteral("foo")));
 		assertEquals("\"foo\"@en", 
-				PrettyPrinter.toString(Node.createLiteral("foo", "en", null)));
+				PrettyPrinter.toString(NodeFactory.createLiteral("foo", "en", null)));
 		assertEquals("\"1\"^^<" + XSDDatatype.XSDint.getURI() + ">",
-				PrettyPrinter.toString(Node.createLiteral("1", null, XSDDatatype.XSDint)));
+				PrettyPrinter.toString(NodeFactory.createLiteral("1", null, XSDDatatype.XSDint)));
 		assertEquals("\"1\"^^xsd:int",
-				PrettyPrinter.toString(Node.createLiteral("1", null, XSDDatatype.XSDint), PrefixMapping.Standard));
+				PrettyPrinter.toString(NodeFactory.createLiteral("1", null, XSDDatatype.XSDint), PrefixMapping.Standard));
 		assertEquals("_:foo", 
-				PrettyPrinter.toString(Node.createAnon(new AnonId("foo"))));
+				PrettyPrinter.toString(NodeFactory.createBlankNode("foo")));
 		assertEquals("<http://example.org/>", 
-				PrettyPrinter.toString(Node.createURI("http://example.org/")));
+				PrettyPrinter.toString(NodeFactory.createURI("http://example.org/")));
 		assertEquals("<" + RDF.type.getURI() + ">", 
 				PrettyPrinter.toString(RDF.type.asNode(), new PrefixMappingImpl()));
 		assertEquals("rdf:type", 
 				PrettyPrinter.toString(RDF.type.asNode(), PrefixMapping.Standard));
 		assertEquals("?x", 
-				PrettyPrinter.toString(Node.createVariable("x")));
+				PrettyPrinter.toString(NodeFactory.createVariable("x")));
 		assertEquals("?ANY",
 				PrettyPrinter.toString(Node.ANY));
 	}
@@ -45,9 +46,9 @@ public class PrettyPrinterTest extends TestCase {
 	public void testTriplePrettyPrinting() {
 		assertEquals("<http://example.org/a> <" + RDFS.label.getURI() + "> \"Example\" .",
 				PrettyPrinter.toString(new Triple(
-						Node.createURI("http://example.org/a"),
+						NodeFactory.createURI("http://example.org/a"),
 						RDFS.label.asNode(),
-						Node.createLiteral("Example", null, null))));
+						NodeFactory.createLiteral("Example", null, null))));
 	}
 
 	public void testTriplePrettyPrintingWithNodeANY() {
@@ -60,9 +61,9 @@ public class PrettyPrinterTest extends TestCase {
 		prefixes.setNsPrefix("ex", "http://example.org/");
 		assertEquals("ex:a rdfs:label \"Example\" .",
 				PrettyPrinter.toString(new Triple(
-						Node.createURI("http://example.org/a"),
+						NodeFactory.createURI("http://example.org/a"),
 						RDFS.label.asNode(),
-						Node.createLiteral("Example", null, null)), prefixes));
+						NodeFactory.createLiteral("Example", null, null)), prefixes));
 	}
 	
 	public void testResourcePrettyPrinting() {

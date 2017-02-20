@@ -11,16 +11,17 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.sparql.vocabulary.FOAF;
-import com.hp.hpl.jena.vocabulary.DC;
-import com.hp.hpl.jena.vocabulary.DCTerms;
-import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RDFS;
+import org.apache.jena.graph.GraphUtil;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.DC;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationalOperators;
@@ -99,7 +100,7 @@ public class ClassMapLister {
 	public Model classMapInventory(String classMapName) {
 		return classMapInventory(classMapName, Relation.NO_LIMIT);
 	}
-	
+
 	public Model classMapInventory(String classMapName, int limitPerClassMap) {
 		log.info("Listing class map: " + classMapName);
 		List<TripleRelation> inventoryBridges = classMapInventoryBridges.get(classMapName);
@@ -109,7 +110,9 @@ public class ClassMapLister {
 		Model result = ModelFactory.createDefaultModel();
 		result.setNsPrefixes(mapping.getPrefixMapping());
 		FindQuery query = new FindQuery(Triple.ANY, inventoryBridges, limitPerClassMap, null);
-		result.getGraph().getBulkUpdateHandler().add(TripleQueryIter.create(query.iterator()));
+		// todo: no more com.hp.hpl.jena.graph.BulkUpdateHandler. Use org.apache.jena.graph.GraphUtil:
+		//result.getGraph().getBulkUpdateHandler().add(TripleQueryIter.create(query.iterator()));
+		GraphUtil.add(result.getGraph(), TripleQueryIter.create(query.iterator()));
 		return result;
 	}
 

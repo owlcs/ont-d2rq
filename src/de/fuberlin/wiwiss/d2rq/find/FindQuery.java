@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.engine.ExecutionContext;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIter;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIterConcat;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.engine.ExecutionContext;
+import org.apache.jena.sparql.engine.iterator.QueryIter;
+import org.apache.jena.sparql.engine.iterator.QueryIterConcat;
 
 import de.fuberlin.wiwiss.d2rq.algebra.CompatibleRelationGroup;
 import de.fuberlin.wiwiss.d2rq.algebra.JoinOptimizer;

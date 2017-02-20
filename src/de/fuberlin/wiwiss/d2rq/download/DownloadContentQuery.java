@@ -13,7 +13,8 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.hp.hpl.jena.graph.Node;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.MutableRelation;
@@ -97,7 +98,7 @@ public class DownloadContentQuery {
 	
 	private void execute() {
 		MutableRelation newRelation = new MutableRelation(downloadMap.getRelation());
-		NodeMaker x = downloadMap.nodeMaker().selectNode(Node.createURI(uri), newRelation);
+		NodeMaker x = downloadMap.nodeMaker().selectNode(NodeFactory.createURI(uri), newRelation);
 		// URI didn't fit the node maker
 		if (x.equals(NodeMaker.EMPTY)) return;
 		Set<ProjectionSpec> requiredProjections = new HashSet<ProjectionSpec>();

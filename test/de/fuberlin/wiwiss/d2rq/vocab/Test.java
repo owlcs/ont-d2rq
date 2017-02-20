@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.vocab; 
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 /**
  * Namespace used in D2RQ unit testing.

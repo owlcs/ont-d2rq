@@ -8,7 +8,7 @@ import java.io.Reader;
 
 import junit.framework.TestCase;
 
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 import de.fuberlin.wiwiss.d2rq.helpers.HSQLDatabase;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;

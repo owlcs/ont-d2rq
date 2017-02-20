@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.core.Var;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.core.Var;
 
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;

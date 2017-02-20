@@ -3,13 +3,11 @@ package de.fuberlin.wiwiss.d2rq.jena;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.hp.hpl.jena.graph.Capabilities;
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.TripleMatch;
-import com.hp.hpl.jena.graph.impl.GraphBase;
-import com.hp.hpl.jena.graph.query.QueryHandler;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.graph.Capabilities;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.graph.impl.GraphBase;
+import org.apache.jena.util.iterator.ExtendedIterator;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
@@ -20,7 +18,7 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 
 /**
  * A D2RQ virtual read-only Jena graph backed by a non-RDF database.
- * 
+ *
  * @author Chris Bizer chris@bizer.de
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -37,13 +35,13 @@ public class GraphD2RQ extends GraphBase implements Graph {
 		public boolean findContractSafe() { return false; }
 		public boolean handlesLiteralTyping() { return true; }
 	};
-	
+
 	static {
 		QueryEngineD2RQ.register();
 	}
-	
+
 	private final Mapping mapping;
-	
+
 	/**
 	 * Creates a new D2RQ graph from a previously prepared {@link Mapping} instance.
 	 * @param mapping A D2RQ mapping
@@ -61,42 +59,42 @@ public class GraphD2RQ extends GraphBase implements Graph {
 	 * For some reasons, Java does not allow to call getConstructor(GraphD2RQ.class)
 	 * on SimpleQueryHandler class.
 	 */
+/* todo: no more QueryHandler in jena (3.0.1)
 	@Override
 	public QueryHandler queryHandler() {
 		checkOpen();
 		return new D2RQQueryHandler(this);
 	}
-
+*/
 	@Override
 	public void close() {
 		mapping.close();
 	}
 
 	@Override
-	public Capabilities getCapabilities() { 
+	public Capabilities getCapabilities() {
 		return capabilities;
 	}
 
 	@Override
-	public ExtendedIterator<Triple> graphBaseFind(TripleMatch m) {
+	public ExtendedIterator<Triple> graphBaseFind(Triple triplePattern) {
 		checkOpen();
-		Triple t = m.asTriple();
 		if (log.isDebugEnabled()) {
-			log.debug("Find: " + PrettyPrinter.toString(t, getPrefixMapping()));
+			log.debug("Find: " + PrettyPrinter.toString(triplePattern, getPrefixMapping()));
 		}
-		FindQuery query = new FindQuery(t, mapping.compiledPropertyBridges(), null);
+		FindQuery query = new FindQuery(triplePattern, mapping.compiledPropertyBridges(), null);
 		ExtendedIterator<Triple> result = TripleQueryIter.create(query.iterator());
 		if (mapping.configuration().getServeVocabulary()) {
-			result = result.andThen(mapping.getVocabularyModel().getGraph().find(t));
+			result = result.andThen(mapping.getVocabularyModel().getGraph().find(triplePattern));
 		}
 		return result;
-    }
+	}
 
 	@Override
 	protected void checkOpen() {
 		mapping.connect();
 	}
-	
+
 	/**
 	 * @return The {@link Mapping} this graph is based on
 	 */

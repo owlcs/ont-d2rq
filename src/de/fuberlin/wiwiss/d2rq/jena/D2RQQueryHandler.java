@@ -1,3 +1,6 @@
+// TODO: no more QueryHandler in jena (3.1.0)
+// TODO: remove it
+/*
 package de.fuberlin.wiwiss.d2rq.jena;
 
 import java.util.HashMap;
@@ -25,16 +28,18 @@ import com.hp.hpl.jena.util.iterator.Map1Iterator;
 
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
 
+*/
 /**
  * An implementation of Jena's {@link QueryHandler} interface
  * that answers BGP queries on behalf of a {@link GraphD2RQ}.
  * This is here for Jena compatibility, and is not involved
  * in answering SPARQL queries through ARQ. It uses the
- * {@link QueryEngineD2RQ} to answer BGP queries and wraps 
+ * {@link QueryEngineD2RQ} to answer BGP queries and wraps
  * it into the expected interface.
- * 
+ *
  * @author Richard Cyganiak
- */
+ *//*
+
 public class D2RQQueryHandler extends SimpleQueryHandler {
 	private final DatasetGraph dataset;
 	private Node[] variables;
@@ -43,13 +48,13 @@ public class D2RQQueryHandler extends SimpleQueryHandler {
 	public D2RQQueryHandler(GraphD2RQ graph) {
 		super(graph);
 		dataset = DatasetGraphFactory.createOneGraph(graph);
-	}     
+	}
 
 	public TreeQueryPlan prepareTree(Graph pattern) {
 		throw new RuntimeException("prepareTree - Andy says Chris says this will not be called");
 	}
 
-	public BindingQueryPlan prepareBindings(Query q, Node[] variables) {   
+	public BindingQueryPlan prepareBindings(Query q, Node[] variables) {
 		this.variables = variables;
 		this.indexes = new HashMap<Node,Integer>();
 		for (int i = 0; i < variables.length; i++) {
@@ -81,3 +86,4 @@ public class D2RQQueryHandler extends SimpleQueryHandler {
 		}
 	}
 }
+*/

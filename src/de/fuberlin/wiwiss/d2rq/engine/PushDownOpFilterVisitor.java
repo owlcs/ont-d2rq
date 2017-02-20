@@ -5,48 +5,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import com.hp.hpl.jena.sparql.algebra.Op;
-import com.hp.hpl.jena.sparql.algebra.OpVisitor;
-import com.hp.hpl.jena.sparql.algebra.TransformCopy;
-import com.hp.hpl.jena.sparql.algebra.op.Op1;
-import com.hp.hpl.jena.sparql.algebra.op.Op2;
-import com.hp.hpl.jena.sparql.algebra.op.OpAssign;
-import com.hp.hpl.jena.sparql.algebra.op.OpBGP;
-import com.hp.hpl.jena.sparql.algebra.op.OpConditional;
-import com.hp.hpl.jena.sparql.algebra.op.OpDatasetNames;
-import com.hp.hpl.jena.sparql.algebra.op.OpDiff;
-import com.hp.hpl.jena.sparql.algebra.op.OpDisjunction;
-import com.hp.hpl.jena.sparql.algebra.op.OpDistinct;
-import com.hp.hpl.jena.sparql.algebra.op.OpExt;
-import com.hp.hpl.jena.sparql.algebra.op.OpExtend;
-import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
-import com.hp.hpl.jena.sparql.algebra.op.OpGraph;
-import com.hp.hpl.jena.sparql.algebra.op.OpGroup;
-import com.hp.hpl.jena.sparql.algebra.op.OpJoin;
-import com.hp.hpl.jena.sparql.algebra.op.OpLabel;
-import com.hp.hpl.jena.sparql.algebra.op.OpLeftJoin;
-import com.hp.hpl.jena.sparql.algebra.op.OpList;
-import com.hp.hpl.jena.sparql.algebra.op.OpMinus;
-import com.hp.hpl.jena.sparql.algebra.op.OpN;
-import com.hp.hpl.jena.sparql.algebra.op.OpNull;
-import com.hp.hpl.jena.sparql.algebra.op.OpOrder;
-import com.hp.hpl.jena.sparql.algebra.op.OpPath;
-import com.hp.hpl.jena.sparql.algebra.op.OpProcedure;
-import com.hp.hpl.jena.sparql.algebra.op.OpProject;
-import com.hp.hpl.jena.sparql.algebra.op.OpPropFunc;
-import com.hp.hpl.jena.sparql.algebra.op.OpQuad;
-import com.hp.hpl.jena.sparql.algebra.op.OpQuadPattern;
-import com.hp.hpl.jena.sparql.algebra.op.OpReduced;
-import com.hp.hpl.jena.sparql.algebra.op.OpSequence;
-import com.hp.hpl.jena.sparql.algebra.op.OpService;
-import com.hp.hpl.jena.sparql.algebra.op.OpSlice;
-import com.hp.hpl.jena.sparql.algebra.op.OpTable;
-import com.hp.hpl.jena.sparql.algebra.op.OpTopN;
-import com.hp.hpl.jena.sparql.algebra.op.OpTriple;
-import com.hp.hpl.jena.sparql.algebra.op.OpUnion;
-import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.expr.Expr;
-import com.hp.hpl.jena.sparql.expr.ExprList;
+import org.apache.jena.sparql.algebra.Op;
+import org.apache.jena.sparql.algebra.OpVisitor;
+import org.apache.jena.sparql.algebra.TransformCopy;
+import org.apache.jena.sparql.algebra.op.*;
+import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.expr.ExprList;
 
 
 /**
@@ -87,15 +52,16 @@ public class PushDownOpFilterVisitor implements OpVisitor {
 	 * which were moved down, are removed
 	 */
 	public void visit(final OpFilter opFilter) {
-		filterExpr.addAll(opFilter.getExprs().getList());
+		List<Expr> exprs = new ArrayList<>(opFilter.getExprs().getList());
+		filterExpr.addAll(exprs);
 		Op subOp = null;
 		if (opFilter.getSubOp() != null) {
 			opFilter.getSubOp().visit(this);
 			subOp = stack.pop();
 		}
-		opFilter.getExprs().getList().removeAll(filterExpr);
+		exprs.removeAll(filterExpr);
 		// remove the filter if it has no expressions
-		if (opFilter.getExprs().isEmpty()) {
+		if (exprs.isEmpty()) {
 			stack.push(subOp);
 		} else {
 			stack.push(opFilter);
@@ -193,6 +159,11 @@ public class PushDownOpFilterVisitor implements OpVisitor {
 
 	public void visit(OpQuadPattern quadPattern) {
 		wrapInCurrentFilter(quadPattern);
+	}
+
+	@Override
+	public void visit(OpQuadBlock quadBlock) {
+		wrapInCurrentFilter(quadBlock);
 	}
 
 	public void visit(OpPath opPath) {

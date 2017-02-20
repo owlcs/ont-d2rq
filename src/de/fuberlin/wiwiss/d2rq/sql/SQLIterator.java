@@ -10,8 +10,8 @@ import java.util.NoSuchElementException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.hp.hpl.jena.query.QueryCancelledException;
-import com.hp.hpl.jena.util.iterator.ClosableIterator;
+import org.apache.jena.query.QueryCancelledException;
+import org.apache.jena.util.iterator.ClosableIterator;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;

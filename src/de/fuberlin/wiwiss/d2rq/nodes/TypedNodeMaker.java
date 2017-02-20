@@ -3,10 +3,11 @@ package de.fuberlin.wiwiss.d2rq.nodes;
 import java.util.List;
 import java.util.Set;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.rdf.model.AnonId;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.rdf.model.AnonId;
 
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.algebra.OrderSpec;
@@ -126,7 +127,7 @@ public class TypedNodeMaker implements NodeMaker {
 	
 	private static class URINodeType implements NodeType {
 		public String extractValue(Node node) { return node.getURI(); }
-		public Node makeNode(String value) { return Node.createURI(value); }
+		public Node makeNode(String value) { return NodeFactory.createURI(value); }
 		public void matchConstraint(NodeSetFilter c) { c.limitToURIs(); }
 		public boolean matches(Node node) { return node.isURI(); }
 		public String toString() { return "URI"; }
@@ -134,42 +135,48 @@ public class TypedNodeMaker implements NodeMaker {
 	
 	private static class BlankNodeType implements NodeType {
 		public String extractValue(Node node) { return node.getBlankNodeLabel(); }
-		public Node makeNode(String value) { return Node.createAnon(new AnonId(value)); }
+		public Node makeNode(String value) { return NodeFactory.createBlankNode(value); }
 		public void matchConstraint(NodeSetFilter c) { c.limitToBlankNodes(); }
 		public boolean matches(Node node) { return node.isBlank(); }
 		public String toString() { return "Blank"; }
 	}
-	
+
 	private static class LiteralNodeType implements NodeType {
 		private String language;
 		private RDFDatatype datatype;
+
 		LiteralNodeType(String language, RDFDatatype datatype) {
-			this.language = language;
-			this.datatype = datatype;
+			this.language = language == null ? "" : language;
+			this.datatype = datatype; // null datatype means any literal.
 		}
+
 		public String extractValue(Node node) {
 			return node.getLiteralLexicalForm();
 		}
+
 		public Node makeNode(String value) {
-			return Node.createLiteral(value, this.language, this.datatype);
+			return NodeFactory.createLiteral(value, this.language, this.datatype);
 		}
+
 		public void matchConstraint(NodeSetFilter c) {
-	        c.limitToLiterals(this.language, this.datatype);
+			c.limitToLiterals(this.language, this.datatype);
 		}
-		public boolean matches(Node node) { 
+
+		public boolean matches(Node node) {
 			return node.isLiteral()
-					&& this.language.equals(node.getLiteralLanguage())
-					&& ((this.datatype == null && node.getLiteralDatatype() == null)
-							|| (this.datatype != null && this.datatype.equals(node.getLiteralDatatype())));
+					&& language.equals(node.getLiteralLanguage())
+					&& (datatype == null || datatype.equals(node.getLiteralDatatype()));
+			//&& ((this.datatype == null && node.getLiteralDatatype() == null)
+			//|| (this.datatype != null && this.datatype.equals(node.getLiteralDatatype())));
 		}
+
 		public String toString() {
-			StringBuffer result = new StringBuffer("Literal");
+			StringBuilder result = new StringBuilder("Literal");
 			if (!"".equals(this.language)) {
-				result.append("@" + this.language);
+				result.append("@").append(this.language);
 			}
 			if (this.datatype != null) {
-				result.append("^^");
-				result.append(PrettyPrinter.toString(this.datatype));
+				result.append("^^").append(PrettyPrinter.toString(this.datatype));
 			}
 			return result.toString();
 		}
@@ -184,7 +191,7 @@ public class TypedNodeMaker implements NodeMaker {
 		}
 		public Node makeNode(String value) {
 			if (!XSDDatatype.XSDdate.isValid(value)) return null;
-			return Node.createLiteral(value, null, XSDDatatype.XSDdate);
+			return NodeFactory.createLiteral(value, null, XSDDatatype.XSDdate);
 		}
 	}
 	
@@ -197,7 +204,7 @@ public class TypedNodeMaker implements NodeMaker {
 		}
 		public Node makeNode(String value) {
 			if (!XSDDatatype.XSDtime.isValid(value)) return null;
-			return Node.createLiteral(value, null, XSDDatatype.XSDtime);
+			return NodeFactory.createLiteral(value, null, XSDDatatype.XSDtime);
 		}
 	}
 	
@@ -210,13 +217,13 @@ public class TypedNodeMaker implements NodeMaker {
 		}
 		public Node makeNode(String value) {
 			if (!XSDDatatype.XSDdateTime.isValid(value)) return null;
-			return Node.createLiteral(value, null, XSDDatatype.XSDdateTime);
+			return NodeFactory.createLiteral(value, null, XSDDatatype.XSDdateTime);
 		}
 	}
 	
 	private static class BooleanLiteralNodeType extends LiteralNodeType {
-		private final static Node TRUE = Node.createLiteral("true", null, XSDDatatype.XSDboolean);
-		private final static Node FALSE = Node.createLiteral("false", null, XSDDatatype.XSDboolean);
+		private final static Node TRUE = NodeFactory.createLiteral("true", null, XSDDatatype.XSDboolean);
+		private final static Node FALSE = NodeFactory.createLiteral("false", null, XSDDatatype.XSDboolean);
 		BooleanLiteralNodeType() {
 			super("", XSDDatatype.XSDboolean);
 		}
