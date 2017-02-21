@@ -15,16 +15,6 @@ public class MappingTest extends TestCase {
     private final static Resource database2 = ResourceFactory.createResource("http://test/db2");
     private final static Resource classMap1 = ResourceFactory.createResource("http://test/classMap1");
 
-    public void testNewMappingWithResource() {
-        Mapping m = new Mapping("http://test/mapping.ttl");
-        assertEquals(ResourceFactory.createResource("http://test/mapping.ttl"), m.resource());
-    }
-
-    public void testNewMappingWithoutResource() {
-        Mapping m = new Mapping();
-        assertTrue(m.resource().isAnon());
-    }
-
     public void testNoDatabasesInitially() {
         Mapping m = new Mapping();
         assertTrue(m.databases().isEmpty());

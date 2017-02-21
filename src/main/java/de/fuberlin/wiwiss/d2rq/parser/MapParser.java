@@ -1,19 +1,15 @@
 package de.fuberlin.wiwiss.d2rq.parser;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jena.n3.IRIResolver;
-import org.apache.jena.ontology.Individual;
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
@@ -26,7 +22,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class MapParser {
-    private final static Log log = LogFactory.getLog(MapParser.class);
+    private final static Log LOGGER = LogFactory.getLog(MapParser.class);
 
     /**
      * A regular expression that matches zero or more characters that are allowed inside IRIs
@@ -47,11 +43,12 @@ public class MapParser {
             return null;
         }
         return resolver.resolve(uri);
+        //return IRIResolver.create().resolve(uri).toString();
     }
 
-    private final static IRIResolver resolver = new IRIResolver();
+    private final static org.apache.jena.n3.IRIResolver resolver = new org.apache.jena.n3.IRIResolver();
 
-    private OntModel model;
+    private Model model;
     private String baseURI;
     private Mapping mapping;
 
@@ -63,17 +60,18 @@ public class MapParser {
      * @param baseURI  used for relative URI patterns
      */
     public MapParser(Model mapModel, String baseURI) {
-        this.model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, mapModel);
+        this.model = mapModel;
         this.baseURI = absolutizeURI(baseURI);
     }
 
     /**
+     * TODO: rewrite this stupid initialization.
      * Starts the parsing process. Must be called before results can be retrieved
      * from the getter methods.
      */
     public Mapping parse() {
         if (this.mapping != null) {
-            return this.mapping;
+            return mapping;
         }
         new VocabularySummarizer(D2RQ.class).assertNoUndefinedTerms(model,
                 D2RQException.MAPPING_UNKNOWN_D2RQ_PROPERTY,
@@ -89,10 +87,9 @@ public class MapParser {
             parseClassMaps();
             parsePropertyBridges();
             parseDownloadMaps();
-            this.mapping.buildVocabularyModel();
-            log.info("Done reading D2RQ map with " +
-                    mapping.databases().size() + " databases and " +
-                    mapping.classMapResources().size() + " class maps");
+            this.mapping.setMappingModel(this.model);
+            this.mapping.setVocabularyModel(MappingTransform.getBuilder().build(this.mapping));
+            LOGGER.info("Done reading D2RQ map with " + mapping.databases().size() + " databases and " + mapping.classMapResources().size() + " class maps");
             return this.mapping;
         } catch (LiteralRequiredException ex) {
             throw new D2RQException("Expected literal, found URI resource instead: " + ex.getMessage(),
@@ -129,24 +126,17 @@ public class MapParser {
      * Administrative D2RQ prefixes are dropped on the assumption that they
      * are not wanted in the actual data.
      */
-    private void copyPrefixes() {
-        mapping.getPrefixMapping().setNsPrefixes(model);
-        Iterator<Map.Entry<String, String>> it =
-                mapping.getPrefixMapping().getNsPrefixMap().entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, String> entry = it.next();
-            String namespace = entry.getValue();
-            if (D2RQ.NS.equals(namespace) && "d2rq".equals(entry.getKey())) {
-                mapping.getPrefixMapping().removeNsPrefix(entry.getKey());
+    private void copyPrefixes() { // todo: put only vocabulary (schema) ns.
+        model.getNsPrefixMap().forEach((prefix, uri) -> {
+            if (Objects.equals(MappingGenerator.STANDARD_PREFIXES.getNsPrefixURI(prefix), uri)) {
+                return;
             }
-            if (JDBC.NS.equals(namespace) && "jdbc".equals(entry.getKey())) {
-                mapping.getPrefixMapping().removeNsPrefix(entry.getKey());
-            }
-        }
+            mapping.getPrefixMapping().setNsPrefix(prefix, uri);
+        });
     }
 
     private void parseDatabases() {
-        Iterator<Individual> it = this.model.listIndividuals(D2RQ.Database);
+        Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.Database);
         while (it.hasNext()) {
             Resource dbResource = it.next();
             Database database = new Database(dbResource);
@@ -156,7 +146,7 @@ public class MapParser {
     }
 
     private void parseConfiguration() {
-        Iterator<Individual> it = this.model.listIndividuals(D2RQ.Configuration);
+        Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.Configuration);
         if (it.hasNext()) {
             Resource configResource = it.next();
             Configuration configuration = new Configuration(configResource);
@@ -263,7 +253,7 @@ public class MapParser {
 
     private void parseTranslationTables() {
         Set<Resource> translationTableResources = new HashSet<Resource>();
-        Iterator<? extends Resource> it = this.model.listIndividuals(D2RQ.TranslationTable);
+        Iterator<? extends Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.TranslationTable);
         while (it.hasNext()) {
             translationTableResources.add(it.next());
         }
@@ -314,7 +304,7 @@ public class MapParser {
     }
 
     private void parseClassMaps() {
-        Iterator<Individual> it = this.model.listIndividuals(D2RQ.ClassMap);
+        Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.ClassMap);
         while (it.hasNext()) {
             Resource r = it.next();
             ClassMap classMap = new ClassMap(r);
@@ -402,7 +392,7 @@ public class MapParser {
             classMap.setDatabase(this.mapping.database(
                     stmts.nextStatement().getResource()));
         }
-        stmts = r.listProperties(D2RQ.class_);
+        stmts = r.listProperties(D2RQ.clazz);
         while (stmts.hasNext()) {
             classMap.addClass(stmts.nextStatement().getResource());
         }
@@ -529,7 +519,7 @@ public class MapParser {
     }
 
     private void parseDownloadMaps() {
-        Iterator<Individual> it = this.model.listIndividuals(D2RQ.DownloadMap);
+        Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.DownloadMap);
         while (it.hasNext()) {
             Resource downloadMapResource = it.next();
             DownloadMap downloadMap = new DownloadMap(downloadMapResource);
@@ -563,7 +553,7 @@ public class MapParser {
 
     // TODO: I guess this should be done at map compile time
     private String ensureIsAbsolute(String uriPattern) {
-        if (uriPattern.indexOf(":") == -1) {
+        if (!uriPattern.contains(":")) {
             return this.baseURI + uriPattern;
         }
         return uriPattern;

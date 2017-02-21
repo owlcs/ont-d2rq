@@ -1,0 +1,291 @@
+@prefix :      <http://db/vocab#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc:    <http://purl.org/dc/elements/1.1/> .
+
+:conferences_Datum  a     owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :conferences ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "conferences_Datum" ;
+        rdfs:range        xsd:dateTime .
+
+:rel_paper_topic_RelationType
+        a                 owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :rel_paper_topic ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "rel_paper_topic_RelationType" ;
+        rdfs:range        xsd:integer .
+
+:papers_URI  a            owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :papers ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "papers_URI" ;
+        rdfs:range        xsd:string .
+
+:papers_Abstract  a       owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :papers ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "papers_Abstract" ;
+        rdfs:range        xsd:string .
+
+:persons_Type  a          owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_Type" ;
+        rdfs:range        xsd:string .
+
+:papers_Conference  a     owl:ObjectProperty , rdf:Property ;
+        rdfs:domain       :papers ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "papers_Conference" ;
+        rdfs:range        :conferences .
+
+:persons_Email  a         owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_Email" ;
+        rdfs:range        xsd:string .
+
+:rel_person_topic  a      owl:ObjectProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "rel_person_topic" ;
+        rdfs:range        :topics .
+
+:papers_PaperID  a        owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :papers ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "papers_PaperID" ;
+        rdfs:range        xsd:integer .
+
+:persons  a               owl:Class , rdfs:Class ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons" .
+
+:organizations_URI  a     owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_URI" ;
+        rdfs:range        xsd:string .
+
+:conferences_Date  a      owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :conferences ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "conferences_Date" ;
+        rdfs:range        xsd:string .
+
+:persons_Phone  a         owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_Phone" ;
+        rdfs:range        xsd:string .
+
+:persons_LastName  a      owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_LastName" ;
+        rdfs:range        xsd:string .
+
+:persons_Homepage  a      owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_Homepage" ;
+        rdfs:range        xsd:string .
+
+:organizations  a         owl:Class , rdfs:Class ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations" .
+
+:rel_paper_topic_TopicID
+        a                 owl:ObjectProperty , rdf:Property ;
+        rdfs:domain       :rel_paper_topic ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "rel_paper_topic_TopicID" ;
+        rdfs:range        :topics .
+
+:papers  a                owl:Class , rdfs:Class ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "papers" .
+
+:conferences_Name  a      owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :conferences ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "conferences_Name" ;
+        rdfs:range        xsd:string .
+
+:       a            owl:Ontology ;
+        dc:creator   "D2RQ Mapping Generator" ;
+        owl:imports  dc: .
+
+:organizations_Name  a    owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_Name" ;
+        rdfs:range        xsd:string .
+
+:conferences_Location
+        a                 owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :conferences ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "conferences_Location" ;
+        rdfs:range        xsd:string .
+
+:topics  a                owl:Class , rdfs:Class ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "topics" .
+
+:organizations_Type  a    owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_Type" ;
+        rdfs:range        xsd:string .
+
+:organizations_Homepage
+        a                 owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_Homepage" ;
+        rdfs:range        xsd:string .
+
+:conferences_URI  a       owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :conferences ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "conferences_URI" ;
+        rdfs:range        xsd:string .
+
+:papers_Year  a           owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :papers ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "papers_Year" ;
+        rdfs:range        xsd:integer .
+
+:conferences  a           owl:Class , rdfs:Class ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "conferences" .
+
+:conferences_ConfID  a    owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :conferences ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "conferences_ConfID" ;
+        rdfs:range        xsd:integer .
+
+:persons_URI  a           owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_URI" ;
+        rdfs:range        xsd:string .
+
+:topics_TopicName  a      owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :topics ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "topics_TopicName" ;
+        rdfs:range        xsd:string .
+
+:rel_person_organization
+        a                 owl:ObjectProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "rel_person_organization" ;
+        rdfs:range        :organizations .
+
+:persons_Address  a       owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_Address" ;
+        rdfs:range        xsd:string .
+
+:persons_FirstName  a     owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_FirstName" ;
+        rdfs:range        xsd:string .
+
+:rel_paper_topic_PaperID
+        a                 owl:ObjectProperty , rdf:Property ;
+        rdfs:domain       :rel_paper_topic ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "rel_paper_topic_PaperID" ;
+        rdfs:range        :papers .
+
+:organizations_Country
+        a                 owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_Country" ;
+        rdfs:range        xsd:string .
+
+:rel_paper_topic  a       owl:Class , rdfs:Class ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "rel_paper_topic" .
+
+:topics_ParentID  a       owl:ObjectProperty , rdf:Property ;
+        rdfs:domain       :topics ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "topics_ParentID" ;
+        rdfs:range        :topics .
+
+:papers_Title  a          owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :papers ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "papers_Title" ;
+        rdfs:range        xsd:string .
+
+:organizations_Location
+        a                 owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_Location" ;
+        rdfs:range        xsd:string .
+
+:persons_PerID  a         owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_PerID" ;
+        rdfs:range        xsd:integer .
+
+:persons_Photo  a         owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :persons ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "persons_Photo" ;
+        rdfs:range        xsd:string .
+
+:rel_person_paper  a      owl:ObjectProperty , rdf:Property ;
+        rdfs:domain       :papers ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "rel_person_paper" ;
+        rdfs:range        :persons .
+
+:topics_URI  a            owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :topics ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "topics_URI" ;
+        rdfs:range        xsd:string .
+
+:papers_Publish  a        owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :papers ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "papers_Publish" ;
+        rdfs:range        xsd:boolean .
+
+:organizations_Address
+        a                 owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_Address" ;
+        rdfs:range        xsd:string .
+
+:organizations_Belongsto
+        a                 owl:ObjectProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_Belongsto" ;
+        rdfs:range        :organizations .
+
+:organizations_Postcode
+        a                 owl:DatatypeProperty , rdf:Property ;
+        rdfs:domain       :organizations ;
+        rdfs:isDefinedBy  : ;
+        rdfs:label        "organizations_Postcode" ;
+        rdfs:range        xsd:string .

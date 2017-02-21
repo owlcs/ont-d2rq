@@ -3,15 +3,14 @@ package de.fuberlin.wiwiss.d2rq.functional_tests;
 import org.apache.jena.JenaRuntime;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.AnonId;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
-import org.apache.jena.vocabulary.DC;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.vocabulary.VCARD;
+import org.apache.jena.vocabulary.*;
 
 import de.fuberlin.wiwiss.d2rq.helpers.FindTestFramework;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
+import ru.avicomp.IOUtils;
 
 /**
  * Functional tests for the find(spo) operation of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ}.
@@ -38,7 +37,8 @@ public class FindTest extends FindTestFramework {
         assertNoStatement(resource("papers/6"), RDF.type, ISWC.InProceedings);
         assertStatement(resource("conferences/23541"), RDF.type, ISWC.Conference);
         assertStatement(resource("topics/15"), RDF.type, SKOS.Concept);
-        assertStatementCount(95);
+        assertStatementCount(89);
+        //assertStatementCount(95);
     }
 
     public void testListTopicInstances() {
@@ -166,7 +166,8 @@ public class FindTest extends FindTestFramework {
     public void testDump() {
         find(null, null, null);
 //		dump();
-        assertStatementCount(322);
+        assertStatementCount(358);
+        //assertStatementCount(322);
     }
 
     public void testFindPredicate() {
@@ -196,13 +197,15 @@ public class FindTest extends FindTestFramework {
     }
 
     public void testDefinitions() {
+        IOUtils.print(ModelFactory.createModelForGraph(graph));
         find(ISWC.Conference, null, null);
-        assertStatement(ISWC.Conference, RDF.type, RDFS.Class);
+        assertStatement(ISWC.Conference, RDF.type, OWL.Class);
         assertStatement(ISWC.Conference, RDFS.label, m.createLiteral("conference"));
         assertStatement(ISWC.Conference, RDFS.comment, m.createLiteral("A conference"));
         assertStatement(ISWC.Conference, RDFS.subClassOf, ISWC.Event);
         find(RDFS.label, null, null);
-        assertStatement(RDFS.label, RDF.type, RDF.Property);
+        // rdfs:label is a datatype property since it is redefined in map (and belongs to several tables (conferences.Name, etc))
+        assertStatement(RDFS.label, RDF.type, OWL.DatatypeProperty);
         assertStatement(RDFS.label, RDFS.label, m.createLiteral("label"));
         assertStatement(RDFS.label, RDFS.comment, m.createLiteral("A human-readable name for the subject."));
         assertStatement(RDFS.label, RDFS.domain, RDFS.Resource);

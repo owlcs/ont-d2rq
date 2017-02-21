@@ -8,9 +8,12 @@ import java.io.PrintStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFLanguages;
 
 import de.fuberlin.wiwiss.d2rq.CommandLineTool;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 
 /**
@@ -61,14 +64,10 @@ public class generate_mapping extends CommandLineTool {
             out = System.out;
         }
 
-        MappingGenerator generator = loader.openMappingGenerator();
+        Mapping generator = loader.getMapping();
         try {
-            if (cmd.contains(vocabAsOutput)) {
-                Model model = generator.vocabularyModel();
-                model.write(out, "TURTLE");
-            } else {
-                generator.writeMapping(out);
-            }
+            Model model = cmd.contains(vocabAsOutput) ? generator.getVocabularyModel() : generator.getMappingModel();
+            RDFDataMgr.write(out, model, RDFLanguages.TURTLE);
         } finally {
             loader.closeMappingGenerator();
         }

@@ -36,7 +36,8 @@ public class ModelAPITest extends TestCase {
 //			dumpStatement(stmt);
             count++;
         }
-        assertEquals(322, count);
+        assertEquals(358, count);
+        //assertEquals(322, count);
     }
 
     public void testHasProperty() {

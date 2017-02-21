@@ -7,18 +7,15 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
-import org.apache.jena.shared.impl.PrefixMappingImpl;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
 /**
  * A D2RQ mapping. Consists of {@link ClassMap}s,
@@ -30,43 +27,38 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class Mapping {
-    private static final Log log = LogFactory.getLog(Mapping.class);
+    private static final Log LOGGER = LogFactory.getLog(Mapping.class);
 
-    private final Model model = ModelFactory.createDefaultModel();
-
-    /**
-     * Holds descriptions of the used classes and properties
-     */
-    private final Model vocabularyModel = ModelFactory.createDefaultModel();
-
-    private Resource mappingResource;
-
-    private final Map<Resource, Database> databases = new HashMap<Resource, Database>();
+    private final Map<Resource, Database> databases = new HashMap<>();
     private Configuration configuration = new Configuration();
-    private final Map<Resource, ClassMap> classMaps = new HashMap<Resource, ClassMap>();
-    private final Map<Resource, TranslationTable> translationTables = new HashMap<Resource, TranslationTable>();
-    private final Map<Resource, DownloadMap> downloadMaps = new HashMap<Resource, DownloadMap>();
-    private final PrefixMapping prefixes = new PrefixMappingImpl();
+    private final Map<Resource, ClassMap> classMaps = new HashMap<>();
+    private final Map<Resource, TranslationTable> translationTables = new HashMap<>();
+    private final Map<Resource, DownloadMap> downloadMaps = new HashMap<>();
     private Collection<TripleRelation> compiledPropertyBridges;
 
-    public Mapping() {
-        this(null);
+    private final PrefixMapping prefixes = PrefixMapping.Factory.create();
+
+    public void setVocabularyModel(Model vocabularyModel) {
+        this.vocabularyModel = vocabularyModel;
     }
 
-    public Mapping(String mappingURI) {
-        if (mappingURI == null) {
-            this.mappingResource = this.model.createResource();
-        } else {
-            this.mappingResource = this.model.createResource(mappingURI);
-        }
+    public void setMappingModel(Model mappingModel) {
+        this.mappingModel = mappingModel;
     }
 
-    public Resource resource() {
-        return this.mappingResource;
+    private Model vocabularyModel;
+    private Model mappingModel;
+
+    public Model getMappingModel() {
+        return mappingModel;
     }
 
     public Model getVocabularyModel() {
         return vocabularyModel;
+    }
+
+    public PrefixMapping getPrefixMapping() {
+        return prefixes;
     }
 
     public void validate() throws D2RQException {
@@ -193,12 +185,12 @@ public class Mapping {
     }
 
     private void compilePropertyBridges() {
-        /**
-         * validate temporarily disabled, see bug
-         * https://github.com/d2rq/d2rq/issues/194
-         *
-         * Not adding tests since new development in other branch
-         * but this patch reduces test errors from 92 to 38
+        /*
+          validate temporarily disabled, see bug
+          https://github.com/d2rq/d2rq/issues/194
+
+          Not adding tests since new development in other branch
+          but this patch reduces test errors from 92 to 38
 
          validate();
 
@@ -207,16 +199,12 @@ public class Mapping {
         for (ClassMap classMap : classMaps.values()) {
             this.compiledPropertyBridges.addAll(classMap.compiledPropertyBridges());
         }
-        log.info("Compiled " + compiledPropertyBridges.size() + " property bridges");
-        if (log.isDebugEnabled()) {
+        LOGGER.info("Compiled " + compiledPropertyBridges.size() + " property bridges");
+        if (LOGGER.isDebugEnabled()) {
             for (TripleRelation rel : compiledPropertyBridges) {
-                log.debug(rel);
+                LOGGER.debug(rel);
             }
         }
-    }
-
-    public PrefixMapping getPrefixMapping() {
-        return prefixes;
     }
 
     private class AttributeTypeValidator {
@@ -245,65 +233,4 @@ public class Mapping {
         }
     }
 
-    /**
-     * Helper method to add definitions from a ResourceMap to its underlying resource
-     *
-     * @param map
-     * @param targetResource
-     */
-    private void addDefinitions(ResourceMap map, Resource targetResource) {
-        /* Infer rdfs:Class or rdf:Property type */
-        Statement s = vocabularyModel.createStatement(targetResource, RDF.type, map instanceof ClassMap ? RDFS.Class : RDF.Property);
-        if (!this.vocabularyModel.contains(s))
-            this.vocabularyModel.add(s);
-
-		/* Apply labels */
-        for (Literal propertyLabel : map.getDefinitionLabels()) {
-            s = vocabularyModel.createStatement(targetResource, RDFS.label, propertyLabel);
-            if (!this.vocabularyModel.contains(s))
-                this.vocabularyModel.add(s);
-        }
-
-		/* Apply comments */
-        for (Literal propertyComment : map.getDefinitionComments()) {
-            s = vocabularyModel.createStatement(targetResource, RDFS.comment, propertyComment);
-            if (!this.vocabularyModel.contains(s))
-                this.vocabularyModel.add(s);
-        }
-
-		/* Apply additional properties */
-        for (Resource additionalProperty : map.getAdditionalDefinitionProperties()) {
-            s = vocabularyModel.createStatement(targetResource,
-                    additionalProperty.getProperty(D2RQ.propertyName).getResource().as(Property.class),
-                    additionalProperty.getProperty(D2RQ.propertyValue).getObject());
-            if (!this.vocabularyModel.contains(s))
-                this.vocabularyModel.add(s);
-        }
-    }
-
-    /**
-     * Loads labels, comments and additional properties for referenced
-     * classes and properties and infers types
-     * Must be called after all classes and property bridges are loaded
-     */
-    public void buildVocabularyModel() {
-        for (ClassMap classMap : classMaps.values()) {
-
-			/* Loop through referenced classes */
-            for (Resource class_ : classMap.getClasses()) {
-                addDefinitions(classMap, class_);
-            }
-
-			/* Loop through property bridges */
-            for (PropertyBridge bridge : classMap.propertyBridges()) {
-
-				/* Loop through referenced properties */
-                for (Resource property : bridge.properties()) {
-                    addDefinitions(bridge, property);
-                }
-
-                // TODO: What to do about dynamic properties?
-            }
-        }
-    }
 }

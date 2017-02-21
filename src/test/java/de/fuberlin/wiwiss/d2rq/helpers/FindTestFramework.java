@@ -9,6 +9,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.log4j.Logger;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
@@ -20,12 +21,14 @@ import junit.framework.TestCase;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public abstract class FindTestFramework extends TestCase {
+    protected static final Logger LOGGER = Logger.getLogger(FindTestFramework.class);
     protected static final Model m = ModelFactory.createDefaultModel();
 
-    private GraphD2RQ graph;
+    protected GraphD2RQ graph;
     private Set<Triple> resultTriples;
 
     protected void setUp() throws Exception {
+        LOGGER.debug("SET UP");
         this.graph = new ModelD2RQ(D2RQTestSuite.ISWC_MAP, "TURTLE", "http://test/").getGraph();
     }
 
@@ -57,7 +60,7 @@ public abstract class FindTestFramework extends TestCase {
     }
 
     protected void assertStatementCount(int count) {
-        assertEquals("Found " + resultTriples, count, this.resultTriples.size());
+        assertEquals("Found " + resultTriples, count, resultTriples.size());
     }
 
     protected void assertStatement(RDFNode s, RDFNode p, RDFNode o) {

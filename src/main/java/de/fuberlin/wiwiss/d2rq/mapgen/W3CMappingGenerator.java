@@ -2,10 +2,14 @@ package de.fuberlin.wiwiss.d2rq.mapgen;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.jena.rdf.model.Resource;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
 /**
  * Generates a D2RQ mapping compatible with W3C's Direct Mapping by introspecting a database schema.
@@ -26,14 +30,13 @@ public class W3CMappingGenerator extends MappingGenerator {
     }
 
     @Override
-    protected void writeEntityIdentifier(RelationName tableName, List<Attribute> identifierColumns) {
-        String uriPattern = this.instanceNamespaceURI + encodeTableName(tableName);
+    protected void writeEntityIdentifier(Resource table, RelationName tableName, List<Attribute> identifierColumns) {
+        String uriPattern = instanceNamespaceURI + encodeTableName(tableName);
         Iterator<Attribute> it = identifierColumns.iterator();
         int i = 0;
         while (it.hasNext()) {
             uriPattern += i == 0 ? "/" : ";";
             i++;
-
             Attribute column = it.next();
             uriPattern += encodeColumnName(column) + "=@@" + column.qualifiedName();
             if (!database.columnType(column).isIRISafe()) {
@@ -41,39 +44,31 @@ public class W3CMappingGenerator extends MappingGenerator {
             }
             uriPattern += "@@";
         }
-        this.out.println("\td2rq:uriPattern \"" + uriPattern + "\";");
+        table.addLiteral(D2RQ.uriPattern, uriPattern);
     }
 
     @Override
-    protected void writePseudoEntityIdentifier(RelationName tableName) {
-        List<Attribute> usedColumns = filter(schema.listColumns(tableName), true, "pseudo identifier column");
-        out.print("\td2rq:bNodeIdColumns \"");
-        Iterator<Attribute> it = usedColumns.iterator();
-        while (it.hasNext()) {
-            Attribute column = it.next();
-            out.print(column.qualifiedName());
-            if (it.hasNext()) {
-                out.print(",");
-            }
-        }
-        out.println("\";");
+    protected void writePseudoEntityIdentifier(Resource table, RelationName tableName) {
+        List<Attribute> usedColumns = filter(table, database.schemaInspector().listColumns(tableName), true, "pseudo identifier column");
+        String msg = String.valueOf(usedColumns.stream().map(Attribute::qualifiedName).collect(Collectors.toList()))
+                .replaceAll("^\\[", "").replaceAll("\\]$", "");
+        table.addLiteral(D2RQ.bNodeIdColumns, msg);
     }
 
     @Override
     protected String vocabularyIRITurtle(RelationName table) {
-        return "<" + encodeTableName(table) + ">";
+        return vocabNamespaceURI + encodeTableName(table);
     }
 
     @Override
     protected String vocabularyIRITurtle(Attribute attribute) {
-        return "<" + encodeTableName(attribute.relationName()) + "#"
-                + encodeColumnName(attribute) + ">";
+        return vocabNamespaceURI + encodeTableName(attribute.relationName()) + "#" + encodeColumnName(attribute);
     }
 
     @Override
     protected String vocabularyIRITurtle(List<Attribute> attributes) {
-        StringBuffer result = new StringBuffer();
-        result.append("<");
+        StringBuilder result = new StringBuilder();
+        result.append(vocabNamespaceURI);
         result.append(encodeTableName(attributes.get(0).relationName()));
         int i = 1;
         for (Attribute column : attributes) {
@@ -82,11 +77,10 @@ public class W3CMappingGenerator extends MappingGenerator {
                 result.append("#ref-");
                 result.append(attributeName);
             } else {
-                result.append(";" + attributeName);
+                result.append(";").append(attributeName);
             }
             i++;
         }
-        result.append(">");
         return result.toString();
     }
 

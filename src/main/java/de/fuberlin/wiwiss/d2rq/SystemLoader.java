@@ -2,6 +2,7 @@ package de.fuberlin.wiwiss.d2rq;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.MalformedInputException;
 import java.sql.SQLException;
 
@@ -9,10 +10,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jena.atlas.AtlasException;
 import org.apache.jena.n3.turtle.TurtleParseException;
-import org.apache.jena.query.ARQ;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.shared.JenaException;
+import org.apache.jena.system.JenaSystem;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.util.FileUtils;
 
@@ -42,16 +43,11 @@ import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 public class SystemLoader {
 
     static {
-        ARQ.init();    // Wire RIOT into Jena, etc.
+        JenaSystem.init();    // Wire RIOT into Jena, etc.
     }
 
     private final static Log log = LogFactory.getLog(SystemLoader.class);
 
-    private static final String DEFAULT_PROTOCOL = "http";
-    private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = 2020;
-
-    public static final String DEFAULT_BASE_URI = DEFAULT_PROTOCOL + "://" + DEFAULT_HOST + ":" + DEFAULT_PORT + "/";
     public static final String DEFAULT_JDBC_URL = "jdbc:hsqldb:mem:temp";
 
     private String username = null;
@@ -65,7 +61,6 @@ public class SystemLoader {
     private String resourceStem = "";
     private Filter filter = null;
     private boolean fastMode = false;
-    private int port = -1;
     private int resultSizeLimit = Database.NO_LIMIT;
 
     private ConnectedDB connectedDB = null;
@@ -114,7 +109,7 @@ public class SystemLoader {
     }
 
     public void setSystemBaseURI(String baseURI) {
-        if (!java.net.URI.create(baseURI).isAbsolute()) {
+        if (!URI.create(baseURI).isAbsolute()) {
             throw new D2RQException("Base URI '" + baseURI + "' must be an absolute URI",
                     D2RQException.STARTUP_BASE_URI_NOT_ABSOLUTE);
         }
@@ -140,31 +135,15 @@ public class SystemLoader {
      * @return Base URI where the server is assumed to run
      */
     public String getSystemBaseURI() {
-        if (baseURI != null) {
-            return MapParser.absolutizeURI(baseURI);
-        }
-        if (getPort() == 80) {
-            return DEFAULT_PROTOCOL + "://" + DEFAULT_HOST + "/";
-        }
-        return DEFAULT_PROTOCOL + "://" + DEFAULT_HOST + ":" + getPort() + "/";
+        return baseURI == null ? null : MapParser.absolutizeURI(baseURI);
     }
 
     /**
      * @return Base URI for making relative URIs in the RDF data absolute
      */
     public String getResourceBaseURI() {
-        return getSystemBaseURI() + resourceStem;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public int getPort() {
-        if (port == -1) {
-            return DEFAULT_PORT;
-        }
-        return port;
+        String base = getSystemBaseURI();
+        return base != null ? base + resourceStem : resourceStem;
     }
 
     public void setFastMode(boolean flag) {
@@ -205,7 +184,7 @@ public class SystemLoader {
      * Returns a mapping generator. Needs to be explicitly closed
      * using {@link #closeMappingGenerator()}.
      */
-    public MappingGenerator openMappingGenerator() {
+    private MappingGenerator openMappingGenerator() {
         if (generator == null) {
             generator = generateDirectMapping ?
                     new W3CMappingGenerator(getConnectedDB()) :
@@ -230,7 +209,7 @@ public class SystemLoader {
         }
     }
 
-    public Model getMappingModel() {
+    public Model getMappingModel() { // todo: make private
         if (mapModel == null) {
             if (jdbcURL != null && mappingFile != null) {
                 throw new D2RQException("conflicting mapping locations " + mappingFile + " and " + jdbcURL + "; specify at most one");
@@ -304,14 +283,14 @@ public class SystemLoader {
         return mapping;
     }
 
-    public ModelD2RQ getModelD2RQ() {
+    public ModelD2RQ getModelD2RQ() { // todo: move to Mapping
         if (dataModel == null) {
             dataModel = new ModelD2RQ(getMapping());
         }
         return dataModel;
     }
 
-    public GraphD2RQ getGraphD2RQ() {
+    public GraphD2RQ getGraphD2RQ() { // todo: move to Mapping
         if (dataGraph == null) {
             dataGraph = getModelD2RQ().getGraph();
         }
@@ -323,14 +302,5 @@ public class SystemLoader {
             classMapLister = new ClassMapLister(getMapping());
         }
         return classMapLister;
-    }
-
-    public void resetMappingFile() {
-        mapModel = null;
-        mapping = null;
-        dataModel = null;
-        if (dataGraph != null) dataGraph.close();
-        dataGraph = null;
-        classMapLister = null;
     }
 }

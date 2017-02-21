@@ -11,7 +11,7 @@ import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 
 /**
  * Represents a SQL data type.
- * <p>
+ *
  * TODO: Data types should know whether they can be used in DISTINCT queries
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
@@ -20,6 +20,8 @@ import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 public abstract class DataType {
 
     public final static Log log = LogFactory.getLog(DataType.class);
+
+    public final static String XSD_STRING = "xsd:string";
 
     public enum GenericType {
         CHARACTER(Types.VARCHAR, "VARCHAR"),
@@ -33,12 +35,10 @@ public abstract class DataType {
         BIT(Types.BIT, "BIT");
         private final int jdbcType;
         private final String name;
-
         GenericType(int jdbcType, String name) {
             this.jdbcType = jdbcType;
             this.name = name.toUpperCase();
         }
-
         public DataType dataTypeFor(Vendor vendor) {
             return vendor.getDataType(jdbcType, name, 0);
         }
@@ -62,7 +62,7 @@ public abstract class DataType {
      * @return RDF datatype as prefixed name: <code>xsd:string</code> etc.
      */
     public String rdfType() {
-        return "xsd:string";
+        return XSD_STRING;
     }
 
     public boolean isIRISafe() {
@@ -99,7 +99,7 @@ public abstract class DataType {
      * of the closest XSD type) from a SQL ResultSet.
      *
      * @param resultSet Result of a SELECT query
-     * @param column    The column index to retrieve; leftmost columns is 1
+     * @param column The column index to retrieve; leftmost columns is 1
      * @return String representation, or <code>null</code> if SQL result was null or is not representable in the XSD type
      * @throws SQLException
      */
