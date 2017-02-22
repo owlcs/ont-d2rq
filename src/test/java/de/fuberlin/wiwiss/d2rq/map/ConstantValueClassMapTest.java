@@ -47,7 +47,7 @@ public class ConstantValueClassMapTest extends TestCase {
 
     public void setUp() {
         this.model = ModelFactory.createDefaultModel();
-        this.mapping = new Mapping();
+        this.mapping = MappingFactory.createEmpty();
         this.database = new Database(this.model.createResource());
         this.mapping.addDatabase(this.database);
 

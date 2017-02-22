@@ -3,10 +3,6 @@ package de.fuberlin.wiwiss.d2rq.jena;
 import org.apache.jena.enhanced.BuiltinPersonalities;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.impl.ModelCom;
-import org.apache.jena.util.FileManager;
-
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.parser.MapParser;
 
 /**
  * <p>A D2RQ read-only Jena model backed by a D2RQ-mapped non-RDF database.</p>
@@ -23,53 +19,8 @@ import de.fuberlin.wiwiss.d2rq.parser.MapParser;
  */
 public class ModelD2RQ extends ModelCom implements Model {
 
-    /**
-     * Create a non-RDF database-based model. The model is created
-     * from a D2RQ map that will be loaded from the given URL.
-     * Its serialization format will be guessed from the
-     * file extension and defaults to RDF/XML.
-     *
-     * @param mapURL URL of the D2RQ map to be used for this model
-     */
-    public ModelD2RQ(String mapURL) {
-        this(FileManager.get().loadModel(mapURL), mapURL + "#");
-    }
-
-    /**
-     * Create a non-RDF database-based model. The model is created
-     * from a D2RQ map that may be in "RDF/XML", "N-TRIPLES" or "TURTLE"
-     * format.
-     *
-     * @param mapURL              URL of the D2RQ map to be used for this model
-     * @param serializationFormat the format of the map, or <tt>null</tt>
-     *                            for guessing based on the file extension
-     * @param baseURIForData      Base URI for turning relative URI patterns into
-     *                            absolute URIs; if <tt>null</tt>, then D2RQ will pick a base URI
-     */
-    public ModelD2RQ(String mapURL, String serializationFormat, String baseURIForData) {
-        this(FileManager.get().loadModel(mapURL, serializationFormat),
-                (baseURIForData == null) ? mapURL + "#" : baseURIForData);
-    }
-
-    /**
-     * Create a non-RDF database-based model. The model is created
-     * from a D2RQ map that is provided as a Jena model.
-     *
-     * @param mapModel       a Jena model containing the D2RQ map
-     * @param baseURIForData Base URI for turning relative URI patterns into
-     *                       absolute URIs; if <tt>null</tt>, then D2RQ will pick a base URI
-     */
-    public ModelD2RQ(Model mapModel, String baseURIForData) {
-        super(new GraphD2RQ(new MapParser(mapModel,
-                (baseURIForData == null) ? "http://localhost/resource/" : baseURIForData).parse()), BuiltinPersonalities.model); // BuiltinPersonalities.model really required?
-    }
-
-    /**
-     * Create a non-RDF database-based model. The model is created
-     * from the given D2RQ map.
-     */
-    public ModelD2RQ(Mapping mapping) {
-        super(new GraphD2RQ(mapping), BuiltinPersonalities.model);
+    public ModelD2RQ(GraphD2RQ graph) {
+        super(graph, BuiltinPersonalities.model);
     }
 
     /**
@@ -79,4 +30,5 @@ public class ModelD2RQ extends ModelCom implements Model {
     public GraphD2RQ getGraph() {
         return (GraphD2RQ) super.getGraph();
     }
+
 }

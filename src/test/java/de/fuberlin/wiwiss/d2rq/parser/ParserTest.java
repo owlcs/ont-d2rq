@@ -13,9 +13,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
-import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
+import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
@@ -38,7 +36,7 @@ public class ParserTest extends TestCase {
 
     public void testEmptyTranslationTable() {
         Resource r = addTranslationTableResource();
-        Mapping mapping = new MapParser(this.model, null).parse();
+        Mapping mapping = MappingFactory.create(this.model, null);
         TranslationTable table = mapping.translationTable(r);
         assertNotNull(table);
         assertEquals(0, table.size());
@@ -47,7 +45,7 @@ public class ParserTest extends TestCase {
     public void testGetSameTranslationTable() {
         Resource r = addTranslationTableResource();
         addTranslationResource(r, "foo", "bar");
-        Mapping mapping = new MapParser(this.model, null).parse();
+        Mapping mapping = MappingFactory.create(this.model, null);
         TranslationTable table1 = mapping.translationTable(r);
         TranslationTable table2 = mapping.translationTable(r);
         assertSame(table1, table2);
@@ -56,7 +54,7 @@ public class ParserTest extends TestCase {
     public void testParseTranslationTable() {
         Resource r = addTranslationTableResource();
         addTranslationResource(r, "foo", "bar");
-        Mapping mapping = new MapParser(this.model, null).parse();
+        Mapping mapping = MappingFactory.create(this.model, null);
         TranslationTable table = mapping.translationTable(r);
         assertEquals(1, table.size());
         Translator translator = table.translator();

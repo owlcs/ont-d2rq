@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.parser.MapParser;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.Test;
 
@@ -47,7 +47,7 @@ public class MapFixture {
         if (!mappingFileName.startsWith("/")) mappingFileName = "/" + mappingFileName;
         InputStream is = D2RQTestSuite.class.getResourceAsStream(mappingFileName);
         m.read(is, null, "TURTLE");
-        Mapping mapping = new MapParser(m, null).parse();
+        Mapping mapping = MappingFactory.create(m, null);
         return mapping.compiledPropertyBridges();
     }
 }

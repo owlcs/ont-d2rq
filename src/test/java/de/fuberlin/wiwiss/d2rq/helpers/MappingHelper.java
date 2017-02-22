@@ -4,7 +4,7 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.parser.MapParser;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
 
 /**
@@ -23,9 +23,7 @@ public class MappingHelper {
      * @throws D2RQException On error during parse
      */
     public static Mapping readFromTestFile(String testFileName) {
-        return new MapParser(
-                D2RQTestSuite.loadTurtle(testFileName),
-                "http://example.org/").parse();
+        return MappingFactory.create(D2RQTestSuite.loadTurtle(testFileName), "http://example.org/");
     }
 
     public static void connectToDummyDBs(Mapping m) {

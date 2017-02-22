@@ -17,8 +17,6 @@ import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.TypedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.TypedNodeMaker.NodeType;
-import de.fuberlin.wiwiss.d2rq.parser.MapParser;
-import de.fuberlin.wiwiss.d2rq.parser.RelationBuilder;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
@@ -300,7 +298,7 @@ public abstract class ResourceMap extends MapObject {
             }
         }
         if (definedSpecs.isEmpty()) {
-            StringBuffer error = new StringBuffer(toString());
+            StringBuilder error = new StringBuilder(toString());
             error.append(" needs one of ");
             for (int i = 0; i < allowedSpecs.length; i++) {
                 if (i > 0) {

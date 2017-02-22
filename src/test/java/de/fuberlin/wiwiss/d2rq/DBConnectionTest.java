@@ -7,7 +7,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 
 import de.fuberlin.wiwiss.d2rq.map.Database;
-import de.fuberlin.wiwiss.d2rq.parser.MapParser;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import junit.framework.TestCase;
 
@@ -29,8 +29,7 @@ public class DBConnectionTest extends TestCase {
     protected void setUp() throws Exception {
         mapModel = ModelFactory.createDefaultModel();
         mapModel.read(D2RQTestSuite.ISWC_MAP, "http://test/", "TURTLE");
-        MapParser parser = new MapParser(mapModel, null);
-        databases = parser.parse().databases();
+        databases = MappingFactory.create(mapModel, null).databases();
         firstDatabase = databases.iterator().next();
         simplestQuery = "SELECT 1;";
         // mediumQuery = "SELECT PaperID from papers";

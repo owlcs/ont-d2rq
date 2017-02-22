@@ -11,10 +11,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.shared.PrefixMapping;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.vocabulary.XSD;
 import org.apache.log4j.Logger;
 
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
@@ -22,6 +19,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Join;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
+import de.fuberlin.wiwiss.d2rq.map.Prefixes;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -57,22 +55,9 @@ public class MappingGenerator {
 
     protected URI startupSQLScript;
 
-    public static final String VOCAB_PREFIX = "vocab";
-    public static final String MAP_PREFIX = "map";
-    public static final String DB_PREFIX = "db";
-    public static final String D2RQ_PREFIX = "d2rq";
-    public static final String JDBC_PREFIX = "jdbc";
-
-    public static final PrefixMapping STANDARD_PREFIXES = PrefixMapping.Factory.create()
-            .setNsPrefix("rdf", RDF.getURI())
-            .setNsPrefix("rdfs", RDFS.getURI())
-            .setNsPrefix("xsd", XSD.getURI())
-            .setNsPrefix(D2RQ_PREFIX, D2RQ.getURI())
-            .setNsPrefix(JDBC_PREFIX, JDBC.getURI()).lock();
-
-    private static final String DEFAULT_MAP_NS = "#";
-    private static final String DEFAULT_DB_NS = "";
-    private static final String DEFAULT_SCHEMA_NS = "vocab/";
+    public static final String DEFAULT_MAP_NS = "#";
+    public static final String DEFAULT_DB_NS = "";
+    public static final String DEFAULT_SCHEMA_NS = "vocab/";
 
     private Map<String, Object> assignedNames = new HashMap<>();
 
@@ -149,7 +134,7 @@ public class MappingGenerator {
 
     public void copy(MappingGenerator other) {
         setVocabNamespaceURI(other.vocabNamespaceURI.toString());
-        setInstanceNamespaceURI(other.instanceNamespaceURI.toString()); // todo: no need
+        setInstanceNamespaceURI(other.instanceNamespaceURI.toString());
         setMapNamespaceURI(other.mapNamespaceURI.toString());
         setFilter(other.filter);
         setStartupSQLScript(other.startupSQLScript);
@@ -203,10 +188,10 @@ public class MappingGenerator {
 
     protected Model createMappingModel() {
         Model res = ModelFactory.createDefaultModel();
-        res.setNsPrefixes(STANDARD_PREFIXES);
-        res.setNsPrefix(MAP_PREFIX, mapNamespaceURI.toString());
-        res.setNsPrefix(DB_PREFIX, instanceNamespaceURI.toString());
-        res.setNsPrefix(VOCAB_PREFIX, vocabNamespaceURI.toString());
+        res.setNsPrefixes(Prefixes.STANDARD);
+        res.setNsPrefix(Prefixes.MAP_PREFIX, mapNamespaceURI.toString());
+        //res.setNsPrefix(DB_PREFIX, instanceNamespaceURI.toString());
+        res.setNsPrefix(Prefixes.VOCAB_PREFIX, vocabNamespaceURI.toString());
         if (!serveVocabulary) {
             addConfiguration(res);
         }

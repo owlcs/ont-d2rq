@@ -1,9 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,60 +9,84 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 
+import de.fuberlin.wiwiss.d2rq.ClassMapLister;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
+import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 
 /**
  * A D2RQ mapping. Consists of {@link ClassMap}s,
  * {@link PropertyBridge}s, and several other classes.
  * <p>
- * TODO: Add getters to everything
  * TODO: Move TripleRelation/NodeMaker building and ConnectedDB to a separate class (MappingRunner?)
+ * TODO: #add* methods should write to mapping model also.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class Mapping {
+public class Mapping implements AutoCloseable {
+
     private static final Log LOGGER = LogFactory.getLog(Mapping.class);
 
     private final Map<Resource, Database> databases = new HashMap<>();
-    private Configuration configuration = new Configuration();
     private final Map<Resource, ClassMap> classMaps = new HashMap<>();
     private final Map<Resource, TranslationTable> translationTables = new HashMap<>();
     private final Map<Resource, DownloadMap> downloadMaps = new HashMap<>();
+    private final Model model;
+
+    private Configuration configuration = new Configuration();
     private Collection<TripleRelation> compiledPropertyBridges;
-
-    private final PrefixMapping prefixes = PrefixMapping.Factory.create();
-
-    public void setVocabularyModel(Model vocabularyModel) {
-        this.vocabularyModel = vocabularyModel;
-    }
-
-    public void setMappingModel(Model mappingModel) {
-        this.mappingModel = mappingModel;
-    }
-
+    private PrefixMapping prefixes;
     private Model vocabularyModel;
-    private Model mappingModel;
+    // cache for dataGraph
+    private GraphD2RQ dataGraph;
+    private volatile boolean connected = false;
+
+    /**
+     * protected access: to get instance of this class please use {@link MappingFactory} or {@link MapParser}.
+     *
+     * @param model {@link Model} with D2RQ rules.
+     */
+    protected Mapping(Model model) {
+        this.model = Objects.requireNonNull(model, "Null mapping model");
+    }
 
     public Model getMappingModel() {
-        return mappingModel;
+        return model;
     }
 
     public Model getVocabularyModel() {
-        return vocabularyModel;
+        return vocabularyModel == null ? vocabularyModel = MappingTransform.getModelBuilder().build(this) : vocabularyModel;
+    }
+
+    public ModelD2RQ getDataModel() {
+        return new ModelD2RQ(getDataGraph());
+    }
+
+    public GraphD2RQ getDataGraph() {
+        return dataGraph == null ? dataGraph = new GraphD2RQ(this) : dataGraph;
+    }
+
+    /**
+     * moved from {@link de.fuberlin.wiwiss.d2rq.SystemLoader}
+     * TODO: it seems we don't need it at all.
+     *
+     * @return {@link ClassMapLister}
+     */
+    public ClassMapLister getClassMapLister() {
+        return new ClassMapLister(this);
     }
 
     public PrefixMapping getPrefixMapping() {
-        return prefixes;
+        return prefixes == null ? prefixes = Prefixes.createPrefixes(model) : prefixes;
     }
 
     public void validate() throws D2RQException {
         if (this.databases.isEmpty()) {
-            throw new D2RQException("No d2rq:Database defined in the mapping",
-                    D2RQException.MAPPING_NO_DATABASE);
+            throw new D2RQException("No d2rq:Database defined in the mapping", D2RQException.MAPPING_NO_DATABASE);
         }
         for (Database db : databases.values()) {
             db.validate();
@@ -72,7 +94,7 @@ public class Mapping {
         for (TranslationTable table : translationTables.values()) {
             table.validate();
         }
-        Collection<ClassMap> classMapsWithoutProperties = new ArrayList<ClassMap>(classMaps.values());
+        Collection<ClassMap> classMapsWithoutProperties = new ArrayList<>(classMaps.values());
         for (ClassMap classMap : classMaps.values()) {
             classMap.validate();    // Also validates attached bridges
             if (classMap.hasProperties()) {
@@ -86,8 +108,7 @@ public class Mapping {
         }
         if (!classMapsWithoutProperties.isEmpty()) {
             throw new D2RQException(classMapsWithoutProperties.iterator().next().toString() +
-                    " has no d2rq:PropertyBridges and no d2rq:class",
-                    D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
+                    " has no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
         }
         for (DownloadMap dlm : downloadMaps.values()) {
             dlm.validate();
@@ -113,8 +134,7 @@ public class Mapping {
         validate();
     }
 
-    private boolean connected = false;
-
+    @Override
     public void close() {
         for (Database db : databases()) {
             db.connectedDB().close();
@@ -147,6 +167,10 @@ public class Mapping {
 
     public Collection<Resource> classMapResources() {
         return this.classMaps.keySet();
+    }
+
+    public Stream<ClassMap> classMaps() {
+        return classMaps.values().stream();
     }
 
     public ClassMap classMap(Resource name) {
@@ -195,7 +219,7 @@ public class Mapping {
          validate();
 
          */
-        compiledPropertyBridges = new ArrayList<TripleRelation>();
+        compiledPropertyBridges = new ArrayList<>();
         for (ClassMap classMap : classMaps.values()) {
             this.compiledPropertyBridges.addAll(classMap.compiledPropertyBridges());
         }
@@ -224,8 +248,7 @@ public class Mapping {
                             D2RQException.DATATYPE_UNKNOWN);
                 }
                 if (dataType.isUnsupported()) {
-                    throw new D2RQException("Column " +
-                            relation.aliases().originalOf(attribute) +
+                    throw new D2RQException("Column " + relation.aliases().originalOf(attribute) +
                             " has a datatype that D2RQ cannot express in RDF: " + dataType,
                             D2RQException.DATATYPE_UNMAPPABLE);
                 }

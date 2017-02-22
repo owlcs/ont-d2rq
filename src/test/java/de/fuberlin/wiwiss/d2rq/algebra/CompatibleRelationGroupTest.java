@@ -9,9 +9,9 @@ import org.apache.jena.sparql.core.Var;
 
 import de.fuberlin.wiwiss.d2rq.engine.BindingMaker;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
+import de.fuberlin.wiwiss.d2rq.map.RelationBuilder;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.TypedNodeMaker;
-import de.fuberlin.wiwiss.d2rq.parser.RelationBuilder;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.values.Column;

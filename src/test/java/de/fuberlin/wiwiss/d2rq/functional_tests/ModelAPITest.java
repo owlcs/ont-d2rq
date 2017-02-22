@@ -5,6 +5,7 @@ import org.apache.jena.vocabulary.DC;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
 import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import junit.framework.TestCase;
 
 /**
@@ -19,7 +20,7 @@ public class ModelAPITest extends TestCase {
     private ModelD2RQ model;
 
     protected void setUp() throws Exception {
-        this.model = new ModelD2RQ(D2RQTestSuite.ISWC_MAP, "TURTLE", "http://test/");
+        this.model = MappingFactory.load(D2RQTestSuite.ISWC_MAP, "TURTLE", "http://test/").getDataModel();
 //		this.model.enableDebug();
     }
 

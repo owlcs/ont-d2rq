@@ -1,4 +1,4 @@
-package de.fuberlin.wiwiss.d2rq.parser;
+package de.fuberlin.wiwiss.d2rq.map;
 
 import java.util.*;
 
@@ -59,8 +59,8 @@ public class RelationBuilder {
         this.condition = this.condition.and(aliases().applyTo(other.condition));
         this.joinConditions.addAll(aliases().applyToJoinSet(other.joinConditions));
         this.projections.addAll(aliases().applyToProjectionSet(other.projections));
-        Collection<Alias> newAliases = new ArrayList<Alias>();
-        Collection<Alias> removedAliases = new ArrayList<Alias>();
+        Collection<Alias> newAliases = new ArrayList<>();
+        Collection<Alias> removedAliases = new ArrayList<>();
         for (Alias alias : this.aliases) {
             Alias newAlias = other.aliases().originalOf(alias);
             if (!alias.equals(newAlias)) {

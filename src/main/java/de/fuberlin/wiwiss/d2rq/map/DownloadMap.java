@@ -9,7 +9,6 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
-import de.fuberlin.wiwiss.d2rq.parser.RelationBuilder;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.values.ConstantValueMaker;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;

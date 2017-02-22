@@ -7,7 +7,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
 /**
@@ -33,6 +33,6 @@ public class D2RQAssembler extends AssemblerBase {
             }
             resourceBaseURI = ((Resource) stmt.getObject()).getURI();
         }
-        return new ModelD2RQ(mappingFileURI, null, resourceBaseURI);
+        return MappingFactory.load(mappingFileURI, null, resourceBaseURI).getDataModel();
     }
 }

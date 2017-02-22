@@ -10,6 +10,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.BeanCounter;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
@@ -110,7 +111,7 @@ public abstract class QueryLanguageTestFramework extends TestCase {
     protected abstract String mapURL();
 
     protected void setUp() throws Exception {
-        this.model = new ModelD2RQ(mapURL(), "TURTLE", "http://test/");
+        this.model = MappingFactory.load(mapURL(), "TURTLE", "http://test/").getDataModel();
 //		this.model.enableDebug();
         setUpShowErrors(); // should be activated all the time
 //	    setUpShowPerformance(); // activate (only) to test performance (only)

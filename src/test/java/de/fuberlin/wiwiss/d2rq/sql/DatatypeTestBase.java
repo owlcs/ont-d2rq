@@ -14,10 +14,7 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import de.fuberlin.wiwiss.d2rq.map.ClassMap;
-import de.fuberlin.wiwiss.d2rq.map.Database;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
+import de.fuberlin.wiwiss.d2rq.map.*;
 import junit.framework.TestCase;
 
 public abstract class DatatypeTestBase extends TestCase {
@@ -130,11 +127,11 @@ public abstract class DatatypeTestBase extends TestCase {
     }
 
     private GraphD2RQ getGraph(Mapping mapping) {
-        return new GraphD2RQ(mapping);
+        return mapping.getDataGraph();
     }
 
     private Mapping generateMapping() {
-        Mapping mapping = new Mapping();
+        Mapping mapping = MappingFactory.createEmpty();
         Database database = new Database(dbURI);
         database.setJDBCDSN(jdbcURL);
         database.setJDBCDriver(driver);

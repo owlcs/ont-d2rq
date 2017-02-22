@@ -1,15 +1,14 @@
-package de.fuberlin.wiwiss.d2rq.parser;
+package de.fuberlin.wiwiss.d2rq.map;
 
 import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.riot.system.IRIResolver;
 import org.apache.jena.vocabulary.RDF;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.*;
-import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
@@ -42,11 +41,9 @@ public class MapParser {
         if (uri == null) {
             return null;
         }
-        return resolver.resolve(uri);
-        //return IRIResolver.create().resolve(uri).toString();
+        //new org.apache.jena.n3.IRIResolver().resolve(uri);
+        return IRIResolver.create().resolveToStringSilent(uri);
     }
-
-    private final static org.apache.jena.n3.IRIResolver resolver = new org.apache.jena.n3.IRIResolver();
 
     private Model model;
     private String baseURI;
@@ -57,7 +54,7 @@ public class MapParser {
      * from a D2RQ mapping file.
      *
      * @param mapModel a Jena model containing the RDF statements from a D2RQ mapping file
-     * @param baseURI  used for relative URI patterns
+     * @param baseURI  used for relative URI patterns. Could be null.
      */
     public MapParser(Model mapModel, String baseURI) {
         this.model = mapModel;
@@ -78,8 +75,7 @@ public class MapParser {
                 D2RQException.MAPPING_UNKNOWN_D2RQ_CLASS);
         ensureAllDistinct(new Resource[]{D2RQ.Database, D2RQ.ClassMap, D2RQ.PropertyBridge,
                 D2RQ.TranslationTable, D2RQ.Translation}, D2RQException.MAPPING_TYPECONFLICT);
-        this.mapping = new Mapping();
-        copyPrefixes();
+        this.mapping = new Mapping(this.model);
         try {
             parseDatabases();
             parseConfiguration();
@@ -87,8 +83,6 @@ public class MapParser {
             parseClassMaps();
             parsePropertyBridges();
             parseDownloadMaps();
-            this.mapping.setMappingModel(this.model);
-            this.mapping.setVocabularyModel(MappingTransform.getBuilder().build(this.mapping));
             LOGGER.info("Done reading D2RQ map with " + mapping.databases().size() + " databases and " + mapping.classMapResources().size() + " class maps");
             return this.mapping;
         } catch (LiteralRequiredException ex) {
@@ -114,25 +108,10 @@ public class MapParser {
                     matchingType = type;
                 } else {
                     throw new D2RQException("Name " + PrettyPrinter.toString(resource) + " cannot be both a "
-                            + PrettyPrinter.toString(matchingType) + " and a " + PrettyPrinter.toString(type),
-                            errorCode);
+                            + PrettyPrinter.toString(matchingType) + " and a " + PrettyPrinter.toString(type), errorCode);
                 }
             }
         }
-    }
-
-    /**
-     * Copies all prefixes from the mapping file Model to the D2RQ mapping.
-     * Administrative D2RQ prefixes are dropped on the assumption that they
-     * are not wanted in the actual data.
-     */
-    private void copyPrefixes() { // todo: put only vocabulary (schema) ns.
-        model.getNsPrefixMap().forEach((prefix, uri) -> {
-            if (Objects.equals(MappingGenerator.STANDARD_PREFIXES.getNsPrefixURI(prefix), uri)) {
-                return;
-            }
-            mapping.getPrefixMapping().setNsPrefix(prefix, uri);
-        });
     }
 
     private void parseDatabases() {
@@ -553,8 +532,8 @@ public class MapParser {
 
     // TODO: I guess this should be done at map compile time
     private String ensureIsAbsolute(String uriPattern) {
-        if (!uriPattern.contains(":")) {
-            return this.baseURI + uriPattern;
+        if (baseURI != null && !uriPattern.contains(":")) {
+            return baseURI + uriPattern;
         }
         return uriPattern;
     }

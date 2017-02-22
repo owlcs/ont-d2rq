@@ -345,6 +345,7 @@ public class D2RQ {
 
     /**
      * this property is new (for ONT-api)
+     * todo: add to schema ttl/rdf
      */
     public static final Property warning = property("warning");
 

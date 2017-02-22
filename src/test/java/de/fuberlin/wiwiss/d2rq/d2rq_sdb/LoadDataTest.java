@@ -18,7 +18,7 @@ import org.apache.jena.sdb.sql.SDBConnection;
 import org.apache.jena.sdb.store.DatabaseType;
 import org.apache.jena.sdb.store.LayoutType;
 
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import junit.framework.TestCase;
 
 /**
@@ -126,7 +126,7 @@ public abstract class LoadDataTest extends TestCase {
             }
         }
 
-        hsqlDataModel = new ModelD2RQ(CURR_DIR + "/" + CONFIG_DIR + "/" + MAPPING_FILE_HSQL, "N3", "http://test/");
+        hsqlDataModel = MappingFactory.load(CURR_DIR + "/" + CONFIG_DIR + "/" + MAPPING_FILE_HSQL, "N3", "http://test/").getDataModel();
 
         System.out.println("Loaded SQL-Data in HSQL-DATABASE!");
     }

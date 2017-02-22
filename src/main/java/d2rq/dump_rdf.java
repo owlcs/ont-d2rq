@@ -12,9 +12,9 @@ import de.fuberlin.wiwiss.d2rq.CommandLineTool;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Database;
+import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
-import de.fuberlin.wiwiss.d2rq.parser.MapParser;
 
 /**
  * Command line utility for dumping a database to RDF, using the
@@ -94,7 +94,7 @@ public class dump_rdf extends CommandLineTool {
                 db.connectedDB().setDefaultFetchSize(DUMP_DEFAULT_FETCH_SIZE);
             }
 
-            Model d2rqModel = loader.getModelD2RQ();
+            Model d2rqModel = loader.getMapping().getDataModel();
 
             try {
                 RDFWriter writer = d2rqModel.getWriter(format.toUpperCase());

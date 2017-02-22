@@ -17,7 +17,7 @@ import de.fuberlin.wiwiss.d2rq.map.Mapping;
  * queries on an LRU basis.
  *
  * @author Holger Knublauch (holger@topquadrant.com)
- *         <p>
+ *
  *         TODO: do we need this class?
  */
 public class CachingGraphD2RQ extends GraphD2RQ {

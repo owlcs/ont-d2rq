@@ -11,8 +11,8 @@ import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
-import de.fuberlin.wiwiss.d2rq.parser.MapParser;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import junit.framework.TestCase;
 
@@ -70,7 +70,7 @@ public class HSQLSimpleTest extends TestCase {
     public void testGenerateEmptyGraphFromSimpleD2RQMapping() {
         Mapping m = MappingHelper.readFromTestFile("helpers/simple.ttl");
         m.configuration().setServeVocabulary(false);
-        GraphD2RQ g = new GraphD2RQ(m);
+        GraphD2RQ g = m.getDataModel().getGraph();
         assertTrue(g.isEmpty());
     }
 
@@ -78,7 +78,7 @@ public class HSQLSimpleTest extends TestCase {
         Mapping m = MappingHelper.readFromTestFile("helpers/simple.ttl");
         m.configuration().setServeVocabulary(false);
         db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
-        GraphD2RQ g = new GraphD2RQ(m);
+        GraphD2RQ g = m.getDataModel().getGraph();
         assertTrue(g.contains(
                 NodeFactory.createURI(EX + "test/1"), RDF.Nodes.type, NodeFactory.createURI(EX + "Test")));
         assertEquals(1, g.size());
@@ -91,10 +91,10 @@ public class HSQLSimpleTest extends TestCase {
     }
 
     private Mapping generateDefaultMapping() {
-        return new MapParser(generateDefaultMappingModel(), EX).parse();
+        return MappingFactory.create(generateDefaultMappingModel(), EX);
     }
 
     private GraphD2RQ generateDefaultGraphD2RQ() {
-        return new GraphD2RQ(generateDefaultMapping());
+        return generateDefaultMapping().getDataModel().getGraph();
     }
 }

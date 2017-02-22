@@ -29,7 +29,7 @@ public class CompileTest extends TestCase {
 
     public void setUp() {
         this.model = ModelFactory.createDefaultModel();
-        this.mapping = new Mapping();
+        this.mapping = MappingFactory.createEmpty();
         this.database = new Database(this.model.createResource());
         database.useConnectedDB(new DummyDB());
         this.mapping.addDatabase(this.database);

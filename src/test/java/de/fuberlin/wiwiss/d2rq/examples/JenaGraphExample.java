@@ -12,7 +12,7 @@ import org.apache.jena.vocabulary.DC;
 
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.parser.MapParser;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 
 public class JenaGraphExample {
 
@@ -21,11 +21,10 @@ public class JenaGraphExample {
         Model mapModel = FileManager.get().loadModel("doc/example/mapping-iswc.mysql.ttl");
 
         // Parse mapping file
-        MapParser parser = new MapParser(mapModel, "http://localhost:2020/");
-        Mapping mapping = parser.parse();
+        Mapping mapping = MappingFactory.create(mapModel, "http://localhost:2020/");
 
         // Set up the GraphD2RQ
-        GraphD2RQ g = new GraphD2RQ(mapping);
+        GraphD2RQ g = mapping.getDataModel().getGraph();
 
         // Create a find(spo) pattern
         Node subject = Node.ANY;

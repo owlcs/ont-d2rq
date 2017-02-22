@@ -1,22 +1,14 @@
-package de.fuberlin.wiwiss.d2rq.parser;
-
-import java.util.Collection;
+package de.fuberlin.wiwiss.d2rq.map;
 
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
 
-import de.fuberlin.wiwiss.d2rq.map.ClassMap;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
-import de.fuberlin.wiwiss.d2rq.map.ResourceMap;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
 /**
- * todo: move it somewhere.
  * To convert {@link Mapping} -> {@link Model}
  * <p>
  * Currently there is only one model builder ({@link OWLModelBuilder}), which makes simple OWL2 DL ontology.
@@ -24,14 +16,16 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
  * Created by @szuev on 19.02.2017.
  */
 public class MappingTransform {
-    private static ModelBuilder builder = new OWLModelBuilder();
+    private static ModelBuilder owlBuilder = new OWLModelBuilder();
 
-    public static ModelBuilder getBuilder() {
-        return builder;
+    public static ModelBuilder getModelBuilder() {
+        return owlBuilder;
     }
 
-    public static void setBuilder(ModelBuilder b) {
-        builder = b;
+    public static ModelBuilder setModelBuilder(ModelBuilder b) {
+        ModelBuilder prev = MappingTransform.owlBuilder;
+        MappingTransform.owlBuilder = b;
+        return prev;
     }
 
     interface ModelBuilder {
@@ -39,32 +33,17 @@ public class MappingTransform {
     }
 
     public static class OWLModelBuilder implements ModelBuilder {
-        public static final PrefixMapping OWL2_PREFIXES = PrefixMapping.Factory.create()
-                .setNsPrefix("rdfs", RDFS.getURI())
-                .setNsPrefix("rdf", RDF.getURI())
-                .setNsPrefix("owl", OWL.getURI())
-                .setNsPrefix("xsd", XSD.getURI())
-                .lock();
 
         @Override
         public Model build(Mapping mapping) {
             Model model = ModelFactory.createDefaultModel();
-
-            model.setNsPrefixes(mapping.getPrefixMapping().withDefaultMappings(OWL2_PREFIXES));
+            model.setNsPrefixes(mapping.getPrefixMapping());
 
             Resource anon = model.createResource();
             anon.addProperty(RDF.type, OWL.Ontology);
             mapping.databases().forEach(d -> anon.addLiteral(RDFS.comment, "Database: <" + d.getJDBCDSN() + ">"));
-            Collection<Resource> classes = mapping.classMapResources();
-            /*List<String> uris = classes.stream().filter(Resource::isURIResource).map(Resource::getNameSpace).distinct().collect(Collectors.toList());
-            if (uris.size() == 1) {
-                model.setNsPrefix(SCHEMA_PREFIX, uris.get(0));
-            } else {
-                for (int i = 0; i < uris.size(); i++) {
-                    model.setNsPrefix(String.format(SCHEMA_PREFIX_TEMPLATE, i + 1), uris.get(i));
-                }
-            }*/
-            classes.stream().map(mapping::classMap).forEach(classMap -> {
+
+            mapping.classMaps().forEach(classMap -> {
                 for (Resource clazz : classMap.getClasses()) {
                     addDefinitions(model, classMap, clazz);
                 }
@@ -78,7 +57,7 @@ public class MappingTransform {
             return model;
         }
 
-        private void addDefinitions(Model model, ResourceMap map, Resource targetResource) {
+        protected void addDefinitions(Model model, ResourceMap map, Resource targetResource) {
             if (ClassMap.class.isInstance(map)) {
                 model.add(targetResource, RDF.type, OWL.Class);
             } else if (PropertyBridge.class.isInstance(map)) {
@@ -108,9 +87,6 @@ public class MappingTransform {
                     }
                 }
             }
-           /* if (!model.contains(targetResource, RDF.type)) { // no declaration:
-                LOGGER.warn("Unknown mapping " + map + " : <" + targetResource + ">");
-            }*/
             for (Literal propertyLabel : map.getDefinitionLabels()) {
                 model.add(targetResource, RDFS.label, propertyLabel);
             }

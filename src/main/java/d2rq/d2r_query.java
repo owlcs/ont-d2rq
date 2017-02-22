@@ -87,7 +87,7 @@ public class d2r_query extends CommandLineTool {
         }
 
         loader.setFastMode(true);
-        ModelD2RQ d2rqModel = loader.getModelD2RQ();
+        ModelD2RQ d2rqModel = loader.getMapping().getDataModel();
 
         String prefixes = "";
         for (String prefix : d2rqModel.getNsPrefixMap().keySet()) {

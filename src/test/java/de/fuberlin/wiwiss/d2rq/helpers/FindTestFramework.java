@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import junit.framework.TestCase;
 
@@ -29,7 +29,7 @@ public abstract class FindTestFramework extends TestCase {
 
     protected void setUp() throws Exception {
         LOGGER.debug("SET UP");
-        this.graph = new ModelD2RQ(D2RQTestSuite.ISWC_MAP, "TURTLE", "http://test/").getGraph();
+        this.graph = MappingFactory.load(D2RQTestSuite.ISWC_MAP, "TURTLE", "http://test/").getDataModel().getGraph();
     }
 
     protected void tearDown() throws Exception {

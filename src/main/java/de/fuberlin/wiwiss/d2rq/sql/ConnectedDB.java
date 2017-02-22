@@ -122,8 +122,6 @@ public class ConnectedDB {
         }
     }
 
-    ;
-
     private void resetConnection() {
         if (this.connection != null) {
             try {
@@ -237,9 +235,8 @@ public class ConnectedDB {
             this.connection = DriverManager.getConnection(this.jdbcURL, getConnectionProperties());
         } catch (SQLException ex) {
             close();
-            throw new D2RQException(
-                    "Database connection to " + jdbcURL + " failed " +
-                            "(user: " + username + "): " + ex.getMessage(),
+            throw new D2RQException("Database connection to " + jdbcURL + " failed (user: " + username + "): " + ex.getMessage(),
+                    ex,
                     D2RQException.D2RQ_DB_CONNECTION_FAILED);
         }
         // Database-dependent initialization

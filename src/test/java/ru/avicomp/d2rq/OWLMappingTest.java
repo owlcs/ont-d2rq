@@ -35,8 +35,8 @@ public class OWLMappingTest {
         loader.setSystemBaseURI("http://db#");
         LOGGER.info("System base URI: " + loader.getSystemBaseURI());
         try {
-            LOGGER.info("Load schema and data.");
-            Model actual = loader.getModelD2RQ();
+            LOGGER.info("Load schema with data.");
+            Model actual = loader.getMapping().getDataModel();
             IOUtils.print(actual);
             Stream.of(OWL.Class, OWL.DatatypeProperty, OWL.ObjectProperty).forEach(t -> {
                 IOUtils.LOGGER.debug("Test " + t);

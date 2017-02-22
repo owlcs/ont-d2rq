@@ -23,6 +23,9 @@ public class SystemLoaderExample {
         // W3C Direct Mapping
         SystemLoader loader = new SystemLoader();
         loader.setJdbcURL("jdbc:hsqldb:mem:test");
+        // don't know why but _sometimes_ it doesn't work without user specified.
+        // Perhaps it is due to the impact of other tests.
+        loader.setUsername("d2rq");
         loader.setStartupSQLScript("doc/example/simple.sql");
         loader.setGenerateW3CDirectMapping(true);
         Mapping mapping = loader.getMapping();
@@ -34,7 +37,7 @@ public class SystemLoaderExample {
         }
 
         // Write the contents of the virtual RDF model as N-Triples
-        Model model = loader.getModelD2RQ();
+        Model model = loader.getMapping().getDataModel();
         model.write(System.out, "N-TRIPLES");
 
         // Important -- close the model!
@@ -48,7 +51,7 @@ public class SystemLoaderExample {
         loader.setSystemBaseURI("http://example.com/");
 
         // Get the virtual model and run a SPARQL query
-        model = loader.getModelD2RQ();
+        model = loader.getMapping().getDataModel();
         ResultSet rs = QueryExecutionFactory.create(
                 "SELECT * {?s ?p ?o} LIMIT 10", model).execSelect();
         while (rs.hasNext()) {

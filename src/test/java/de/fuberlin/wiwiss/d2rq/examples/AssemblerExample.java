@@ -18,7 +18,9 @@ public class AssemblerExample {
         Model m = Assembler.general.openModel(modelSpec);
 
         // Write it to System.out
-        m.write(System.out);
+        // jena 3.1.0: java.lang.StackOverflowError in case no format specified.
+        //m.write(System.out);
+        m.write(System.out, "ttl");
 
         m.close();
     }

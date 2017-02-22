@@ -102,7 +102,7 @@ public class RelationImpl extends Relation {
     }
 
     public String toString() {
-        StringBuffer result = new StringBuffer("RelationImpl(");
+        StringBuilder result = new StringBuilder("RelationImpl(");
         if (isUnique) {
             result.append("[unique]");
         }

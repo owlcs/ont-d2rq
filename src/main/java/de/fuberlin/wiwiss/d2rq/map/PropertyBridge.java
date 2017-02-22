@@ -15,7 +15,6 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.expr.AttributeExpr;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
-import de.fuberlin.wiwiss.d2rq.parser.RelationBuilder;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
@@ -100,27 +99,27 @@ public class PropertyBridge extends ResourceMap {
     }
 
     public int getLimit() {
-        return limit.intValue();
+        return limit;
     }
 
     public void setLimit(int limit) {
         assertNotYetDefined(this.limit, D2RQ.limit, D2RQException.PROPERTYBRIDGE_DUPLICATE_LIMIT);
-        this.limit = new Integer(limit);
+        this.limit = limit;
     }
 
     public int getLimitInverse() {
-        return limitInverse.intValue();
+        return limitInverse;
     }
 
     public void setLimitInverse(int limit) {
         assertNotYetDefined(this.limitInverse, D2RQ.limitInverse, D2RQException.PROPERTYBRIDGE_DUPLICATE_LIMITINVERSE);
-        this.limitInverse = new Integer(limit);
+        this.limitInverse = limit;
     }
 
     public void setOrder(String column, boolean desc) {
         assertNotYetDefined(this.order, (desc ? D2RQ.orderDesc : D2RQ.orderAsc), D2RQException.PROPERTYBRIDGE_DUPLICATE_ORDER);
         this.order = column;
-        this.orderDesc = new Boolean(desc);
+        this.orderDesc = desc;
     }
 
     public ClassMap getRefersToClassMap() {
@@ -193,14 +192,14 @@ public class PropertyBridge extends ResourceMap {
             builder.addOther(new PropertyMap(pattern, belongsToClassMap.database()).relationBuilder(database));
         }
         if (this.limit != null) {
-            builder.setLimit(this.limit.intValue());
+            builder.setLimit(this.limit);
         }
         if (this.limitInverse != null) {
-            builder.setLimitInverse(this.limitInverse.intValue());
+            builder.setLimitInverse(this.limitInverse);
         }
         if (this.order != null) {
             builder.setOrderSpecs(Collections.singletonList(
-                    new OrderSpec(new AttributeExpr(SQL.parseAttribute(this.order)), this.orderDesc.booleanValue())));
+                    new OrderSpec(new AttributeExpr(SQL.parseAttribute(this.order)), this.orderDesc)));
         }
         return builder.buildRelation();
     }

@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.parser;
 
+import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import junit.framework.TestCase;
 
 public class URITest extends TestCase {

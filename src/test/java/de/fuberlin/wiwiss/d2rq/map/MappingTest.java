@@ -16,13 +16,13 @@ public class MappingTest extends TestCase {
     private final static Resource classMap1 = ResourceFactory.createResource("http://test/classMap1");
 
     public void testNoDatabasesInitially() {
-        Mapping m = new Mapping();
+        Mapping m = MappingFactory.createEmpty();
         assertTrue(m.databases().isEmpty());
         assertNull(m.database(database1));
     }
 
     public void testReturnAddedDatabase() {
-        Mapping m = new Mapping();
+        Mapping m = MappingFactory.createEmpty();
         Database db = new Database(database1);
         m.addDatabase(db);
         assertEquals(Collections.singletonList(db), new ArrayList<Database>(m.databases()));
@@ -30,7 +30,7 @@ public class MappingTest extends TestCase {
     }
 
     public void testNoDatabaseCausesValidationError() {
-        Mapping m = new Mapping();
+        Mapping m = MappingFactory.createEmpty();
         try {
             m.validate();
         } catch (D2RQException ex) {
@@ -56,7 +56,7 @@ public class MappingTest extends TestCase {
     }
 
     public void testMultipleDatabasesForClassMapCauseValidationError() {
-        Mapping m = new Mapping();
+        Mapping m = MappingFactory.createEmpty();
         ClassMap c = new ClassMap(classMap1);
         try {
             Database db1 = new Database(database1);
@@ -71,7 +71,7 @@ public class MappingTest extends TestCase {
     }
 
     public void testClassMapWithoutDatabaseCausesValidationError() {
-        Mapping m = new Mapping();
+        Mapping m = MappingFactory.createEmpty();
         ClassMap c = new ClassMap(classMap1);
         try {
             Database db1 = new Database(database1);
@@ -86,13 +86,13 @@ public class MappingTest extends TestCase {
     }
 
     public void testNewMappingHasNoClassMaps() {
-        Mapping m = new Mapping();
+        Mapping m = MappingFactory.createEmpty();
         assertTrue(m.classMapResources().isEmpty());
         assertNull(m.classMap(classMap1));
     }
 
     public void testReturnAddedClassMaps() {
-        Mapping m = new Mapping();
+        Mapping m = MappingFactory.createEmpty();
         ClassMap c = new ClassMap(classMap1);
         m.addClassMap(c);
         assertEquals(Collections.singleton(classMap1),
