@@ -1,6 +1,5 @@
 package ru.avicomp.ontapi;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +36,7 @@ public class IndividualsTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static List<ONTAPITests.ConnectionData> getData() {
-        return Arrays.asList(ONTAPITests.ConnectionData.MYSQL, ONTAPITests.ConnectionData.POSTGRES);
+        return ONTAPITests.ConnectionData.asList();
     }
 
     @Test

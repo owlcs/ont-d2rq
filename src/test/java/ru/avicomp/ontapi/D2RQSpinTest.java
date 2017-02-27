@@ -1,6 +1,5 @@
 package ru.avicomp.ontapi;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.jena.mem.GraphMem;
@@ -41,7 +40,7 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static List<ONTAPITests.ConnectionData> getData() {
-        return Arrays.asList(ONTAPITests.ConnectionData.MYSQL, ONTAPITests.ConnectionData.POSTGRES);
+        return ONTAPITests.ConnectionData.asList();
     }
 
     @Override
@@ -64,13 +63,9 @@ public class D2RQSpinTest extends SpinMappingTest {
     public MappingFilter prepareDataFilter() {
         String papersTitleDataPropertyURI = D2RQGraphDocumentSource.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Title";
         String papersYearDataPropertyURI = D2RQGraphDocumentSource.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Year";
-        MappingFilter filter = MappingFilter.create().includeProperty(toIRI(papersTitleDataPropertyURI)).includeProperty(toIRI(papersYearDataPropertyURI));
+        MappingFilter filter = MappingFilter.create().includeProperty(data.toIRI(papersTitleDataPropertyURI)).includeProperty(data.toIRI(papersYearDataPropertyURI));
         LOGGER.debug(filter);
         return filter;
-    }
-
-    public IRI toIRI(String uri) {
-        return IRI.create(ONTAPITests.ConnectionData.POSTGRES.equals(data) ? uri.toLowerCase() : uri);
     }
 
     @Override

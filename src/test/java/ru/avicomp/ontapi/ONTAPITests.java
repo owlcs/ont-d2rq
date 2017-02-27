@@ -1,5 +1,8 @@
 package ru.avicomp.ontapi;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.enhanced.EnhGraph;
 import org.apache.jena.graph.Graph;
@@ -67,11 +70,11 @@ public abstract class ONTAPITests {
 
     public enum ConnectionData {
         /**
-         * to set up use <a href='file:doc/example/iswc-mysql.sql'>iswc-mysql</a>
+         * to set up use <a href='file:doc/example/iswc-mysql.sql'>iswc-mysql.sql</a>
          */
         MYSQL("jdbc:mysql://127.0.0.1/iswc", "root", null),
         /**
-         * to set up use <a href='file:doc/example/iswc-postgres.sql'>iswc-mysql</a>
+         * to set up use <a href='file:doc/example/iswc-postgres.sql'>iswc-postgres.sql</a>
          */
         POSTGRES("jdbc:postgresql://localhost:5432/iswc", "postgres", "");
 
@@ -99,6 +102,14 @@ public abstract class ONTAPITests {
 
         public D2RQGraphDocumentSource toDocumentSource() {
             return new D2RQGraphDocumentSource(iri, user, pwd);
+        }
+
+        public IRI toIRI(String uri) {
+            return IRI.create(POSTGRES.equals(this) ? uri.toLowerCase() : uri);
+        }
+
+        public static List<ConnectionData> asList() {
+            return Arrays.asList(values());
         }
     }
 
