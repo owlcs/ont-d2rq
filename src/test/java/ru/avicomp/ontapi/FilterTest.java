@@ -1,5 +1,6 @@
 package ru.avicomp.ontapi;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -7,6 +8,8 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.*;
 
 import ru.avicomp.ontapi.jena.model.OntOPE;
@@ -18,13 +21,24 @@ import ru.avicomp.ontapi.utils.ReadWriteUtils;
  * <p>
  * Created by @szuev on 25.02.2017.
  */
+@RunWith(Parameterized.class)
 public class FilterTest {
     private static final Logger LOGGER = Logger.getLogger(FilterTest.class);
+    private ONTAPITests.ConnectionData data;
+
+    public FilterTest(ONTAPITests.ConnectionData data) {
+        this.data = data;
+    }
+
+    @Parameterized.Parameters(name = "{0}")
+    public static List<ONTAPITests.ConnectionData> getData() {
+        return Arrays.asList(ONTAPITests.ConnectionData.MYSQL, ONTAPITests.ConnectionData.POSTGRES);
+    }
 
     @Test
     public void testLoad() throws Exception {
-        LOGGER.info("Load full db schema from " + ONTAPITests.JDBC_IRI);
-        D2RQGraphDocumentSource source1 = new D2RQGraphDocumentSource(ONTAPITests.JDBC_IRI);
+        LOGGER.info("Load full db schema from " + data);
+        D2RQGraphDocumentSource source1 = data.toDocumentSource();
         OntologyManager m = OntManagerFactory.createONTManager();
         OntologyModel o1 = (OntologyModel) m.loadOntologyFromOntologyDocument(source1);
         o1.axioms().forEach(LOGGER::debug);
@@ -33,6 +47,7 @@ public class FilterTest {
         LOGGER.info("Load the restricted model from db (property constraints)");
         OWLDataProperty dp = o1.dataPropertiesInSignature().findAny().orElseThrow(() -> new AssertionError("Can't find any data property."));
         OWLObjectProperty op = o1.objectPropertiesInSignature().findAny().orElseThrow(() -> new AssertionError("Can't find any object property."));
+
         MappingFilter filter1 = MappingFilter.create(dp, op);
         LOGGER.debug("Constraint properties: " + filter1.properties().collect(Collectors.toList()));
         D2RQGraphDocumentSource source2 = source1.filter(filter1);

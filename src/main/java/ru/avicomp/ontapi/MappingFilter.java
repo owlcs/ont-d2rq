@@ -64,12 +64,14 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     }
 
     /**
-     * creates filtered model base on specified one.
+     * creates filtered D2RQ mapping model base on specified one.
      *
      * @param model {@link Model} with D2RQ mapping rules.
      * @return the new Model which corresponds this filter.
+     * @throws OntApiException in case there some properties or classes are missed.
      */
     public Model filter(Model model) {
+        validate(model);
         MappingFilter _filter = compile(model);
         Model res = ModelFactory.createDefaultModel();
         res.setNsPrefixes(model.getNsPrefixMap());
@@ -86,7 +88,7 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     /**
      * Creates new {@link MappingFilter} and compiles it using specified {@link Model} with D2RQ mapping rules inside.
      * This means it complements missing properties and classes by analysing mapping graph:
-     * For each property it adds a class which corresponds d2rq:belongsToClassMap predicate;
+     * For each property it adds classes which correspond d2rq:belongsToClassMap and d2rq:refersToClassMap predicates;
      * For each class it adds properties which have the class as an object in statement with predicate d2rq:belongsToClassMap
      * and satisfy some other conditions to be a valid owl:DatatypeProperty or owl:ObjectProperty.
      * Unfamiliar properties and classes stay untouched.
@@ -106,14 +108,46 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     }
 
     /**
+     * validate that filter parameters are present in the specified model.
+     *
+     * @param model {@link Model} with D2RQ rules.
+     * @throws OntApiException if some parameters are missed.
+     */
+    public void validate(Model model) {
+        Set<Resource> missedProperties = properties().filter(p -> !model.contains(null, D2RQ.property, p)).collect(Collectors.toSet());
+        Set<Resource> missedClasses = classes().filter(c -> !model.contains(null, D2RQ.clazz, c)).collect(Collectors.toSet());
+        if (missedClasses.isEmpty() && missedProperties.isEmpty()) return;
+        StringBuilder sb = new StringBuilder();
+        if (!missedProperties.isEmpty()) {
+            sb.append("properties:").append(missedProperties).append(";");
+        }
+        if (!missedClasses.isEmpty()) {
+            sb.append("classes:").append(missedClasses).append(";");
+        }
+        throw new OntApiException("Some filter params are absent in model: " + sb);
+    }
+
+    /**
      * Returns all classes from model which relate to the properties in this filter.
      *
      * @param model D2RQ Model
      * @return Stream of classes
      */
     private Stream<Resource> classes(Model model) {
-        return properties().map(p -> findClassByProperty(p, model))
-                .filter(Objects::nonNull);
+        return properties().map(p -> model.listResourcesWithProperty(D2RQ.property, p))
+                .map(Iter::asStream)
+                .flatMap(Function.identity())
+                .map(p -> p.listProperties(D2RQ.belongsToClassMap).andThen(p.listProperties(D2RQ.refersToClassMap)))
+                .map(Iter::asStream)
+                .flatMap(Function.identity())
+                .map(Statement::getObject)
+                .filter(RDFNode::isURIResource)
+                .map(RDFNode::asResource)
+                .map(c -> model.listObjectsOfProperty(c, D2RQ.clazz))
+                .map(Iter::asStream)
+                .flatMap(Function.identity())
+                .filter(RDFNode::isURIResource)
+                .map(RDFNode::asResource);
     }
 
     /**
@@ -154,21 +188,6 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
         // object property:
         Set<RDFNode> refClassMaps = bridge.listProperties(D2RQ.refersToClassMap).mapWith(Statement::getObject).toSet();
         return !refClassMaps.isEmpty() && classMaps.containsAll(refClassMaps);
-    }
-
-    private static Resource findClassByProperty(Resource property, Model model) {
-        return Iter.asStream(model.listResourcesWithProperty(D2RQ.property, property))
-                .map(s -> model.listObjectsOfProperty(s, D2RQ.belongsToClassMap))
-                .map(Iter::asStream)
-                .flatMap(Function.identity())
-                .filter(RDFNode::isURIResource)
-                .map(RDFNode::asResource)
-                .map(r -> model.listObjectsOfProperty(r, D2RQ.clazz))
-                .map(Iter::asStream)
-                .flatMap(Function.identity())
-                .filter(RDFNode::isURIResource)
-                .map(RDFNode::asResource)
-                .findFirst().orElse(null);
     }
 
     @Override

@@ -22,7 +22,6 @@ import ru.avicomp.ontapi.jena.vocabulary.RDF;
  * Created by @szuev on 23.02.2017.
  */
 public abstract class ONTAPITests {
-    public static final IRI JDBC_IRI = IRI.create("jdbc:mysql://127.0.0.1/iswc?user=root");
 
     /**
      * Returns the new {@link OntPersonality} based on {@link OntModelConfig#ONT_PERSONALITY_LAX}.
@@ -64,6 +63,43 @@ public abstract class ONTAPITests {
                 .and((s, g) -> Iter.asStream(g.asGraph().find(s, RDF.type.asNode(), Node.ANY)).map(Triple::getObject)
                         .anyMatch(o -> ce.canWrap(o, g)));
         return new CommonOntObjectFactory(maker, finder, filter);
+    }
+
+    public enum ConnectionData {
+        /**
+         * to set up use <a href='file:doc/example/iswc-mysql.sql'>iswc-mysql</a>
+         */
+        MYSQL("jdbc:mysql://127.0.0.1/iswc", "root", null),
+        /**
+         * to set up use <a href='file:doc/example/iswc-postgres.sql'>iswc-mysql</a>
+         */
+        POSTGRES("jdbc:postgresql://localhost:5432/iswc", "postgres", "");
+
+        private final IRI iri;
+        private final String user;
+        private final String pwd;
+
+        ConnectionData(String uri, String user, String pwd) {
+            this.iri = IRI.create(uri);
+            this.user = user;
+            this.pwd = pwd;
+        }
+
+        public IRI getIRI() {
+            return iri;
+        }
+
+        public String getUser() {
+            return user;
+        }
+
+        public String getPwd() {
+            return pwd;
+        }
+
+        public D2RQGraphDocumentSource toDocumentSource() {
+            return new D2RQGraphDocumentSource(iri, user, pwd);
+        }
     }
 
     public static class IndividualImpl extends OntIndividualImpl.NamedImpl {

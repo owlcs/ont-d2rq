@@ -1,5 +1,6 @@
 package ru.avicomp.ontapi;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,6 +9,8 @@ import org.apache.jena.mem.GraphMem;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
 
@@ -23,9 +26,19 @@ import ru.avicomp.ontapi.jena.model.OntIndividual;
  * <p>
  * Created by @szuev on 25.02.2017.
  */
+@RunWith(Parameterized.class)
 public class IndividualsTest {
-
     private static final Logger LOGGER = Logger.getLogger(IndividualsTest.class);
+    private ONTAPITests.ConnectionData data;
+
+    public IndividualsTest(ONTAPITests.ConnectionData data) {
+        this.data = data;
+    }
+
+    @Parameterized.Parameters(name = "{0}")
+    public static List<ONTAPITests.ConnectionData> getData() {
+        return Arrays.asList(ONTAPITests.ConnectionData.MYSQL, ONTAPITests.ConnectionData.POSTGRES);
+    }
 
     @Test
     public void testList() throws Exception {
@@ -34,8 +47,8 @@ public class IndividualsTest {
         OntPersonality newGlobalPersonality = ONTAPITests.createD2RQPersonality();
         OntModelConfig.setPersonality(newGlobalPersonality);
 
-        LOGGER.info("Load full db schema from " + ONTAPITests.JDBC_IRI);
-        D2RQGraphDocumentSource source = new D2RQGraphDocumentSource(ONTAPITests.JDBC_IRI);
+        LOGGER.info("Load full db schema from " + data);
+        D2RQGraphDocumentSource source = data.toDocumentSource();
         LOGGER.info("Source: " + source);
 
         OntologyModel o = (OntologyModel) m.loadOntologyFromOntologyDocument(source);
