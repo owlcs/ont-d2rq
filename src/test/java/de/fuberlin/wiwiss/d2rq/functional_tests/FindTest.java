@@ -3,14 +3,12 @@ package de.fuberlin.wiwiss.d2rq.functional_tests;
 import org.apache.jena.JenaRuntime;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.AnonId;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 
 import de.fuberlin.wiwiss.d2rq.helpers.FindTestFramework;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
-import ru.avicomp.IOUtils;
 
 /**
  * Functional tests for the find(spo) operation of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ}.
@@ -197,7 +195,6 @@ public class FindTest extends FindTestFramework {
     }
 
     public void testDefinitions() {
-        IOUtils.print(ModelFactory.createModelForGraph(graph));
         find(ISWC.Conference, null, null);
         assertStatement(ISWC.Conference, RDF.type, OWL.Class);
         assertStatement(ISWC.Conference, RDFS.label, m.createLiteral("conference"));
