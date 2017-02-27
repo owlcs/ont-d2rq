@@ -13,7 +13,6 @@ import org.semanticweb.owlapi.model.SetOntologyID;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import ru.avicomp.ontapi.jena.Hybrid;
-import ru.avicomp.ontapi.jena.impl.configuration.OntModelConfig;
 import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.tests.SpinMappingTest;
@@ -44,10 +43,10 @@ public class D2RQSpinTest extends SpinMappingTest {
     }
 
     @Override
-    public void prepare() {
-        super.prepare();
-        OntPersonality newGlobalPersonality = ONTAPITests.createD2RQPersonality();
-        OntModelConfig.setPersonality(newGlobalPersonality);
+    public void setUpManager(OntologyManager manager) {
+        super.setUpManager(manager);
+        OntPersonality newPersonality = ONTAPITests.createD2RQPersonality();
+        manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setPersonality(newPersonality));
     }
 
     @Override

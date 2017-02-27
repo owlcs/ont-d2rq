@@ -14,7 +14,6 @@ import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
 
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import ru.avicomp.ontapi.jena.impl.configuration.OntModelConfig;
 import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 
@@ -42,9 +41,9 @@ public class IndividualsTest {
     @Test
     public void testList() throws Exception {
         OntologyManager m = OntManagerFactory.createONTManager();
-        // overwrite global individual factories
-        OntPersonality newGlobalPersonality = ONTAPITests.createD2RQPersonality();
-        OntModelConfig.setPersonality(newGlobalPersonality);
+        // overwrite local(manager) individual factories collection (personalities)
+        OntPersonality newPersonality = ONTAPITests.createD2RQPersonality();
+        m.setOntologyLoaderConfiguration(m.getOntologyLoaderConfiguration().setPersonality(newPersonality));
 
         LOGGER.info("Load full db schema from " + data);
         D2RQGraphDocumentSource source = data.toDocumentSource();

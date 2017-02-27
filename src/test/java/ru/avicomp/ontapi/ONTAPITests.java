@@ -76,7 +76,7 @@ public abstract class ONTAPITests {
         /**
          * to set up use <a href='file:doc/example/iswc-postgres.sql'>iswc-postgres.sql</a>
          */
-        POSTGRES("jdbc:postgresql://localhost:5432/iswc", "postgres", "");
+        POSTGRES("jdbc:postgresql://localhost:5432/iswc", "postgres", ""),;
 
         private final IRI iri;
         private final String user;
@@ -105,7 +105,7 @@ public abstract class ONTAPITests {
         }
 
         public IRI toIRI(String uri) {
-            return IRI.create(POSTGRES.equals(this) ? uri.toLowerCase() : uri);
+            return IRI.create(MYSQL.equals(this) ? uri : uri.toLowerCase());
         }
 
         public static List<ConnectionData> asList() {
