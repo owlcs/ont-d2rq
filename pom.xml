@@ -77,56 +77,17 @@
             <version>2.11.0</version>
             <type>jar</type>
         </dependency>
+        <!-- ontapi (with jena-3.0.1 inside): -->
         <dependency>
-            <groupId>org.apache.jena</groupId>
-            <artifactId>jena-arq</artifactId>
-            <version>3.1.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>xerces</groupId>
-                    <artifactId>xercesImpl</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpcore</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.github.jsonld-java</groupId>
-                    <artifactId>jsonld-java</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>ru.avicomp.ontapi</groupId>
+            <artifactId>ontapi</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <!--jdbc-drivers:-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.39</version>
-            <type>jar</type>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.jtds</groupId>
@@ -136,7 +97,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>9.4.1210.jre7</version>
+            <version>9.4.1212.jre7</version>
         </dependency>
         <!--tests-->
         <dependency>
@@ -146,15 +107,28 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>ru.avicomp.ontapi</groupId>
+            <artifactId>ontapi</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.topbraid</groupId>
+            <artifactId>spin</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-sdb</artifactId>
-            <version>3.1.0</version>
+            <version>3.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-core</artifactId>
-            <version>3.1.0</version>
+            <version>3.0.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
