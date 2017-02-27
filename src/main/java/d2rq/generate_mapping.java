@@ -13,6 +13,7 @@ import org.apache.jena.riot.RDFLanguages;
 
 import de.fuberlin.wiwiss.d2rq.CommandLineTool;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
+import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 
@@ -36,15 +37,18 @@ public class generate_mapping extends CommandLineTool {
         printConnectionOptions();
         System.err.println("    -o outfile.ttl  Output file name (default: stdout)");
         System.err.println("    -v              Generate RDFS+OWL vocabulary instead of mapping file");
+        System.err.println("    -b baseURI      Base URI for RDF output");
         System.err.println("    --verbose       Print debug information");
         System.err.println();
         System.exit(1);
     }
 
+    private ArgDecl baseArg = new ArgDecl(true, "b", "base");
     private ArgDecl outfileArg = new ArgDecl(true, "o", "out", "outfile");
     private ArgDecl vocabAsOutput = new ArgDecl(false, "v", "vocab");
 
     public void initArgs(CommandLine cmd) {
+        cmd.add(baseArg);
         cmd.add(outfileArg);
         cmd.add(vocabAsOutput);
     }
@@ -58,10 +62,14 @@ public class generate_mapping extends CommandLineTool {
         if (cmd.contains(outfileArg)) {
             File f = new File(cmd.getArg(outfileArg).getValue());
             log.info("Writing to " + f);
+            loader.setSystemBaseURI(MapParser.absolutizeURI(f.toURI().toString() + "#"));
             out = new PrintStream(new FileOutputStream(f));
         } else {
             log.info("Writing to stdout");
             out = System.out;
+        }
+        if (cmd.hasArg(baseArg)) {
+            loader.setSystemBaseURI(cmd.getArg(baseArg).getValue());
         }
 
         Mapping generator = loader.getMapping();

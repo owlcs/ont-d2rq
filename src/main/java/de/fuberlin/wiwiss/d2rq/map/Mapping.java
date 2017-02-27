@@ -8,6 +8,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.XSD;
 
 import de.fuberlin.wiwiss.d2rq.ClassMapLister;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
@@ -17,6 +21,8 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
 
 /**
  * A D2RQ mapping. Consists of {@link ClassMap}s,
@@ -81,7 +87,7 @@ public class Mapping implements AutoCloseable {
     }
 
     public PrefixMapping getPrefixMapping() {
-        return prefixes == null ? prefixes = Prefixes.createPrefixes(model) : prefixes;
+        return prefixes == null ? prefixes = Prefixes.createSchemaPrefixes(model) : prefixes;
     }
 
     public void validate() throws D2RQException {
@@ -256,4 +262,55 @@ public class Mapping implements AutoCloseable {
         }
     }
 
+    /**
+     * Just a set of constants and auxiliary methods to work with prefixes (mapping + schema)
+     * It is used by {@link de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator} and {@link Mapping}.
+     * <p>
+     * Created by szuev on 22.02.2017.
+     */
+    public static class Prefixes {
+        public static final String VOCAB_PREFIX = "vocab";
+        public static final String MAP_PREFIX = "map";
+        public static final String D2RQ_PREFIX = "d2rq";
+        public static final String JDBC_PREFIX = "jdbc";
+
+        private static final PrefixMapping COMMON = PrefixMapping.Factory.create()
+                .setNsPrefix("rdf", RDF.getURI())
+                .setNsPrefix("rdfs", RDFS.getURI())
+                .setNsPrefix("xsd", XSD.getURI()).lock();
+
+        public static final PrefixMapping MAPPING = PrefixMapping.Factory.create()
+                .withDefaultMappings(COMMON)
+                .setNsPrefix(D2RQ_PREFIX, D2RQ.getURI())
+                .setNsPrefix(JDBC_PREFIX, JDBC.getURI()).lock();
+        public static final PrefixMapping SCHEMA = PrefixMapping.Factory.create()
+                .withDefaultMappings(COMMON)
+                .setNsPrefix("owl", OWL.getURI()).lock();
+
+        private static PrefixMapping createSchemaPrefixes(Model mapping) {
+            PrefixMapping res = PrefixMapping.Factory.create().withDefaultMappings(Prefixes.SCHEMA);
+            Map<String, String> add = mapping.getNsPrefixMap();
+            Map<String, String> ignore = calcMapSpecificPrefixes(mapping);
+            ignore.entrySet().forEach(e -> add.remove(e.getKey(), e.getValue()));
+            res.setNsPrefixes(add);
+            return res;
+        }
+
+        private static Map<String, String> calcMapSpecificPrefixes(Model mapping) {
+            Map<String, String> res = new HashMap<>();
+            Stream.of(D2RQ_PREFIX, JDBC_PREFIX).forEach(p -> {
+                String ns = mapping.getNsPrefixURI(p);
+                if (ns == null) return;
+                res.put(p, ns);
+            });
+            mapping.listSubjectsWithProperty(RDF.type, D2RQ.Database).forEachRemaining(r -> {
+                String ns = r.getNameSpace();
+                if (ns == null) return;
+                String p = mapping.getNsURIPrefix(ns);
+                if (p == null) return;
+                res.put(p, ns);
+            });
+            return res;
+        }
+    }
 }

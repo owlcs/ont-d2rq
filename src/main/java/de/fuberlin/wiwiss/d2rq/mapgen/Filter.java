@@ -1,6 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.mapgen;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
@@ -79,7 +80,7 @@ public abstract class Filter {
     }
 
     protected boolean sameSchema(String schema1, String schema2) {
-        return schema1 == schema2 || (schema1 != null && schema1.equals(schema2));
+        return Objects.equals(schema1, schema2);
     }
 
     public interface IdentifierMatcher {
@@ -121,8 +122,7 @@ public abstract class Filter {
     public static IdentifierMatcher createPatternMatcher(final Pattern pattern) {
         return new IdentifierMatcher() {
             public boolean matches(String identifier) {
-                if (identifier == null) return false;
-                return pattern.matcher(identifier).matches();
+                return identifier != null && pattern.matcher(identifier).matches();
             }
 
             public String toString() {

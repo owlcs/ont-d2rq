@@ -19,7 +19,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Join;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
-import de.fuberlin.wiwiss.d2rq.map.Prefixes;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -55,7 +55,7 @@ public class MappingGenerator {
 
     protected URI startupSQLScript;
 
-    public static final String DEFAULT_MAP_NS = "#";
+    public static final String DEFAULT_MAP_NS = "map#";
     public static final String DEFAULT_DB_NS = "";
     public static final String DEFAULT_SCHEMA_NS = "vocab/";
 
@@ -154,66 +154,72 @@ public class MappingGenerator {
      * @return In-memory Jena model containing the D2RQ mapping
      */
     public Model mappingModel(String baseURI) {
-        Model res;
-        try {
-            res = createMappingModel();
-        } finally {
-            assignedNames.clear();
-        }
         if (baseURI == null || baseURI.isEmpty()) {
-            return res;
+            return createMappingModel();
+        }
+        URI base = URI.create(baseURI);
+        if (!base.isAbsolute()) {
+            throw new IllegalArgumentException("Not absolute: <" + base + ">");
         }
         if (mapNamespaceURI.isAbsolute() && vocabNamespaceURI.isAbsolute() && instanceNamespaceURI.isAbsolute()) {
-            LOGGER.warn("There are no relative URIs: <" + baseURI + "> is ignored.");
-            return res;
+            LOGGER.warn("There are no relative URIs. The base URI <" + base + "> is ignored.");
+            return createMappingModel();
         }
+        LOGGER.info("The base URI is <" + base + ">.");
         MappingGenerator copy = new MappingGenerator(database);
         copy.copy(this);
         if (!copy.mapNamespaceURI.isAbsolute()) {
-            copy.setMapNamespaceURI(concat(baseURI, copy.mapNamespaceURI) + '#');
+            copy.setMapNamespaceURI(composeURI(base, copy.mapNamespaceURI).toString());
         }
         if (!copy.instanceNamespaceURI.isAbsolute()) {
-            copy.setInstanceNamespaceURI(concat(baseURI, copy.instanceNamespaceURI) + '#');
+            copy.setInstanceNamespaceURI(composeURI(base, copy.instanceNamespaceURI).toString());
         }
         if (!copy.vocabNamespaceURI.isAbsolute()) {
-            copy.setVocabNamespaceURI(concat(baseURI, copy.vocabNamespaceURI) + '#');
+            copy.setVocabNamespaceURI(composeURI(base, copy.vocabNamespaceURI).toString());
         }
         return copy.createMappingModel();
     }
 
-    private static String concat(String base, URI part) {
-        String res = base.replaceAll("(/|#)+$", "") + "/" + part.toString().replaceAll("^(/|#)", "");
-        return res.replaceAll("(/|#)+$", "");
+    private static URI composeURI(URI base, URI part) {
+        String res = trimEndSymbol(base.toString()) + "/" + trimEndSymbol(part.toString());
+        return URI.create(trimEndSymbol(res) + '#');
+    }
+
+    private static String trimEndSymbol(String s) {
+        return s.replaceAll("(/|#)+$", "");
     }
 
     protected Model createMappingModel() {
-        Model res = ModelFactory.createDefaultModel();
-        res.setNsPrefixes(Prefixes.STANDARD);
-        res.setNsPrefix(Prefixes.MAP_PREFIX, mapNamespaceURI.toString());
-        //res.setNsPrefix(DB_PREFIX, instanceNamespaceURI.toString());
-        res.setNsPrefix(Prefixes.VOCAB_PREFIX, vocabNamespaceURI.toString());
-        if (!serveVocabulary) {
-            addConfiguration(res);
-        }
-        Resource db = addDatabase(res);
-        List<RelationName> tableNames = new ArrayList<>();
-        for (RelationName tableName : database.schemaInspector().listTableNames(filter.getSingleSchema())) {
-            if (!filter.matches(tableName)) {
-                LOGGER.info("Skipping table " + tableName);
-                continue;
+        try {
+            Model res = ModelFactory.createDefaultModel();
+            res.setNsPrefixes(Mapping.Prefixes.MAPPING);
+            res.setNsPrefix(Mapping.Prefixes.MAP_PREFIX, mapNamespaceURI.toString());
+            res.setNsPrefix(Mapping.Prefixes.VOCAB_PREFIX, vocabNamespaceURI.toString());
+            if (!serveVocabulary) {
+                addConfiguration(res);
             }
-            tableNames.add(tableName);
-        }
-        LOGGER.info("Filter '" + filter + "' matches " + tableNames.size() + " total tables");
-        for (RelationName tableName : tableNames) {
-            if (handleLinkTables && isLinkTable(tableName)) {
-                addLinkTable(res, tableName);
-            } else {
-                addTable(res, db, tableName);
+            Resource db = addDatabase(res);
+            List<RelationName> tableNames = new ArrayList<>();
+            for (RelationName tableName : database.schemaInspector().listTableNames(filter.getSingleSchema())) {
+                if (!filter.matches(tableName)) {
+                    LOGGER.info("Skipping table <" + tableName + ">");
+                    continue;
+                }
+                tableNames.add(tableName);
             }
+            LOGGER.info("Filter '" + filter + "' matches " + tableNames.size() + " total tables");
+            for (RelationName tableName : tableNames) {
+                if (handleLinkTables && isLinkTable(tableName)) {
+                    addLinkTable(res, tableName);
+                } else {
+                    addTable(res, db, tableName);
+                }
+            }
+            LOGGER.info("Done!");
+            return res;
+        } finally {
+            assignedNames.clear();
         }
-        LOGGER.info("Done!");
-        return res;
     }
 
     protected Resource addConfiguration(Model model) {
@@ -301,6 +307,10 @@ public class MappingGenerator {
         res.addProperty(D2RQ.belongsToClassMap, model.getResource(classMapIRITurtle(table1)));
         res.addProperty(D2RQ.property, model.getResource(vocabularyIRITurtle(linkTableName)));
         res.addProperty(D2RQ.refersToClassMap, model.getResource(classMapIRITurtle(table2)));
+        if (generateDefinitionLabels) { // new:
+            res.addLiteral(D2RQ.propertyDefinitionLabel, toLabel(join1.attributes1()));
+            res.addLiteral(D2RQ.propertyDefinitionLabel, toLabel(join2.attributes1()));
+        }
         for (Attribute column : join1.attributes1()) {
             Attribute otherColumn = join1.equalAttribute(column);
             String join = column.qualifiedName() + " " + Join.joinOperators[join1.joinDirection()] + " " + otherColumn.qualifiedName();
@@ -386,7 +396,7 @@ public class MappingGenerator {
         res.addProperty(D2RQ.belongsToClassMap, table1);
         res.addProperty(D2RQ.property, prop);
         res.addProperty(D2RQ.refersToClassMap, table2);
-        if (generateDefinitionLabels) { //todo: it is new here
+        if (generateDefinitionLabels) { // new:
             res.addLiteral(D2RQ.propertyDefinitionLabel, toLabel(primaryColumns));
         }
         AliasMap alias = AliasMap.NO_ALIASES;

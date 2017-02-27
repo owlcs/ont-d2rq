@@ -28,7 +28,7 @@ public class MappingTransform {
         return prev;
     }
 
-    interface ModelBuilder {
+    public interface ModelBuilder {
         Model build(Mapping mapping);
     }
 
@@ -65,9 +65,6 @@ public class MappingTransform {
                 ClassMap range = prop.getRefersToClassMap();
                 ClassMap domain = prop.getBelongsToClassMap();
                 String column = prop.getColumn();
-                if (targetResource.equals(RDFS.label)) {
-                    System.err.println();
-                }
                 if (domain != null) {
                     if (range != null) { // if range != null -> object property (foreign key)
                         model.add(targetResource, RDF.type, OWL.ObjectProperty);
