@@ -40,7 +40,7 @@ public class IndividualsTest {
 
     @Test
     public void testList() throws Exception {
-        OntologyManager m = OntManagerFactory.createONTManager();
+        OntologyManager m = OntManagers.createONT();
         // overwrite local(manager) individual factories collection (personalities)
         OntPersonality newPersonality = ONTAPITests.createD2RQPersonality();
         m.setOntologyLoaderConfiguration(m.getOntologyLoaderConfiguration().setPersonality(newPersonality));

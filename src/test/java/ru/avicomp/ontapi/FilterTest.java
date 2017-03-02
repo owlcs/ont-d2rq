@@ -38,7 +38,7 @@ public class FilterTest {
     public void testLoad() throws Exception {
         LOGGER.info("Load full db schema from " + data);
         D2RQGraphDocumentSource source1 = data.toDocumentSource();
-        OntologyManager m = OntManagerFactory.createONTManager();
+        OntologyManager m = OntManagers.createONT();
         OntologyModel o1 = (OntologyModel) m.loadOntologyFromOntologyDocument(source1);
         o1.axioms().forEach(LOGGER::debug);
         source1.close();
