@@ -129,7 +129,6 @@ public abstract class ONTAPITests {
         Graph prev = ((Hybrid) model.asGraphModel().getBaseGraph()).switchTo(chosen);
         // since content is changed reset all caches:
         model.clearCache();
-        ((OntInternalModel) model.asGraphModel()).clearJenaCache();
         return prev;
     }
 
