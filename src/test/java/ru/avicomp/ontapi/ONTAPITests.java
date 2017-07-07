@@ -52,7 +52,7 @@ public abstract class ONTAPITests {
         OntObjectFactory anonymous = res.getOntImplementation(OntIndividual.Anonymous.class);
 
         OntObjectFactory named = createNamedIndividualFactory(ce);
-        OntObjectFactory all = new MultiOntObjectFactory(OntFinder.ANY_SUBJECT, named, anonymous);
+        OntObjectFactory all = new MultiOntObjectFactory(OntFinder.ANY_SUBJECT, null, named, anonymous);
         res.register(OntIndividual.Named.class, named)
                 .register(OntIndividual.class, all);
         return res;

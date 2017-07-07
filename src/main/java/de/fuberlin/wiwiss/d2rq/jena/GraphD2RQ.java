@@ -78,20 +78,6 @@ public class GraphD2RQ extends GraphBase implements Graph {
         getPrefixMapping().setNsPrefixes(mapping.getPrefixMapping());
     }
 
-    /**
-     * Returns a QueryHandler for this graph.
-     * The query handler class can be set by the mapping.
-     * It then must have exact constructor signature QueryHandler(Graph)
-     * For some reasons, Java does not allow to call getConstructor(GraphD2RQ.class)
-     * on SimpleQueryHandler class.
-     */
-/* todo: no more QueryHandler in jena (3.0.1)
-    @Override
-	public QueryHandler queryHandler() {
-		checkOpen();
-		return new D2RQQueryHandler(this);
-	}
-*/
     @Override
     public void close() {
         mapping.close();
@@ -126,5 +112,15 @@ public class GraphD2RQ extends GraphBase implements Graph {
      */
     public Mapping getMapping() {
         return mapping;
+    }
+
+    /**
+     * Do not allow database excursion
+     *
+     * @return String
+     */
+    @Override
+    public String toString() {
+        return getClass().getName() + "@" + Integer.toHexString(hashCode());
     }
 }

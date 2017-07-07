@@ -3,17 +3,43 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ru.avicomp</groupId>
-    <artifactId>ont-d2rq</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>ontd2rq</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
 
     <name>ont-d2rq</name>
-    <description>The D2R engine incl. some edits as maven project. See also http://github.com/cygri/d2rq</description>
+    <description>The D2R engine incl. some edits as maven project. See also https://github.com/d2rq/d2rq.git
+    </description>
     <url>http://d2rq.org</url>
+
+    <licenses>
+        <license>
+            <name>Apache License Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/avicomp/ont-d2rq/issues</url>
+    </issueManagement>
+
+    <organization>
+        <name>Avicomp Services, AO</name>
+        <url>http://avicomp.ru/</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Sergei Zuev</name>
+            <email>sss.zuev@gmail.com</email>
+        </developer>
+    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--The tests depend on configured local databases (mysql, postges)-->
+        <!--The tests depend on configured local databases (mysql, postgres)-->
         <maven.test.skip>true</maven.test.skip>
+        <skipTests>true</skipTests>
     </properties>
 
     <build>
@@ -81,9 +107,9 @@
         </dependency>
         <!-- ontapi (with jena-3.0.1 inside): -->
         <dependency>
-            <groupId>ru.avicomp.ontapi</groupId>
+            <groupId>ru.avicomp</groupId>
             <artifactId>ontapi</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
         <!--jdbc-drivers:-->
         <dependency>
@@ -109,9 +135,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>ru.avicomp.ontapi</groupId>
+            <groupId>ru.avicomp</groupId>
             <artifactId>ontapi</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

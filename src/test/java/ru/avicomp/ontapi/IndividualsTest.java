@@ -20,7 +20,7 @@ import ru.avicomp.ontapi.jena.model.OntIndividual;
 /**
  * Test loading database data in the form of OWLNamedIndividuals.
  * Here we use the method {@link ru.avicomp.ontapi.jena.Hybrid#switchTo(Graph)},
- * but if we really need list of all individuals we better put them to memory without switching.
+ * but if you really need the list of all individuals you better put them to memory without switching.
  * <p>
  * Created by @szuev on 25.02.2017.
  */
