@@ -11,6 +11,19 @@
     </description>
     <url>http://d2rq.org</url>
 
+    <repositories>
+        <repository>
+            <id>snapshots-repo</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <licenses>
         <license>
             <name>Apache License Version 2.0</name>
@@ -27,13 +40,6 @@
         <name>Avicomp Services, AO</name>
         <url>http://avicomp.ru/</url>
     </organization>
-
-    <developers>
-        <developer>
-            <name>Sergei Zuev</name>
-            <email>sss.zuev@gmail.com</email>
-        </developer>
-    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

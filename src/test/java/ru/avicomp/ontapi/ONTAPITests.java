@@ -1,7 +1,11 @@
 package ru.avicomp.ontapi;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.enhanced.EnhGraph;
@@ -72,36 +76,32 @@ public abstract class ONTAPITests {
         /**
          * to set up use <a href='file:doc/example/iswc-mysql.sql'>iswc-mysql.sql</a>
          */
-        MYSQL("jdbc:mysql://127.0.0.1/iswc", "root", null),
+        MYSQL,
         /**
          * to set up use <a href='file:doc/example/iswc-postgres.sql'>iswc-postgres.sql</a>
          */
-        POSTGRES("jdbc:postgresql://localhost:5432/iswc", "postgres", ""),;
+        POSTGRES,;
 
-        private final IRI iri;
-        private final String user;
-        private final String pwd;
-
-        ConnectionData(String uri, String user, String pwd) {
-            this.iri = IRI.create(uri);
-            this.user = user;
-            this.pwd = pwd;
-        }
+        private static final Properties PROPERTIES = load("/db.properties");
 
         public IRI getIRI() {
-            return iri;
+            return IRI.create(PROPERTIES.getProperty(prefix() + "uri"));
         }
 
         public String getUser() {
-            return user;
+            return PROPERTIES.getProperty(prefix() + "user");
         }
 
         public String getPwd() {
-            return pwd;
+            return PROPERTIES.getProperty(prefix() + "password");
+        }
+
+        private String prefix() {
+            return String.format("%s.", name().toLowerCase());
         }
 
         public D2RQGraphDocumentSource toDocumentSource() {
-            return new D2RQGraphDocumentSource(iri, user, pwd);
+            return new D2RQGraphDocumentSource(getIRI(), getUser(), getPwd());
         }
 
         public IRI toIRI(String uri) {
@@ -110,6 +110,16 @@ public abstract class ONTAPITests {
 
         public static List<ConnectionData> asList() {
             return Arrays.asList(values());
+        }
+
+        public static Properties load(String file) {
+            Properties res = new Properties();
+            try (InputStream in = ConnectionData.class.getResourceAsStream(file)) {
+                res.load(in);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            return res;
         }
     }
 
