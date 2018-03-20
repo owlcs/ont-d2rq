@@ -4,7 +4,7 @@
 
     <groupId>ru.avicomp</groupId>
     <artifactId>ontd2rq</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <name>ont-d2rq</name>
     <description>The D2R engine incl. some edits as maven project. See also https://github.com/d2rq/d2rq.git
@@ -46,6 +46,8 @@
         <!--The tests depend on configured local databases (mysql, postgres)-->
         <maven.test.skip>true</maven.test.skip>
         <skipTests>true</skipTests>
+        <version.jena>3.6.0</version.jena>
+        <version.ontpai>1.2.0-SNAPSHOT</version.ontpai>
     </properties>
 
     <build>
@@ -111,11 +113,22 @@
             <version>2.11.0</version>
             <type>jar</type>
         </dependency>
-        <!-- ontapi (with jena-3.0.1 inside): -->
+        <!-- ONT-API: -->
         <dependency>
             <groupId>ru.avicomp</groupId>
             <artifactId>ontapi</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>${version.ontpai}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.jena</groupId>
+                    <artifactId>jena-arq</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-arq</artifactId>
+            <version>${version.jena}</version>
         </dependency>
         <!--jdbc-drivers:-->
         <dependency>
@@ -143,26 +156,32 @@
         <dependency>
             <groupId>ru.avicomp</groupId>
             <artifactId>ontapi</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>${version.ontpai}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.topbraid</groupId>
-            <artifactId>spin</artifactId>
-            <version>2.0.0-SNAPSHOT</version>
+            <artifactId>shacl</artifactId>
+            <version>1.0.1</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.jena</groupId>
+                    <artifactId>jena-arq</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-sdb</artifactId>
-            <version>3.0.1</version>
+            <version>${version.jena}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-core</artifactId>
-            <version>3.0.1</version>
+            <version>${version.jena}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

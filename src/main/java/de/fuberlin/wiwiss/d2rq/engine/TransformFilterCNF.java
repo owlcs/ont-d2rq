@@ -108,30 +108,22 @@ public class TransformFilterCNF extends TransformCopy {
     public static class DeMorganLawApplyer implements ExprVisitor {
         private Expr resultExpr;
 
-        /**
-         * Constructor
-         */
-        public DeMorganLawApplyer() {
-        }
-
-        public void finishVisit() {
-        }
-
-        public void startVisit() {
-        }
-
+        @Override
         public void visit(NodeValue nv) {
             this.resultExpr = nv;
         }
 
+        @Override
         public void visit(ExprVar nv) {
             this.resultExpr = nv;
         }
 
+        @Override
         public void visit(ExprFunction0 func) {
             this.resultExpr = func;
         }
 
+        @Override
         public void visit(ExprFunction1 curExpr) {
             Expr subExpr, leftExpr, rightExpr;
             Expr newAndExpr;
@@ -197,6 +189,7 @@ public class TransformFilterCNF extends TransformCopy {
             }
         }
 
+        @Override
         public void visit(ExprFunction2 curExpr) {
             Expr leftExpr, rightExpr;
 
@@ -214,7 +207,7 @@ public class TransformFilterCNF extends TransformCopy {
                 // create new And/Or with resultExpr
                 if (curExpr instanceof E_LogicalOr) {
                     this.resultExpr = new E_LogicalOr(leftExpr, rightExpr);
-                } else if (curExpr instanceof E_LogicalAnd) {
+                } else {
                     this.resultExpr = new E_LogicalAnd(leftExpr, rightExpr);
                 }
 
@@ -223,20 +216,29 @@ public class TransformFilterCNF extends TransformCopy {
             }
         }
 
+        @Override
         public void visit(ExprFunction3 func) {
             this.resultExpr = func;
         }
 
+        @Override
         public void visit(ExprFunctionN func) {
             this.resultExpr = func;
         }
 
+        @Override
         public void visit(ExprFunctionOp funcOp) {
             this.resultExpr = funcOp;
         }
 
+        @Override
         public void visit(ExprAggregator eAgg) {
             this.resultExpr = eAgg;
+        }
+
+        @Override
+        public void visit(ExprNone exprNone) {
+            this.resultExpr = exprNone;
         }
 
         public Expr result() {
@@ -253,30 +255,22 @@ public class TransformFilterCNF extends TransformCopy {
     public static class DistributiveLawApplyer implements ExprVisitor {
         private Expr resultExpr;
 
-        /**
-         * Constructor
-         */
-        public DistributiveLawApplyer() {
-        }
-
-        public void finishVisit() {
-        }
-
-        public void startVisit() {
-        }
-
+        @Override
         public void visit(NodeValue nv) {
             this.resultExpr = nv;
         }
 
+        @Override
         public void visit(ExprVar nv) {
             this.resultExpr = nv;
         }
 
+        @Override
         public void visit(ExprFunction0 func) {
             this.resultExpr = func;
         }
 
+        @Override
         public void visit(ExprFunction1 curExpr) {
             Expr subExpr;
             if (curExpr instanceof E_LogicalNot) {
@@ -290,6 +284,7 @@ public class TransformFilterCNF extends TransformCopy {
             }
         }
 
+        @Override
         public void visit(ExprFunction2 curExpr) {
             Expr leftExpr, rightExpr;
             Expr leftLeftExpr, rightLeftExpr, leftRightExpr, rightRightExpr;
@@ -350,20 +345,29 @@ public class TransformFilterCNF extends TransformCopy {
             }
         }
 
+        @Override
         public void visit(ExprFunction3 func) {
             this.resultExpr = func;
         }
 
+        @Override
         public void visit(ExprFunctionN func) {
             this.resultExpr = func;
         }
 
+        @Override
         public void visit(ExprFunctionOp funcOp) {
             this.resultExpr = funcOp;
         }
 
+        @Override
         public void visit(ExprAggregator eAgg) {
             this.resultExpr = eAgg;
+        }
+
+        @Override
+        public void visit(ExprNone exprNone) {
+            this.resultExpr = exprNone;
         }
 
         public Expr result() {

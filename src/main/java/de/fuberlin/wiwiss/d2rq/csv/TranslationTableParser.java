@@ -1,18 +1,17 @@
 package de.fuberlin.wiwiss.d2rq.csv;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.map.TranslationTable.Translation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.jena.riot.system.IRIResolver;
+
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.n3.IRIResolver;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable.Translation;
 
 /**
  * Parses the contents of a CSV file into a collection of
@@ -34,7 +33,7 @@ public class TranslationTableParser {
 
     public TranslationTableParser(String url) {
         try {
-            this.url = new IRIResolver().resolve(url);
+            this.url = IRIResolver.resolveFileURL(url);
             this.reader = new BufferedReader(new FileReader(new File(new URI(this.url))));
         } catch (FileNotFoundException fnfex) {
             throw new D2RQException("File not found at URL: " + this.url);

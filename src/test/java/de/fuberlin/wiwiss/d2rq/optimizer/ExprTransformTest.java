@@ -2,24 +2,34 @@
  */
 package de.fuberlin.wiwiss.d2rq.optimizer;
 
-import org.apache.jena.sparql.expr.Expr;
-import org.apache.jena.sparql.util.ExprUtils;
-
 import de.fuberlin.wiwiss.d2rq.engine.TransformFilterCNF.DeMorganLawApplyer;
 import de.fuberlin.wiwiss.d2rq.engine.TransformFilterCNF.DistributiveLawApplyer;
 import junit.framework.TestCase;
+import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.expr.ExprNone;
+import org.apache.jena.sparql.util.ExprUtils;
 
 /**
  * @author dorgon
  */
 public class ExprTransformTest extends TestCase {
 
+    /**
+     * To fix test due to upgrade from jena 3.0.1 -&gt; 3.6.0
+     *
+     * @param node {@link ExprNone}
+     * @return String
+     */
+    public static String asString(Expr node) {
+        return ExprUtils.fmtSPARQL(node);
+    }
+
     public void testExprDeMorganDoubleNotA() {
         Expr expr = ExprUtils.parse("!(!(?a))");
         DeMorganLawApplyer apply = new DeMorganLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("?a", apply.result().toString());
+        assertEquals("?a", asString(apply.result()));
     }
 
     public void testExprDeMorganDoubleNotAB() {
@@ -27,7 +37,7 @@ public class ExprTransformTest extends TestCase {
         DeMorganLawApplyer apply = new DeMorganLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("( ?a && ?b )", apply.result().toString());
+        assertEquals("( ?a && ?b )", asString(apply.result()));
     }
 
     public void testExprDeMorganOr() {
@@ -35,7 +45,7 @@ public class ExprTransformTest extends TestCase {
         DeMorganLawApplyer apply = new DeMorganLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("( ( ! ?a ) && ( ! ?b ) )", apply.result().toString());
+        assertEquals("( ( ! ?a ) && ( ! ?b ) )", asString(apply.result()));
     }
 
     public void testExprDeMorganAndDontChange() {
@@ -43,7 +53,7 @@ public class ExprTransformTest extends TestCase {
         DeMorganLawApplyer apply = new DeMorganLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("( ! ( ?a && ?b ) )", apply.result().toString());
+        assertEquals("( ! ( ?a && ?b ) )", asString(apply.result()));
     }
 
     public void testExprDistributiveABOrC() {
@@ -51,7 +61,7 @@ public class ExprTransformTest extends TestCase {
         DistributiveLawApplyer apply = new DistributiveLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("( ( ?a || ?c ) && ( ?b || ?c ) )", apply.result().toString());
+        assertEquals("( ( ?a || ?c ) && ( ?b || ?c ) )", asString(apply.result()));
     }
 
     public void testExprDistributiveCOrAB() {
@@ -59,7 +69,7 @@ public class ExprTransformTest extends TestCase {
         DistributiveLawApplyer apply = new DistributiveLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("( ( ?c || ?a ) && ( ?c || ?b ) )", apply.result().toString());
+        assertEquals("( ( ?c || ?a ) && ( ?c || ?b ) )", asString(apply.result()));
     }
 
     public void testExprDistributiveAndDontChange() {
@@ -67,7 +77,7 @@ public class ExprTransformTest extends TestCase {
         DistributiveLawApplyer apply = new DistributiveLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("( ( ! ( ?a || ?b ) ) && ?c )", apply.result().toString());
+        assertEquals("( ( ! ( ?a || ?b ) ) && ?c )", asString(apply.result()));
     }
 
     public void testExprDistributiveOrComplex() {
@@ -75,21 +85,21 @@ public class ExprTransformTest extends TestCase {
         DistributiveLawApplyer apply = new DistributiveLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("( ( ( ( ?c || ?a ) || ?d ) && ( ( ?c || ?b ) || ?d ) ) && ( ( ( ?c || ?a ) || ?e ) && ( ( ?c || ?b ) || ?e ) ) )", apply.result().toString()); // correct
+        assertEquals("( ( ( ( ?c || ?a ) || ?d ) && ( ( ?c || ?b ) || ?d ) ) && ( ( ( ?c || ?a ) || ?e ) && ( ( ?c || ?b ) || ?e ) ) )", asString(apply.result())); // correct
     }
 
     public void testExprDistributiveABC() {
         Expr expr = ExprUtils.parse("(( ?a && ?b ) && ?c )");
         DistributiveLawApplyer apply = new DistributiveLawApplyer();
         expr.visit(apply);
-        assertEquals("( ( ?a && ?b ) && ?c )", apply.result().toString());
+        assertEquals("( ( ?a && ?b ) && ?c )", asString(apply.result()));
     }
 
     public void testExprDistributiveUsingFunctions() {
         Expr expr = ExprUtils.parse("( ( ( ?n = 1 ) && bound(?pref) ) && bound(?n) )");
         DistributiveLawApplyer apply = new DistributiveLawApplyer();
         expr.visit(apply);
-        assertEquals("( ( ( ?n = 1 ) && bound(?pref) ) && bound(?n) )", apply.result().toString());
+        assertEquals("( ( ( ?n = 1 ) && bound(?pref) ) && bound(?n) )", asString(apply.result()));
     }
 
     public void testDeMorganNotEqual() {
@@ -97,6 +107,6 @@ public class ExprTransformTest extends TestCase {
         DeMorganLawApplyer apply = new DeMorganLawApplyer();
         expr.visit(apply);
         assertNotNull(apply.result());
-        assertEquals("( ?x != ?z )", apply.result().toString());
+        assertEquals("( ?x != ?z )", asString(apply.result()));
     }
 }

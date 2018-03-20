@@ -1,7 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.optimizer.expr;
 
-import java.util.*;
-
+import de.fuberlin.wiwiss.d2rq.algebra.*;
+import de.fuberlin.wiwiss.d2rq.expr.*;
+import de.fuberlin.wiwiss.d2rq.nodes.*;
+import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jena.datatypes.RDFDatatype;
@@ -13,10 +15,7 @@ import org.apache.jena.sparql.expr.*;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 import org.apache.jena.sparql.expr.nodevalue.NodeValueBoolean;
 
-import de.fuberlin.wiwiss.d2rq.algebra.*;
-import de.fuberlin.wiwiss.d2rq.expr.*;
-import de.fuberlin.wiwiss.d2rq.nodes.*;
-import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
+import java.util.*;
 
 /**
  * Attempts to transform a SPARQL FILTER Expr to a SQL Expression
@@ -86,14 +85,6 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
         return result;
     }
 
-    public void startVisit() {
-        logger.debug("transform started");
-    }
-
-    public void finishVisit() {
-        logger.debug("transform finished");
-    }
-
     public void visit(ExprFunction0 func) {
         visitExprFunction(func);
     }
@@ -132,6 +123,11 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
 
     public void visit(ExprAggregator eAgg) {
         conversionFailed(eAgg);
+    }
+
+    @Override
+    public void visit(ExprNone exprNone) {
+        conversionFailed(exprNone);
     }
 
     public void visit(ExprVar var) {
@@ -419,7 +415,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                 }
 
                 boolean empty = nm.selectNode(node, RelationalOperators.DUMMY).equals(NodeMaker.EMPTY);
-                logger.debug("result " + new Boolean(empty));
+                logger.debug("result " + empty);
                 if (!empty) {
                     if (node.isURI())
                         expression.push(vm.valueExpression(node.getURI()));
@@ -457,7 +453,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                     equals = false;
                 }
             }
-            logger.debug("constants equal? " + new Boolean(equals));
+            logger.debug("constants equal? " + equals);
             expression.push(equals ? Expression.TRUE : Expression.FALSE);
             return;
         } else if (e1 instanceof AttributeExprEx && e2 instanceof AttributeExprEx) {
@@ -544,7 +540,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                     }
                 }
                 boolean empty = nm.selectNode(node, RelationalOperators.DUMMY).equals(NodeMaker.EMPTY);
-                logger.debug("result " + new Boolean(empty));
+                logger.debug("result " + empty);
                 if (!empty) {
                     if (node.isURI())
                         expression.push(new Negation(vm.valueExpression(node.getURI())));
@@ -580,7 +576,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                     equals = false;
                 }
             }
-            logger.debug("constants equal? " + new Boolean(equals));
+            logger.debug("constants equal? " + equals);
             expression.push(equals ? Expression.FALSE : Expression.TRUE);
             return;
         } else if (e1 instanceof AttributeExprEx && e2 instanceof AttributeExprEx) {
@@ -923,7 +919,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                 logger.debug("checking " + node + " with " + nm);
 
                 boolean empty = nm.selectNode(node, RelationalOperators.DUMMY).equals(NodeMaker.EMPTY);
-                logger.debug("result " + new Boolean(empty));
+                logger.debug("result " + empty);
                 if (!empty) {
                     if (node.isURI())
                         expression.push(vm.valueExpression(node.getURI()));
@@ -944,7 +940,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             ConstantEx constant1 = (ConstantEx) e1;
             ConstantEx constant2 = (ConstantEx) e2;
             boolean equals = NodeFunctions.sameTerm(constant1.getNode(), constant2.getNode());
-            logger.debug("constants same? " + new Boolean(equals));
+            logger.debug("constants same? " + equals);
             expression.push(equals ? Expression.TRUE : Expression.FALSE);
             return;
         } else if (e1 instanceof AttributeExprEx && e2 instanceof AttributeExprEx) {
@@ -1023,7 +1019,6 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
 
         if (nodeMaker instanceof FixedNodeMaker) {
             Node node = nodeMaker.makeNode(null);
-
             return new FixedNodeMaker(XSD.cast(node, datatype), nodeMaker.isUnique());
         }
 
@@ -1031,10 +1026,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     static boolean isSimpleLiteral(Node node) {
-        if (!node.isLiteral())
-            return false;
+        return node.isLiteral() && node.getLiteralDatatype() == null && "".equals(node.getLiteralLanguage());
 
-        return node.getLiteralDatatype() == null && "".equals(node.getLiteralLanguage());
     }
 
     // extension mechanism
