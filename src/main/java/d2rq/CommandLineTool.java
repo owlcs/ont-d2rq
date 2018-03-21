@@ -1,5 +1,7 @@
-package de.fuberlin.wiwiss.d2rq;
+package d2rq;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.mapgen.Filter;
 import de.fuberlin.wiwiss.d2rq.mapgen.FilterIncludeExclude;
 import de.fuberlin.wiwiss.d2rq.mapgen.FilterMatchAny;

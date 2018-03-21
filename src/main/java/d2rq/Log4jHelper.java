@@ -1,4 +1,4 @@
-package de.fuberlin.wiwiss.d2rq;
+package d2rq;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;

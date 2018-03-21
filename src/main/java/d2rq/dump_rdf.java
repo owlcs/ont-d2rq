@@ -1,6 +1,5 @@
 package d2rq;
 
-import de.fuberlin.wiwiss.d2rq.CommandLineTool;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Database;
