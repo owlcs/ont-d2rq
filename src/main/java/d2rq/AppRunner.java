@@ -2,8 +2,10 @@ package d2rq;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import sun.misc.Unsafe;
 
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -14,6 +16,7 @@ import java.util.stream.Stream;
 public class AppRunner {
 
     public static void main(String... args) {
+        forceDisableExternalLogging();
         Log4jHelper.turnLoggingOff();
         PrintStream out = CommandLineTool.CONSOLE;
         if (args.length == 0 || Stream.of("-h", "--h", "-help", "--help", "/?").anyMatch(h -> h.equalsIgnoreCase(args[0]))) {
@@ -72,6 +75,20 @@ public class AppRunner {
 
         public static Stream<Mode> commands() {
             return Arrays.stream(Mode.values());
+        }
+    }
+
+    private static void forceDisableExternalLogging() {
+        try {
+            // java9:
+            Class clazz = Class.forName("jdk.internal.module.IllegalAccessLogger");
+            Field logger = clazz.getDeclaredField("logger");
+            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            Unsafe unsafe = (Unsafe) theUnsafe.get(null);
+            unsafe.putObjectVolatile(clazz, unsafe.staticFieldOffset(logger), null);
+        } catch (Exception e) {
+            // ignore
         }
     }
 }

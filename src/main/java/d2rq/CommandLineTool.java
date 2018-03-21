@@ -21,7 +21,7 @@ import java.util.function.BiConsumer;
 
 
 /**
- * TODO: rewrite
+ * TODO: rewrite it, looks ugly
  * Base class for the D2RQ command line tools. They share much of their
  * argument list and functionality, therefore this is extracted into
  * this superclass.

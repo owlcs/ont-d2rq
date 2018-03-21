@@ -1,13 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.dbschema;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-
-import org.apache.log4j.Logger;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Join;
@@ -15,6 +7,14 @@ import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.*;
 
 /**
  * Inspects a database to retrieve schema information.
@@ -26,7 +26,7 @@ import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class DatabaseSchemaInspector {
-    private final static Logger log = Logger.getLogger(DatabaseSchemaInspector.class);
+    private final static Logger log = LoggerFactory.getLogger(DatabaseSchemaInspector.class);
 
     private final ConnectedDB db;
     private final DatabaseMetaData schema;

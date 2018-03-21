@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO: rewrite
+ * TODO: rewrite it, looks ugly
  * Command line utility for executing SPARQL queries
  * against a D2RQ-mapped database
  *

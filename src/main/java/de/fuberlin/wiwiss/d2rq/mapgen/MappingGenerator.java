@@ -1,19 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.mapgen;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.datatypes.TypeMapper;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.RDFS;
-import org.apache.log4j.Logger;
-
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Join;
@@ -24,6 +10,20 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.TypeMapper;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Generates a D2RQ mapping by introspecting a database schema.
@@ -35,7 +35,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
 
 @SuppressWarnings("WeakerAccess")
 public class MappingGenerator {
-    public final static Logger LOGGER = Logger.getLogger(MappingGenerator.class);
+    public final static Logger LOGGER = LoggerFactory.getLogger(MappingGenerator.class);
 
     protected final ConnectedDB database;
 
@@ -43,7 +43,7 @@ public class MappingGenerator {
     protected URI mapNamespaceURI;
     protected URI vocabNamespaceURI;
 
-    protected String driverClass = null;
+    protected String driverClass;
     protected Filter filter = Filter.ALL;
 
     protected boolean generateClasses = true;
@@ -63,7 +63,7 @@ public class MappingGenerator {
 
     public MappingGenerator(ConnectedDB database) {
         this.database = Objects.requireNonNull(database, "Null database.");
-        this.driverClass = ConnectedDB.guessJDBCDriverClass(database.getJdbcURL());
+        setJDBCDriverClass(ConnectedDB.guessJDBCDriverClass(database.getJdbcURL()));
         setMapNamespaceURI(DEFAULT_MAP_NS);
         setInstanceNamespaceURI(DEFAULT_DB_NS);
         setVocabNamespaceURI(DEFAULT_SCHEMA_NS);
@@ -86,7 +86,7 @@ public class MappingGenerator {
     }
 
     public void setJDBCDriverClass(String driverClassName) {
-        this.driverClass = driverClassName;
+        this.driverClass = Objects.requireNonNull(driverClassName, "Null driver class");
     }
 
     public void setStartupSQLScript(URI uri) {

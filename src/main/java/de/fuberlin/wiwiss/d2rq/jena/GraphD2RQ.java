@@ -24,38 +24,47 @@ public class GraphD2RQ extends GraphBase implements Graph {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphD2RQ.class);
 
     private static final Capabilities capabilities = new Capabilities() {
+        @Override
         public boolean sizeAccurate() {
             return true;
         }
 
+        @Override
         public boolean addAllowed() {
             return addAllowed(false);
         }
 
+        @Override
         public boolean addAllowed(boolean every) {
             return false;
         }
 
+        @Override
         public boolean deleteAllowed() {
             return deleteAllowed(false);
         }
 
+        @Override
         public boolean deleteAllowed(boolean every) {
             return false;
         }
 
+        @Override
         public boolean canBeEmpty() {
             return true;
         }
 
+        @Override
         public boolean iteratorRemoveAllowed() {
             return false;
         }
 
+        @Override
         public boolean findContractSafe() {
             return false;
         }
 
+        @Override
         public boolean handlesLiteralTyping() {
             return true;
         }
