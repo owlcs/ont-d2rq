@@ -1,10 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.sql.types;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class SQLBinary extends DataType {
     private final boolean supportsDistinct;
@@ -38,7 +38,7 @@ public class SQLBinary extends DataType {
     @Override
     public String toSQLLiteral(String value) {
         if (!SQL.isHexString(value)) {
-            log.warn("Unsupported BINARY format: '" + value + "'; treating as NULL");
+            LOGGER.warn("Unsupported BINARY format: '" + value + "'; treating as NULL");
             return "NULL";
         }
         return syntax().quoteBinaryLiteral(value);

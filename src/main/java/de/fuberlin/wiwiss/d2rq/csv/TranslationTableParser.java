@@ -2,9 +2,9 @@ package de.fuberlin.wiwiss.d2rq.csv;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.TranslationTable.Translation;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jena.riot.system.IRIResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URI;
@@ -22,7 +22,7 @@ import java.util.List;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class TranslationTableParser {
-    private Log log = LogFactory.getLog(TranslationTableParser.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TranslationTableParser.class);
     private BufferedReader reader;
     private CSV csvLineParser = new CSV();
     private String url;
@@ -52,8 +52,7 @@ public class TranslationTableParser {
                 }
                 String[] fields = this.csvLineParser.parse(line);
                 if (fields.length != 2) {
-                    this.log.warn("Skipping line with " +
-                            fields.length + " instead of 2 columns in CSV file " + this.url);
+                    LOGGER.warn("Skipping line with {} instead of 2 columns in CSV file {}", fields.length, url);
                     continue;
                 }
                 result.add(new Translation(fields[0], fields[1]));

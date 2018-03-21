@@ -1,13 +1,12 @@
 package de.fuberlin.wiwiss.d2rq.sql.types;
 
+import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 
 /**
  * Represents a SQL data type.
@@ -19,7 +18,7 @@ import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
  */
 public abstract class DataType {
 
-    public final static Log log = LogFactory.getLog(DataType.class);
+    public final static Logger LOGGER = LoggerFactory.getLogger(DataType.class);
 
     public final static String XSD_STRING = "xsd:string";
 

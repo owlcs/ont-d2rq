@@ -1,19 +1,18 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
+import org.apache.jena.query.QueryCancelledException;
+import org.apache.jena.util.iterator.ClosableIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.query.QueryCancelledException;
-import org.apache.jena.util.iterator.ClosableIterator;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 
 /**
  * Executes an SQL query and delivers result rows as an iterator over {@link ResultRow}s.
@@ -23,7 +22,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class SQLIterator implements ClosableIterator<ResultRow> {
-    private final static Log log = LogFactory.getLog(SQLIterator.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(SQLIterator.class);
     private String sql;
     private List<ProjectionSpec> columns;
     private ConnectedDB database;
@@ -100,7 +99,8 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
      */
     public void close() {
         if (explicitlyClosed) return;
-        log.debug("Closing SQLIterator");
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("Closing SQLIterator");
         try {
             /* JDBC 4+ requires manual closing of result sets and statements */
             if (this.resultSet != null) {
@@ -144,7 +144,7 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
             return;
         }
         this.queryExecuted = true;
-        log.info(sql);
+        LOGGER.info(sql);
         BeanCounter.totalNumberOfExecutedSQLQueries++;
         try {
             Connection con = this.database.connection();
@@ -159,11 +159,13 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
             database.vendor().beforeQuery(database.connection());
             this.resultSet = this.statement.executeQuery(this.sql);
             database.vendor().afterQuery(database.connection());
-            log.debug("SQL result set created");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("SQL result set created");
             this.numCols = this.resultSet.getMetaData().getColumnCount();
         } catch (SQLException ex) {
             if (cancelled) {
-                log.debug("SQL query execution cancelled", ex);
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("SQL query execution cancelled", ex);
                 throw new QueryCancelledException();
             }
             throw new D2RQException(ex.getMessage() + ": " + this.sql, ex);

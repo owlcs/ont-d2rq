@@ -1,9 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.sql.types;
 
+import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 
 public class SQLBoolean extends DataType {
     public SQLBoolean(Vendor syntax, String name) {
@@ -35,7 +35,7 @@ public class SQLBoolean extends DataType {
         if ("false".equals(value) || "0".equals(value)) {
             return "FALSE";
         }
-        log.warn("Unsupported BOOLEAN format: '" + value + "'; treating as NULL");
+        LOGGER.warn("Unsupported BOOLEAN format: '" + value + "'; treating as NULL");
         return "NULL";
     }
 }

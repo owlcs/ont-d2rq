@@ -1,15 +1,15 @@
 package de.fuberlin.wiwiss.d2rq.sql.vendor;
 
+import de.fuberlin.wiwiss.d2rq.sql.Quoter;
+import de.fuberlin.wiwiss.d2rq.sql.Quoter.PatternDoublingQuoter;
+import de.fuberlin.wiwiss.d2rq.sql.types.*;
+
 import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 import java.util.regex.Pattern;
-
-import de.fuberlin.wiwiss.d2rq.sql.Quoter;
-import de.fuberlin.wiwiss.d2rq.sql.Quoter.PatternDoublingQuoter;
-import de.fuberlin.wiwiss.d2rq.sql.types.*;
 
 /**
  * This syntax class implements MySQL-compatible SQL syntax.
@@ -115,7 +115,7 @@ public class MySQL extends SQL92 {
                 // zeroes will be dropped.
                 return new BigInteger(value).toString(2);
             } catch (NumberFormatException ex) {
-                log.warn("Expected numeric, got '" + value + "'; treating as null");
+                LOGGER.warn("Expected numeric, got '" + value + "'; treating as null");
                 return null;
             }
         }
@@ -127,7 +127,7 @@ public class MySQL extends SQL92 {
         }
 
         @Override
-        public String value(ResultSet resultSet, int column) throws SQLException {
+        public String value(ResultSet resultSet, int column) {
             // MySQL JDBC connector 5.1.18 chokes on the zero/error
             // value 0000-00-00 with a SQLException
             try {
@@ -144,13 +144,13 @@ public class MySQL extends SQL92 {
         }
 
         @Override
-        public String value(ResultSet resultSet, int column) throws SQLException {
+        public String value(ResultSet resultSet, int column) {
             // MySQL JDBC connector 5.1.18 chokes on negative or too
             // large TIME values with a SQLException
             try {
                 return super.value(resultSet, column);
             } catch (SQLException ex) {
-                log.warn(ex);
+                LOGGER.warn("MySQLCompatibilityTimeDataType#value:", ex);
                 return null;
             }
         }
@@ -162,7 +162,7 @@ public class MySQL extends SQL92 {
         }
 
         @Override
-        public String value(ResultSet resultSet, int column) throws SQLException {
+        public String value(ResultSet resultSet, int column) {
             // MySQL JDBC connector 5.1.18 chokes on the zero/error
             // value 0000-00-00 00:00:00 with a SQLException
             try {

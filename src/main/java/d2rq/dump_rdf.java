@@ -1,13 +1,5 @@
 package d2rq;
 
-import java.io.*;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFWriter;
-import org.apache.jena.shared.NoWriterForLangException;
-
 import de.fuberlin.wiwiss.d2rq.CommandLineTool;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
@@ -15,6 +7,14 @@ import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFWriter;
+import org.apache.jena.shared.NoWriterForLangException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Command line utility for dumping a database to RDF, using the
@@ -23,7 +23,7 @@ import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class dump_rdf extends CommandLineTool {
-    private final static Log log = LogFactory.getLog(dump_rdf.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(dump_rdf.class);
 
     private final static int DUMP_DEFAULT_FETCH_SIZE = 500;
 
@@ -73,11 +73,11 @@ public class dump_rdf extends CommandLineTool {
         PrintStream out;
         if (cmd.hasArg(outfileArg)) {
             File f = new File(cmd.getArg(outfileArg).getValue());
-            log.info("Writing to " + f);
+            LOGGER.info("Writing to " + f);
             out = new PrintStream(new FileOutputStream(f));
             loader.setSystemBaseURI(MapParser.absolutizeURI(f.toURI().toString() + "#"));
         } else {
-            log.info("Writing to stdout");
+            LOGGER.info("Writing to stdout");
             out = System.out;
         }
         if (cmd.hasArg(baseArg)) {
@@ -104,11 +104,9 @@ public class dump_rdf extends CommandLineTool {
                         writer.setProperty("xmlbase", loader.getResourceBaseURI());
                     }
                 }
-                writer.write(d2rqModel, new OutputStreamWriter(out, "utf-8"), loader.getResourceBaseURI());
+                writer.write(d2rqModel, new OutputStreamWriter(out, StandardCharsets.UTF_8), loader.getResourceBaseURI());
             } catch (NoWriterForLangException ex) {
                 throw new D2RQException("Unknown format '" + format + "'", D2RQException.STARTUP_UNKNOWN_FORMAT);
-            } catch (UnsupportedEncodingException ex) {
-                throw new RuntimeException("Can't happen -- utf-8 is always supported");
             }
         } finally {
             out.close();

@@ -1,14 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
@@ -17,6 +8,14 @@ import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
 import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.*;
 
 /**
  * TODO Move all engine-specific code from here to {@link Vendor} and its implementations
@@ -25,7 +24,7 @@ import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
  * @author kurtjx (http://github.com/kurtjx)
  */
 public class ConnectedDB {
-    private static final Log log = LogFactory.getLog(ConnectedDB.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectedDB.class);
 
     public static final String KEEP_ALIVE_PROPERTY = "keepAlive"; // interval property, value in seconds
     public static final int DEFAULT_KEEP_ALIVE_INTERVAL = 60 * 60; // hourly
@@ -48,8 +47,7 @@ public class ConnectedDB {
     private int fetchSize;
     private int defaultFetchSize = Database.NO_FETCH_SIZE;
     private Map<Attribute, Boolean> zerofillCache = new HashMap<>();
-    private Map<RelationName, Map<String, List<String>>> uniqueIndexCache =
-            new HashMap<RelationName, Map<String, List<String>>>();
+    private Map<RelationName, Map<String, List<String>>> uniqueIndexCache = new HashMap<>();
     private final Properties connectionProperties;
 
     private class KeepAliveAgent extends Thread {
@@ -79,8 +77,8 @@ public class ConnectedDB {
                 }
 
                 try {
-                    if (log.isDebugEnabled())
-                        log.debug("Keep alive agent is executing noop query '" + query + "'...");
+                    if (LOGGER.isDebugEnabled())
+                        LOGGER.debug("Keep alive agent is executing noop query '{}'...", query);
                     c = connection();
                     v = vendor();
                     s = c.createStatement();
@@ -94,9 +92,9 @@ public class ConnectedDB {
                     v.afterClose(c);
 
                 } catch (Throwable e) { // may throw D2RQException at runtime
-                    log.error("Keep alive connection test failed: " + e.getMessage());
+                    LOGGER.error("Keep alive connection test failed: {} ", e.getMessage());
 
-                    log.info("Connection will be reset since a failure is detected by keep alive agent.");
+                    LOGGER.info("Connection will be reset since a failure is detected by keep alive agent.");
                     if (s != null) {
                         try {
                             s.close();
@@ -112,11 +110,13 @@ public class ConnectedDB {
                 }
             }
 
-            log.debug("Keep alive agent terminated.");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Keep alive agent terminated.");
         }
 
         public void shutdown() {
-            log.debug("shutting down");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("shutting down");
             shutdown = true;
             this.interrupt();
         }
@@ -128,8 +128,7 @@ public class ConnectedDB {
                 this.connection.close();
             } catch (SQLException sqlExc) {
                 // ignore...
-                log.error("Error while closing current connection: "
-                        + sqlExc.getMessage(), sqlExc);
+                LOGGER.error("Error while closing current connection: {}", sqlExc.getMessage(), sqlExc);
             } finally {
                 this.connection = null;
             }
@@ -174,7 +173,8 @@ public class ConnectedDB {
 
             this.keepAliveAgent = new KeepAliveAgent(interval, query);
             this.keepAliveAgent.start();
-            log.debug("Keep alive agent is enabled (interval: " + interval + " seconds, noop query: '" + query + "').");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Keep alive agent is enabled (interval: {} seconds, noop query: '{}').", interval, query);
         } else
             this.keepAliveAgent = null;
     }
@@ -231,7 +231,7 @@ public class ConnectedDB {
             throw new D2RQException("Not a JDBC URL: " + jdbcURL, D2RQException.D2RQ_DB_CONNECTION_FAILED);
         }
         try {
-            log.info("Establishing JDBC connection to " + jdbcURL);
+            LOGGER.info("Establishing JDBC connection to {}", jdbcURL);
             this.connection = DriverManager.getConnection(this.jdbcURL, getConnectionProperties());
         } catch (SQLException ex) {
             close();
@@ -337,7 +337,7 @@ public class ConnectedDB {
         if (vendor != null) return;
         try {
             String productName = getDatabaseProductType();
-            log.info("JDBC database product type: " + productName);
+            LOGGER.info("JDBC database product type: {}", productName);
             productName = productName.toLowerCase();
             if (productName.contains("mysql")) {
                 vendor = Vendor.MySQL;
@@ -356,7 +356,7 @@ public class ConnectedDB {
             } else {
                 this.vendor = Vendor.SQL92;
             }
-            log.info("Using vendor class: " + vendor.getClass().getName());
+            LOGGER.info("Using vendor class: {}", vendor.getClass().getName());
         } catch (SQLException ex) {
             throw new D2RQException("Database exception", ex);
         }
@@ -427,12 +427,11 @@ public class ConnectedDB {
             keepAliveAgent.shutdown();
 
         if (connection != null) try {
-            log.info("Closing connection to " + jdbcURL);
+            LOGGER.info("Closing connection to {}", jdbcURL);
             this.connection.close();
         } catch (SQLException sqlExc) {
             // ignore...
-            log.error("Error while closing current connection: "
-                    + sqlExc.getMessage(), sqlExc);
+            LOGGER.error("Error while closing current connection: {}", sqlExc.getMessage(), sqlExc);
         } finally {
             connection = null;
         }
@@ -479,8 +478,7 @@ public class ConnectedDB {
         try {
             Class.forName(driverClassName);
         } catch (ClassNotFoundException ex) {
-            throw new D2RQException("Database driver class not found: " + driverClassName,
-                    D2RQException.DATABASE_JDBCDRIVER_CLASS_NOT_FOUND);
+            throw new D2RQException("Database driver class not found: " + driverClassName, D2RQException.DATABASE_JDBCDRIVER_CLASS_NOT_FOUND);
         }
     }
 }

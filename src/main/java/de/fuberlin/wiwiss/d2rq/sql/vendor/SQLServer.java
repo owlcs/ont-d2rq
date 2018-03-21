@@ -1,12 +1,12 @@
 package de.fuberlin.wiwiss.d2rq.sql.vendor;
 
-import java.sql.Types;
-
 import de.fuberlin.wiwiss.d2rq.expr.BooleanToIntegerCaseExpression;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.sql.types.*;
+
+import java.sql.Types;
 
 /**
  * This syntax class implements SQL syntax for MS SQL Server
@@ -108,7 +108,7 @@ public class SQLServer extends SQL92 {
                 return Integer.parseInt(value) == 0 ? "0" : "1";
             } catch (NumberFormatException nfex) {
                 // Not 0 or 1
-                DataType.log.warn("Unsupported BIT format: '" + value + "'; treating as NULL");
+                DataType.LOGGER.warn("Unsupported BIT format: '" + value + "'; treating as NULL");
                 return "NULL";
             }
         }

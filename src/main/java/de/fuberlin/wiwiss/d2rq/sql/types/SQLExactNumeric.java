@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.sql.types;
 
+import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-
-import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 
 public class SQLExactNumeric extends DataType {
     private final String rdfType;
@@ -75,7 +75,7 @@ public class SQLExactNumeric extends DataType {
                 return Double.toString(d);
             } catch (NumberFormatException ex2) {
                 // Not a number AFAICT
-                log.warn("Unsupported NUMERIC format: '" + value + "'; treating as NULL");
+                LOGGER.warn("Unsupported NUMERIC format: '" + value + "'; treating as NULL");
                 return "NULL";
             }
         }

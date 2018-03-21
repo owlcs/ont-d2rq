@@ -1,18 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import java.util.*;
-import java.util.stream.Stream;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.shared.PrefixMapping;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.vocabulary.XSD;
-
 import de.fuberlin.wiwiss.d2rq.ClassMapLister;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
@@ -23,6 +10,18 @@ import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.XSD;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * A D2RQ mapping. Consists of {@link ClassMap}s,
@@ -35,7 +34,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
  */
 public class Mapping implements AutoCloseable {
 
-    private static final Log LOGGER = LogFactory.getLog(Mapping.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Mapping.class);
 
     private final Map<Resource, Database> databases = new HashMap<>();
     private final Map<Resource, ClassMap> classMaps = new HashMap<>();
@@ -231,9 +230,7 @@ public class Mapping implements AutoCloseable {
         }
         LOGGER.info("Compiled " + compiledPropertyBridges.size() + " property bridges");
         if (LOGGER.isDebugEnabled()) {
-            for (TripleRelation rel : compiledPropertyBridges) {
-                LOGGER.debug(rel);
-            }
+            compiledPropertyBridges.stream().map(String::valueOf).forEach(LOGGER::debug);
         }
     }
 

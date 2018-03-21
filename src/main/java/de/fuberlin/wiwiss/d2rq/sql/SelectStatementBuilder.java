@@ -1,16 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
-import java.util.*;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import d2rq.d2r_query;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.*;
 import de.fuberlin.wiwiss.d2rq.expr.Conjunction;
 import de.fuberlin.wiwiss.d2rq.expr.Equality;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 
 /**
@@ -21,15 +19,15 @@ import de.fuberlin.wiwiss.d2rq.expr.Expression;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class SelectStatementBuilder {
-    private static final Log log = LogFactory.getLog(d2r_query.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SelectStatementBuilder.class);
 
     private ConnectedDB database;
-    private List<ProjectionSpec> selectSpecs = new ArrayList<ProjectionSpec>(10);
-    private List<Expression> conditions = new ArrayList<Expression>();
+    private List<ProjectionSpec> selectSpecs = new ArrayList<>(10);
+    private List<Expression> conditions = new ArrayList<>();
     private Expression cachedCondition = null;
-    private boolean eliminateDuplicates = false;
-    private AliasMap aliases = AliasMap.NO_ALIASES;
-    private Collection<RelationName> mentionedTables = new HashSet<RelationName>(5); // in their alias forms
+    private boolean eliminateDuplicates;
+    private AliasMap aliases;
+    private Collection<RelationName> mentionedTables = new HashSet<>(5); // in their alias forms
     private List<OrderSpec> orderSpecs;
     private int limit;
 
@@ -37,13 +35,13 @@ public class SelectStatementBuilder {
         if (relation.isTrivial()) {
             throw new IllegalArgumentException("Cannot create SQL for trivial relation");
         }
-        if (relation.equals(Relation.EMPTY)) {
+        if (Relation.EMPTY.equals(relation)) {
             throw new IllegalArgumentException("Cannot create SQL for empty relation");
         }
         database = relation.database();
         this.limit = Relation.combineLimits(relation.limit(), database.limit());
         this.orderSpecs = relation.orderSpecs();
-        this.aliases = this.aliases.applyTo(relation.aliases());
+        this.aliases = AliasMap.NO_ALIASES.applyTo(relation.aliases());
         for (Join join : relation.joinConditions()) {
             for (Attribute attribute1 : join.attributes1()) {
                 Attribute attribute2 = join.equalAttribute(attribute1);
@@ -64,10 +62,9 @@ public class SelectStatementBuilder {
             for (ProjectionSpec projection : selectSpecs) {
                 for (Attribute column : projection.requiredAttributes()) {
                     if (!database.columnType(aliases.originalOf(column)).supportsDistinct()) {
-                        log.info("Attempting to apply DISTINCT to relation: " + relation);
-                        throw new D2RQException("Bug in engine logic: DISTINCT used with " +
-                                "datatype (" + database.columnType(column) + ") that " +
-                                "doesn't support it",
+                        LOGGER.info("Attempting to apply DISTINCT to relation: {}", relation);
+                        throw new D2RQException(String.format("Bug in engine logic: DISTINCT used with datatype (%s) that doesn't support it",
+                                database.columnType(column)),
                                 D2RQException.DATATYPE_DOES_NOT_SUPPORT_DISTINCT);
                     }
                 }
@@ -89,19 +86,15 @@ public class SelectStatementBuilder {
     }
 
     public String getSQLStatement() {
-
-        StringBuffer result = new StringBuffer("SELECT ");
-
+        StringBuilder result = new StringBuilder("SELECT ");
         if (this.eliminateDuplicates) {
             result.append("DISTINCT ");
         }
-
         String s = database.vendor().getRowNumLimitAsSelectModifier(limit);
         if (!"".equals(s)) {
             result.append(s);
             result.append(" ");
         }
-
         Iterator<ProjectionSpec> it = this.selectSpecs.iterator();
         if (!it.hasNext()) {
             result.append("1");
@@ -113,8 +106,6 @@ public class SelectStatementBuilder {
                 result.append(", ");
             }
         }
-
-
         result.append(" FROM ");
         Iterator<RelationName> tableIt = mentionedTables.iterator();
         while (tableIt.hasNext()) {
@@ -128,14 +119,11 @@ public class SelectStatementBuilder {
             if (tableIt.hasNext()) {
                 result.append(", ");
             }
-
         }
-
         if (!condition().isTrue()) {
             result.append(" WHERE ");
             result.append(condition().toSQL(this.database, this.aliases));
         }
-
         Iterator<OrderSpec> orderIt = orderSpecs.iterator();
         if (orderIt.hasNext()) {
             result.append(" ORDER BY ");

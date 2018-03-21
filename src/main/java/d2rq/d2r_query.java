@@ -1,18 +1,15 @@
 package d2rq;
 
-import java.io.IOException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.query.*;
-import org.apache.jena.sparql.resultset.ResultsFormat;
-import org.apache.jena.sparql.util.QueryExecUtils;
-
 import de.fuberlin.wiwiss.d2rq.CommandLineTool;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
 import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
+import org.apache.jena.query.*;
+import org.apache.jena.sparql.resultset.ResultsFormat;
+import org.apache.jena.sparql.util.QueryExecUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Command line utility for executing SPARQL queries
@@ -21,7 +18,7 @@ import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class d2r_query extends CommandLineTool {
-    private static final Log log = LogFactory.getLog(d2r_query.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(d2r_query.class);
 
     public static void main(String[] args) {
         new d2r_query().process(args);
@@ -60,7 +57,7 @@ public class d2r_query extends CommandLineTool {
         setSupportImplicitJdbcURL(true);
     }
 
-    public void run(CommandLine cmd, SystemLoader loader) throws IOException {
+    public void run(CommandLine cmd, SystemLoader loader) {
         String query = null;
         if (cmd.numItems() == 1) {
             query = cmd.getItem(0, true);
@@ -89,12 +86,12 @@ public class d2r_query extends CommandLineTool {
         loader.setFastMode(true);
         ModelD2RQ d2rqModel = loader.getMapping().getDataModel();
 
-        String prefixes = "";
+        StringBuilder prefixes = new StringBuilder();
         for (String prefix : d2rqModel.getNsPrefixMap().keySet()) {
-            prefixes += "PREFIX " + prefix + ": <" + d2rqModel.getNsPrefixURI(prefix) + ">\n";
+            prefixes.append("PREFIX ").append(prefix).append(": <").append(d2rqModel.getNsPrefixURI(prefix)).append(">\n");
         }
         query = prefixes + query;
-        log.info("Query:\n" + query);
+        LOGGER.info("Query:\n" + query);
 
         try {
             QueryEngineD2RQ.register();

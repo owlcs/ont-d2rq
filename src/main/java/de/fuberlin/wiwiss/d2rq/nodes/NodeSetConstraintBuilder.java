@@ -1,12 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.nodes;
 
-import java.util.*;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.graph.Node;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.expr.AttributeExpr;
 import de.fuberlin.wiwiss.d2rq.expr.Conjunction;
@@ -15,6 +8,12 @@ import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.values.BlankNodeID;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.graph.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 /**
  * Builds up an {@link Expression} that expresses restrictions
@@ -26,7 +25,7 @@ import de.fuberlin.wiwiss.d2rq.values.Translator;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class NodeSetConstraintBuilder implements NodeSetFilter {
-    private final static Log log = LogFactory.getLog(NodeSetConstraintBuilder.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(NodeSetConstraintBuilder.class);
 
     private final static int NODE_TYPE_UNKNOWN = 0;
     private final static int NODE_TYPE_URI = 1;
@@ -211,7 +210,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
             results.add(Equality.create(p1.toExpression(), p2.toExpression()));
             // FIXME: Actually support it
             if (p1.usesColumnFunctions() || p2.usesColumnFunctions()) {
-                log.warn("Joining multiple d2rq:[uri]Patterns with different @@|encoding@@ is not supported");
+                LOGGER.warn("Joining multiple d2rq:[uri]Patterns with different @@|encoding@@ is not supported");
                 unsupported = true;
             }
         }
@@ -312,7 +311,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
         }
         // FIXME: Actually handle this properly, see https://github.com/d2rq/d2rq/issues/22
         if (translators.size() > 1) {
-            log.warn("Join involving multiple translators (d2rq:translateWith) is not supported");
+            LOGGER.warn("Join involving multiple translators (d2rq:translateWith) is not supported");
         }
         return Conjunction.create(translated);
     }
@@ -321,7 +320,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
         if (!pattern.usesColumnFunctions()) return;
         // FIXME: Actually handle this properly, see https://github.com/d2rq/d2rq/issues/22
         unsupported = true;
-        log.warn("Joining a d2rq:[uri]Pattern with any @@|encoding@@ to a " +
+        LOGGER.warn("Joining a d2rq:[uri]Pattern with any @@|encoding@@ to a " +
                 "d2rq:[uri]Column or d2rq:[uri]Expression etc. is not supported");
     }
 

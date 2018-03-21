@@ -1,10 +1,14 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import java.util.*;
-import java.util.Map.Entry;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import de.fuberlin.wiwiss.d2rq.algebra.Relation;
+import de.fuberlin.wiwiss.d2rq.algebra.RelationalOperators;
+import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.find.FindQuery;
+import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
+import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
+import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
 import org.apache.jena.graph.GraphUtil;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -16,16 +20,11 @@ import org.apache.jena.vocabulary.DC;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import de.fuberlin.wiwiss.d2rq.algebra.Relation;
-import de.fuberlin.wiwiss.d2rq.algebra.RelationalOperators;
-import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
-import de.fuberlin.wiwiss.d2rq.find.FindQuery;
-import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
-import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
-import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Provides access to the contents of a d2rq:ClassMap in various
@@ -34,7 +33,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class ClassMapLister {
-    private static final Log log = LogFactory.getLog(ClassMapLister.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassMapLister.class);
 
     private final Mapping mapping;
 
@@ -96,7 +95,7 @@ public class ClassMapLister {
     }
 
     public Model classMapInventory(String classMapName, int limitPerClassMap) {
-        log.info("Listing class map: " + classMapName);
+        LOGGER.info("Listing class map: " + classMapName);
         List<TripleRelation> inventoryBridges = classMapInventoryBridges.get(classMapName);
         if (inventoryBridges == null) {
             return null;

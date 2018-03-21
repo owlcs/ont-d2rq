@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.sql.types;
 
+import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 
 public class SQLTime extends DataType {
     private final static Pattern TIME_PATTERN =
@@ -69,7 +69,7 @@ public class SQLTime extends DataType {
     public String toSQLLiteral(String value) {
         value = value.replace("Z", "+00:00");
         if (!TIME_PATTERN.matcher(value).matches()) {
-            log.warn("Unsupported TIME format: '" + value + "'; treating as NULL");
+            LOGGER.warn("Unsupported TIME format: '" + value + "'; treating as NULL");
             return "NULL";
         }
         return syntax().quoteTimeLiteral(value);

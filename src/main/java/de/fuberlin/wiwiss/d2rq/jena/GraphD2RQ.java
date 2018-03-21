@@ -1,19 +1,18 @@
 package de.fuberlin.wiwiss.d2rq.jena;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.graph.Capabilities;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.Triple;
-import org.apache.jena.graph.impl.GraphBase;
-import org.apache.jena.util.iterator.ExtendedIterator;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
 import de.fuberlin.wiwiss.d2rq.find.FindQuery;
 import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
+import org.apache.jena.graph.Capabilities;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.graph.impl.GraphBase;
+import org.apache.jena.util.iterator.ExtendedIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A D2RQ virtual read-only Jena graph backed by a non-RDF database.
@@ -22,7 +21,8 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class GraphD2RQ extends GraphBase implements Graph {
-    private static final Log log = LogFactory.getLog(GraphD2RQ.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GraphD2RQ.class);
+
     private static final Capabilities capabilities = new Capabilities() {
         public boolean sizeAccurate() {
             return true;
@@ -91,8 +91,8 @@ public class GraphD2RQ extends GraphBase implements Graph {
     @Override
     public ExtendedIterator<Triple> graphBaseFind(Triple triplePattern) {
         checkOpen();
-        if (log.isDebugEnabled()) {
-            log.debug("Find: " + PrettyPrinter.toString(triplePattern, getPrefixMapping()));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Find: {}", PrettyPrinter.toString(triplePattern, getPrefixMapping()));
         }
         FindQuery query = new FindQuery(triplePattern, mapping.compiledPropertyBridges(), null);
         ExtendedIterator<Triple> result = TripleQueryIter.create(query.iterator());

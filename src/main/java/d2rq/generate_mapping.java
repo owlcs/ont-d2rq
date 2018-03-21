@@ -1,21 +1,20 @@
 package d2rq;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
-
 import de.fuberlin.wiwiss.d2rq.CommandLineTool;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFLanguages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * Command line interface for {@link MappingGenerator}.
@@ -23,7 +22,7 @@ import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class generate_mapping extends CommandLineTool {
-    private final static Log log = LogFactory.getLog(generate_mapping.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(generate_mapping.class);
 
     public static void main(String[] args) {
         new generate_mapping().process(args);
@@ -61,11 +60,11 @@ public class generate_mapping extends CommandLineTool {
         PrintStream out;
         if (cmd.contains(outfileArg)) {
             File f = new File(cmd.getArg(outfileArg).getValue());
-            log.info("Writing to " + f);
+            LOGGER.info("Writing to " + f);
             loader.setSystemBaseURI(MapParser.absolutizeURI(f.toURI().toString() + "#"));
             out = new PrintStream(new FileOutputStream(f));
         } else {
-            log.info("Writing to stdout");
+            LOGGER.info("Writing to stdout");
             out = System.out;
         }
         if (cmd.hasArg(baseArg)) {

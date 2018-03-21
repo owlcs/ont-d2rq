@@ -1,11 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.values;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.*;
-import java.util.regex.Matcher;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
@@ -16,6 +10,13 @@ import de.fuberlin.wiwiss.d2rq.mapgen.IRIEncoder;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeSetFilter;
 import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Matcher;
 
 /**
  * A pattern that combines one or more database columns into a String. Often
@@ -300,7 +301,7 @@ public class Pattern implements ValueMaker {
     static class URLEncodeFunction implements ColumnFunction {
         public String encode(String s) {
             try {
-                return URLEncoder.encode(s, "utf-8");
+                return URLEncoder.encode(s, StandardCharsets.UTF_8.name());
             } catch (UnsupportedEncodingException ex) {
                 // Can't happen, UTF-8 is always supported
                 throw new RuntimeException(ex);
@@ -309,7 +310,7 @@ public class Pattern implements ValueMaker {
 
         public String decode(String s) {
             try {
-                return URLDecoder.decode(s, "utf-8");
+                return URLDecoder.decode(s, StandardCharsets.UTF_8.name());
             } catch (UnsupportedEncodingException ex) {
                 // Can't happen, UTF-8 is always supported
                 throw new RuntimeException(ex);
@@ -327,8 +328,7 @@ public class Pattern implements ValueMaker {
     static class URLifyFunction implements ColumnFunction {
         public String encode(String s) {
             try {
-                return URLEncoder.encode(s, "utf-8")
-                        .replaceAll("_", "%5F").replace('+', '_');
+                return URLEncoder.encode(s, StandardCharsets.UTF_8.name()).replaceAll("_", "%5F").replace('+', '_');
             } catch (UnsupportedEncodingException ex) {
                 // Can't happen, UTF-8 is always supported
                 throw new RuntimeException(ex);
@@ -337,7 +337,7 @@ public class Pattern implements ValueMaker {
 
         public String decode(String s) {
             try {
-                return URLDecoder.decode(s.replace('_', '+'), "utf-8");
+                return URLDecoder.decode(s.replace('_', '+'), StandardCharsets.UTF_8.name());
             } catch (UnsupportedEncodingException ex) {
                 // Can't happen, UTF-8 is always supported
                 throw new RuntimeException(ex);
@@ -359,7 +359,7 @@ public class Pattern implements ValueMaker {
 
         public String decode(String s) {
             try {
-                return URLDecoder.decode(s.replaceAll("%20", "+"), "utf-8");
+                return URLDecoder.decode(s.replaceAll("%20", "+"), StandardCharsets.UTF_8.name());
             } catch (UnsupportedEncodingException ex) {
                 // Can't happen, UTF-8 is always supported
                 throw new RuntimeException(ex);

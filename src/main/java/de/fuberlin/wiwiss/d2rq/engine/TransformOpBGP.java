@@ -1,21 +1,20 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
+import de.fuberlin.wiwiss.d2rq.expr.Expression;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.optimizer.expr.TransformExprToSQLApplyer;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.TransformCopy;
 import org.apache.jena.sparql.algebra.op.OpBGP;
 import org.apache.jena.sparql.algebra.op.OpFilter;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
-import de.fuberlin.wiwiss.d2rq.expr.Expression;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.optimizer.expr.TransformExprToSQLApplyer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Translates an OpBGP to an OpUnionTableSQL over a GraphD2RQ.
@@ -27,7 +26,7 @@ import de.fuberlin.wiwiss.d2rq.optimizer.expr.TransformExprToSQLApplyer;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class TransformOpBGP extends TransformCopy {
-    private final static Log log = LogFactory.getLog(TransformOpBGP.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(TransformOpBGP.class);
 
     private final Mapping mapping;
     private final boolean useAllOptimizations;
@@ -61,14 +60,16 @@ public class TransformOpBGP extends TransformCopy {
                 useAllOptimizations).translate();
 
         if (useAllOptimizations) {
-            log.debug("NodeRelations before applying filters: " + tables.size());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("NodeRelations before applying filters: {}", tables.size());
+            }
             ExprList copy = new ExprList();
             copy.addAll(filters);
             for (Expr filter : copy) {
                 tables = applyFilter(tables, filter, filters);
             }
-            if (log.isDebugEnabled()) {
-                log.debug("NodeRelations after applying filters: " + tables.size());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("NodeRelations after applying filters: " + tables.size());
             }
         }
 
@@ -100,10 +101,12 @@ public class TransformOpBGP extends TransformCopy {
             result.add(nodeRelation);
         }
         if (convertable) {
-            log.debug("Removing converted filter: " + filter);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Removing converted filter: {}", filter);
             allFilters.getList().remove(filter);
         } else {
-            log.debug("Filter could not be fully converted and is kept: " + filter);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Filter could not be fully converted and is kept: {}", filter);
         }
         return result;
     }

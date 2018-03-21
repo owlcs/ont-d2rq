@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.sql.types;
 
+import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 
 public class SQLTimestamp extends DataType {
     private final static Pattern TIMESTAMP_PATTERN =
@@ -80,7 +80,7 @@ public class SQLTimestamp extends DataType {
     public String toSQLLiteral(String value) {
         value = value.replace('T', ' ').replace("Z", "+00:00");
         if (!TIMESTAMP_PATTERN.matcher(value).matches()) {
-            log.warn("Unsupported TIMESTAMP format: '" + value + "'; treating as NULL");
+            LOGGER.warn("Unsupported TIMESTAMP format: '" + value + "'; treating as NULL");
             return "NULL";
         }
         return syntax().quoteTimestampLiteral(value);

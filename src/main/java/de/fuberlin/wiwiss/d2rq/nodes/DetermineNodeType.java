@@ -1,20 +1,19 @@
 package de.fuberlin.wiwiss.d2rq.nodes;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.graph.Node;
-import org.apache.jena.sparql.core.Var;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.values.BlankNodeID;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.sparql.core.Var;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DetermineNodeType implements NodeSetFilter {
 
-    private final Log logger = LogFactory.getLog(DetermineNodeType.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DetermineNodeType.class);
 
     private boolean limitedToURIs = false;
     private boolean limitedToBlankNodes = false;
@@ -44,7 +43,7 @@ public class DetermineNodeType implements NodeSetFilter {
     }
 
     public void limitTo(Node node) {
-        logger.debug("limitting to " + node);
+        LOGGER.debug("limitting to {}", node);
 
         if (node.isURI())
             limitedToURIs = true;
@@ -55,17 +54,17 @@ public class DetermineNodeType implements NodeSetFilter {
     }
 
     public void limitToBlankNodes() {
-        logger.debug("limitting to blank nodes");
+        LOGGER.debug("limitting to blank nodes");
 
         limitedToBlankNodes = true;
     }
 
     public void limitToEmptySet() {
-        logger.warn("TODO DetermineNodeType.limitToEmptySet()");
+        LOGGER.warn("TODO DetermineNodeType.limitToEmptySet()");
     }
 
     public void limitToLiterals(String language, RDFDatatype datatype) {
-        logger.debug("limitting to literals");
+        LOGGER.debug("limitting to literals");
 
         limitedToLiterals = true;
         this.datatype = datatype;
@@ -73,40 +72,40 @@ public class DetermineNodeType implements NodeSetFilter {
     }
 
     public void limitToURIs() {
-        logger.debug("limitting to URIs");
+        LOGGER.debug("limitting to URIs");
 
         limitedToURIs = true;
     }
 
     // FIXME Implement!
     public void limitValues(String constant) {
-        logger.warn("TODO DetermineNodeType.limitValues() " + constant);
+        LOGGER.warn("TODO DetermineNodeType.limitValues() {}", constant);
     }
 
     // FIXME Implement!
     public void limitValuesToAttribute(Attribute attribute) {
-        logger.warn("TODO DetermineNodeType.limitValuesToAttribute() " + attribute);
+        LOGGER.warn("TODO DetermineNodeType.limitValuesToAttribute() {}", attribute);
     }
 
     // FIXME Implement!
     public void limitValuesToBlankNodeID(BlankNodeID id) {
-        logger.warn("TODO DetermineNodeType.limitValuesToBlankNodeID() " + id);
+        LOGGER.warn("TODO DetermineNodeType.limitValuesToBlankNodeID() {}", id);
     }
 
     // FIXME Implement!
     public void limitValuesToExpression(Expression expression) {
-        logger.warn("TODO DetermineNodeType.limitValuesToExpression() " + expression);
+        LOGGER.warn("TODO DetermineNodeType.limitValuesToExpression() {}", expression);
     }
 
     // FIXME Implement!
     public void limitValuesToPattern(Pattern pattern) {
-        logger.warn("TODO DetermineNodeType.limitValuesToPattern() " + pattern);
+        LOGGER.warn("TODO DetermineNodeType.limitValuesToPattern() {}", pattern);
     }
 
     // FIXME Implement!
     public void setUsesTranslator(Translator translator) {
         if (translator != Translator.IDENTITY) {
-            logger.warn("TODO DetermineNodeType.setUsesTranslator() " + translator);
+            LOGGER.warn("TODO DetermineNodeType.setUsesTranslator() {}", translator);
         }
     }
 }

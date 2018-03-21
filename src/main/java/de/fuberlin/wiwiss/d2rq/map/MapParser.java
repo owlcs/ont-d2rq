@@ -1,18 +1,17 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import java.util.*;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.system.IRIResolver;
-import org.apache.jena.vocabulary.RDF;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
 import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.riot.system.IRIResolver;
+import org.apache.jena.vocabulary.RDF;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 /**
  * Creates a {@link Mapping} from a Jena model representation
@@ -21,7 +20,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class MapParser {
-    private final static Log LOGGER = LogFactory.getLog(MapParser.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(MapParser.class);
 
     /**
      * A regular expression that matches zero or more characters that are allowed inside IRIs
@@ -83,7 +82,7 @@ public class MapParser {
             parseClassMaps();
             parsePropertyBridges();
             parseDownloadMaps();
-            LOGGER.info("Done reading D2RQ map with " + mapping.databases().size() + " databases and " + mapping.classMapResources().size() + " class maps");
+            LOGGER.info("Done reading D2RQ map with {} databases and {} class maps", mapping.databases().size(), mapping.classMapResources().size());
             return this.mapping;
         } catch (LiteralRequiredException ex) {
             throw new D2RQException("Expected literal, found URI resource instead: " + ex.getMessage(),

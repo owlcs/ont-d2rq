@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.mapgen;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 public class IRIEncoder {
 
@@ -12,7 +12,7 @@ public class IRIEncoder {
      * non-characters is undefined.
      */
     public static String encode(String s) {
-        StringBuffer sbuffer = new StringBuffer(s.length());
+        StringBuilder sbuffer = new StringBuilder(s.length());
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             int cCode = (int) c;
@@ -22,14 +22,10 @@ public class IRIEncoder {
                     || cCode >= 0x00A0) {
                 sbuffer.append(c);
             } else {
-                try {
-                    for (byte b : s.substring(i, i + 1).getBytes("utf-8")) {
-                        sbuffer.append('%');
-                        sbuffer.append(hexDigits[(b >> 4) & 0x0F]);
-                        sbuffer.append(hexDigits[b & 0x0F]);
-                    }
-                } catch (UnsupportedEncodingException ex) {
-                    throw new RuntimeException("Can't happen");
+                for (byte b : s.substring(i, i + 1).getBytes(StandardCharsets.UTF_8)) {
+                    sbuffer.append('%');
+                    sbuffer.append(hexDigits[(b >> 4) & 0x0F]);
+                    sbuffer.append(hexDigits[b & 0x0F]);
                 }
             }
         }

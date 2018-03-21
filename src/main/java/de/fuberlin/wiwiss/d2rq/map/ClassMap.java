@@ -1,28 +1,28 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.vocabulary.RDF;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.RDF;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class ClassMap extends ResourceMap {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassMap.class);
+
     private Resource resource;
     private Database database = null;
-    private Collection<Resource> classes = new ArrayList<Resource>();
-    private Collection<PropertyBridge> propertyBridges = new ArrayList<PropertyBridge>();
+    private Collection<Resource> classes = new ArrayList<>();
+    private Collection<PropertyBridge> propertyBridges = new ArrayList<>();
     private Collection<TripleRelation> compiledPropertyBridges = null;
-    private Log log = LogFactory.getLog(ClassMap.class);
 
     public ClassMap(Resource classMapResource) {
         super(classMapResource, false);
@@ -65,13 +65,15 @@ public class ClassMap extends ResourceMap {
                 D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue
         });
         if (this.constantValue != null && this.constantValue.isLiteral()) {
-            throw new D2RQException(
-                    "d2rq:constantValue for class map " + toString() + " must be a URI or blank node",
+            throw new D2RQException("d2rq:constantValue for class map " + toString() + " must be a URI or blank node",
                     D2RQException.CLASSMAP_INVALID_CONSTANTVALUE);
         }
         if (this.uriPattern != null && new Pattern(uriPattern).attributes().size() == 0) {
-            this.log.warn(toString() + " has an uriPattern without any column specifications. This usually happens when no primary keys are defined for a table. If the configuration is left as is, all table rows will be mapped to a single instance. " +
-                    "If this is not what you want, please define the keys in the database and re-run the mapping generator, or edit the mapping to provide the relevant keys.");
+            LOGGER.warn(String.format("%s has an uriPattern without any column specifications. " +
+                    "This usually happens when no primary keys are defined for a table. " +
+                    "If the configuration is left as is, all table rows will be mapped to a single instance. " +
+                    "If this is not what you want, please define the keys in the database and re-run the mapping generator, " +
+                    "or edit the mapping to provide the relevant keys.", toString()));
         }
         for (PropertyBridge bridge : propertyBridges) {
             bridge.validate();
@@ -91,7 +93,7 @@ public class ClassMap extends ResourceMap {
     }
 
     private void compile() {
-        this.compiledPropertyBridges = new ArrayList<TripleRelation>();
+        this.compiledPropertyBridges = new ArrayList<>();
         for (PropertyBridge bridge : propertyBridges) {
             this.compiledPropertyBridges.addAll(bridge.toTripleRelations());
         }

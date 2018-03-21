@@ -1,21 +1,20 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.function.BiConsumer;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.shared.JenaException;
-import org.apache.jena.util.FileManager;
-import org.apache.jena.util.FileUtils;
-
 import de.fuberlin.wiwiss.d2rq.mapgen.Filter;
 import de.fuberlin.wiwiss.d2rq.mapgen.FilterIncludeExclude;
 import de.fuberlin.wiwiss.d2rq.mapgen.FilterMatchAny;
 import de.fuberlin.wiwiss.d2rq.mapgen.FilterParser;
 import de.fuberlin.wiwiss.d2rq.mapgen.FilterParser.ParseException;
+import org.apache.jena.shared.JenaException;
+import org.apache.jena.util.FileManager;
+import org.apache.jena.util.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.function.BiConsumer;
 
 
 /**
@@ -26,7 +25,7 @@ import de.fuberlin.wiwiss.d2rq.mapgen.FilterParser.ParseException;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public abstract class CommandLineTool {
-    private final static Log log = LogFactory.getLog(CommandLineTool.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(CommandLineTool.class);
 
     private final CommandLine cmd = new CommandLine();
     private final ArgDecl userArg = new ArgDecl(true, "u", "user", "username");
@@ -172,13 +171,13 @@ public abstract class CommandLineTool {
         } else {
             System.err.println(ex.getMessage());
         }
-        log.info("Command line tool exception", ex);
+        LOGGER.info("Command line tool exception", ex);
         System.exit(1);
     }
 
     private void reportException(Exception ex) {
         System.err.println(ex.getMessage());
-        log.info("Command line tool exception", ex);
+        LOGGER.info("Command line tool exception", ex);
         System.exit(1);
     }
 

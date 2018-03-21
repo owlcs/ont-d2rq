@@ -1,10 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.sql.types;
 
+import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
+
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 
 public class SQLApproximateNumeric extends DataType {
     public SQLApproximateNumeric(Vendor syntax, String name) {
@@ -55,7 +55,7 @@ public class SQLApproximateNumeric extends DataType {
                 return Double.toString(d);
             } catch (NumberFormatException ex2) {
                 // Not a number AFAICT
-                log.warn("Unsupported DOUBLE format: '" + value + "'; treating as NULL");
+                LOGGER.warn("Unsupported DOUBLE format: '" + value + "'; treating as NULL");
                 return "NULL";
             }
         }

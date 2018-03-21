@@ -1,22 +1,5 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.charset.MalformedInputException;
-import java.sql.SQLException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.atlas.AtlasException;
-import org.apache.jena.n3.turtle.TurtleParseException;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.RiotException;
-import org.apache.jena.shared.JenaException;
-import org.apache.jena.system.JenaSystem;
-import org.apache.jena.util.FileManager;
-import org.apache.jena.util.FileUtils;
-
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -26,6 +9,22 @@ import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import de.fuberlin.wiwiss.d2rq.mapgen.W3CMappingGenerator;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
+import org.apache.jena.atlas.AtlasException;
+import org.apache.jena.n3.turtle.TurtleParseException;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RiotException;
+import org.apache.jena.shared.JenaException;
+import org.apache.jena.system.JenaSystem;
+import org.apache.jena.util.FileManager;
+import org.apache.jena.util.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.MalformedInputException;
+import java.sql.SQLException;
 
 /**
  * Factory for MappingGenerators, ModelD2RQs and the like.
@@ -45,7 +44,7 @@ public class SystemLoader {
         JenaSystem.init();    // Wire RIOT into Jena, etc.
     }
 
-    private final static Log LOGGER = LogFactory.getLog(SystemLoader.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(SystemLoader.class);
 
     public static final String DEFAULT_JDBC_URL = "jdbc:hsqldb:mem:temp";
 
@@ -231,9 +230,8 @@ public class SystemLoader {
                 // Detect the specific case of non-UTF-8 encoded input files
                 // and do a custom error message
                 if (FileUtils.langTurtle.equals(lang) && ex.getCause() != null && (ex.getCause() instanceof MalformedInputException)) {
-                    throw new D2RQException("Error parsing " + mappingFile +
-                            ": Turtle files must be in UTF-8 encoding; bad encoding found at byte " +
-                            ((MalformedInputException) ex.getCause()).getInputLength(), ex, 77);
+                    throw new D2RQException(String.format("Error parsing %s: Turtle files must be in UTF-8 encoding; bad encoding found at byte %d",
+                            mappingFile, ((MalformedInputException) ex.getCause()).getInputLength()), ex, 77);
                 }
                 // Generic error message for other parse errors
                 throw new D2RQException("Error parsing " + mappingFile + ": " + ex.getMessage(), ex, 77);

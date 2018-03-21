@@ -1,15 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.download;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.*;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jena.graph.NodeFactory;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.MutableRelation;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
@@ -21,6 +11,15 @@ import de.fuberlin.wiwiss.d2rq.sql.ResultRowMap;
 import de.fuberlin.wiwiss.d2rq.sql.SQLIterator;
 import de.fuberlin.wiwiss.d2rq.sql.SelectStatementBuilder;
 import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
+import org.apache.jena.graph.NodeFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.sql.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A helper that evaluates a {@link DownloadMap} for a particular
@@ -35,7 +34,7 @@ import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
  * @author RichardCyganiak
  */
 public class DownloadContentQuery {
-    private static final Log log = LogFactory.getLog(DownloadContentQuery.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DownloadContentQuery.class);
 
     private final DownloadMap downloadMap;
     private final ValueMaker mediaTypeValueMaker;
@@ -108,7 +107,8 @@ public class DownloadContentQuery {
         Connection conn = db.connection();
         try {
             statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-            log.debug(sql);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug(sql);
 
             db.vendor().beforeQuery(conn);
             resultSet = statement.executeQuery(sql);
@@ -131,8 +131,7 @@ public class DownloadContentQuery {
                     resultStream = new ByteArrayInputStream(s.getBytes());
                 }
             }
-            mediaType = mediaTypeValueMaker.makeValue(
-                    ResultRowMap.fromResultSet(resultSet, builder.getColumnSpecs(), db));
+            mediaType = mediaTypeValueMaker.makeValue(ResultRowMap.fromResultSet(resultSet, builder.getColumnSpecs(), db));
         } catch (SQLException ex) {
             throw new D2RQException(ex);
         }

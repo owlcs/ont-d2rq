@@ -1,12 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
+import de.fuberlin.wiwiss.d2rq.algebra.Relation;
+import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
+import de.fuberlin.wiwiss.d2rq.sql.SQLIterator;
+import de.fuberlin.wiwiss.d2rq.sql.SelectStatementBuilder;
 import org.apache.jena.sparql.engine.ExecutionContext;
 import org.apache.jena.sparql.engine.QueryIterator;
 import org.apache.jena.sparql.engine.binding.Binding;
@@ -14,12 +12,13 @@ import org.apache.jena.sparql.engine.iterator.QueryIter;
 import org.apache.jena.sparql.engine.iterator.QueryIterNullIterator;
 import org.apache.jena.sparql.engine.iterator.QueryIterPlainWrapper;
 import org.apache.jena.sparql.engine.iterator.QueryIterSingleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
-import de.fuberlin.wiwiss.d2rq.algebra.Relation;
-import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
-import de.fuberlin.wiwiss.d2rq.sql.SQLIterator;
-import de.fuberlin.wiwiss.d2rq.sql.SelectStatementBuilder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 
 /**
  * A {@link QueryIterator} over the bindings produced by a
@@ -29,7 +28,7 @@ import de.fuberlin.wiwiss.d2rq.sql.SelectStatementBuilder;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class QueryIterTableSQL extends QueryIter {
-    private final static Log log = LogFactory.getLog(QueryIterTableSQL.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(QueryIterTableSQL.class);
 
     /**
      * Creates an instance, or a simpler QueryIterator
@@ -65,9 +64,7 @@ public class QueryIterTableSQL extends QueryIter {
             return new QueryIterNullIterator(execCxt);
         }
         if (table.baseRelation().isTrivial()) {
-            return QueryIterSingleton.create(
-                    BindingMaker.createFor(table).makeBinding(ResultRow.NO_ATTRIBUTES),
-                    execCxt);
+            return QueryIterSingleton.create(BindingMaker.createFor(table).makeBinding(ResultRow.NO_ATTRIBUTES), execCxt);
         }
         return new QueryIterTableSQL(table.baseRelation(),
                 Collections.singleton(BindingMaker.createFor(table)), execCxt);
@@ -101,13 +98,14 @@ public class QueryIterTableSQL extends QueryIter {
 
     @Override
     protected void closeIterator() {
-        log.debug("closeIterator() called ...");
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("closeIterator() called ...");
         wrapped.close();
     }
 
     @Override
     protected void requestCancel() {
-        log.info("requestCancel() called ...");
+        LOGGER.info("requestCancel() called ...");
         wrapped.cancel();
     }
 

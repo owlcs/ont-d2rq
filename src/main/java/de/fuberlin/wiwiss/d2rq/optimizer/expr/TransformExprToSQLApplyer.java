@@ -4,8 +4,6 @@ import de.fuberlin.wiwiss.d2rq.algebra.*;
 import de.fuberlin.wiwiss.d2rq.expr.*;
 import de.fuberlin.wiwiss.d2rq.nodes.*;
 import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
@@ -14,6 +12,8 @@ import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.*;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 import org.apache.jena.sparql.expr.nodevalue.NodeValueBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -31,7 +31,7 @@ import java.util.*;
  */
 public final class TransformExprToSQLApplyer implements ExprVisitor {
 
-    private static final Log logger = LogFactory.getLog(TransformExprToSQLApplyer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransformExprToSQLApplyer.class);
 
     /**
      * Converts a SPARQL filter expression to an SQL expression
@@ -73,7 +73,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      */
     public Expression result() {
         if (!convertable) {
-            logger.debug("filter conversion failed: " + reason);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("filter conversion failed: {}", reason);
             return null;
         }
 
@@ -81,7 +82,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             throw new IllegalStateException("something is seriously wrong");
 
         Expression result = expression.pop();
-        logger.debug("Resulting filter = " + result);
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("Resulting filter = {}", result);
         return result;
     }
 
@@ -90,7 +92,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     public void visit(ExprFunction1 function) {
-        logger.debug("visit ExprFunction " + function);
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("visit ExprFunction {}", function);
 
         if (!convertable) {
             expression.push(Expression.FALSE); // prevent stack empty exceptions when conversion
@@ -100,7 +103,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     public void visit(ExprFunction2 function) {
-        logger.debug("visit ExprFunction " + function);
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("visit ExprFunction {}", function);
 
         if (!convertable) {
             expression.push(Expression.FALSE); // prevent stack empty exceptions when conversion
@@ -131,7 +135,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     public void visit(ExprVar var) {
-        logger.debug("visit ExprVar " + var);
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("visit ExprVar {}", var);
 
         if (!convertable) {
             expression.push(Expression.FALSE); // prevent stack empty exceptions when conversion
@@ -157,7 +162,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     public void visit(NodeValue value) {
-        logger.debug("visit NodeValue " + value);
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("visit NodeValue {}", value);
 
         if (!convertable) {
             expression.push(Expression.FALSE); // prevent stack empty exceptions when conversion
@@ -177,7 +183,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     private void visitExprFunction(ExprFunction function) {
-        logger.debug("visit ExprFunction " + function);
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("visit ExprFunction {}", function);
 
         if (!convertable) {
             expression.push(Expression.FALSE); // prevent stack empty exceptions when conversion
@@ -214,7 +221,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                 TypedNodeMaker typedNodeMaker = (TypedNodeMaker) nodeMaker;
                 Iterator<ProjectionSpec> it = typedNodeMaker.projectionSpecs().iterator();
                 if (!it.hasNext()) {
-                    logger.debug("no projection spec for " + exprVar + ", assuming constant");
+                    if (LOGGER.isDebugEnabled())
+                        LOGGER.debug("no projection spec for {}, assuming constant", exprVar);
                     Node node = typedNodeMaker.makeNode(null);
                     result.add(new ConstantEx(NodeValue.makeNode(node).asString(), node));
                 }
@@ -247,7 +255,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     private void convertFunction(ExprFunction1 expr) {
-        logger.debug("convertFunction " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertFunction {}", expr);
 
         if (expr instanceof E_Str) {
             convertStr((E_Str) expr);
@@ -278,7 +287,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     private void convertFunction(ExprFunction2 expr) {
-        logger.debug("convertFunction " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertFunction {}", expr);
 
         if (expr instanceof E_LogicalOr) {
             expr.getArg1().visit(this);
@@ -360,7 +370,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     private void convertEquals(E_Equals expr) {
-        logger.debug("convertEquals " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertEquals {}", expr);
 
         convertEquality(expr);
     }
@@ -394,14 +405,16 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                 constant = (ConstantEx) e1;
             }
 
-            logger.debug("isEqual(" + variable + ", " + constant + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isEqual({}, {})", variable, constant);
 
             NodeMaker nm = variable.getNodeMaker();
 
             if (nm instanceof TypedNodeMaker) {
                 ValueMaker vm = ((TypedNodeMaker) nm).valueMaker();
                 Node node = constant.getNode();
-                logger.debug("checking " + node + " with " + nm);
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("checking {} with {}", node, nm);
 
                 if (XSD.isNumeric(node)) {
                     DetermineNodeType filter = new DetermineNodeType();
@@ -415,7 +428,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                 }
 
                 boolean empty = nm.selectNode(node, RelationalOperators.DUMMY).equals(NodeMaker.EMPTY);
-                logger.debug("result " + empty);
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("result {}", empty);
                 if (!empty) {
                     if (node.isURI())
                         expression.push(vm.valueExpression(node.getURI()));
@@ -432,10 +446,11 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                     return;
                 }
             } else {
-                logger.warn("nm is not a TypedNodemaker");
+                LOGGER.warn("nm is not a TypedNodemaker");
             }
         } else if (e1 instanceof ConstantEx && e2 instanceof ConstantEx) {
-            logger.debug("isEqual(" + e1 + ", " + e2 + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isEqual({}, {})", e1, e2);
             Node c1 = ((ConstantEx) e1).getNode();
             Node c2 = ((ConstantEx) e2).getNode();
             boolean equals;
@@ -453,11 +468,13 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                     equals = false;
                 }
             }
-            logger.debug("constants equal? " + equals);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("constants equal? {}", equals);
             expression.push(equals ? Expression.TRUE : Expression.FALSE);
             return;
         } else if (e1 instanceof AttributeExprEx && e2 instanceof AttributeExprEx) {
-            logger.debug("isEqual(" + e1 + ", " + e2 + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isEqual({}, {})", e1, e2);
             AttributeExprEx variable1 = (AttributeExprEx) e1;
             AttributeExprEx variable2 = (AttributeExprEx) e2;
 
@@ -482,7 +499,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             nm2.describeSelf(nodeSet);
 
             if (nodeSet.isEmpty()) {
-                logger.debug("nodes " + nm1 + " " + nm2 + " incompatible");
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("nodes {} & {} incompatible", nm1, nm2);
                 expression.push(Expression.FALSE);
                 return;
             }
@@ -492,7 +510,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     private void convertNotEquals(E_NotEquals expr) {
-        logger.debug("convertNotEquals " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertNotEquals {}", expr);
 
         expr.getArg1().visit(this);
         expr.getArg2().visit(this);
@@ -521,14 +540,16 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                 constant = (ConstantEx) e1;
             }
 
-            logger.debug("isNotEqual(" + variable + ", " + constant + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isNotEqual({}, {})", variable, constant);
 
             NodeMaker nm = variable.getNodeMaker();
 
             if (nm instanceof TypedNodeMaker) {
                 ValueMaker vm = ((TypedNodeMaker) nm).valueMaker();
                 Node node = constant.getNode();
-                logger.debug("checking " + node + " with " + nm);
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("checking {} with {}", node, nm);
                 if (XSD.isNumeric(node)) {
                     DetermineNodeType filter = new DetermineNodeType();
                     nm.describeSelf(filter);
@@ -540,7 +561,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                     }
                 }
                 boolean empty = nm.selectNode(node, RelationalOperators.DUMMY).equals(NodeMaker.EMPTY);
-                logger.debug("result " + empty);
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("result {}", empty);
                 if (!empty) {
                     if (node.isURI())
                         expression.push(new Negation(vm.valueExpression(node.getURI())));
@@ -558,7 +580,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                 }
             }
         } else if (e1 instanceof ConstantEx && e2 instanceof ConstantEx) {
-            logger.debug("isNotEqual(" + e1 + ", " + e2 + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isNotEqual({}, {})", e1, e2);
             Node c1 = ((ConstantEx) e1).getNode();
             Node c2 = ((ConstantEx) e2).getNode();
             boolean equals;
@@ -576,11 +599,13 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                     equals = false;
                 }
             }
-            logger.debug("constants equal? " + equals);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("constants equal? {}", equals);
             expression.push(equals ? Expression.FALSE : Expression.TRUE);
             return;
         } else if (e1 instanceof AttributeExprEx && e2 instanceof AttributeExprEx) {
-            logger.debug("isNotEqual(" + e1 + ", " + e2 + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isNotEqual({}, {})", e1, e2);
             AttributeExprEx variable1 = (AttributeExprEx) e1;
             AttributeExprEx variable2 = (AttributeExprEx) e2;
 
@@ -606,7 +631,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             nm2.describeSelf(nodeSet);
 
             if (nodeSet.isEmpty()) {
-                logger.debug("nodes " + nm1 + " " + nm2 + " incompatible");
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("nodes {} & {} incompatible", nm1, nm2);
                 expression.push(Expression.TRUE);
                 return;
             }
@@ -645,7 +671,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @see http://www.w3.org/TR/rdf-sparql-query
      */
     private void convertIsIRI(E_IsIRI expr) {
-        logger.debug("convertIsIRI " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertIsIRI {}", expr);
 
         expr.getArg().visit(this);
 
@@ -674,7 +701,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @see http://www.w3.org/TR/rdf-sparql-query
      */
     private void convertIsBlank(E_IsBlank expr) {
-        logger.debug("convertIsBlank " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertIsBlank {}", expr);
 
         expr.getArg().visit(this);
 
@@ -703,13 +731,15 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @see http://www.w3.org/TR/rdf-sparql-query
      */
     private void convertIsLiteral(E_IsLiteral expr) {
-        logger.debug("convertIsLiteral " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertIsLiteral {}", expr);
 
         expr.getArg().visit(this);
 
         Expression arg = expression.pop();
 
-        logger.debug("arg " + arg);
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("arg {}", arg);
 
         if (arg instanceof AttributeExprEx) {
             AttributeExprEx variable = (AttributeExprEx) arg;
@@ -736,7 +766,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @see http://www.w3.org/TR/rdf-sparql-query
      */
     private void convertStr(E_Str expr) {
-        logger.debug("convertStr " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertStr {}", expr);
 
         expr.getArg().visit(this);
 
@@ -748,7 +779,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             AttributeExprEx attribute = (AttributeExprEx) arg;
             TypedNodeMaker nodeMaker = (TypedNodeMaker) attribute.getNodeMaker();
             TypedNodeMaker newNodeMaker = new TypedNodeMaker(TypedNodeMaker.PLAIN_LITERAL, nodeMaker.valueMaker(), nodeMaker.isUnique());
-            logger.debug("changing nodemaker " + nodeMaker + " to " + newNodeMaker);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("changing nodemaker {} to {}", nodeMaker, newNodeMaker);
             expression.push(new AttributeExprEx(attribute.attributes().iterator().next(), newNodeMaker));
         } else if (arg instanceof ConstantEx) {
             ConstantEx constant = (ConstantEx) arg;
@@ -756,7 +788,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             String lexicalForm = node.getLiteral().getLexicalForm();
             node = NodeFactory.createLiteral(lexicalForm);
             ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
-            logger.debug("pushing " + constantEx);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("pushing {}", constantEx);
             expression.push(constantEx);
         } else {
             conversionFailed(expr);
@@ -770,7 +803,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @see http://www.w3.org/TR/rdf-sparql-query
      */
     private void convertLang(E_Lang expr) {
-        logger.debug("convertLang " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertLang {}", expr);
 
         expr.getArg().visit(this);
 
@@ -782,7 +816,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             DetermineNodeType filter = new DetermineNodeType();
             nm.describeSelf(filter);
             String lang = filter.getLanguage();
-            logger.debug("lang " + lang);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("lang {}", lang);
             if (lang == null)
                 lang = "";
 
@@ -790,26 +825,29 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             Node node = NodeFactory.createLiteral(lang);
 
             ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
-            logger.debug("pushing " + constantEx);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("pushing {}", constantEx);
             expression.push(constantEx);
         } else if (arg instanceof ConstantEx) {
             ConstantEx constant = (ConstantEx) arg;
             Node node = constant.getNode();
             if (!node.isLiteral()) {
                 // type error, return false?
-                logger.warn("type error: " + node + " is not a literal, returning FALSE");
+                LOGGER.warn("type error: {} is not a literal, returning FALSE", node);
                 expression.push(Expression.FALSE);
                 return;
             }
             String lang = node.getLiteralLanguage();
-            logger.debug("lang " + lang);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("lang {}", lang);
             if (lang == null)
                 lang = "";
 
             node = NodeFactory.createLiteral(lang);
 
             ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
-            logger.debug("pushing " + constantEx);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("pushing {}", constantEx);
             expression.push(constantEx);
         } else {
             conversionFailed(expr);
@@ -824,7 +862,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @see http://www.w3.org/TR/rdf-sparql-query
      */
     private void convertDataType(E_Datatype expr) {
-        logger.debug("convertDataType " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertDataType {}", expr);
 
         expr.getArg().visit(this);
 
@@ -837,32 +876,36 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             nm.describeSelf(filter);
             if (!filter.isLimittedToLiterals()) {
                 // type error, return false?
-                logger.warn("type error: " + variable + " is not a literal, returning FALSE");
+                LOGGER.warn("type error: {} is not a literal, returning FALSE", variable);
                 expression.push(Expression.FALSE);
                 return;
             }
             RDFDatatype datatype = filter.getDatatype();
-            logger.debug("datatype " + datatype);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("datatype {}", datatype);
 
             Node node = NodeFactory.createURI((datatype != null) ? datatype.getURI() : XSDDatatype.XSDstring.getURI());
 
             ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
-            logger.debug("pushing " + constantEx);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("pushing {}", constantEx);
             expression.push(constantEx);
         } else if (arg instanceof ConstantEx) {
             ConstantEx constant = (ConstantEx) arg;
             Node node = constant.getNode();
             if (!node.isLiteral()) {
                 // type error, return false?
-                logger.warn("type error: " + node + " is not a literal, returning FALSE");
+                LOGGER.warn("type error: {} is not a literal, returning FALSE", node);
                 expression.push(Expression.FALSE);
                 return;
             }
             RDFDatatype datatype = node.getLiteralDatatype();
-            logger.debug("datatype " + datatype);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("datatype {}", datatype);
             node = NodeFactory.createURI((datatype != null) ? datatype.getURI() : XSDDatatype.XSDstring.getURI());
             ConstantEx constantEx = new ConstantEx(NodeValue.makeNode(node).asString(), node);
-            logger.debug("pushing " + constantEx);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("pushing {}", constantEx);
             expression.push(constantEx);
         } else {
             conversionFailed(expr);
@@ -879,7 +922,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @see http://www.w3.org/TR/rdf-concepts/
      */
     private void convertSameTerm(E_SameTerm expr) {
-        logger.debug("convertSameTerm " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertSameTerm {}", expr);
 
         expr.getArg1().visit(this);
         expr.getArg2().visit(this);
@@ -909,17 +953,20 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                 constant = (ConstantEx) e1;
             }
 
-            logger.debug("isEqual(" + variable + ", " + constant + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isEqual({}, {})", variable, constant);
 
             NodeMaker nm = variable.getNodeMaker();
 
             if (nm instanceof TypedNodeMaker) {
                 ValueMaker vm = ((TypedNodeMaker) nm).valueMaker();
                 Node node = constant.getNode();
-                logger.debug("checking " + node + " with " + nm);
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("checking {} with {}", node, nm);
 
                 boolean empty = nm.selectNode(node, RelationalOperators.DUMMY).equals(NodeMaker.EMPTY);
-                logger.debug("result " + empty);
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("result {}", empty);
                 if (!empty) {
                     if (node.isURI())
                         expression.push(vm.valueExpression(node.getURI()));
@@ -933,18 +980,21 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
                     return;
                 }
             } else {
-                logger.warn("nm is not a TypedNodemaker");
+                LOGGER.warn("nm is not a TypedNodemaker");
             }
         } else if (e1 instanceof ConstantEx && e2 instanceof ConstantEx) {
-            logger.debug("isEqual(" + e1 + ", " + e2 + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isEqual({}, {})", e1, e2);
             ConstantEx constant1 = (ConstantEx) e1;
             ConstantEx constant2 = (ConstantEx) e2;
             boolean equals = NodeFunctions.sameTerm(constant1.getNode(), constant2.getNode());
-            logger.debug("constants same? " + equals);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("constants same? {}", equals);
             expression.push(equals ? Expression.TRUE : Expression.FALSE);
             return;
         } else if (e1 instanceof AttributeExprEx && e2 instanceof AttributeExprEx) {
-            logger.debug("isEqual(" + e1 + ", " + e2 + ")");
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("isEqual({}, {})", e1, e2);
             AttributeExprEx variable1 = (AttributeExprEx) e1;
             AttributeExprEx variable2 = (AttributeExprEx) e2;
 
@@ -956,7 +1006,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             nm2.describeSelf(nodeSet);
 
             if (nodeSet.isEmpty()) {
-                logger.debug("nodes " + nm1 + " " + nm2 + " incompatible");
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("nodes {} & {}", nm1, nm2);
                 expression.push(Expression.FALSE);
                 return;
             }
@@ -976,7 +1027,8 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @see http://www.w3.org/TR/rdf-sparql-query
      */
     private void convertLangMatches(E_LangMatches expr) {
-        logger.debug("convertLangMatches " + expr.toString());
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("convertLangMatches {}", expr);
 
         expr.getArg1().visit(this);
         expr.getArg2().visit(this);

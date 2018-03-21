@@ -1,7 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import org.apache.jena.atlas.io.PrintUtils;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.algebra.Op;
@@ -17,9 +17,8 @@ import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingRoot;
 import org.apache.jena.sparql.engine.main.QueryEngineMain;
 import org.apache.jena.sparql.util.Context;
-
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An ARQ query engine for D2RQ-mapped graphs. Allows evaluation of SPARQL
@@ -30,7 +29,7 @@ import de.fuberlin.wiwiss.d2rq.map.Mapping;
  * @author Herwig Leimer
  */
 public class QueryEngineD2RQ extends QueryEngineMain {
-    private static final Log log = LogFactory.getLog(QueryEngineD2RQ.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueryEngineD2RQ.class);
 
     private final Mapping mapping;
     private final Binding inputBinding;
@@ -72,8 +71,8 @@ public class QueryEngineD2RQ extends QueryEngineMain {
      * the parent of an OpBGP.
      */
     private Op translate(Op op) {
-        if (log.isDebugEnabled()) {
-            log.debug("Before translation:\n" + PrintUtils.toString(op));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Before translation:\n{}", PrintUtils.toString(op));
         }
         // Shape filter expressions to maximize opportunities for pushing them
         // down
@@ -85,8 +84,8 @@ public class QueryEngineD2RQ extends QueryEngineMain {
         // Translate BGPs that don't have a filter
         op = Transformer.transformSkipService(new TransformOpBGP(mapping, false), op);
 
-        if (log.isDebugEnabled()) {
-            log.debug("After translation:\n" + PrintUtils.toString(op));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("After translation:\n{}", PrintUtils.toString(op));
         }
         return op;
     }
@@ -113,8 +112,7 @@ public class QueryEngineD2RQ extends QueryEngineMain {
 
         public Plan create(Query query, DatasetGraph dataset,
                            Binding inputBinding, Context context) {
-            return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(),
-                    query, inputBinding, context).getPlan();
+            return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(), query, inputBinding, context).getPlan();
         }
 
         public boolean accept(Op op, DatasetGraph dataset, Context context) {
@@ -123,8 +121,7 @@ public class QueryEngineD2RQ extends QueryEngineMain {
 
         public Plan create(Op op, DatasetGraph dataset, Binding inputBinding,
                            Context context) {
-            return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(),
-                    op, inputBinding, context).getPlan();
+            return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(), op, inputBinding, context).getPlan();
         }
     }
 }
