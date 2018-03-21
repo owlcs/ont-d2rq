@@ -1,15 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.mapgen;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.jena.rdf.model.Resource;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.rdf.model.Resource;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Generates a D2RQ mapping compatible with W3C's Direct Mapping by introspecting a database schema.
@@ -31,27 +30,27 @@ public class W3CMappingGenerator extends MappingGenerator {
 
     @Override
     protected void writeEntityIdentifier(Resource table, RelationName tableName, List<Attribute> identifierColumns) {
-        String uriPattern = instanceNamespaceURI + encodeTableName(tableName);
+        StringBuilder uriPattern = new StringBuilder(instanceNamespaceURI + encodeTableName(tableName));
         Iterator<Attribute> it = identifierColumns.iterator();
         int i = 0;
         while (it.hasNext()) {
-            uriPattern += i == 0 ? "/" : ";";
+            uriPattern.append(i == 0 ? "/" : ";");
             i++;
             Attribute column = it.next();
-            uriPattern += encodeColumnName(column) + "=@@" + column.qualifiedName();
+            uriPattern.append(encodeColumnName(column)).append("=@@").append(column.qualifiedName());
             if (!database.columnType(column).isIRISafe()) {
-                uriPattern += "|encode";
+                uriPattern.append("|encode");
             }
-            uriPattern += "@@";
+            uriPattern.append("@@");
         }
-        table.addLiteral(D2RQ.uriPattern, uriPattern);
+        table.addLiteral(D2RQ.uriPattern, uriPattern.toString());
     }
 
     @Override
     protected void writePseudoEntityIdentifier(Resource table, RelationName tableName) {
         List<Attribute> usedColumns = filter(table, database.schemaInspector().listColumns(tableName), true, "pseudo identifier column");
         String msg = String.valueOf(usedColumns.stream().map(Attribute::qualifiedName).collect(Collectors.toList()))
-                .replaceAll("^\\[", "").replaceAll("\\]$", "");
+                .replaceAll("^\\[", "").replaceAll("]$", "");
         table.addLiteral(D2RQ.bNodeIdColumns, msg);
     }
 

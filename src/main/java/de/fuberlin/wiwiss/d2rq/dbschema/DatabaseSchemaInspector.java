@@ -164,8 +164,7 @@ public class DatabaseSchemaInspector {
     public List<Attribute> primaryKeyColumns(RelationName tableName) {
         List<Attribute> result = new ArrayList<Attribute>();
         try {
-            ResultSet rs = this.schema.getPrimaryKeys(
-                    null, schemaName(tableName), tableName(tableName));
+            ResultSet rs = this.schema.getPrimaryKeys(null, schemaName(tableName), tableName(tableName));
             while (rs.next()) {
                 result.add(new Attribute(tableName, rs.getString("COLUMN_NAME")));
             }
@@ -187,14 +186,14 @@ public class DatabaseSchemaInspector {
         try {
             /*
              * When requesting index info from an Oracle database, accept approximate
-			 * data, as requesting exact results will invoke an ANALYZE, for which the
-			 * querying user must have proper write permissions.
-			 * If he doesn't, an SQLException is thrown right here.
-			 * Note that the "approximate" parameter was not handled by the Oracle JDBC
-			 * driver before release 10.2.0.4, which may result in an exception here.
-			 * @see http://forums.oracle.com/forums/thread.jspa?threadID=210782
-			 * @see http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/htdocs/readme_jdbc_10204.html
-			 */
+             * data, as requesting exact results will invoke an ANALYZE, for which the
+             * querying user must have proper write permissions.
+             * If he doesn't, an SQLException is thrown right here.
+             * Note that the "approximate" parameter was not handled by the Oracle JDBC
+             * driver before release 10.2.0.4, which may result in an exception here.
+             * @see http://forums.oracle.com/forums/thread.jspa?threadID=210782
+             * @see http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/htdocs/readme_jdbc_10204.html
+             */
             boolean approximate = (db.vendor() == Vendor.Oracle);
             ResultSet rs = this.schema.getIndexInfo(
                     null, schemaName(tableName), tableName(tableName), true, approximate);

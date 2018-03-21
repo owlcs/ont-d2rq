@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-
 @SuppressWarnings("WeakerAccess")
 public class MappingGenerator {
     public final static Logger LOGGER = LoggerFactory.getLogger(MappingGenerator.class);
@@ -332,19 +331,19 @@ public class MappingGenerator {
     }
 
     protected void writeEntityIdentifier(Resource table, RelationName tableName, List<Attribute> identifierColumns) {
-        String uriPattern = this.instanceNamespaceURI.toString();
+        StringBuilder uriPattern = new StringBuilder(this.instanceNamespaceURI.toString());
         if (tableName.schemaName() != null) {
-            uriPattern += IRIEncoder.encode(tableName.schemaName()) + "/";
+            uriPattern.append(IRIEncoder.encode(tableName.schemaName())).append("/");
         }
-        uriPattern += IRIEncoder.encode(tableName.tableName());
+        uriPattern.append(IRIEncoder.encode(tableName.tableName()));
         for (Attribute column : identifierColumns) {
-            uriPattern += "/@@" + column.qualifiedName();
+            uriPattern.append("/@@").append(column.qualifiedName());
             if (!database.schemaInspector().columnType(column).isIRISafe()) {
-                uriPattern += "|urlify";
+                uriPattern.append("|urlify");
             }
-            uriPattern += "@@";
+            uriPattern.append("@@");
         }
-        table.addLiteral(D2RQ.uriPattern, uriPattern);
+        table.addLiteral(D2RQ.uriPattern, uriPattern.toString());
     }
 
     protected void writePseudoEntityIdentifier(Resource table, RelationName tableName) {
@@ -464,7 +463,7 @@ public class MappingGenerator {
         if (table.schemaName() == null) {
             return table.tableName();
         }
-        String separator = "_";
+        StringBuilder separator = new StringBuilder("_");
         while (true) {
             String candidate = table.schemaName() + separator + table.tableName();
             if (!assignedNames.containsKey(candidate)) {
@@ -474,7 +473,7 @@ public class MappingGenerator {
             if (assignedNames.get(candidate).equals(table)) {
                 return candidate;
             }
-            separator += "_";
+            separator.append("_");
         }
     }
 
@@ -485,7 +484,7 @@ public class MappingGenerator {
      * underscores (AAA__BBB_CCC) until we have no clash.
      */
     private String toUniqueString(Attribute column) {
-        String separator = "_";
+        StringBuilder separator = new StringBuilder("_");
         while (true) {
             String candidate = toUniqueString(column.relationName()) + separator + column.attributeName();
             if (!assignedNames.containsKey(candidate)) {
@@ -495,7 +494,7 @@ public class MappingGenerator {
             if (assignedNames.get(candidate).equals(column)) {
                 return candidate;
             }
-            separator += "_";
+            separator.append("_");
         }
     }
 
@@ -546,15 +545,15 @@ public class MappingGenerator {
     }
 
     private String labelPattern(String name, List<Attribute> labelColumns) {
-        String result = name + " #";
+        StringBuilder result = new StringBuilder(name + " #");
         Iterator<Attribute> it = labelColumns.iterator();
         while (it.hasNext()) {
-            result += "@@" + it.next().qualifiedName() + "@@";
+            result.append("@@").append(it.next().qualifiedName()).append("@@");
             if (it.hasNext()) {
-                result += "/";
+                result.append("/");
             }
         }
-        return result;
+        return result.toString();
     }
 
     /**
