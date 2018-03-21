@@ -14,8 +14,7 @@ import org.apache.log4j.Logger;
 public class Log4jHelper {
 
     public static void turnLoggingOff() {
-        System.err.println("Logging is turned off!");
-        Logger.getLogger("de.fuberlin.wiwiss.d2rq").setLevel(Level.OFF);
+        Logger.getRootLogger().setLevel(Level.OFF);
     }
 
     public static void setVerboseLogging() {

@@ -16,6 +16,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 /**
+ * TODO: rewrite
  * Command line utility for dumping a database to RDF, using the
  * {@link MappingGenerator} or a mapping file.
  *
@@ -26,28 +27,24 @@ public class dump_rdf extends CommandLineTool {
 
     private final static int DUMP_DEFAULT_FETCH_SIZE = 500;
 
-    public static void main(String[] args) {
-        new dump_rdf().process(args);
-    }
-
     public void usage() {
-        System.err.println("usage:");
-        System.err.println("  dump-rdf [output-options] mappingFile");
-        System.err.println("  dump-rdf [output-options] [connection-options] jdbcURL");
-        System.err.println("  dump-rdf [output-options] [connection-options] -l script.sql");
-        System.err.println();
+        CONSOLE.println("usage:");
+        CONSOLE.println("  dump-rdf [output-options] mappingFile");
+        CONSOLE.println("  dump-rdf [output-options] [connection-options] jdbcURL");
+        CONSOLE.println("  dump-rdf [output-options] [connection-options] -l script.sql");
+        CONSOLE.println();
         printStandardArguments(true);
-        System.err.println();
-        System.err.println("  RDF output options:");
-        System.err.println("    -b baseURI      Base URI for RDF output");
-        System.err.println("    -f format       One of N-TRIPLE (default), RDF/XML, RDF/XML-ABBREV, TURTLE");
-        System.err.println("    -o outfile      Output file name (default: stdout)");
-        System.err.println("    --verbose       Print debug information");
-        System.err.println();
-        System.err.println("  Database connection options (only with jdbcURL):");
+        CONSOLE.println();
+        CONSOLE.println("  RDF output options:");
+        CONSOLE.println("    -b baseURI      Base URI for RDF output");
+        CONSOLE.println("    -f format       One of N-TRIPLE (default), RDF/XML, RDF/XML-ABBREV, TURTLE");
+        CONSOLE.println("    -o outfile      Output file name (default: stdout)");
+        CONSOLE.println("    --verbose       Print debug information");
+        CONSOLE.println();
+        CONSOLE.println("  Database connection options (only with jdbcURL):");
         printConnectionOptions();
-        System.err.println();
-        System.exit(1);
+        CONSOLE.println();
+        throw new ExitException(1);
     }
 
     private ArgDecl baseArg = new ArgDecl(true, "b", "base");

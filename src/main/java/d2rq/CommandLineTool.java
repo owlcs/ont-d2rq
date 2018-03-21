@@ -14,12 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
 
 /**
+ * TODO: rewrite
  * Base class for the D2RQ command line tools. They share much of their
  * argument list and functionality, therefore this is extracted into
  * this superclass.
@@ -48,7 +50,35 @@ public abstract class CommandLineTool {
     private int minArguments = 0;
     private int maxArguments = 1;
 
-    public abstract void usage();
+    protected static final PrintStream CONSOLE = System.err;
+
+    private static void reportException(D2RQException ex) {
+        if (ex.getMessage() == null && ex.getCause() != null && ex.getCause().getMessage() != null) {
+            if (ex.getCause() instanceof SQLException) {
+                CONSOLE.println("SQL error " + ex.getCause().getMessage());
+            } else {
+                CONSOLE.println(ex.getCause().getMessage());
+            }
+        } else {
+            CONSOLE.println(ex.getMessage());
+        }
+        LOGGER.info("Command line tool exception", ex);
+        throw new ExitException(2);
+    }
+
+    private static String withIndirection(String value) {
+        if (value.startsWith("@")) {
+            value = value.substring(1);
+            try {
+                value = FileManager.get().readWholeFileAsUTF8(value);
+            } catch (Exception ex) {
+                throw new IllegalArgumentException("Failed to read '" + value + "': " + ex.getMessage());
+            }
+        }
+        return value;
+    }
+
+    public abstract void usage() throws ExitException;
 
     public abstract void initArgs(CommandLine cmd);
 
@@ -64,7 +94,7 @@ public abstract class CommandLineTool {
         supportImplicitJdbcURL = flag;
     }
 
-    public void process(String[] args) {
+    public void process(String[] args) throws ExitException {
         cmd.add(userArg);
         cmd.add(passArg);
         cmd.add(driverArg);
@@ -98,7 +128,6 @@ public abstract class CommandLineTool {
             loader.setJdbcURL(SystemLoader.DEFAULT_JDBC_URL);
         } else if (cmd.numItems() == 0) {
             usage();
-            System.exit(1);
         }
         if (cmd.numItems() < minArguments) {
             reportException(new IllegalArgumentException("Not enough arguments"));
@@ -163,57 +192,31 @@ public abstract class CommandLineTool {
         }
     }
 
-    private static void reportException(D2RQException ex) {
-        if (ex.getMessage() == null && ex.getCause() != null && ex.getCause().getMessage() != null) {
-            if (ex.getCause() instanceof SQLException) {
-                System.err.println("SQL error " + ex.getCause().getMessage());
-            } else {
-                System.err.println(ex.getCause().getMessage());
-            }
-        } else {
-            System.err.println(ex.getMessage());
-        }
-        LOGGER.info("Command line tool exception", ex);
-        System.exit(1);
-    }
-
     private void reportException(Exception ex) {
-        System.err.println(ex.getMessage());
+        CONSOLE.println(ex.getMessage());
         LOGGER.info("Command line tool exception", ex);
-        System.exit(1);
+        throw new ExitException(2);
     }
 
     protected void printStandardArguments(boolean withMappingFile) {
-        System.err.println("  Arguments:");
+        CONSOLE.println("  Arguments:");
         if (withMappingFile) {
-            System.err.println("    mappingFile     Filename or URL of a D2RQ mapping file");
+            CONSOLE.println("    mappingFile     Filename or URL of a D2RQ mapping file");
         }
-        System.err.println("    jdbcURL         JDBC URL for the DB, e.g. jdbc:mysql://localhost/dbname");
+        CONSOLE.println("    jdbcURL         JDBC URL for the DB, e.g. jdbc:mysql://localhost/dbname");
         if (supportImplicitJdbcURL) {
-            System.err.println("                    (If omitted with -l, set up a temporary in-memory DB)");
+            CONSOLE.println("                    (If omitted with -l, set up a temporary in-memory DB)");
         }
     }
 
     protected void printConnectionOptions() {
-        System.err.println("    -u username     Database user for connecting to the DB");
-        System.err.println("    -p password     Database password for connecting to the DB");
-        System.err.println("    -d driverclass  Java class name of the JDBC driver for the DB");
-        System.err.println("    -l script.sql   Load a SQL script before processing");
-        System.err.println("    --w3c           Produce W3C Direct Mapping compatible mapping file");
-        System.err.println("    --[skip-](schemas|tables|columns) [schema.]table[.column]");
-        System.err.println("                    Include or exclude specific database objects");
-    }
-
-    private static String withIndirection(String value) {
-        if (value.startsWith("@")) {
-            value = value.substring(1);
-            try {
-                value = FileManager.get().readWholeFileAsUTF8(value);
-            } catch (Exception ex) {
-                throw new IllegalArgumentException("Failed to read '" + value + "': " + ex.getMessage());
-            }
-        }
-        return value;
+        CONSOLE.println("    -u username     Database user for connecting to the DB");
+        CONSOLE.println("    -p password     Database password for connecting to the DB");
+        CONSOLE.println("    -d driverclass  Java class name of the JDBC driver for the DB");
+        CONSOLE.println("    -l script.sql   Load a SQL script before processing");
+        CONSOLE.println("    --w3c           Produce W3C Direct Mapping compatible mapping file");
+        CONSOLE.println("    --[skip-](schemas|tables|columns) [schema.]table[.column]");
+        CONSOLE.println("                    Include or exclude specific database objects");
     }
 
     /**
@@ -245,18 +248,16 @@ public abstract class CommandLineTool {
      * <li>Arguments with values can use "="</li>
      * </ul>
      * <p>
-     * Note: a updated copy-past from jena-core-3.0.1 {@link jena.rdfcat.CommandLine}
      */
     protected static class CommandLine {
+        protected String usage = null;
+        protected Map<String, Arg> args = new HashMap<>();
         /* Extra processor called before the registered one when set.
          * Used for tracing.
          */
         BiConsumer<String, String> argHook = null;
-        protected String usage = null;
         Map<String, ArgDecl> argMap = new HashMap<>();
-        protected Map<String, Arg> args = new HashMap<>();
         //protected boolean ignoreUnknown = false ;
-
         // Rest of the items found on the command line
         String indirectionMarker = "@";
         boolean allowItemIndirect = false;   // Allow @ to mean contents of file
@@ -628,6 +629,13 @@ public abstract class CommandLineTool {
         }
 
         /**
+         * @param ignoreIndirectionMarker The ignoreIndirectionMarker to set.
+         */
+        public void setIgnoreIndirectionMarker(boolean ignoreIndirectionMarker) {
+            this.ignoreIndirectionMarker = ignoreIndirectionMarker;
+        }
+
+        /**
          * @return Returns the indirectionMarker.
          */
         public String getIndirectionMarker() {
@@ -641,16 +649,9 @@ public abstract class CommandLineTool {
             this.indirectionMarker = indirectionMarker;
         }
 
-        /**
-         * @param ignoreIndirectionMarker The ignoreIndirectionMarker to set.
-         */
-        public void setIgnoreIndirectionMarker(boolean ignoreIndirectionMarker) {
-            this.ignoreIndirectionMarker = ignoreIndirectionMarker;
-        }
-
         public BiConsumer<String, String> trace() {
             return (arg, val) -> {
-                System.err.println("Seen: " + arg + (val != null ? " = " + val : ""));
+                CONSOLE.println("Seen: " + arg + (val != null ? " = " + val : ""));
             };
         }
 
@@ -658,8 +659,6 @@ public abstract class CommandLineTool {
 
     /**
      * A command line argument that has been found specification.
-     * <p>
-     * Note: a copy-past from jena-core-3.0.1 {@link jena.rdfcat.Arg}
      */
     protected static class Arg {
         String name;
@@ -682,14 +681,6 @@ public abstract class CommandLineTool {
             setValue(_value);
         }
 
-        void setName(String n) {
-            name = n;
-        }
-
-        void setValue(String v) {
-            value = v;
-        }
-
         void addValue(String v) {
             values.add(v);
         }
@@ -698,8 +689,16 @@ public abstract class CommandLineTool {
             return name;
         }
 
+        void setName(String n) {
+            name = n;
+        }
+
         public String getValue() {
             return value;
+        }
+
+        void setValue(String v) {
+            value = v;
         }
 
         public List<String> getValues() {
@@ -720,12 +719,12 @@ public abstract class CommandLineTool {
      * A command line argument specification.
      */
     protected static class ArgDecl {
+        public static final boolean HasValue = true;
+        public static final boolean NoValue = false;
         boolean takesValue;
         Set<String> names = new HashSet<>();
         boolean takesArg = false;
         List<BiConsumer<String, String>> argHooks = new ArrayList<>();
-        public static final boolean HasValue = true;
-        public static final boolean NoValue = false;
 
         /**
          * Create a declaration for a command argument.
@@ -887,6 +886,16 @@ public abstract class CommandLineTool {
             addHook(handler);
         }
 
+        static String canonicalForm(String str) {
+            if (str.startsWith("--"))
+                return str.substring(2);
+
+            if (str.startsWith("-"))
+                return str.substring(1);
+
+            return str;
+        }
+
         public void addName(String name) {
             name = canonicalForm(name);
             names.add(name);
@@ -896,11 +905,11 @@ public abstract class CommandLineTool {
             return names;
         }
 
+        // Callback model
+
         public Iterator<String> names() {
             return names.iterator();
         }
-
-        // Callback model
 
         public void addHook(BiConsumer<String, String> argHandler) {
             argHooks.add(argHandler);
@@ -927,15 +936,17 @@ public abstract class CommandLineTool {
             arg = canonicalForm(arg);
             return names.contains(arg);
         }
+    }
 
-        static String canonicalForm(String str) {
-            if (str.startsWith("--"))
-                return str.substring(2);
+    public static class ExitException extends RuntimeException {
+        public int getCode() {
+            return code;
+        }
 
-            if (str.startsWith("-"))
-                return str.substring(1);
+        private final int code;
 
-            return str;
+        public ExitException(int code) {
+            this.code = code;
         }
     }
 }

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
+ * TODO: rewrite
  * Command line interface for {@link MappingGenerator}.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
@@ -23,22 +24,18 @@ import java.io.PrintStream;
 public class generate_mapping extends CommandLineTool {
     private final static Logger LOGGER = LoggerFactory.getLogger(generate_mapping.class);
 
-    public static void main(String[] args) {
-        new generate_mapping().process(args);
-    }
-
     public void usage() {
-        System.err.println("usage: generate-mapping [options] jdbcURL");
-        System.err.println();
+        CONSOLE.println("usage: generate-mapping [options] jdbcURL");
+        CONSOLE.println();
         printStandardArguments(false);
-        System.err.println("  Options:");
+        CONSOLE.println("  Options:");
         printConnectionOptions();
-        System.err.println("    -o outfile.ttl  Output file name (default: stdout)");
-        System.err.println("    -v              Generate RDFS+OWL vocabulary instead of mapping file");
-        System.err.println("    -b baseURI      Base URI for RDF output");
-        System.err.println("    --verbose       Print debug information");
-        System.err.println();
-        System.exit(1);
+        CONSOLE.println("    -o outfile.ttl  Output file name (default: stdout)");
+        CONSOLE.println("    -v              Generate RDFS+OWL vocabulary instead of mapping file");
+        CONSOLE.println("    -b baseURI      Base URI for RDF output");
+        CONSOLE.println("    --verbose       Print debug information");
+        CONSOLE.println();
+        throw new ExitException(1);
     }
 
     private ArgDecl baseArg = new ArgDecl(true, "b", "base");

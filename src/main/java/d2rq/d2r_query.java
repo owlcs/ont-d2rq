@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * TODO: rewrite
  * Command line utility for executing SPARQL queries
  * against a D2RQ-mapped database
  *
@@ -19,29 +20,25 @@ import org.slf4j.LoggerFactory;
 public class d2r_query extends CommandLineTool {
     private static final Logger LOGGER = LoggerFactory.getLogger(d2r_query.class);
 
-    public static void main(String[] args) {
-        new d2r_query().process(args);
-    }
-
     public void usage() {
-        System.err.println("usage:");
-        System.err.println("  d2r-query [query-options] mappingFile query");
-        System.err.println("  d2r-query [query-options] [connection-options] jdbcURL query");
-        System.err.println("  d2r-query [query-options] [connection-options] -l script.sql query");
-        System.err.println();
+        CONSOLE.println("usage:");
+        CONSOLE.println("  d2r-query [query-options] mappingFile query");
+        CONSOLE.println("  d2r-query [query-options] [connection-options] jdbcURL query");
+        CONSOLE.println("  d2r-query [query-options] [connection-options] -l script.sql query");
+        CONSOLE.println();
         printStandardArguments(true);
-        System.err.println("    query           A SPARQL query, e.g., \"SELECT * {?s rdf:type ?o} LIMIT 10\"");
-        System.err.println("                    A value of @file.sparql reads the query from a file.");
-        System.err.println("  Query options:");
-        System.err.println("    -b baseURI      Base URI for RDF output");
-        System.err.println("    -f format       One of text (default), xml, json, csv, tsv, srb, ttl");
-        System.err.println("    -t timeout      Query timeout in seconds");
-        System.err.println("    --verbose       Print debug information");
-        System.err.println();
-        System.err.println("  Database connection options (only with jdbcURL):");
+        CONSOLE.println("    query           A SPARQL query, e.g., \"SELECT * {?s rdf:type ?o} LIMIT 10\"");
+        CONSOLE.println("                    A value of @file.sparql reads the query from a file.");
+        CONSOLE.println("  Query options:");
+        CONSOLE.println("    -b baseURI      Base URI for RDF output");
+        CONSOLE.println("    -f format       One of text (default), xml, json, csv, tsv, srb, ttl");
+        CONSOLE.println("    -t timeout      Query timeout in seconds");
+        CONSOLE.println("    --verbose       Print debug information");
+        CONSOLE.println();
+        CONSOLE.println("  Database connection options (only with jdbcURL):");
         printConnectionOptions();
-        System.err.println();
-        System.exit(1);
+        CONSOLE.println();
+        throw new ExitException(1);
     }
 
     private ArgDecl baseArg = new ArgDecl(true, "b", "base");
