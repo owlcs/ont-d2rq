@@ -42,19 +42,19 @@ public class AppRunner {
         QUERY("d2rq-query") {
             @Override
             public CommandLineTool getTool() {
-                return new d2r_query();
+                return new QueryTool();
             }
         },
         DUMP("dump-rdf") {
             @Override
             public CommandLineTool getTool() {
-                return new dump_rdf();
+                return new DumpTool();
             }
         },
         MAPPING("generate-mapping") {
             @Override
             public CommandLineTool getTool() {
-                return new generate_mapping();
+                return new MappingTool();
             }
         },;
         private final String key;

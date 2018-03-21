@@ -21,8 +21,8 @@ import java.io.PrintStream;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class generate_mapping extends CommandLineTool {
-    private final static Logger LOGGER = LoggerFactory.getLogger(generate_mapping.class);
+public class MappingTool extends CommandLineTool {
+    private final static Logger LOGGER = LoggerFactory.getLogger(MappingTool.class);
 
     public void usage() {
         CONSOLE.println("usage: generate-mapping [options] jdbcURL");

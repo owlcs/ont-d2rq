@@ -16,14 +16,14 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 /**
- * TODO: rewrite it, looks ugly
+ * TODO: rewrite and cleanup, looks ugly
  * Command line utility for dumping a database to RDF, using the
  * {@link MappingGenerator} or a mapping file.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class dump_rdf extends CommandLineTool {
-    private final static Logger LOGGER = LoggerFactory.getLogger(dump_rdf.class);
+public class DumpTool extends CommandLineTool {
+    private final static Logger LOGGER = LoggerFactory.getLogger(DumpTool.class);
 
     private final static int DUMP_DEFAULT_FETCH_SIZE = 500;
 

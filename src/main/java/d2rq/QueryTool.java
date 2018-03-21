@@ -4,21 +4,24 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
 import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
-import org.apache.jena.query.*;
+import org.apache.jena.query.QueryCancelledException;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
 import org.apache.jena.sparql.resultset.ResultsFormat;
 import org.apache.jena.sparql.util.QueryExecUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO: rewrite it, looks ugly
+ * TODO: rewrite and cleanup, looks ugly
  * Command line utility for executing SPARQL queries
  * against a D2RQ-mapped database
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class d2r_query extends CommandLineTool {
-    private static final Logger LOGGER = LoggerFactory.getLogger(d2r_query.class);
+public class QueryTool extends CommandLineTool {
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueryTool.class);
 
     public void usage() {
         CONSOLE.println("usage:");
@@ -91,7 +94,7 @@ public class d2r_query extends CommandLineTool {
 
         try {
             QueryEngineD2RQ.register();
-            Query q = QueryFactory.create(query, loader.getResourceBaseURI());
+            org.apache.jena.query.Query q = QueryFactory.create(query, loader.getResourceBaseURI());
             QueryExecution qe = QueryExecutionFactory.create(q, d2rqModel);
             if (timeout > 0) {
                 qe.setTimeout(Math.round(timeout * 1000));
