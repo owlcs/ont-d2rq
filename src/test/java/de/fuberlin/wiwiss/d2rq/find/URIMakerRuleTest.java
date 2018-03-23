@@ -1,14 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.find;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
-import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.sparql.vocabulary.FOAF;
-import org.apache.jena.vocabulary.RDF;
-
 import de.fuberlin.wiwiss.d2rq.algebra.*;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.find.URIMakerRule.URIMakerRuleChecker;
@@ -16,7 +7,17 @@ import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.TypedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.values.Column;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
-import junit.framework.TestCase;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.RDF;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * :cm1 a d2rq:ClassMap;
@@ -37,7 +38,7 @@ import junit.framework.TestCase;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class URIMakerRuleTest extends TestCase {
+public class URIMakerRuleTest {
     private TripleRelation withURIPatternSubject;
     private TripleRelation withURIPatternSubjectAndObject;
     private TripleRelation withURIColumnSubject;
@@ -45,6 +46,7 @@ public class URIMakerRuleTest extends TestCase {
     private URIMakerRuleChecker employeeChecker;
     private URIMakerRuleChecker foobarChecker;
 
+    @Before
     public void setUp() {
         Relation base = new RelationImpl(null, AliasMap.NO_ALIASES,
                 Expression.TRUE, Expression.TRUE,
@@ -78,76 +80,78 @@ public class URIMakerRuleTest extends TestCase {
                 NodeFactory.createURI("http://test/foobar"));
     }
 
+    @Test
     public void testComparator() {
         URIMakerRule u = new URIMakerRule();
-        assertEquals(0, u.compare(this.withURIPatternSubject, this.withURIPatternSubject));
-        assertEquals(1, u.compare(this.withURIPatternSubject, this.withURIPatternSubjectAndObject));
-        assertEquals(-1, u.compare(this.withURIPatternSubject, this.withURIColumnSubject));
-        assertEquals(-1, u.compare(this.withURIPatternSubject, this.withURIPatternSubjectAndURIColumnObject));
+        Assert.assertEquals(0, u.compare(this.withURIPatternSubject, this.withURIPatternSubject));
+        Assert.assertEquals(1, u.compare(this.withURIPatternSubject, this.withURIPatternSubjectAndObject));
+        Assert.assertEquals(-1, u.compare(this.withURIPatternSubject, this.withURIColumnSubject));
+        Assert.assertEquals(-1, u.compare(this.withURIPatternSubject, this.withURIPatternSubjectAndURIColumnObject));
 
-        assertEquals(-1, u.compare(this.withURIPatternSubjectAndObject, this.withURIPatternSubject));
-        assertEquals(0, u.compare(this.withURIPatternSubjectAndObject, this.withURIPatternSubjectAndObject));
-        assertEquals(-1, u.compare(this.withURIPatternSubjectAndObject, this.withURIColumnSubject));
-        assertEquals(-1, u.compare(this.withURIPatternSubjectAndObject, this.withURIPatternSubjectAndURIColumnObject));
+        Assert.assertEquals(-1, u.compare(this.withURIPatternSubjectAndObject, this.withURIPatternSubject));
+        Assert.assertEquals(0, u.compare(this.withURIPatternSubjectAndObject, this.withURIPatternSubjectAndObject));
+        Assert.assertEquals(-1, u.compare(this.withURIPatternSubjectAndObject, this.withURIColumnSubject));
+        Assert.assertEquals(-1, u.compare(this.withURIPatternSubjectAndObject, this.withURIPatternSubjectAndURIColumnObject));
 
-        assertEquals(1, u.compare(this.withURIColumnSubject, this.withURIPatternSubject));
-        assertEquals(1, u.compare(this.withURIColumnSubject, this.withURIPatternSubjectAndObject));
-        assertEquals(0, u.compare(this.withURIColumnSubject, this.withURIColumnSubject));
-        assertEquals(1, u.compare(this.withURIColumnSubject, this.withURIPatternSubjectAndURIColumnObject));
+        Assert.assertEquals(1, u.compare(this.withURIColumnSubject, this.withURIPatternSubject));
+        Assert.assertEquals(1, u.compare(this.withURIColumnSubject, this.withURIPatternSubjectAndObject));
+        Assert.assertEquals(0, u.compare(this.withURIColumnSubject, this.withURIColumnSubject));
+        Assert.assertEquals(1, u.compare(this.withURIColumnSubject, this.withURIPatternSubjectAndURIColumnObject));
 
-        assertEquals(1, u.compare(this.withURIPatternSubjectAndURIColumnObject, this.withURIPatternSubject));
-        assertEquals(1, u.compare(this.withURIPatternSubjectAndURIColumnObject, this.withURIPatternSubjectAndObject));
-        assertEquals(-1, u.compare(this.withURIPatternSubjectAndURIColumnObject, this.withURIColumnSubject));
-        assertEquals(0, u.compare(this.withURIPatternSubjectAndURIColumnObject, this.withURIPatternSubjectAndURIColumnObject));
+        Assert.assertEquals(1, u.compare(this.withURIPatternSubjectAndURIColumnObject, this.withURIPatternSubject));
+        Assert.assertEquals(1, u.compare(this.withURIPatternSubjectAndURIColumnObject, this.withURIPatternSubjectAndObject));
+        Assert.assertEquals(-1, u.compare(this.withURIPatternSubjectAndURIColumnObject, this.withURIColumnSubject));
+        Assert.assertEquals(0, u.compare(this.withURIPatternSubjectAndURIColumnObject, this.withURIPatternSubjectAndURIColumnObject));
     }
 
+    @Test
     public void testSort() {
-        Collection<TripleRelation> unsorted = new ArrayList<TripleRelation>(Arrays.asList(new TripleRelation[]{
-                this.withURIColumnSubject,
+        Collection<TripleRelation> unsorted = new ArrayList<>(Arrays.asList(this.withURIColumnSubject,
                 this.withURIPatternSubject,
                 this.withURIPatternSubjectAndObject,
-                this.withURIPatternSubjectAndURIColumnObject
-        }));
-        Collection<TripleRelation> sorted = new ArrayList<TripleRelation>(Arrays.asList(new TripleRelation[]{
-                this.withURIPatternSubjectAndObject,
+                this.withURIPatternSubjectAndURIColumnObject));
+        Collection<TripleRelation> sorted = new ArrayList<>(Arrays.asList(this.withURIPatternSubjectAndObject,
                 this.withURIPatternSubject,
                 this.withURIPatternSubjectAndURIColumnObject,
-                this.withURIColumnSubject
-        }));
-        assertEquals(sorted, new URIMakerRule().sortRDFRelations(unsorted));
+                this.withURIColumnSubject));
+        Assert.assertEquals(sorted, new URIMakerRule().sortRDFRelations(unsorted));
     }
 
+    @Test
     public void testRuleCheckerStartsAccepting() {
-        assertTrue(this.employeeChecker.canMatch(
+        Assert.assertTrue(this.employeeChecker.canMatch(
                 this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
-        assertTrue(this.employeeChecker.canMatch(
+        Assert.assertTrue(this.employeeChecker.canMatch(
                 this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
     }
 
+    @Test
     public void testRuleCheckerUnaffectedByNonURIPattern() {
         this.employeeChecker.addPotentialMatch(
                 this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT));
-        assertTrue(this.employeeChecker.canMatch(
+        Assert.assertTrue(this.employeeChecker.canMatch(
                 this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
-        assertTrue(this.employeeChecker.canMatch(
+        Assert.assertTrue(this.employeeChecker.canMatch(
                 this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
     }
 
+    @Test
     public void testRuleCheckerRejectsAfterMatch() {
         this.employeeChecker.addPotentialMatch(
                 this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT));
-        assertFalse(this.employeeChecker.canMatch(
+        Assert.assertFalse(this.employeeChecker.canMatch(
                 this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
-        assertTrue(this.employeeChecker.canMatch(
+        Assert.assertTrue(this.employeeChecker.canMatch(
                 this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
     }
 
+    @Test
     public void testRuleCheckerDoesNotRejectAfterNonMatch() {
         this.foobarChecker.addPotentialMatch(
                 this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT));
-        assertTrue(this.foobarChecker.canMatch(
+        Assert.assertTrue(this.foobarChecker.canMatch(
                 this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
-        assertTrue(this.foobarChecker.canMatch(
+        Assert.assertTrue(this.foobarChecker.canMatch(
                 this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
     }
 }

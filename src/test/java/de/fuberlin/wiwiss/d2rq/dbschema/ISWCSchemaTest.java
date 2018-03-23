@@ -2,30 +2,37 @@ package de.fuberlin.wiwiss.d2rq.dbschema;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-public class ISWCSchemaTest extends TestCase {
+public class ISWCSchemaTest {
     private final static String driverClass = "com.mysql.jdbc.Driver";
     private final static String jdbcURL = "jdbc:mysql://127.0.0.1/iswc?user=root";
 
     private ConnectedDB db;
 
+    @Before
     public void setUp() throws Exception {
         Class.forName(driverClass);
         db = new ConnectedDB(jdbcURL, null, null);
     }
 
+    @After
     public void tearDown() {
         db.close();
     }
 
+    @Test
     public void testRecognizeNullableColumn() {
         Attribute personEmail = new Attribute(null, "persons", "Email");
-        assertTrue(db.isNullable(personEmail));
+        Assert.assertTrue(db.isNullable(personEmail));
     }
 
+    @Test
     public void testRecognizeNonNullableColumn() {
         Attribute personID = new Attribute(null, "persons", "PerID");
-        assertFalse(db.isNullable(personID));
+        Assert.assertFalse(db.isNullable(personID));
     }
 }

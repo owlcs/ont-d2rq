@@ -1,12 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.DC;
-
-import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
+import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import junit.framework.TestCase;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.DC;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Functional tests that exercise a ModelD2RQ by calling Model API functions. For
@@ -16,18 +18,21 @@ import junit.framework.TestCase;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class ModelAPITest extends TestCase {
+public class ModelAPITest {
     private ModelD2RQ model;
 
-    protected void setUp() throws Exception {
-        this.model = MappingFactory.load(D2RQTestSuite.ISWC_MAP, "TURTLE", "http://test/").getDataModel();
+    @Before
+    public void setUp() {
+        this.model = MappingFactory.load(D2RQTestHelper.ISWC_MAP, "TURTLE", "http://test/").getDataModel();
 //		this.model.enableDebug();
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() {
         this.model.close();
     }
 
+    @Test
     public void testListStatements() {
         StmtIterator iter = this.model.listStatements();
         int count = 0;
@@ -37,12 +42,13 @@ public class ModelAPITest extends TestCase {
 //			dumpStatement(stmt);
             count++;
         }
-        assertEquals(358, count);
+        Assert.assertEquals(358, count);
         //assertEquals(322, count);
     }
 
+    @Test
     public void testHasProperty() {
-        assertTrue(this.model.getResource("http://test/papers/1").hasProperty(DC.creator));
+        Assert.assertTrue(this.model.getResource("http://test/papers/1").hasProperty(DC.creator));
     }
 
     void dumpStatement(Statement stmt) {

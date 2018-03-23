@@ -1,86 +1,99 @@
 package de.fuberlin.wiwiss.d2rq.expr;
 
-import java.util.Collections;
-
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.Collections;
 
 /**
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class ExpressionTest extends TestCase {
+public class ExpressionTest {
     private AliasMap aliases;
 
+    @Before
     public void setUp() {
-        aliases = AliasMap.create1(
-                new RelationName(null, "table"), new RelationName(null, "alias"));
+        aliases = AliasMap.create1(new RelationName(null, "table"), new RelationName(null, "alias"));
     }
 
+    @Test
     public void testTrue() {
-        assertEquals("TRUE", Expression.TRUE.toString());
-        assertEquals(Expression.TRUE, Expression.TRUE);
-        assertTrue(Expression.TRUE.isTrue());
-        assertFalse(Expression.TRUE.isFalse());
+        Assert.assertEquals("TRUE", Expression.TRUE.toString());
+        Assert.assertEquals(Expression.TRUE, Expression.TRUE);
+        Assert.assertTrue(Expression.TRUE.isTrue());
+        Assert.assertFalse(Expression.TRUE.isFalse());
     }
 
+    @Test
     public void testFalse() {
-        assertEquals("FALSE", Expression.FALSE.toString());
-        assertEquals(Expression.FALSE, Expression.FALSE);
-        assertFalse(Expression.FALSE.isTrue());
-        assertTrue(Expression.FALSE.isFalse());
+        Assert.assertEquals("FALSE", Expression.FALSE.toString());
+        Assert.assertEquals(Expression.FALSE, Expression.FALSE);
+        Assert.assertFalse(Expression.FALSE.isTrue());
+        Assert.assertTrue(Expression.FALSE.isFalse());
     }
 
+    @Test
     public void testTrueNotEqualFalse() {
-        assertFalse(Expression.TRUE.equals(Expression.FALSE));
+        Assert.assertFalse(Expression.TRUE.equals(Expression.FALSE));
     }
 
+    @Test
     public void testConstant() {
         Expression expr = new Constant("foo");
-        assertTrue(expr.attributes().isEmpty());
-        assertFalse(expr.isFalse());
-        assertFalse(expr.isTrue());
-        assertEquals(expr, expr.renameAttributes(aliases));
+        Assert.assertTrue(expr.attributes().isEmpty());
+        Assert.assertFalse(expr.isFalse());
+        Assert.assertFalse(expr.isTrue());
+        Assert.assertEquals(expr, expr.renameAttributes(aliases));
     }
 
+    @Test
     public void testConstantEquals() {
-        assertTrue(new Constant("foo").equals(new Constant("foo")));
-        assertFalse(new Constant("foo").equals(new Constant("bar")));
-        assertFalse(new Constant("foo").equals(Expression.TRUE));
+        Assert.assertTrue(new Constant("foo").equals(new Constant("foo")));
+        Assert.assertFalse(new Constant("foo").equals(new Constant("bar")));
+        Assert.assertFalse(new Constant("foo").equals(Expression.TRUE));
     }
 
+    @Test
     public void testConstantHashCode() {
-        assertEquals(new Constant("foo").hashCode(), new Constant("foo").hashCode());
-        assertFalse(new Constant("foo").hashCode() == new Constant("bar").hashCode());
+        Assert.assertEquals(new Constant("foo").hashCode(), new Constant("foo").hashCode());
+        Assert.assertFalse(new Constant("foo").hashCode() == new Constant("bar").hashCode());
     }
 
+    @Test
     public void testConstantToString() {
-        assertEquals("Constant(foo)", new Constant("foo").toString());
+        Assert.assertEquals("Constant(foo)", new Constant("foo").toString());
     }
 
+    @Test
     public void testConstantToSQL() {
-        assertEquals("'foo'", new Constant("foo").toSQL(new DummyDB(), AliasMap.NO_ALIASES));
+        Assert.assertEquals("'foo'", new Constant("foo").toSQL(new DummyDB(), AliasMap.NO_ALIASES));
     }
 
+    @Test
     public void testConstantToSQLWithType() {
         Attribute attribute = SQL.parseAttribute("table.col1");
         DummyDB db = new DummyDB(Collections.singletonMap("table.col1", GenericType.NUMERIC));
-        assertEquals("42", new Constant("42", attribute).toSQL(db, AliasMap.NO_ALIASES));
+        Assert.assertEquals("42", new Constant("42", attribute).toSQL(db, AliasMap.NO_ALIASES));
     }
 
+    @Test
     public void testConstantToSQLWithTypeAndAlias() {
         Attribute aliasedAttribute = SQL.parseAttribute("alias.col1");
         DummyDB db = new DummyDB(Collections.singletonMap("table.col1", GenericType.NUMERIC));
-        assertEquals("42", new Constant("42", aliasedAttribute).toSQL(db, aliases));
+        Assert.assertEquals("42", new Constant("42", aliasedAttribute).toSQL(db, aliases));
     }
 
+    @Test
     public void testConstantTypeAttributeIsRenamed() {
         Attribute attribute = SQL.parseAttribute("table.col1");
-        assertEquals("Constant(42@alias.col1)",
+        Assert.assertEquals("Constant(42@alias.col1)",
                 new Constant("42", attribute).renameAttributes(aliases).toString());
     }
 }

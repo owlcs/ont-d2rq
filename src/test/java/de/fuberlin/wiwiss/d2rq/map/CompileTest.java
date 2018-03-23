@@ -1,21 +1,22 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.vocabulary.RDF;
-
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Join;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
-import junit.framework.TestCase;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.vocabulary.RDF;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-public class CompileTest extends TestCase {
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+public class CompileTest {
     private Model model;
     private Mapping mapping;
     private Database database;
@@ -27,6 +28,7 @@ public class CompileTest extends TestCase {
     private ClassMap countries;
     private PropertyBridge countriesTypeBridge;
 
+    @Before
     public void setUp() {
         this.model = ModelFactory.createDefaultModel();
         this.mapping = MappingFactory.createEmpty();
@@ -70,50 +72,53 @@ public class CompileTest extends TestCase {
         return result;
     }
 
+    @Test
     public void testAttributesInRefersToClassMapAreRenamed() {
         TripleRelation relation = this.managerBridge.toTripleRelations().iterator().next();
-        assertEquals("URI(Pattern(http://test/employee@@e.ID@@))",
+        Assert.assertEquals("URI(Pattern(http://test/employee@@e.ID@@))",
                 relation.nodeMaker(TripleRelation.SUBJECT).toString());
-        assertEquals("URI(Pattern(http://test/employee@@m.ID@@))",
-                relation.nodeMaker(TripleRelation.OBJECT).toString());
+        Assert.assertEquals("URI(Pattern(http://test/employee@@m.ID@@))", relation.nodeMaker(TripleRelation.OBJECT).toString());
     }
 
+    @Test
     public void testJoinConditionsInRefersToClassMapAreRenamed() {
         TripleRelation relation = this.managerBridge.toTripleRelations().iterator().next();
         Set<String> joinsToString = new HashSet<String>();
         for (Join join : relation.baseRelation().joinConditions()) {
             joinsToString.add(join.toString());
         }
-        assertEquals(new HashSet<String>(Arrays.asList(new String[]{
-                        "Join(e.manager <=> m.ID)",
-                        "Join(m.ID <=> foo.bar)",
-                        "Join(e.ID <=> foo.bar)"})),
+        Assert.assertEquals(new HashSet<>(Arrays.asList("Join(e.manager <=> m.ID)", "Join(m.ID <=> foo.bar)",
+                "Join(e.ID <=> foo.bar)")),
                 joinsToString);
     }
 
+    @Test
     public void testConditionInRefersToClassMapIsRenamed() {
         TripleRelation relation = this.managerBridge.toTripleRelations().iterator().next();
-        assertEquals("Conjunction(SQL(e.status = 'active'), SQL(m.status = 'active'))",
+        Assert.assertEquals("Conjunction(SQL(e.status = 'active'), SQL(m.status = 'active'))",
                 relation.baseRelation().condition().toString());
     }
 
+    @Test
     public void testAliasesInRefersToClassMapAreRenamed() {
         TripleRelation relation = this.managerBridge.toTripleRelations().iterator().next();
-        assertEquals(
-                new AliasMap(Arrays.asList(SQL.parseAlias("employees AS e"),
-                        SQL.parseAlias("employees AS m"))),
+        Assert.assertEquals(new AliasMap(Arrays.asList(SQL.parseAlias("employees AS e"),
+                SQL.parseAlias("employees AS m"))),
                 relation.baseRelation().aliases());
     }
 
+    @Test
     public void testSimpleTypeBridgeContainsNoDuplicates() {
-        assertTrue(this.citiesTypeBridge.buildRelation().isUnique());
+        Assert.assertTrue(this.citiesTypeBridge.buildRelation().isUnique());
     }
 
+    @Test
     public void testSimpleColumnBridgeContainsNoDuplicates() {
-        assertTrue(this.citiesNameBridge.buildRelation().isUnique());
+        Assert.assertTrue(this.citiesNameBridge.buildRelation().isUnique());
     }
 
+    @Test
     public void testBridgeWithDuplicateClassMapContainsDuplicates() {
-        assertFalse(this.countriesTypeBridge.buildRelation().isUnique());
+        Assert.assertFalse(this.countriesTypeBridge.buildRelation().isUnique());
     }
 }

@@ -1,18 +1,24 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
+import de.fuberlin.wiwiss.d2rq.helpers.FindTestFramework;
+import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
+import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
 import org.apache.jena.JenaRuntime;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.AnonId;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
-
-import de.fuberlin.wiwiss.d2rq.helpers.FindTestFramework;
-import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
-import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
+import org.junit.Test;
 
 /**
  * Functional tests for the find(spo) operation of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ}.
- * For notes on running the tests, see {@link AllTests}.
+ * From AllTests:
+ * Functional test suite for D2RQ. These are functional tests (as opposed to
+ * unit tests). The suite runs different find queries against the ISWC database, using the
+ * example map provided with the D2RQ manual. To run the test, you must have either the MySQL
+ * or the MS Access version accessible. Maybe you must adapt the connection information at the
+ * beginning of the map file to fit your database server.
+
  * <p>
  * Each test method runs one or more find queries and automatically compares the actual
  * results to the expected results. For some tests, only the number of returned triples
@@ -27,6 +33,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
  */
 public class FindTest extends FindTestFramework {
 
+    @Test
     public void testListTypeStatements() {
         find(null, RDF.type, null);
 //		dump();
@@ -39,6 +46,7 @@ public class FindTest extends FindTestFramework {
         //assertStatementCount(95);
     }
 
+    @Test
     public void testListTopicInstances() {
         find(null, RDF.type, SKOS.Concept);
 //		dump();
@@ -47,6 +55,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(15);
     }
 
+    @Test
     public void testListTopicNames() {
         find(null, SKOS.prefLabel, null);
 //		dump();
@@ -57,6 +66,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(15);
     }
 
+    @Test
     public void testListAuthors() {
         find(null, DC.creator, null);
 //		dump();
@@ -65,6 +75,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(8);
     }
 
+    @Test
     public void testDatatypeFindByYear() {
         find(null, DC.date, m.createTypedLiteral("2003", XSDDatatype.XSDgYear));
 //		dump();
@@ -72,6 +83,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testDatatypeFindByString() {
         find(null, SKOS.prefLabel, m.createTypedLiteral("E-Business", XSDDatatype.XSDstring));
 //		dump();
@@ -79,6 +91,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testXSDStringDoesntMatchPlainLiteral() {
         // in RDF 1.1 plain it is the same
         if (JenaRuntime.isRDF11) return;
@@ -87,6 +100,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(0);
     }
 
+    @Test
     public void testDatatypeFindYear() {
         find(resource("papers/2"), DC.date, null);
 //		dump();
@@ -94,6 +108,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testDatatypeYearContains() {
         find(resource("papers/2"), DC.date, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
 //		dump();
@@ -102,6 +117,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testLiteralLanguage() {
         find(null, DC.title, m.createLiteral("Trusting Information Sources One Citizen at a Time", "en"));
 //		dump();
@@ -109,6 +125,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testFindSubjectWhereObjectURIColumn() {
         find(null, DC.creator, resource("persons/4"));
 //		dump();
@@ -116,6 +133,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testFindSubjectWithConditionalObject() {
         // The paper is not published, therefore no result triples
         find(null, DC.creator, resource("persons/5"));
@@ -123,6 +141,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(0);
     }
 
+    @Test
     public void testFindSubjectWhereObjectURIPattern() {
         find(null, FOAF.mbox, m.createResource("mailto:andy.seaborne@hpl.hp.com"));
 //		dump();
@@ -130,6 +149,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testFindAnonymousNode() {
         find(null, VCARD.Pcode, m.createLiteral("BS34 8QZ"));
 //		dump();
@@ -139,6 +159,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testMatchAnonymousSubject() {
         find(
                 m.createResource(new AnonId("map:PostalAddresses@@7")),
@@ -150,6 +171,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testMatchAnonymousObject() {
         find(
                 null, VCARD.ADR,
@@ -161,6 +183,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testDump() {
         find(null, null, null);
 //		dump();
@@ -168,6 +191,7 @@ public class FindTest extends FindTestFramework {
         //assertStatementCount(322);
     }
 
+    @Test
     public void testFindPredicate() {
         find(resource("papers/2"), null, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
 //		dump();
@@ -175,18 +199,21 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(1);
     }
 
+    @Test
     public void testReverseFetchWithDatatype() {
         find(null, null, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
 //		dump();
         assertStatementCount(3);
     }
 
+    @Test
     public void testReverseFetchWithURI() {
         find(null, null, resource("topics/11"));
 //		dump();
         assertStatementCount(2);
     }
 
+    @Test
     public void testFindAliasedPropertyBridge() {
         find(null, SKOS.broader, null);
 //		dump();
@@ -194,6 +221,7 @@ public class FindTest extends FindTestFramework {
         assertStatementCount(10);
     }
 
+    @Test
     public void testDefinitions() {
         find(ISWC.Conference, null, null);
         assertStatement(ISWC.Conference, RDF.type, OWL.Class);

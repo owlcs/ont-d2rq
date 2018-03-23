@@ -1,13 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.nodes;
 
-import java.util.Collections;
-
-import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.RDF;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.expr.AttributeExpr;
 import de.fuberlin.wiwiss.d2rq.expr.Equality;
@@ -18,7 +10,16 @@ import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.values.BlankNodeID;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
-import junit.framework.TestCase;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.RDF;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.Collections;
 
 /**
  * TODO: Improve matching of datatypes, languages etc:
@@ -30,7 +31,7 @@ import junit.framework.TestCase;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class NodeSetTest extends TestCase {
+public class NodeSetTest {
     private final static Attribute table1foo = SQL.parseAttribute("table1.foo");
     private final static Attribute table1bar = SQL.parseAttribute("table1.bar");
     private final static Attribute alias1foo = SQL.parseAttribute("T2_table1.foo");
@@ -54,296 +55,346 @@ public class NodeSetTest extends TestCase {
             SQLExpression.create("LOWER(table1.bar)");
     private NodeSetConstraintBuilder nodes;
 
+    @Before
     public void setUp() {
         nodes = new NodeSetConstraintBuilder();
     }
 
+    @Test
     public void testInitiallyNotEmpty() {
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitToURIsNotEmpty() {
         nodes.limitToURIs();
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitToLiteralsNotEmpty() {
         nodes.limitToLiterals(null, null);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitToBlankNodes() {
         nodes.limitToBlankNodes();
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitToFixedNodeNotEmpty() {
         nodes.limitTo(RDF.Nodes.type);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitToEmptySetIsEmpty() {
         nodes.limitToEmptySet();
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitValuesToConstantNotEmpty() {
         nodes.limitValues("foo");
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitValuesToAttributeNotEmpty() {
         nodes.limitValuesToAttribute(table1foo);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitValuesToPatternNotEmpty() {
         nodes.limitValuesToPattern(pattern1);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitValuesToBlankNodeIDNotEmpty() {
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testLimitValuesToExpressionNotEmpty() {
         nodes.limitValuesToExpression(expression1);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testURIsAndLiteralsEmpty() {
         nodes.limitToURIs();
         nodes.limitToLiterals(null, null);
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testURIsAndBlanksEmpty() {
         nodes.limitToURIs();
         nodes.limitToBlankNodes();
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testBlanksAndLiteralsEmpty() {
         nodes.limitToBlankNodes();
         nodes.limitToLiterals(null, null);
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentFixedBlanksEmpty() {
         nodes.limitTo(NodeFactory.createBlankNode("foo"));
         nodes.limitTo(NodeFactory.createBlankNode("bar"));
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentFixedURIsEmpty() {
         nodes.limitTo(RDF.Nodes.type);
         nodes.limitTo(RDF.Nodes.Property);
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentFixedLiteralsEmpty() {
         nodes.limitTo(NodeFactory.createLiteral("foo"));
         nodes.limitTo(NodeFactory.createLiteral("bar"));
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentTypeFixedLiteralsEmpty() {
         nodes.limitTo(NodeFactory.createURI("http://example.org/"));
         nodes.limitTo(NodeFactory.createLiteral("http://example.org/"));
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentConstantsEmpty() {
         nodes.limitValues("foo");
         nodes.limitValues("bar");
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testFixedAndConstantEmpty() {
         nodes.limitTo(NodeFactory.createURI("http://example.org/"));
         nodes.limitValues("foo");
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testFixedAndConstantNotEmpty() {
         nodes.limitTo(NodeFactory.createURI("http://example.org/"));
         nodes.limitValues("http://example.org/");
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentLanguagesEmpty() {
         nodes.limitToLiterals("en", null);
         nodes.limitToLiterals("de", null);
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentLanguagesFixedEmpty() {
         nodes.limitTo(NodeFactory.createLiteral("foo", "de", null));
         nodes.limitTo(NodeFactory.createLiteral("foo", "en", null));
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentDatatypesEmpty() {
         nodes.limitToLiterals(null, XSDDatatype.XSDstring);
         nodes.limitToLiterals(null, XSDDatatype.XSDinteger);
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testDifferentDatatypesFixedEmpty() {
         nodes.limitTo(NodeFactory.createLiteral("42", null, XSDDatatype.XSDstring));
         nodes.limitTo(NodeFactory.createLiteral("42", null, XSDDatatype.XSDinteger));
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testSameAttributeTwiceNotEmpty() {
         nodes.limitValuesToAttribute(table1foo);
         nodes.limitValuesToAttribute(table1foo);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testAttributeAndConstantNotEmpty() {
         nodes.limitValues("foo");
         nodes.limitValuesToAttribute(table1foo);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testSameBlankNodeIDTwiceNotEmpty() {
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testSamePatternTwiceNotEmpty() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValuesToPattern(pattern1);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testSameExpressionTwiceNotEmpty() {
         nodes.limitValuesToExpression(expression1);
         nodes.limitValuesToExpression(expression1);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testBlankNodesFromDifferentClassMapsEmpty() {
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
         nodes.limitValuesToBlankNodeID(barBlankNodeID);
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testBlankNodeAndConstantMatchNotEmpty() {
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
         nodes.limitTo(NodeFactory.createBlankNode("Foo@@42"));
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testBlankNodeAndConstantNoMatchEmpty() {
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
         nodes.limitTo(NodeFactory.createBlankNode("Bar@@42"));
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testIncompatiblePatternsEmpty() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValuesToPattern(pattern2);
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testPatternAndConstantMatchNotEmpty() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValues("http://example.org/res42");
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testPatternAndConstantNoMatchEmpty() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValues("http://example.org/thing42");
-        assertTrue(nodes.isEmpty());
+        Assert.assertTrue(nodes.isEmpty());
     }
 
+    @Test
     public void testAliasedPatternsNotEmpty() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValuesToPattern(pattern1aliased);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testExpressionAndConstantNotEmpty() {
         nodes.limitValues("foo");
         nodes.limitValuesToExpression(expression1);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testSameAttributeTwiceExpressionIsTrue() {
         nodes.limitValuesToAttribute(table1foo);
         nodes.limitValuesToAttribute(table1foo);
-        assertEquals(Expression.TRUE, nodes.constraint());
+        Assert.assertEquals(Expression.TRUE, nodes.constraint());
     }
 
+    @Test
     public void testAttributeAndConstantExpressionIsEquality() {
         nodes.limitValues("foo");
         nodes.limitValuesToAttribute(table1foo);
-        assertEquals(Equality.createAttributeValue(table1foo, "foo"),
+        Assert.assertEquals(Equality.createAttributeValue(table1foo, "foo"),
                 nodes.constraint());
     }
 
+    @Test
     public void testSameBlankNodeIDTwiceExpressionIsTrue() {
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
-        assertEquals(Expression.TRUE, nodes.constraint());
+        Assert.assertEquals(Expression.TRUE, nodes.constraint());
     }
 
+    @Test
     public void testSamePatternTwiceExpressionIsTrue() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValuesToPattern(pattern1);
-        assertEquals(Expression.TRUE, nodes.constraint());
+        Assert.assertEquals(Expression.TRUE, nodes.constraint());
     }
 
+    @Test
     public void testSameExpressionTwiceExpressionIsTrue() {
         nodes.limitValuesToExpression(expression1);
         nodes.limitValuesToExpression(expression1);
-        assertEquals(Expression.TRUE, nodes.constraint());
+        Assert.assertEquals(Expression.TRUE, nodes.constraint());
     }
 
+    @Test
     public void testBlankNodeAndConstantMatchExpressionIsEquality() {
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
         nodes.limitTo(NodeFactory.createBlankNode("Foo@@42"));
-        assertEquals(Equality.createAttributeValue(table1foo, "42"),
+        Assert.assertEquals(Equality.createAttributeValue(table1foo, "42"),
                 nodes.constraint());
     }
 
+    @Test
     public void testPatternAndConstantMatchExpressionIsEquality() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValues("http://example.org/res42");
-        assertEquals(Equality.createAttributeValue(table1foo, "42"),
+        Assert.assertEquals(Equality.createAttributeValue(table1foo, "42"),
                 nodes.constraint());
     }
 
+    @Test
     public void testExpressionAndConstantExpressionIsEquality() {
         nodes.limitValues("foo");
         nodes.limitValuesToExpression(expression1);
-        assertEquals(Equality.createExpressionValue(expression1, "foo"),
+        Assert.assertEquals(Equality.createExpressionValue(expression1, "foo"),
                 nodes.constraint());
     }
 
+    @Test
     public void testTwoAttributesExpressionIsEquality() {
         nodes.limitValuesToAttribute(table1foo);
         nodes.limitValuesToAttribute(table1bar);
-        assertEquals(Equality.createAttributeEquality(table1foo, table1bar),
+        Assert.assertEquals(Equality.createAttributeEquality(table1foo, table1bar),
                 nodes.constraint());
     }
 
+    @Test
     public void testEquivalentPatternsExpressionIsEquality() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValuesToPattern(pattern1aliased);
-        assertEquals(Equality.createAttributeEquality(table1foo, alias1foo),
+        Assert.assertEquals(Equality.createAttributeEquality(table1foo, alias1foo),
                 nodes.constraint());
     }
 
+    @Test
     public void testTwoPatternsExpressionIsConcatEquality() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValuesToPattern(pattern3);
-        assertEquals("Equality(" +
+        Assert.assertEquals("Equality(" +
                         "Concatenation(" +
                         "Constant(http://example.org/res), " +
                         "AttributeExpr(@@table1.foo@@)), " +
@@ -355,24 +406,27 @@ public class NodeSetTest extends TestCase {
                 nodes.constraint().toString());
     }
 
+    @Test
     public void testTwoExpressionsTranslatesToEquality() {
         nodes.limitValuesToExpression(expression1);
         nodes.limitValuesToExpression(expression2);
-        assertEquals(Equality.create(expression1, expression2),
+        Assert.assertEquals(Equality.create(expression1, expression2),
                 nodes.constraint());
     }
 
+    @Test
     public void testEquivalentBlankNodeIDsExpressionIsEquality() {
         nodes.limitValuesToBlankNodeID(fooBlankNodeID);
         nodes.limitValuesToBlankNodeID(fooBlankNodeID2);
-        assertEquals(Equality.createAttributeEquality(table1foo, alias1foo),
+        Assert.assertEquals(Equality.createAttributeEquality(table1foo, alias1foo),
                 nodes.constraint());
     }
 
+    @Test
     public void testPatternEqualsAttribute() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValuesToAttribute(table1bar);
-        assertEquals("Equality(" +
+        Assert.assertEquals("Equality(" +
                         "AttributeExpr(@@table1.bar@@), " +
                         "Concatenation(" +
                         "Constant(http://example.org/res), " +
@@ -380,17 +434,19 @@ public class NodeSetTest extends TestCase {
                 nodes.constraint().toString());
     }
 
+    @Test
     public void testExpressionEqualsAttribute() {
         nodes.limitValuesToExpression(expression1);
         nodes.limitValuesToAttribute(table1bar);
-        assertEquals(Equality.create(expression1, new AttributeExpr(table1bar)),
+        Assert.assertEquals(Equality.create(expression1, new AttributeExpr(table1bar)),
                 nodes.constraint());
     }
 
+    @Test
     public void testExpressionEqualsPattern() {
         nodes.limitValuesToPattern(pattern1);
         nodes.limitValuesToExpression(expression1);
-        assertEquals("Equality(" +
+        Assert.assertEquals("Equality(" +
                         "SQL(SHA1(table1.foo)), " +
                         "Concatenation(" +
                         "Constant(http://example.org/res), " +
@@ -398,37 +454,42 @@ public class NodeSetTest extends TestCase {
                 nodes.constraint().toString());
     }
 
+    @Test
     public void testANYNodeDoesNotLimit() {
         nodes.limitTo(Node.ANY);
         nodes.limitTo(RDF.Nodes.type);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testVariableNodeDoesNotLimit() {
         nodes.limitTo(NodeFactory.createVariable("foo"));
         nodes.limitTo(RDF.Nodes.type);
-        assertFalse(nodes.isEmpty());
+        Assert.assertFalse(nodes.isEmpty());
     }
 
+    @Test
     public void testPatternDifferentColumnFunctionsUnsupported() {
         nodes.limitValuesToPattern(new Pattern("test/@@table1.foo|urlify@@"));
         nodes.limitValuesToPattern(new Pattern("test/@@table1.bar|urlencode@@"));
-        assertFalse(nodes.isEmpty());
-        assertTrue(nodes.isUnsupported());
+        Assert.assertFalse(nodes.isEmpty());
+        Assert.assertTrue(nodes.isUnsupported());
     }
 
+    @Test
     public void testTranslatorUnsupported() {
         nodes.setUsesTranslator(Translator.IDENTITY);
         nodes.setUsesTranslator(new TranslationTable(ResourceFactory.createResource()).translator());
-        assertFalse(nodes.isEmpty());
-        assertTrue(nodes.isUnsupported());
+        Assert.assertFalse(nodes.isEmpty());
+        Assert.assertTrue(nodes.isUnsupported());
     }
 
+    @Test
     public void testPatternWithColumnFunctionAndColumnUnsupported() {
         nodes.limitValuesToAttribute(table1foo);
         nodes.limitValuesToPattern(new Pattern("@@table2.bar|urlify@@"));
-        assertEquals("Equality(AttributeExpr(@@table1.foo@@), AttributeExpr(@@table2.bar@@))",
+        Assert.assertEquals("Equality(AttributeExpr(@@table1.foo@@), AttributeExpr(@@table2.bar@@))",
                 nodes.constraint().toString());
-        assertTrue(nodes.isUnsupported());
+        Assert.assertTrue(nodes.isUnsupported());
     }
 }

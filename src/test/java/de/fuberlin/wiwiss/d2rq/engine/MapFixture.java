@@ -1,8 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.io.InputStream;
-import java.util.Collection;
-
+import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
+import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import de.fuberlin.wiwiss.d2rq.vocab.TestVocab;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -11,12 +14,8 @@ import org.apache.jena.shared.impl.PrefixMappingImpl;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.log4j.Logger;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
-import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-import de.fuberlin.wiwiss.d2rq.vocab.Test;
+import java.io.InputStream;
+import java.util.Collection;
 
 /**
  * Helper for loading mappings as test fixtures from Turtle files.
@@ -42,10 +41,10 @@ public class MapFixture {
     public static Collection<TripleRelation> loadPropertyBridges(String mappingFileName) {
         LOGGER.debug("Mapping file " + mappingFileName);
         Model m = ModelFactory.createDefaultModel();
-        Resource dummyDB = m.getResource(Test.DummyDatabase.getURI());
+        Resource dummyDB = m.getResource(TestVocab.DummyDatabase.getURI());
         dummyDB.addProperty(RDF.type, D2RQ.Database);
         if (!mappingFileName.startsWith("/")) mappingFileName = "/" + mappingFileName;
-        InputStream is = D2RQTestSuite.class.getResourceAsStream(mappingFileName);
+        InputStream is = D2RQTestHelper.class.getResourceAsStream(mappingFileName);
         m.read(is, null, "TURTLE");
         Mapping mapping = MappingFactory.create(m, null);
         return mapping.compiledPropertyBridges();

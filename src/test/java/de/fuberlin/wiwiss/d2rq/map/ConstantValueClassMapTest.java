@@ -1,13 +1,13 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.RDF;
+import org.junit.Before;
+import org.junit.Test;
 
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import junit.framework.TestCase;
-
-public class ConstantValueClassMapTest extends TestCase {
+public class ConstantValueClassMapTest {
 
     private Model model;
     private Mapping mapping;
@@ -45,6 +45,7 @@ public class ConstantValueClassMapTest extends TestCase {
         return result;
     }
 
+    @Before
     public void setUp() {
         this.model = ModelFactory.createDefaultModel();
         this.mapping = MappingFactory.createEmpty();
@@ -64,11 +65,12 @@ public class ConstantValueClassMapTest extends TestCase {
         memberBridge.addCondition("c.foo = 1");
     }
 
+    @Test
     public void testValidate() {
         try {
             collection.validate();
         } catch (D2RQException e) {
-            fail("Should validate without exceptions");
+            throw new AssertionError("Should validate without exceptions", e);
         }
     }
 }

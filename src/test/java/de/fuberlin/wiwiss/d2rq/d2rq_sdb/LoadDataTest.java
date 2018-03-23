@@ -1,13 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.d2rq_sdb;
 
-import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sdb.SDBFactory;
 import org.apache.jena.sdb.Store;
@@ -17,20 +10,30 @@ import org.apache.jena.sdb.sql.JDBC;
 import org.apache.jena.sdb.sql.SDBConnection;
 import org.apache.jena.sdb.store.DatabaseType;
 import org.apache.jena.sdb.store.LayoutType;
+import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import junit.framework.TestCase;
+import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Test for loading the sql-data in the derby-database and the turtle-data in the sdb
  *
  * @author Herwig Leimer
  */
-public abstract class LoadDataTest extends TestCase {
+public abstract class LoadDataTest {
+    protected static final Logger LOGGER = LoggerFactory.getLogger(LoadDataTest.class);
+    
     private static boolean loadHsqlData = true;
     private static boolean loadSDBData = true;
     // directories and data-files and config-files
-    protected static final String CURR_DIR = "test/de/fuberlin/wiwiss/d2rq/d2rq_sdb";
+    protected static final String CURR_DIR = "src/test/java/de/fuberlin/wiwiss/d2rq/d2rq_sdb";
     private static final String DATA_DIR = "dataset";
     private static final String CONFIG_DIR = "config";
     private static final String FILENAME_TTL_DATA = "dataset.ttl.zip";
@@ -67,23 +70,17 @@ public abstract class LoadDataTest extends TestCase {
         try {
             if (loadHsqlData) {
                 createHsqlDatabase();
-                assertNotNull("Hsql-DataModel is not null", hsqlDataModel);
+                Assert.assertNotNull("Hsql-DataModel is not null", hsqlDataModel);
             }
 
             if (loadSDBData) {
                 createSemanticDatabase();
-                assertNotNull("SDBDataModel is not null", sdbDataModel);
-                assertTrue("There is some data in the SDBDataModel", sdbDataModel.size() > 0);
+                Assert.assertNotNull("SDBDataModel is not null", sdbDataModel);
+                Assert.assertTrue("There is some data in the SDBDataModel", sdbDataModel.size() > 0);
             }
-
-            System.out.println("-----------------------------------------------------------");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            fail();
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
+            LOGGER.debug("-----------------------------------------------------------");
+        } catch (SQLException | IOException e) {
+            throw new AssertionError("initDatabase", e);
         }
     }
 
@@ -95,7 +92,7 @@ public abstract class LoadDataTest extends TestCase {
         Connection hsqlConnection;
         File zipFile;
         ZipEntry entry;
-        ZipInputStream zipInputStream = null;
+        ZipInputStream zipInputStream;
         String sqlData;
         Statement statement;
 
@@ -111,24 +108,22 @@ public abstract class LoadDataTest extends TestCase {
         zipFile = new File(CURR_DIR + "/" + DATA_DIR + "/" + FILENAME_SQL_DATA);
         zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
 
-        if (zipInputStream != null) {
-            try {
-                // so that only one ttl file could be into the zip-file
-                while ((entry = zipInputStream.getNextEntry()) != null) {
-                    System.out.println("Loading Data from " + entry.getName());
-                    sqlData = convertStreamToString(zipInputStream);
-                    statement = hsqlConnection.createStatement();
-                    statement.execute(sqlData);
-                    statement.close();
-                }
-            } finally {
-                zipInputStream.close();
+        try {
+            // so that only one ttl file could be into the zip-file
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                LOGGER.debug("Loading Data from " + entry.getName());
+                sqlData = convertStreamToString(zipInputStream);
+                statement = hsqlConnection.createStatement();
+                statement.execute(sqlData);
+                statement.close();
             }
+        } finally {
+            zipInputStream.close();
         }
 
         hsqlDataModel = MappingFactory.load(CURR_DIR + "/" + CONFIG_DIR + "/" + MAPPING_FILE_HSQL, "N3", "http://test/").getDataModel();
 
-        System.out.println("Loaded SQL-Data in HSQL-DATABASE!");
+        LOGGER.debug("Loaded SQL-Data in HSQL-DATABASE!");
     }
 
 
@@ -138,7 +133,7 @@ public abstract class LoadDataTest extends TestCase {
     private void createSemanticDatabase() throws IOException {
         File zipFile;
         ZipEntry entry;
-        ZipInputStream zipInputStream = null;
+        ZipInputStream zipInputStream;
         SDBConnection sdbConnection;
         StoreDesc sdbStoreDesc;
         Store sdbStore;
@@ -155,27 +150,25 @@ public abstract class LoadDataTest extends TestCase {
         zipFile = new File(CURR_DIR + "/" + DATA_DIR + "/" + FILENAME_TTL_DATA);
         zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
 
-        if (zipInputStream != null) {
-            // NOTE: sdbModel.read closes the inputstream !!!!
-            // so that only one ttl file could be into the zip-file
-            entry = zipInputStream.getNextEntry();
+        // NOTE: sdbModel.read closes the inputstream !!!!
+        // so that only one ttl file could be into the zip-file
+        entry = zipInputStream.getNextEntry();
 
-            if (entry != null) {
-                assertFalse("Entry-Name is not empty", "".equals(entry.getName()));
-                sdbDataModel = sdbDataModel.read(zipInputStream, null, "TTL");
-                assertTrue("sdbModel is not emtpy", sdbDataModel.size() > 0);
-            }
-            zipInputStream.close();
+        if (entry != null) {
+            Assert.assertFalse("Entry-Name is not empty", "".equals(entry.getName()));
+            sdbDataModel = sdbDataModel.read(zipInputStream, null, "TTL");
+            Assert.assertTrue("sdbModel is not emtpy", sdbDataModel.size() > 0);
         }
+        zipInputStream.close();
 
-        System.out.println("Loaded " + sdbDataModel.size() + " Tripples into SDB-Database!");
+        LOGGER.debug("Loaded " + sdbDataModel.size() + " Tripples into SDB-Database!");
     }
 
 
     private String convertStreamToString(InputStream inputStream) throws IOException {
         BufferedReader bufferedReader;
         StringBuilder stringBuilder;
-        String line = null;
+        String line;
 
         bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         stringBuilder = new StringBuilder();

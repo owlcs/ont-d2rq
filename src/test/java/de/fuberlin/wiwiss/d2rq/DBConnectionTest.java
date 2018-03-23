@@ -1,20 +1,26 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import java.sql.*;
-import java.util.Collection;
-
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
-import junit.framework.TestCase;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.*;
+import java.util.Collection;
 
 /**
  * @author jgarbers
  */
-public class DBConnectionTest extends TestCase {
+public class DBConnectionTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionTest.class);
 
     private Model mapModel;
 
@@ -26,9 +32,10 @@ public class DBConnectionTest extends TestCase {
     private String mediumQuery;
     private String complexQuery;
 
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() {
         mapModel = ModelFactory.createDefaultModel();
-        mapModel.read(D2RQTestSuite.ISWC_MAP, "http://test/", "TURTLE");
+        mapModel.read(D2RQTestHelper.ISWC_MAP, "http://test/", "TURTLE");
         databases = MappingFactory.create(mapModel, null).databases();
         firstDatabase = databases.iterator().next();
         simplestQuery = "SELECT 1;";
@@ -38,22 +45,24 @@ public class DBConnectionTest extends TestCase {
 
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() {
         mapModel.close();
         if (cdb != null) cdb.close();
     }
 
+    @Test
     public void testConnections() throws SQLException {
         for (Database db : databases) {
             cdb = db.connectedDB();
             Connection c = cdb.connection();
             String result = performQuery(c, simplestQuery); //
-            assertEquals(result, "1");
+            Assert.assertEquals(result, "1");
         }
     }
 
     private static String performQuery(Connection c, String theQuery) throws SQLException {
-        String query_results = "";
+        StringBuilder query_results = new StringBuilder();
         Statement s;
         ResultSet rs;
         s = c.createStatement();
@@ -62,14 +71,14 @@ public class DBConnectionTest extends TestCase {
         while (rs.next()) {
             for (int pos = 1; pos <= col; pos++) {
                 if (pos > 1)
-                    query_results += " ";
-                query_results += rs.getString(pos);
+                    query_results.append(" ");
+                query_results.append(rs.getString(pos));
             }
         } // end while
 
         rs.close();
         s.close();
-        return query_results;
+        return query_results.toString();
     }
 
     public Connection manuallyConfiguredConnection() {
@@ -90,7 +99,7 @@ public class DBConnectionTest extends TestCase {
             return c;
         } //end try
         catch (Exception x) {
-            x.printStackTrace();
+            LOGGER.error("manuallyConfiguredConnection", x);
         }
         return null;
     }
@@ -104,9 +113,10 @@ public class DBConnectionTest extends TestCase {
 
         String query_results = performQuery(c, query);
         c.close();
-        assertEquals(query_results, "2 2002");
+        Assert.assertEquals(query_results, "2 2002");
     }
 
+    @Test
     public void testDistinct() throws SQLException {
         // there seems to be a problem with MSAccess databases
         // when using the DISTINCT keyword, Strings are truncated to 256 chars
@@ -118,11 +128,12 @@ public class DBConnectionTest extends TestCase {
         String distinctResult = performQuery(c, distinct);
         String nonDistinctResult = performQuery(c, nonDistinct);
         c.close();
-        assertEquals(distinctResult, nonDistinctResult);
+        Assert.assertEquals(distinctResult, nonDistinctResult);
     }
 
     // fails with wrong MSAccess Iswc DB (doc/manual/ISWC.mdb revision < 1.5)
     // succeeds with revision 1.5
+    @Test
     public void testMedium() throws SQLException {
         cdb = firstDatabase.connectedDB();
         Connection c = cdb.connection();
@@ -130,23 +141,21 @@ public class DBConnectionTest extends TestCase {
         String query = mediumQuery;
         String query_results = performQuery(c, query);
         c.close();
-        assertNotNull(query_results);
+        Assert.assertNotNull(query_results);
     }
 
     // fails with MSAccess
-    public void testLongComplexSQLQuery() throws SQLException {
+    @Test
+    public void testLongComplexSQLQuery() {
         cdb = firstDatabase.connectedDB();
-        Connection c = cdb.connection();
         //Connection c=manuallyConfiguredConnection(); // 2 is ok, 1 fails
         String query = complexQuery;
-        try {
+        try (Connection c = cdb.connection()) {
             performQuery(c, query);
         } catch (SQLException e) {
-            fail("DBConnectionTest.testLong() is known to fail with MSAccess");
-        } finally {
-            c.close();
+            throw new AssertionError("DBConnectionTest.testLong() is known to fail with MSAccess", e);
         }
-        // assertEquals(query_results,"2 2002");
+        // Assert.assertEquals(query_results,"2 2002");
     }
 
 

@@ -1,20 +1,21 @@
 package de.fuberlin.wiwiss.d2rq.helpers;
 
-import java.util.*;
-
+import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.sql.BeanCounter;
+import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
+import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DC;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.sql.BeanCounter;
-import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
-import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
-import junit.framework.TestCase;
+import java.util.*;
 
 /**
  * TODO: What's all the logger stuff doing? Needs to be more obvious or better documented
@@ -22,7 +23,7 @@ import junit.framework.TestCase;
  * @author Richard Cyganiak (richard@cyganiak.de)
  * @author jgarbers
  */
-public abstract class QueryLanguageTestFramework extends TestCase {
+public abstract class QueryLanguageTestFramework {
     protected ModelD2RQ model;
     protected Set<Map<String, RDFNode>> results;
     protected String queryString;
@@ -110,7 +111,9 @@ public abstract class QueryLanguageTestFramework extends TestCase {
 
     protected abstract String mapURL();
 
-    protected void setUp() throws Exception {
+
+    @Before
+    public void setUp() {
         this.model = MappingFactory.load(mapURL(), "TURTLE", "http://test/").getDataModel();
 //		this.model.enableDebug();
         setUpShowErrors(); // should be activated all the time
@@ -118,18 +121,18 @@ public abstract class QueryLanguageTestFramework extends TestCase {
         //setUpShowStatements(); // activate to analyse generated SQL statements
         //setUpMixOutputs(true); // activate to mix output from two QueryHandlers nicely
         //setUpShowAll(); // activate to get most verbatim output
+        runTest();
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() {
         this.model.close();
         this.results = null;
-        super.tearDown();
     }
 
-    public void runTest() throws Throwable {
+    public void runTest() {
         testCaseSeparatorLogger.debug("");
         if (!compareQueryHandlers) {
-            super.runTest();
             return;
         }
         Level oldQueryLoggerState = queryLogger.getLevel();
@@ -145,7 +148,7 @@ public abstract class QueryLanguageTestFramework extends TestCase {
                         queryLogger.setLevel(Level.INFO);
                         sqlResultSetLogger.setLevel(Level.INFO);
                     }
-                    super.runTest();
+                    //super.runTest();
                 }
                 diffInfo[i] = BeanCounter.instanceMinus(startInst);
                 diffInfo[i].div(nTimes);
@@ -170,9 +173,7 @@ public abstract class QueryLanguageTestFramework extends TestCase {
                     differenceLogger.debug(printed[1]);
                 }
             }
-            assertEquals(resultMaps[0], resultMaps[1]);
-        } catch (Exception e) {
-            throw e;
+            Assert.assertEquals(resultMaps[0], resultMaps[1]);
         } finally {
             queryLogger.setLevel(oldQueryLoggerState);
             sqlResultSetLogger.setLevel(oldSqlResultSetLoggerState);
@@ -258,7 +259,7 @@ public abstract class QueryLanguageTestFramework extends TestCase {
     }
 
     protected void assertResultCount(int count) {
-        assertEquals(count, this.results.size());
+        Assert.assertEquals(count, this.results.size());
     }
 
     protected void expectVariable(String variableName, RDFNode value) {
@@ -267,7 +268,7 @@ public abstract class QueryLanguageTestFramework extends TestCase {
 
     protected void assertSolution() {
         if (!this.results.contains(this.currentSolution)) {
-            fail();
+            Assert.fail();
         }
         this.currentSolution.clear();
     }

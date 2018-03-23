@@ -9,10 +9,6 @@ There are following major differences with the original:
 * No D2R Server
 * ONT-API (OWL-API over Jena, see https://github.com/avicomp/ont-api) in dependencies
 
-## Drivers
-* MySQL
-* PostgreSQL
-* MSSQL (not tested)
 
 ## Usage
 * to build command-line tools use `mvn clean package -Ptools`

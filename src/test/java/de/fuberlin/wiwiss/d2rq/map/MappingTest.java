@@ -1,60 +1,67 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import junit.framework.TestCase;
-
-public class MappingTest extends TestCase {
+public class MappingTest {
     private final static Resource database1 = ResourceFactory.createResource("http://test/db");
     private final static Resource database2 = ResourceFactory.createResource("http://test/db2");
     private final static Resource classMap1 = ResourceFactory.createResource("http://test/classMap1");
 
+    @Test
     public void testNoDatabasesInitially() {
         Mapping m = MappingFactory.createEmpty();
-        assertTrue(m.databases().isEmpty());
-        assertNull(m.database(database1));
+        Assert.assertTrue(m.databases().isEmpty());
+        Assert.assertNull(m.database(database1));
     }
 
+    @Test
     public void testReturnAddedDatabase() {
         Mapping m = MappingFactory.createEmpty();
         Database db = new Database(database1);
         m.addDatabase(db);
-        assertEquals(Collections.singletonList(db), new ArrayList<Database>(m.databases()));
-        assertEquals(db, m.database(database1));
+        Assert.assertEquals(Collections.singletonList(db), new ArrayList<Database>(m.databases()));
+        Assert.assertEquals(db, m.database(database1));
     }
 
+    @Test
     public void testNoDatabaseCausesValidationError() {
         Mapping m = MappingFactory.createEmpty();
         try {
             m.validate();
         } catch (D2RQException ex) {
-            assertEquals(D2RQException.MAPPING_NO_DATABASE, ex.errorCode());
+            Assert.assertEquals(D2RQException.MAPPING_NO_DATABASE, ex.errorCode());
         }
     }
 
+    @Test
     public void testReturnResourceFromNewClassMap() {
         ClassMap c = new ClassMap(classMap1);
-        assertEquals(classMap1, c.resource());
+        Assert.assertEquals(classMap1, c.resource());
     }
 
+    @Test
     public void testNewClassMapHasNoDatabase() {
         ClassMap c = new ClassMap(classMap1);
-        assertNull(c.database());
+        Assert.assertNull(c.database());
     }
 
+    @Test
     public void testClassMapReturnsAssignedDatabase() {
         Database db = new Database(database1);
         ClassMap c = new ClassMap(classMap1);
         c.setDatabase(db);
-        assertEquals(db, c.database());
+        Assert.assertEquals(db, c.database());
     }
 
+    @Test
     public void testMultipleDatabasesForClassMapCauseValidationError() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = new ClassMap(classMap1);
@@ -66,10 +73,11 @@ public class MappingTest extends TestCase {
             m.addClassMap(c);
             m.validate();
         } catch (D2RQException ex) {
-            assertEquals(D2RQException.CLASSMAP_DUPLICATE_DATABASE, ex.errorCode());
+            Assert.assertEquals(D2RQException.CLASSMAP_DUPLICATE_DATABASE, ex.errorCode());
         }
     }
 
+    @Test
     public void testClassMapWithoutDatabaseCausesValidationError() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = new ClassMap(classMap1);
@@ -81,22 +89,24 @@ public class MappingTest extends TestCase {
             m.addClassMap(c);
             m.validate();
         } catch (D2RQException ex) {
-            assertEquals(D2RQException.CLASSMAP_NO_DATABASE, ex.errorCode());
+            Assert.assertEquals(D2RQException.CLASSMAP_NO_DATABASE, ex.errorCode());
         }
     }
 
+    @Test
     public void testNewMappingHasNoClassMaps() {
         Mapping m = MappingFactory.createEmpty();
-        assertTrue(m.classMapResources().isEmpty());
-        assertNull(m.classMap(classMap1));
+        Assert.assertTrue(m.classMapResources().isEmpty());
+        Assert.assertNull(m.classMap(classMap1));
     }
 
+    @Test
     public void testReturnAddedClassMaps() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = new ClassMap(classMap1);
         m.addClassMap(c);
-        assertEquals(Collections.singleton(classMap1),
+        Assert.assertEquals(Collections.singleton(classMap1),
                 new HashSet<Resource>(m.classMapResources()));
-        assertEquals(c, m.classMap(classMap1));
+        Assert.assertEquals(c, m.classMap(classMap1));
     }
 }

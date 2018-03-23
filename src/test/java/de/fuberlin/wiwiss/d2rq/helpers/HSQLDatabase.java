@@ -1,10 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.helpers;
 
+import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.*;
-
-import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A simple wrapper around a HSQL in-memory database for testing purposes
@@ -26,9 +30,7 @@ public class HSQLDatabase {
             Class.forName(HSQL_DRIVER_CLASS);
             conn = DriverManager.getConnection(jdbcURL + ";create=true",
                     HSQL_USER, HSQL_PASS);
-        } catch (ClassNotFoundException ex) {
-            throw new RuntimeException(ex);
-        } catch (SQLException ex) {
+        } catch (ClassNotFoundException | SQLException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -50,10 +52,8 @@ public class HSQLDatabase {
     }
 
     public void executeSQL(String sql) {
-        try {
-            Statement stmt = conn.createStatement();
+        try (Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            stmt.close();
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
@@ -68,9 +68,7 @@ public class HSQLDatabase {
     public void executeScript(String filename) {
         try {
             SQLScriptLoader.loadFile(new File(filename), conn);
-        } catch (FileNotFoundException ex) {
-            throw new RuntimeException(ex);
-        } catch (SQLException ex) {
+        } catch (FileNotFoundException | SQLException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -88,14 +86,31 @@ public class HSQLDatabase {
      * result rows or the value is <code>NULL</code>
      */
     public String selectString(String sql) {
-        try {
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             if (!rs.next()) return null;
-            String result = rs.getString(1);
-            rs.close();
-            stmt.close();
-            return result;
+            return rs.getString(1);
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public List<String> select(String sql) {
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            List<String> res = new ArrayList<>();
+            int count = rs.getMetaData().getColumnCount();
+            while (rs.next()) {
+                String row = IntStream.rangeClosed(1, count).mapToObj(i -> {
+                    try {
+                        return rs.getString(i);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).collect(Collectors.joining(","));
+                res.add(row);
+            }
+            return res;
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
@@ -178,7 +193,7 @@ public class HSQLDatabase {
         try {
             conn.close();
         } catch (SQLException ex) {
-            // do nothing
+            throw new RuntimeException(ex);
         }
     }
 

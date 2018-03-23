@@ -1,25 +1,28 @@
 package de.fuberlin.wiwiss.d2rq.download;
 
 
+import de.fuberlin.wiwiss.d2rq.helpers.HSQLDatabase;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
+import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import org.apache.jena.rdf.model.ResourceFactory;
-
-import de.fuberlin.wiwiss.d2rq.helpers.HSQLDatabase;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
-import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import junit.framework.TestCase;
-
-public class DownloadContentQueryTest extends TestCase {
+public class DownloadContentQueryTest {
     private HSQLDatabase db;
     private DownloadMap downloadCLOB;
     private DownloadMap downloadBLOB;
     private DownloadContentQuery q;
 
+    @Before
     public void setUp() {
         db = new HSQLDatabase("test");
         db.executeSQL("CREATE TABLE People (ID INT NOT NULL PRIMARY KEY, PIC_CLOB CLOB NULL, PIC_BLOB BLOB NULL)");
@@ -30,49 +33,52 @@ public class DownloadContentQueryTest extends TestCase {
         downloadBLOB = m.downloadMap(ResourceFactory.createResource("http://example.org/downloadBLOB"));
     }
 
+    @After
     public void tearDown() {
         db.close(true);
         if (q != null) q.close();
     }
 
+    @Test
     public void testFixture() {
-        assertNotNull(downloadCLOB);
-        assertNotNull(downloadBLOB);
+        Assert.assertNotNull(downloadCLOB);
+        Assert.assertNotNull(downloadBLOB);
     }
 
+    @Test
     public void testNullForNonDownloadURI() {
-        q = new DownloadContentQuery(
-                downloadCLOB, "http://not-in-the-mapping");
-        assertFalse(q.hasContent());
-        assertNull(q.getContentStream());
+        q = new DownloadContentQuery(downloadCLOB, "http://not-in-the-mapping");
+        Assert.assertFalse(q.hasContent());
+        Assert.assertNull(q.getContentStream());
     }
 
+    @Test
     public void testNullForNonExistingRecord() {
         // There is no People.ID=42 in the table
-        q = new DownloadContentQuery(
-                downloadCLOB, "http://example.org/downloads/clob/42");
-        assertFalse(q.hasContent());
-        assertNull(q.getContentStream());
+        q = new DownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/42");
+        Assert.assertFalse(q.hasContent());
+        Assert.assertNull(q.getContentStream());
     }
 
+    @Test
     public void testReturnCLOBContentForExistingRecord() throws IOException {
-        q = new DownloadContentQuery(
-                downloadCLOB, "http://example.org/downloads/clob/1");
-        assertTrue(q.hasContent());
-        assertEquals("Hello World!", inputStreamToString(q.getContentStream()));
+        q = new DownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/1");
+        Assert.assertTrue(q.hasContent());
+        Assert.assertEquals("Hello World!", inputStreamToString(q.getContentStream()));
     }
 
+    @Test
     public void testNULLContent() {
-        q = new DownloadContentQuery(
-                downloadCLOB, "http://example.org/downloads/clob/2");
-        assertFalse(q.hasContent());
-        assertNull(q.getContentStream());
+        q = new DownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/2");
+        Assert.assertFalse(q.hasContent());
+        Assert.assertNull(q.getContentStream());
     }
 
+    @Test
     public void testReturnBLOBContentForExistingRecord() throws IOException {
         q = new DownloadContentQuery(downloadBLOB, "http://example.org/downloads/blob/2");
-        assertTrue(q.hasContent());
-        assertEquals("@@@", inputStreamToString(q.getContentStream()));
+        Assert.assertTrue(q.hasContent());
+        Assert.assertEquals("@@@", inputStreamToString(q.getContentStream()));
     }
 
     private String inputStreamToString(InputStream is) throws IOException {

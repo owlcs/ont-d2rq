@@ -1,13 +1,13 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
-import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.vocabulary.DC;
-import org.apache.jena.vocabulary.RDF;
-
-import de.fuberlin.wiwiss.d2rq.D2RQTestSuite;
+import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.helpers.QueryLanguageTestFramework;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.vocabulary.DC;
+import org.apache.jena.vocabulary.RDF;
+import org.junit.Test;
 
 
 /**
@@ -28,9 +28,10 @@ import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
 public class SPARQLTest extends QueryLanguageTestFramework {
 
     protected String mapURL() {
-        return D2RQTestSuite.ISWC_MAP;
+        return D2RQTestHelper.ISWC_MAP;
     }
 
+    @Test
     public void testSPARQLFetch() {
         sparql("SELECT ?x ?y WHERE { <http://test/papers/1> ?x ?y }");
 //		dump();
@@ -63,6 +64,7 @@ public class SPARQLTest extends QueryLanguageTestFramework {
     }
 
 
+    @Test
     public void testSPARQLGetAuthorsAndEmails() {
         sparql("SELECT ?x ?y WHERE { ?x dc:creator ?z . " +
                 "?z foaf:mbox ?y }");
@@ -78,6 +80,7 @@ public class SPARQLTest extends QueryLanguageTestFramework {
         assertResultCount(8);
     }
 
+    @Test
     public void testSPARQLGetAuthorsAndEmailsWithCondition() {
         // GraphD2RQ.setUsingD2RQQueryHandler(false);
         // mysql must be prepared for ANSI expressions with:
@@ -98,6 +101,7 @@ public class SPARQLTest extends QueryLanguageTestFramework {
     }
 
 
+    @Test
     public void testSPARQLGetTopics() {
         sparql("SELECT ?x ?y WHERE { ?x skos:primarySubject ?z . ?z skos:prefLabel ?y }");
 //		dump();
@@ -117,6 +121,7 @@ public class SPARQLTest extends QueryLanguageTestFramework {
         assertResultCount(3);
     }
 
+    @Test
     public void testSPARQLGetAuthorsOfPaperByTitle() {
         sparql("SELECT ?x ?y WHERE { ?x dc:creator ?y . ?x dc:title 'Three Implementations of SquishQL, a Simple RDF Query Language'@en }");
 //		dump();
@@ -132,6 +137,7 @@ public class SPARQLTest extends QueryLanguageTestFramework {
         assertResultCount(2);
     }
 
+    @Test
     public void testSPARQLGetAuthorsNameAndEmail() {
         sparql("SELECT ?x ?y ?a WHERE { ?x dc:creator ?y . ?x dc:title 'Three Implementations of SquishQL, a Simple RDF Query Language'@en . ?y foaf:mbox ?a }");
 //		dump();
@@ -149,6 +155,7 @@ public class SPARQLTest extends QueryLanguageTestFramework {
         assertResultCount(2);
     }
 
+    @Test
     public void testGetTitleAndYearOfAllPapers() {
         sparql("SELECT ?title ?year WHERE { ?paper dc:title ?title; dc:date ?year }");
 //		dump();
@@ -160,6 +167,7 @@ public class SPARQLTest extends QueryLanguageTestFramework {
         assertResultCount(6);
     }
 
+    @Test
     public void testRDFType() {
         sparql("SELECT ?x ?y ?z WHERE { ?x a iswc:InProceedings; ?y ?z } ");
     }

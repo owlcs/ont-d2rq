@@ -1,18 +1,19 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
+import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;
+import de.fuberlin.wiwiss.d2rq.expr.SQLExpression;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;
-import de.fuberlin.wiwiss.d2rq.expr.SQLExpression;
-import junit.framework.TestCase;
-
 /**
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class AliasMapTest extends TestCase {
+public class AliasMapTest {
     private final static RelationName foo = new RelationName(null, "foo");
     private final static RelationName bar = new RelationName(null, "bar");
     private final static RelationName baz = new RelationName(null, "baz");
@@ -27,153 +28,177 @@ public class AliasMapTest extends TestCase {
     private Alias bazAsBar = new Alias(baz, bar);
     private AliasMap fooAsBarMap = new AliasMap(Collections.singleton(new Alias(foo, bar)));
 
+    @Test
     public void testEmptyMapDoesIdentityTranslation() {
         AliasMap aliases = AliasMap.NO_ALIASES;
-        assertFalse(aliases.isAlias(foo));
-        assertFalse(aliases.hasAlias(foo));
-        assertEquals(foo, aliases.applyTo(foo));
-        assertEquals(foo, aliases.originalOf(foo));
+        Assert.assertFalse(aliases.isAlias(foo));
+        Assert.assertFalse(aliases.hasAlias(foo));
+        Assert.assertEquals(foo, aliases.applyTo(foo));
+        Assert.assertEquals(foo, aliases.originalOf(foo));
     }
 
+    @Test
     public void testAliasIsTranslated() {
-        assertFalse(this.fooAsBarMap.isAlias(foo));
-        assertTrue(this.fooAsBarMap.isAlias(bar));
-        assertFalse(this.fooAsBarMap.isAlias(baz));
-        assertTrue(this.fooAsBarMap.hasAlias(foo));
-        assertFalse(this.fooAsBarMap.hasAlias(bar));
-        assertFalse(this.fooAsBarMap.hasAlias(baz));
-        assertEquals(bar, this.fooAsBarMap.applyTo(foo));
-        assertEquals(baz, this.fooAsBarMap.applyTo(baz));
-        assertEquals(foo, this.fooAsBarMap.originalOf(bar));
-        assertEquals(baz, this.fooAsBarMap.originalOf(baz));
+        Assert.assertFalse(this.fooAsBarMap.isAlias(foo));
+        Assert.assertTrue(this.fooAsBarMap.isAlias(bar));
+        Assert.assertFalse(this.fooAsBarMap.isAlias(baz));
+        Assert.assertTrue(this.fooAsBarMap.hasAlias(foo));
+        Assert.assertFalse(this.fooAsBarMap.hasAlias(bar));
+        Assert.assertFalse(this.fooAsBarMap.hasAlias(baz));
+        Assert.assertEquals(bar, this.fooAsBarMap.applyTo(foo));
+        Assert.assertEquals(baz, this.fooAsBarMap.applyTo(baz));
+        Assert.assertEquals(foo, this.fooAsBarMap.originalOf(bar));
+        Assert.assertEquals(baz, this.fooAsBarMap.originalOf(baz));
     }
 
+    @Test
     public void testApplyToColumn() {
-        assertEquals(baz_col1, this.fooAsBarMap.applyTo(baz_col1));
-        assertEquals(bar_col1, this.fooAsBarMap.applyTo(foo_col1));
-        assertEquals(bar_col1, this.fooAsBarMap.applyTo(bar_col1));
+        Assert.assertEquals(baz_col1, this.fooAsBarMap.applyTo(baz_col1));
+        Assert.assertEquals(bar_col1, this.fooAsBarMap.applyTo(foo_col1));
+        Assert.assertEquals(bar_col1, this.fooAsBarMap.applyTo(bar_col1));
     }
 
+    @Test
     public void testOriginalOfColumn() {
-        assertEquals(baz_col1, this.fooAsBarMap.originalOf(baz_col1));
-        assertEquals(foo_col1, this.fooAsBarMap.originalOf(foo_col1));
-        assertEquals(foo_col1, this.fooAsBarMap.originalOf(bar_col1));
+        Assert.assertEquals(baz_col1, this.fooAsBarMap.originalOf(baz_col1));
+        Assert.assertEquals(foo_col1, this.fooAsBarMap.originalOf(foo_col1));
+        Assert.assertEquals(foo_col1, this.fooAsBarMap.originalOf(bar_col1));
     }
 
+    @Test
     public void testApplyToJoinSetDoesNotModifyUnaliasedJoin() {
         Join join = new Join(abc_col1, xyz_col1, Join.DIRECTION_RIGHT);
         Set<Join> joins = Collections.singleton(join);
-        assertEquals(joins, this.fooAsBarMap.applyToJoinSet(joins));
+        Assert.assertEquals(joins, this.fooAsBarMap.applyToJoinSet(joins));
     }
 
+    @Test
     public void testApplyToJoinSetDoesModifyAliasedJoin() {
         Join join = new Join(foo_col1, foo_col1, Join.DIRECTION_RIGHT);
         Set<Join> aliasedSet = this.fooAsBarMap.applyToJoinSet(Collections.singleton(join));
-        assertEquals(1, aliasedSet.size());
+        Assert.assertEquals(1, aliasedSet.size());
         Join aliased = aliasedSet.iterator().next();
-        assertEquals(Collections.singletonList(bar_col1), aliased.attributes1());
-        assertEquals(Collections.singletonList(bar_col1), aliased.attributes2());
+        Assert.assertEquals(Collections.singletonList(bar_col1), aliased.attributes1());
+        Assert.assertEquals(Collections.singletonList(bar_col1), aliased.attributes2());
     }
 
+    @Test
     public void testApplyToSQLExpression() {
-        assertEquals(SQLExpression.create("bar.col1 = 1"),
-                fooAsBarMap.applyTo(SQLExpression.create("foo.col1 = 1")));
+        Assert.assertEquals(SQLExpression.create("bar.col1 = 1"), fooAsBarMap.applyTo(SQLExpression.create("foo.col1 = 1")));
     }
 
+    @Test
     public void testNoAliasesConstantEqualsNewEmptyAliasMap() {
         AliasMap noAliases = new AliasMap(Collections.emptyList());
-        assertTrue(AliasMap.NO_ALIASES.equals(noAliases));
-        assertTrue(noAliases.equals(AliasMap.NO_ALIASES));
+        Assert.assertTrue(AliasMap.NO_ALIASES.equals(noAliases));
+        Assert.assertTrue(noAliases.equals(AliasMap.NO_ALIASES));
     }
 
+    @Test
     public void testEmptyMapEqualsItself() {
-        assertTrue(AliasMap.NO_ALIASES.equals(AliasMap.NO_ALIASES));
+        Assert.assertTrue(AliasMap.NO_ALIASES.equals(AliasMap.NO_ALIASES));
     }
 
+    @Test
     public void testEmptyMapDoesntEqualPopulatedMap() {
-        assertFalse(AliasMap.NO_ALIASES.equals(fooAsBarMap));
+        Assert.assertFalse(AliasMap.NO_ALIASES.equals(fooAsBarMap));
     }
 
+    @Test
     public void testPopulatedMapDoesntEqualEmptyMap() {
-        assertFalse(fooAsBarMap.equals(AliasMap.NO_ALIASES));
+        Assert.assertFalse(fooAsBarMap.equals(AliasMap.NO_ALIASES));
     }
 
+    @Test
     public void testPopulatedMapEqualsItself() {
         AliasMap fooAsBar2 = new AliasMap(Collections.singleton(new Alias(foo, bar)));
-        assertTrue(fooAsBarMap.equals(fooAsBar2));
-        assertTrue(fooAsBar2.equals(fooAsBarMap));
+        Assert.assertTrue(fooAsBarMap.equals(fooAsBar2));
+        Assert.assertTrue(fooAsBar2.equals(fooAsBarMap));
     }
 
+    @Test
     public void testPopulatedMapDoesNotEqualDifferentMap() {
         AliasMap fooAsBaz = new AliasMap(Collections.singleton(new Alias(foo, baz)));
-        assertFalse(fooAsBarMap.equals(fooAsBaz));
-        assertFalse(fooAsBaz.equals(fooAsBarMap));
+        Assert.assertFalse(fooAsBarMap.equals(fooAsBaz));
+        Assert.assertFalse(fooAsBaz.equals(fooAsBarMap));
     }
 
+    @Test
     public void testEqualMapsHaveSameHashCode() {
         AliasMap m1 = new AliasMap(new ArrayList<Alias>());
         AliasMap m2 = new AliasMap(new ArrayList<Alias>());
-        assertEquals(m1.hashCode(), m2.hashCode());
+        Assert.assertEquals(m1.hashCode(), m2.hashCode());
     }
 
+    @Test
     public void testAliasEquals() {
         Alias fooAsBar2 = new Alias(foo, bar);
-        assertEquals(fooAsBar, fooAsBar2);
-        assertEquals(fooAsBar2, fooAsBar);
-        assertEquals(fooAsBar.hashCode(), fooAsBar2.hashCode());
+        Assert.assertEquals(fooAsBar, fooAsBar2);
+        Assert.assertEquals(fooAsBar2, fooAsBar);
+        Assert.assertEquals(fooAsBar.hashCode(), fooAsBar2.hashCode());
     }
 
+    @Test
     public void testAliasNotEquals() {
-        assertFalse(fooAsBar.equals(fooAsBaz));
-        assertFalse(fooAsBaz.equals(fooAsBar));
-        assertFalse(fooAsBar.equals(bazAsBar));
-        assertFalse(bazAsBar.equals(fooAsBar));
-        assertFalse(fooAsBar.hashCode() == fooAsBaz.hashCode());
-        assertFalse(fooAsBar.hashCode() == bazAsBar.hashCode());
+        Assert.assertFalse(fooAsBar.equals(fooAsBaz));
+        Assert.assertFalse(fooAsBaz.equals(fooAsBar));
+        Assert.assertFalse(fooAsBar.equals(bazAsBar));
+        Assert.assertFalse(bazAsBar.equals(fooAsBar));
+        Assert.assertFalse(fooAsBar.hashCode() == fooAsBaz.hashCode());
+        Assert.assertFalse(fooAsBar.hashCode() == bazAsBar.hashCode());
     }
 
+    @Test
     public void testAliasToString() {
-        assertEquals("foo AS bar", fooAsBar.toString());
+        Assert.assertEquals("foo AS bar", fooAsBar.toString());
     }
 
+    @Test
     public void testApplyToAliasEmpty() {
-        assertEquals(fooAsBar, AliasMap.NO_ALIASES.applyTo(fooAsBar));
+        Assert.assertEquals(fooAsBar, AliasMap.NO_ALIASES.applyTo(fooAsBar));
     }
 
+    @Test
     public void testApplyToAlias() {
-        assertEquals(new Alias(baz, bar), fooAsBarMap.applyTo(new Alias(baz, foo)));
+        Assert.assertEquals(new Alias(baz, bar), fooAsBarMap.applyTo(new Alias(baz, foo)));
     }
 
+    @Test
     public void testOriginalOfAliasEmpty() {
-        assertEquals(fooAsBar, AliasMap.NO_ALIASES.originalOf(fooAsBar));
+        Assert.assertEquals(fooAsBar, AliasMap.NO_ALIASES.originalOf(fooAsBar));
     }
 
+    @Test
     public void testOriginalOfAlias() {
-        assertEquals(fooAsBaz, fooAsBarMap.originalOf(new Alias(bar, baz)));
+        Assert.assertEquals(fooAsBaz, fooAsBarMap.originalOf(new Alias(bar, baz)));
     }
 
+    @Test
     public void testToStringEmpty() {
-        assertEquals("AliasMap()", AliasMap.NO_ALIASES.toString());
+        Assert.assertEquals("AliasMap()", AliasMap.NO_ALIASES.toString());
     }
 
+    @Test
     public void testToStringOneAlias() {
-        assertEquals("AliasMap(foo AS bar)", fooAsBarMap.toString());
+        Assert.assertEquals("AliasMap(foo AS bar)", fooAsBarMap.toString());
     }
 
+    @Test
     public void testToStringTwoAliases() {
-        Collection<Alias> aliases = new ArrayList<Alias>();
+        Collection<Alias> aliases = new ArrayList<>();
         aliases.add(fooAsBar);
         aliases.add(new Alias(new RelationName(null, "abc"), new RelationName(null, "xyz")));
         // Order is alphabetical by alias
-        assertEquals("AliasMap(foo AS bar, abc AS xyz)", new AliasMap(aliases).toString());
+        Assert.assertEquals("AliasMap(foo AS bar, abc AS xyz)", new AliasMap(aliases).toString());
     }
 
+    @Test
     public void testWithSchema() {
         RelationName table = new RelationName(null, "table");
         RelationName schema_table = new RelationName("schema", "table");
         RelationName schema_alias = new RelationName("schema", "alias");
         AliasMap m = new AliasMap(Collections.singleton(new Alias(schema_table, schema_alias)));
-        assertEquals(schema_alias, m.applyTo(schema_table));
-        assertEquals(table, m.applyTo(table));
+        Assert.assertEquals(schema_alias, m.applyTo(schema_table));
+        Assert.assertEquals(table, m.applyTo(table));
     }
 }

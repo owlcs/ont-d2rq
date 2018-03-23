@@ -8,7 +8,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
  *
  * @author Richard Cyganiak
  */
-public class Test {
+public class TestVocab {
     public static final String NS = "http://d2rq.org/terms/test#";
     public static final Resource DummyDatabase = ResourceFactory.createResource(NS + "DummyDatabase");
 }

@@ -1,21 +1,21 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
+import de.fuberlin.wiwiss.d2rq.algebra.*;
+import de.fuberlin.wiwiss.d2rq.expr.Equality;
+import de.fuberlin.wiwiss.d2rq.expr.Expression;
+import de.fuberlin.wiwiss.d2rq.sql.SQL;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.graph.test.NodeCreateUtils;
+import org.apache.jena.sparql.core.Var;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.jena.graph.Triple;
-import org.apache.jena.graph.test.NodeCreateUtils;
-import org.apache.jena.sparql.core.Var;
-
-import de.fuberlin.wiwiss.d2rq.algebra.*;
-import de.fuberlin.wiwiss.d2rq.expr.Equality;
-import de.fuberlin.wiwiss.d2rq.expr.Expression;
-import de.fuberlin.wiwiss.d2rq.sql.SQL;
-import junit.framework.TestCase;
-
-public class GraphPatternTranslatorTest extends TestCase {
+public class GraphPatternTranslatorTest {
     private final static RelationName table1 = SQL.parseRelationName("table1");
     private final static Attribute table1id = SQL.parseAttribute("table1.id");
     private final static Attribute t1table1id = SQL.parseAttribute("T1_table1.id");
@@ -25,105 +25,114 @@ public class GraphPatternTranslatorTest extends TestCase {
     private final static Var x = Var.alloc("x");
 
 
+    @Test
     public void testEmptyGraphAndBGP() {
         NodeRelation nodeRel = translate1(Collections.emptyList(), Collections.emptyList());
-        assertEquals(Relation.TRUE, nodeRel.baseRelation());
-        assertEquals(Collections.EMPTY_SET, nodeRel.variables());
+        Assert.assertNotNull(nodeRel);
+        Assert.assertEquals(Relation.TRUE, nodeRel.baseRelation());
+        Assert.assertEquals(Collections.EMPTY_SET, nodeRel.variables());
     }
 
+    @Test
     public void testEmptyGraph() {
-        assertNull(translate1("?subject ?predicate ?object", Collections.emptyList()));
+        Assert.assertNull(translate1("?subject ?predicate ?object", Collections.emptyList()));
     }
 
+    @Test
     public void testEmptyBGP() {
         NodeRelation nodeRel = translate1(Collections.emptyList(), "engine/type-bridge.n3");
-        assertEquals(Relation.TRUE, nodeRel.baseRelation());
-        assertEquals(Collections.EMPTY_SET, nodeRel.variables());
+        Assert.assertEquals(Relation.TRUE, nodeRel.baseRelation());
+        Assert.assertEquals(Collections.EMPTY_SET, nodeRel.variables());
     }
 
+    @Test
     public void testAskNoMatch() {
-        assertNull(translate1("ex:res1 rdf:type foaf:Project", "engine/type-bridge.n3"));
+        Assert.assertNull(translate1("ex:res1 rdf:type foaf:Project", "engine/type-bridge.n3"));
     }
 
+    @Test
     public void testAskMatch() {
         NodeRelation nodeRel = translate1("ex:res1 rdf:type ex:Class1", "engine/type-bridge.n3");
         Relation r = nodeRel.baseRelation();
-        assertEquals(Collections.singleton(table1), r.tables());
-        assertEquals(Collections.EMPTY_SET, r.projections());
-        assertEquals(Equality.createAttributeValue(table1id, "1"), r.condition());
-        assertEquals(AliasMap.NO_ALIASES, r.aliases());
-        assertEquals(Collections.EMPTY_SET, nodeRel.variables());
+        Assert.assertEquals(Collections.singleton(table1), r.tables());
+        Assert.assertEquals(Collections.EMPTY_SET, r.projections());
+        Assert.assertEquals(Equality.createAttributeValue(table1id, "1"), r.condition());
+        Assert.assertEquals(AliasMap.NO_ALIASES, r.aliases());
+        Assert.assertEquals(Collections.EMPTY_SET, nodeRel.variables());
     }
 
+    @Test
     public void testFindNoMatch() {
-        assertNull(translate1("ex:res1 ex:foo ?foo", "engine/type-bridge.n3"));
+        Assert.assertNull(translate1("ex:res1 ex:foo ?foo", "engine/type-bridge.n3"));
     }
 
+    @Test
     public void testFindFixedMatch() {
         NodeRelation nodeRel = translate1("ex:res1 rdf:type ?type", "engine/type-bridge.n3");
         Relation r = nodeRel.baseRelation();
-        assertEquals(Collections.singleton(table1), r.tables());
-        assertEquals(Collections.EMPTY_SET, r.projections());
-        assertEquals(Equality.createAttributeValue(table1id, "1"), r.condition());
-        assertEquals(AliasMap.NO_ALIASES, r.aliases());
-        assertEquals(Collections.singleton(type), nodeRel.variables());
-        assertEquals("Fixed(<http://example.org/Class1>)",
-                nodeRel.nodeMaker(type).toString());
+        Assert.assertEquals(Collections.singleton(table1), r.tables());
+        Assert.assertEquals(Collections.EMPTY_SET, r.projections());
+        Assert.assertEquals(Equality.createAttributeValue(table1id, "1"), r.condition());
+        Assert.assertEquals(AliasMap.NO_ALIASES, r.aliases());
+        Assert.assertEquals(Collections.singleton(type), nodeRel.variables());
+        Assert.assertEquals("Fixed(<http://example.org/Class1>)", nodeRel.nodeMaker(type).toString());
     }
 
+    @Test
     public void testFindMatch() {
         NodeRelation nodeRel = translate1("?x rdf:type ex:Class1", "engine/type-bridge.n3");
         Relation r = nodeRel.baseRelation();
-        assertEquals(Collections.singleton(table1), r.tables());
-        assertEquals(Collections.singleton(table1id), r.projections());
-        assertEquals(Expression.TRUE, r.condition());
-        assertEquals(AliasMap.NO_ALIASES, r.aliases());
-        assertEquals(Collections.singleton(x), nodeRel.variables());
-        assertEquals("URI(Pattern(http://example.org/res@@table1.id@@))",
-                nodeRel.nodeMaker(x).toString());
+        Assert.assertEquals(Collections.singleton(table1), r.tables());
+        Assert.assertEquals(Collections.singleton(table1id), r.projections());
+        Assert.assertEquals(Expression.TRUE, r.condition());
+        Assert.assertEquals(AliasMap.NO_ALIASES, r.aliases());
+        Assert.assertEquals(Collections.singleton(x), nodeRel.variables());
+        Assert.assertEquals("URI(Pattern(http://example.org/res@@table1.id@@))", nodeRel.nodeMaker(x).toString());
     }
 
+    @Test
     public void testConstraintInTripleNoMatch() {
-        assertNull(translate1("?x rdf:type ?x", "engine/type-bridge.n3"));
+        Assert.assertNull(translate1("?x rdf:type ?x", "engine/type-bridge.n3"));
     }
 
+    @Test
     public void testConstraintInTripleMatch() {
         NodeRelation nodeRel = translate1("?x rdf:type ?x", "engine/object-uricolumn.n3");
         Relation r = nodeRel.baseRelation();
-        assertEquals(Collections.singleton(table1), r.tables());
-        assertTrue(r.condition() instanceof Equality);    // Too lazy to check both sides
-        assertEquals(AliasMap.NO_ALIASES, r.aliases());
-        assertEquals(Collections.singleton(x), nodeRel.variables());
+        Assert.assertEquals(Collections.singleton(table1), r.tables());
+        Assert.assertTrue(r.condition() instanceof Equality);    // Too lazy to check both sides
+        Assert.assertEquals(AliasMap.NO_ALIASES, r.aliases());
+        Assert.assertEquals(Collections.singleton(x), nodeRel.variables());
     }
 
+    @Test
     public void testReturnMultipleMatchesForSingleTriplePattern() {
         NodeRelation[] rels = translate("?s ?p ?o", "engine/simple.n3");
-        assertEquals(2, rels.length);
+        Assert.assertEquals(2, rels.length);
     }
 
+    @Test
     public void testMatchOneOfTwoPropertyBridges() {
-        NodeRelation nodeRel = translate1(
-                "ex:res1 rdf:type ex:Class1",
-                "engine/simple.n3");
+        NodeRelation nodeRel = translate1("ex:res1 rdf:type ex:Class1", "engine/simple.n3");
         Relation r = nodeRel.baseRelation();
-        assertEquals(Collections.EMPTY_SET, r.projections());
-        assertEquals(Equality.createAttributeValue(table1id, "1"), r.condition());
+        Assert.assertEquals(Collections.EMPTY_SET, r.projections());
+        Assert.assertEquals(Equality.createAttributeValue(table1id, "1"), r.condition());
     }
 
+    @Test
     public void testAskTwoTriplePatternsNoMatch() {
-        assertNull(translate1(
+        Assert.assertNull(translate1(
                 "ex:res1 rdf:type ex:Class1 . ex:res1 rdf:type ex:Class2",
                 "engine/simple.n3"));
     }
 
+    @Test
     public void testAskTwoTriplePatternsMatch() {
-        NodeRelation nodeRel = translate1(
-                "ex:res1 rdf:type ex:Class1 . ex:res1 ex:foo ?foo",
-                "engine/simple.n3");
-        assertEquals(Collections.singleton(foo), nodeRel.variables());
-        assertEquals("Literal(Column(T2_table1.foo))", nodeRel.nodeMaker(foo).toString());
+        NodeRelation nodeRel = translate1("ex:res1 rdf:type ex:Class1 . ex:res1 ex:foo ?foo", "engine/simple.n3");
+        Assert.assertEquals(Collections.singleton(foo), nodeRel.variables());
+        Assert.assertEquals("Literal(Column(T2_table1.foo))", nodeRel.nodeMaker(foo).toString());
         Relation r = nodeRel.baseRelation();
-        assertEquals("Conjunction(" +
+        Assert.assertEquals("Conjunction(" +
                         "Equality(" +
                         "AttributeExpr(@@T1_table1.id@@), " +
                         "Constant(1@T1_table1.id)), " +
@@ -133,18 +142,18 @@ public class GraphPatternTranslatorTest extends TestCase {
                 r.condition().toString());
     }
 
+    @Test
     public void testTwoTriplePatternsWithJoinMatch() {
         NodeRelation nodeRel = translate1(
                 "?x rdf:type ex:Class1 . ?x ex:foo ?foo",
                 "engine/simple.n3");
-        assertEquals(2, nodeRel.variables().size());
-        assertEquals("Literal(Column(T2_table1.foo))",
+        Assert.assertEquals(2, nodeRel.variables().size());
+        Assert.assertEquals("Literal(Column(T2_table1.foo))",
                 nodeRel.nodeMaker(foo).toString());
-        assertEquals("URI(Pattern(http://example.org/res@@T1_table1.id@@))",
+        Assert.assertEquals("URI(Pattern(http://example.org/res@@T1_table1.id@@))",
                 nodeRel.nodeMaker(x).toString());
         Relation r = nodeRel.baseRelation();
-        assertEquals(Equality.createAttributeEquality(t1table1id, t2table1id),
-                r.condition());
+        Assert.assertEquals(Equality.createAttributeEquality(t1table1id, t2table1id), r.condition());
     }
 
     private NodeRelation translate1(String pattern, String mappingFile) {
@@ -163,7 +172,7 @@ public class GraphPatternTranslatorTest extends TestCase {
     private NodeRelation translate1(List<Triple> triplePatterns, Collection<TripleRelation> tripleRelations) {
         Collection<NodeRelation> rels = new GraphPatternTranslator(triplePatterns, tripleRelations, true).translate();
         if (rels.isEmpty()) return null;
-        assertEquals(1, rels.size());
+        Assert.assertEquals(1, rels.size());
         return rels.iterator().next();
     }
 
@@ -176,8 +185,8 @@ public class GraphPatternTranslatorTest extends TestCase {
     private List<Triple> triplesToList(String pattern) {
         List<Triple> results = new ArrayList<Triple>();
         String[] parts = pattern.split("\\s+\\.\\s*");
-        for (int i = 0; i < parts.length; i++) {
-            results.add(NodeCreateUtils.createTriple(MapFixture.prefixes(), parts[i]));
+        for (String part : parts) {
+            results.add(NodeCreateUtils.createTriple(MapFixture.prefixes(), part));
         }
         return results;
     }
