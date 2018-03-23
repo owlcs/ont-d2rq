@@ -110,12 +110,21 @@ public abstract class ONTAPITests {
         }
 
         public static Properties load(String file) {
-            Properties res = new Properties();
+            Properties fromFile = new Properties();
             try (InputStream in = ConnectionData.class.getResourceAsStream(file)) {
-                res.load(in);
+                fromFile.load(in);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+
+            Properties res = new Properties(fromFile);
+            System.getProperties().forEach((key, val) -> {
+                if (!(key instanceof String)) return;
+                String str = (String) key;
+                if (Arrays.stream(values()).map(ConnectionData::prefix).anyMatch(str::startsWith)) {
+                    res.put(key, val);
+                }
+            });
             return res;
         }
     }

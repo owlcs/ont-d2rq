@@ -21,13 +21,13 @@ import java.util.function.BiConsumer;
 
 
 /**
- * TODO: rewrite it, looks ugly
  * Base class for the D2RQ command line tools. They share much of their
  * argument list and functionality, therefore this is extracted into
  * this superclass.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings({"WeakerAccess", "unused", "SameParameterValue"})
 public abstract class CommandLineTool {
     private final static Logger LOGGER = LoggerFactory.getLogger(CommandLineTool.class);
 
@@ -344,8 +344,7 @@ public abstract class CommandLineTool {
          * @throws IllegalArgumentException Throw when something is wrong (no value found, action fails).
          */
         public void process(String[] argv) throws java.lang.IllegalArgumentException {
-            List<String> argList = new ArrayList<>();
-            argList.addAll(Arrays.asList(argv));
+            List<String> argList = new ArrayList<>(Arrays.asList(argv));
 
             int i = 0;
             for (; i < argList.size(); i++) {
@@ -362,7 +361,7 @@ public abstract class CommandLineTool {
                 int j2 = argStr.indexOf(':');
                 int j = Integer.MAX_VALUE;
 
-                if (j1 > 0 && j1 < j)
+                if (j1 > 0)
                     j = j1;
                 if (j2 > 0 && j2 < j)
                     j = j2;
@@ -513,7 +512,7 @@ public abstract class CommandLineTool {
          * Returns the value (a string) for an argument with a value -
          * returns null for no argument and no value.
          *
-         * @param argDecl
+         * @param argDecl {@link ArgDecl}
          * @return String
          */
         public String getValue(ArgDecl argDecl) {
@@ -555,7 +554,7 @@ public abstract class CommandLineTool {
         /**
          * Returns all the values (0 or more strings) for an argument.
          *
-         * @param argName
+         * @param argName String
          * @return List
          */
         public List<String> getValues(String argName) {
@@ -650,9 +649,7 @@ public abstract class CommandLineTool {
         }
 
         public BiConsumer<String, String> trace() {
-            return (arg, val) -> {
-                CONSOLE.println("Seen: " + arg + (val != null ? " = " + val : ""));
-            };
+            return (arg, val) -> CONSOLE.println("Seen: " + arg + (val != null ? " = " + val : ""));
         }
 
     }
