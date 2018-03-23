@@ -1,8 +1,8 @@
 package ru.avicomp.ontapi.jena;
 
-import java.util.stream.Stream;
-
 import org.apache.jena.graph.Graph;
+
+import java.util.stream.Stream;
 
 /**
  * This is an interface to a 'hybrid' graph which wraps a collection of true graphs.
@@ -16,12 +16,14 @@ import org.apache.jena.graph.Graph;
 public interface Hybrid extends Graph {
 
     /**
+     * TODO: should not be possible to change state, otherwise the overlying data may be corrupted.
      * switches to the specified graph.
      *
      * @param graph {@link Graph} to switch
      * @return the previous primary {@link Graph}
      * @throws OntJenaException if there is no specified graph inside.
      */
+    @Deprecated
     Graph switchTo(Graph graph);
 
     /**

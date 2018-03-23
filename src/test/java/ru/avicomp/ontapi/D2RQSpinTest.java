@@ -1,22 +1,23 @@
 package ru.avicomp.ontapi;
 
-import java.util.List;
-
-import org.apache.jena.mem.GraphMem;
+import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.SetOntologyID;
-
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
-import ru.avicomp.ontapi.jena.Hybrid;
+import org.topbraid.spin.inference.SPINInferences;
+import org.topbraid.spin.system.SPINModuleRegistry;
+import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.tests.SpinMappingTest;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
+
+import java.util.List;
 
 /**
  * To test SPIN + D2RQ + ONT-API.
@@ -51,12 +52,14 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Override
     public void validate(OntGraphModel source, OntGraphModel target) {
-        super.validate(source, target);
+        OntGraphModel src = GraphUtils.reassembly(source);
+        super.validate(src, target);
         target.listNamedIndividuals().forEach(LOGGER::debug);
         Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
         OntologyModel o = manager.getOntology(IRI.create(source.getID().getURI()));
-        ONTAPITests.switchTo(o, GraphMem.class).close();
+        Assert.assertNotNull(o);
         ReadWriteUtils.print(o);
+        GraphUtils.close((UnionGraph) source.getGraph());
     }
 
     public MappingFilter prepareDataFilter() {
@@ -72,18 +75,19 @@ public class D2RQSpinTest extends SpinMappingTest {
         LOGGER.info("Create source model based on " + data.getIRI());
         MappingFilter filter = prepareDataFilter();
         D2RQGraphDocumentSource source = data.toDocumentSource().filter(filter);
-        OntologyModel res = (OntologyModel) manager.loadOntologyFromOntologyDocument(source);
+        OntologyModel res = manager.loadOntologyFromOntologyDocument(source);
         res.applyChange(new SetOntologyID(res, IRI.create("http://source.avicomp.ru")));
         return res.asGraphModel();
     }
 
     @Override
     public void runInferences(OntologyModel mapping, Model target) {
-        OntologyModel source = mapping.imports().map(OntologyModel.class::cast)
-                .filter(m -> Hybrid.class.isInstance(m.asGraphModel().getBaseGraph())).findFirst().orElse(null);
-        Assert.assertNotNull("Can't find source model.", source);
-        // todo: need assemble new graph-model for inference, initial graph (base, facade) should be unchanged.
-        ONTAPITests.switchTo(source, GraphD2RQ.class);
-        super.runInferences(mapping, target);
+        Graph graph = GraphUtils.reassembly((UnionGraph) mapping.asGraphModel().getGraph());
+        Model source = ModelFactory.createModelForGraph(graph);
+        LOGGER.info("Run Inferences");
+        SPINModuleRegistry.get().init();
+        SPINModuleRegistry.get().registerAll(source, null);
+        SPINInferences.run(source, target, null, null, false, null);
     }
+
 }

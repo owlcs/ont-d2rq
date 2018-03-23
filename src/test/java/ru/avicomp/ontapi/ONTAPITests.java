@@ -1,20 +1,10 @@
 package ru.avicomp.ontapi;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.enhanced.EnhGraph;
-import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.semanticweb.owlapi.model.IRI;
-
-import ru.avicomp.ontapi.jena.Hybrid;
 import ru.avicomp.ontapi.jena.impl.OntIndividualImpl;
 import ru.avicomp.ontapi.jena.impl.configuration.*;
 import ru.avicomp.ontapi.jena.model.OntCE;
@@ -22,6 +12,13 @@ import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntStatement;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Helper class to provide common methods to test D2RQ + ONT API.
@@ -134,16 +131,4 @@ public abstract class ONTAPITests {
         }
     }
 
-    public static Graph switchTo(OntologyModel model, Class<? extends Graph> view) {
-        Graph chosen = select(model, view);
-        Graph prev = ((Hybrid) model.asGraphModel().getBaseGraph()).switchTo(chosen);
-        // since content is changed reset all caches:
-        model.clearCache();
-        return prev;
-    }
-
-    public static Graph select(OntologyModel model, Class<? extends Graph> view) {
-        Graph graph = model.asGraphModel().getBaseGraph();
-        return graph instanceof Hybrid ? ((Hybrid) graph).graphs().filter(view::isInstance).findFirst().orElse(null) : null;
-    }
 }

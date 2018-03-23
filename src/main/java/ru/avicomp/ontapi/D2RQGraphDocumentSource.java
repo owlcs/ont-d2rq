@@ -1,17 +1,16 @@
 package ru.avicomp.ontapi;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.jena.graph.Graph;
-import org.apache.jena.rdf.model.Model;
-import org.semanticweb.owlapi.model.IRI;
-
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.rdf.model.Model;
+import org.semanticweb.owlapi.model.IRI;
 import ru.avicomp.ontapi.jena.HybridImpl;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The document source ({@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}) for loading graph from database.
@@ -22,7 +21,7 @@ import ru.avicomp.ontapi.jena.HybridImpl;
  * Created by @szuev on 24.02.2017.
  */
 public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements AutoCloseable {
-    public static final IRI DEFAULT_BASE_IRI = IRI.create("http://d2rq.avicom.ru/");
+    public static final IRI DEFAULT_BASE_IRI = IRI.create("http://d2rq.avc.ru/");
     public static IRI base = DEFAULT_BASE_IRI;
 
     private final Mapping mapping;

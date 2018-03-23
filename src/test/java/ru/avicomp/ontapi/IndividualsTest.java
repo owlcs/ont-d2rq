@@ -1,10 +1,5 @@
 package ru.avicomp.ontapi;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.jena.graph.Graph;
-import org.apache.jena.mem.GraphMem;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,15 +7,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
-
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
+import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Test loading database data in the form of OWLNamedIndividuals.
- * Here we use the method {@link ru.avicomp.ontapi.jena.Hybrid#switchTo(Graph)},
- * but if you really need the list of all individuals you better put them to memory without switching.
  * <p>
  * Created by @szuev on 25.02.2017.
  */
@@ -49,33 +45,36 @@ public class IndividualsTest {
         D2RQGraphDocumentSource source = data.toDocumentSource();
         LOGGER.info("Source: " + source);
 
-        OntologyModel o = (OntologyModel) m.loadOntologyFromOntologyDocument(source);
-        o.axioms().forEach(LOGGER::debug);
+        OntologyModel schema = m.loadOntologyFromOntologyDocument(source);
+        schema.axioms().forEach(LOGGER::debug);
 
         int expectedNumberOfIndividuals = 56;
 
-        LOGGER.info("Switch to data view.");
-        ONTAPITests.switchTo(o, GraphD2RQ.class);
-        testIndividuals(o, expectedNumberOfIndividuals);
+        LOGGER.info("Test schema+data ontology.");
+        OntGraphModel data = GraphUtils.reassembly(schema.asGraphModel());
+        testIndividuals(data, expectedNumberOfIndividuals);
 
-        LOGGER.info("Switch back to schema view.");
-        ONTAPITests.switchTo(o, GraphMem.class);
-        testIndividuals(o, 0);
+        LOGGER.info("Test there is no individuals inside schema ontology.");
+        testIndividuals(schema.asGraphModel(), 0);
 
-        LOGGER.info("Switch to data view again.");
-        ONTAPITests.switchTo(o, GraphD2RQ.class);
-        testIndividuals(o, expectedNumberOfIndividuals);
+        // pass all data from DB to memory
+        OntologyModel inMemory = m.createOntology();
+        inMemory.asGraphModel().add(data);
+        // add owl:NamedIndividual declarations
+        data.listNamedIndividuals().forEach(i -> inMemory.asGraphModel().createResource(i.getURI(), OWL.NamedIndividual));
 
-        List<OWLAxiom> axioms = o.axioms(AxiomType.CLASS_ASSERTION).collect(Collectors.toList());
+        List<OWLAxiom> axioms = inMemory.axioms(AxiomType.CLASS_ASSERTION).collect(Collectors.toList());
         axioms.forEach(LOGGER::debug);
         Assert.assertEquals("Incorrect number of class-assertion axioms", expectedNumberOfIndividuals, axioms.size());
+
+        GraphUtils.close(data);
     }
 
-    private void testIndividuals(OntologyModel model, int expected) {
-        List<OntIndividual.Named> individuals = model.asGraphModel().listNamedIndividuals().collect(Collectors.toList());
+    private void testIndividuals(OntGraphModel model, int expected) {
+        List<OntIndividual.Named> individuals = model.listNamedIndividuals().collect(Collectors.toList());
         LOGGER.debug("Number of individuals " + individuals.size());
         individuals.forEach(LOGGER::debug);
         Assert.assertEquals("Incorrect number of (named)individuals", expected, individuals.size());
-        Assert.assertEquals("Incorrect number of (all)individuals", expected, model.asGraphModel().ontObjects(OntIndividual.class).count());
+        Assert.assertEquals("Incorrect number of (all)individuals", expected, model.ontObjects(OntIndividual.class).count());
     }
 }
