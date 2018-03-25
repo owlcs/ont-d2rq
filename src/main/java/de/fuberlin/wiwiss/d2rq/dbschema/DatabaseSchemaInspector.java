@@ -26,7 +26,7 @@ import java.util.*;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class DatabaseSchemaInspector {
-    private final static Logger log = LoggerFactory.getLogger(DatabaseSchemaInspector.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(DatabaseSchemaInspector.class);
 
     private final ConnectedDB db;
     private final DatabaseMetaData schema;
@@ -44,81 +44,56 @@ public class DatabaseSchemaInspector {
     }
 
     /**
-     * @param column
+     * @param column {@link Attribute}
      * @return The column's datatype, or <code>null</code> if unknown
      */
     public DataType columnType(Attribute column) {
-        try {
-            ResultSet rs = this.schema.getColumns(null, column.schemaName(),
-                    column.tableName(), column.attributeName());
-            try {
-                if (!rs.next()) {
-                    throw new D2RQException("Column " + column + " not found in database",
-                            D2RQException.SQL_COLUMN_NOT_FOUND);
-                }
-                int type = rs.getInt("DATA_TYPE");
-                String name = rs.getString("TYPE_NAME").toUpperCase();
-                int size = rs.getInt("COLUMN_SIZE");
-                DataType result = db.vendor().getDataType(type, name, size);
-                if (result == null) {
-                    log.warn("Unknown datatype '" + (size == 0 ? name : (name + "(" + size + ")")) + "' (" + type + ")");
-                }
-                return result;
-            } finally {
-                rs.close();
+        try (ResultSet rs = this.schema.getColumns(null, column.schemaName(), column.tableName(), column.attributeName())) {
+            if (!rs.next()) {
+                throw new D2RQException("Column " + column + " not found in database", D2RQException.SQL_COLUMN_NOT_FOUND);
             }
+            int type = rs.getInt("DATA_TYPE");
+            String name = rs.getString("TYPE_NAME").toUpperCase();
+            int size = rs.getInt("COLUMN_SIZE");
+            DataType result = db.vendor().getDataType(type, name, size);
+            if (result == null) {
+                LOGGER.warn("Unknown datatype '" + (size == 0 ? name : (name + "(" + size + ")")) + "' (" + type + ")");
+            }
+            return result;
         } catch (SQLException ex) {
             throw new D2RQException("Database exception", ex, D2RQException.D2RQ_SQLEXCEPTION);
         }
     }
 
     public boolean isNullable(Attribute column) {
-        try {
-            ResultSet rs = this.schema.getColumns(null, column.schemaName(),
-                    column.tableName(), column.attributeName());
+        try (ResultSet rs = this.schema.getColumns(null, column.schemaName(), column.tableName(), column.attributeName())) {
             if (!rs.next()) {
-                throw new D2RQException("Column " + column + " not found in database",
-                        D2RQException.SQL_COLUMN_NOT_FOUND);
+                throw new D2RQException("Column " + column + " not found in database", D2RQException.SQL_COLUMN_NOT_FOUND);
             }
-            boolean nullable = (rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable);
-            rs.close();
-            return nullable;
+            return rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable;
         } catch (SQLException ex) {
             throw new D2RQException("Database exception", ex, D2RQException.D2RQ_SQLEXCEPTION);
         }
     }
 
     public boolean isZerofillColumn(Attribute column) {
-        boolean isZerofill = false;
-        boolean foundColumn = false;
-
-        try {
-            if (db.vendor() != Vendor.MySQL) return false;
-            Statement stmt = db.connection().createStatement();
-
+        if (db.vendor() != Vendor.MySQL) return false;
+        try (Statement stmt = db.connection().createStatement()) {
             db.vendor().beforeQuery(db.connection());
-            ResultSet rs = stmt.executeQuery("DESCRIBE " + db.vendor().quoteRelationName(column.relationName()));
-            db.vendor().afterQuery(db.connection());
-
-            while (rs.next()) {
-                // MySQL names are case insensitive, so we normalize to lower case
-                if (column.attributeName().toLowerCase().equals(rs.getString("Field").toLowerCase())) {
-                    isZerofill = (rs.getString("Type").toLowerCase().indexOf("zerofill") != -1);
-                    foundColumn = true;
-                    break;
+            try (ResultSet rs = stmt.executeQuery(String.format("DESCRIBE %s", db.vendor().quoteRelationName(column.relationName())))) {
+                db.vendor().afterQuery(db.connection());
+                while (rs.next()) {
+                    // MySQL names are case insensitive, so we normalize to lower case
+                    if (!column.attributeName().equalsIgnoreCase(rs.getString("Field"))) {
+                        continue;
+                    }
+                    return rs.getString("Type").toLowerCase().contains("zerofill");
                 }
             }
-
-            rs.close();
-            stmt.close();
-
-            if (foundColumn)
-                return isZerofill;
         } catch (SQLException ex) {
             throw new D2RQException("Database exception", ex, D2RQException.D2RQ_SQLEXCEPTION);
         }
-        throw new D2RQException("Column not found in DESCRIBE result: " + column,
-                D2RQException.SQL_COLUMN_NOT_FOUND);
+        throw new D2RQException("Column not found in DESCRIBE result: " + column, D2RQException.SQL_COLUMN_NOT_FOUND);
     }
 
     /**
@@ -128,10 +103,8 @@ public class DatabaseSchemaInspector {
      * @return A list of {@link RelationName}s
      */
     public List<RelationName> listTableNames(String searchInSchema) {
-        List<RelationName> result = new ArrayList<RelationName>();
-        try {
-            ResultSet rs = this.schema.getTables(
-                    null, searchInSchema, null, new String[]{"TABLE", "VIEW"});
+        try (ResultSet rs = this.schema.getTables(null, searchInSchema, null, new String[]{"TABLE", "VIEW"})) {
+            List<RelationName> result = new ArrayList<>();
             while (rs.next()) {
                 String schema = rs.getString("TABLE_SCHEM");
                 String table = rs.getString("TABLE_NAME");
@@ -139,7 +112,6 @@ public class DatabaseSchemaInspector {
                     result.add(toRelationName(schema, table));
                 }
             }
-            rs.close();
             return result;
         } catch (SQLException ex) {
             throw new D2RQException("Database exception", ex);
@@ -147,14 +119,11 @@ public class DatabaseSchemaInspector {
     }
 
     public List<Attribute> listColumns(RelationName tableName) {
-        List<Attribute> result = new ArrayList<Attribute>();
-        try {
-            ResultSet rs = this.schema.getColumns(
-                    null, schemaName(tableName), tableName(tableName), null);
+        try (ResultSet rs = this.schema.getColumns(null, schemaName(tableName), tableName(tableName), null)) {
+            List<Attribute> result = new ArrayList<>();
             while (rs.next()) {
                 result.add(new Attribute(tableName, rs.getString("COLUMN_NAME")));
             }
-            rs.close();
             return result;
         } catch (SQLException ex) {
             throw new D2RQException("Database exception", ex, D2RQException.D2RQ_SQLEXCEPTION);
@@ -162,14 +131,12 @@ public class DatabaseSchemaInspector {
     }
 
     public List<Attribute> primaryKeyColumns(RelationName tableName) {
-        List<Attribute> result = new ArrayList<Attribute>();
-        try {
-            ResultSet rs = this.schema.getPrimaryKeys(null, schemaName(tableName), tableName(tableName));
+        try (ResultSet rs = this.schema.getPrimaryKeys(null, schemaName(tableName), tableName(tableName))) {
+            List<Attribute> res = new ArrayList<>();
             while (rs.next()) {
-                result.add(new Attribute(tableName, rs.getString("COLUMN_NAME")));
+                res.add(new Attribute(tableName, rs.getString("COLUMN_NAME")));
             }
-            rs.close();
-            return result;
+            return res;
         } catch (SQLException ex) {
             throw new D2RQException("Database exception", ex, D2RQException.D2RQ_SQLEXCEPTION);
         }
@@ -182,34 +149,29 @@ public class DatabaseSchemaInspector {
      * @return Map from index name to list of column names
      */
     public Map<String, List<String>> uniqueColumns(RelationName tableName) {
-        Map<String, List<String>> result = new HashMap<String, List<String>>();
-        try {
-            /*
-             * When requesting index info from an Oracle database, accept approximate
-             * data, as requesting exact results will invoke an ANALYZE, for which the
-             * querying user must have proper write permissions.
-             * If he doesn't, an SQLException is thrown right here.
-             * Note that the "approximate" parameter was not handled by the Oracle JDBC
-             * driver before release 10.2.0.4, which may result in an exception here.
-             * @see http://forums.oracle.com/forums/thread.jspa?threadID=210782
-             * @see http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/htdocs/readme_jdbc_10204.html
-             */
-            boolean approximate = (db.vendor() == Vendor.Oracle);
-            ResultSet rs = this.schema.getIndexInfo(
-                    null, schemaName(tableName), tableName(tableName), true, approximate);
+        /*
+         * When requesting index info from an Oracle database, accept approximate
+         * data, as requesting exact results will invoke an ANALYZE, for which the
+         * querying user must have proper write permissions.
+         * If he doesn't, an SQLException is thrown right here.
+         * Note that the "approximate" parameter was not handled by the Oracle JDBC
+         * driver before release 10.2.0.4, which may result in an exception here.
+         * @see http://forums.oracle.com/forums/thread.jspa?threadID=210782
+         * @see http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/htdocs/readme_jdbc_10204.html
+         */
+        boolean approximate = db.vendor() == Vendor.Oracle;
+        try (ResultSet rs = this.schema.getIndexInfo(null, schemaName(tableName), tableName(tableName), true, approximate)) {
+            Map<String, List<String>> result = new HashMap<>();
             while (rs.next()) {
                 String indexKey = rs.getString("INDEX_NAME");
-                if (indexKey != null) { // is null when type = tableIndexStatistic, ignore
-                    if (!result.containsKey(indexKey))
-                        result.put(indexKey, new ArrayList<String>());
-                    result.get(indexKey).add(rs.getString("COLUMN_NAME"));
+                if (indexKey == null) { // is null when type = tableIndexStatistic, ignore
+                    continue;
                 }
+                result.computeIfAbsent(indexKey, k -> new ArrayList<>()).add(rs.getString("COLUMN_NAME"));
             }
-            rs.close();
             return result;
         } catch (SQLException ex) {
-            throw new D2RQException("Database exception (unable to determine unique columns)",
-                    ex, D2RQException.D2RQ_SQLEXCEPTION);
+            throw new D2RQException("Database exception (unable to determine unique columns)", ex, D2RQException.D2RQ_SQLEXCEPTION);
         }
     }
 
@@ -222,17 +184,14 @@ public class DatabaseSchemaInspector {
      * @return A list of {@link Join}s; the local columns are in attributes1()
      */
     public List<Join> foreignKeys(RelationName tableName, int direction) {
-        try {
-            Map<String, ForeignKey> fks = new HashMap<String, ForeignKey>();
-            ResultSet rs = (direction == KEYS_IMPORTED
-                    ? this.schema.getImportedKeys(null, schemaName(tableName), tableName(tableName))
-                    : this.schema.getExportedKeys(null, schemaName(tableName), tableName(tableName)));
+        Map<String, ForeignKey> fks = new HashMap<>();
+        try (ResultSet rs = direction == KEYS_IMPORTED
+                ? this.schema.getImportedKeys(null, schemaName(tableName), tableName(tableName))
+                : this.schema.getExportedKeys(null, schemaName(tableName), tableName(tableName))) {
             while (rs.next()) {
-                RelationName pkTable = toRelationName(
-                        rs.getString("PKTABLE_SCHEM"), rs.getString("PKTABLE_NAME"));
+                RelationName pkTable = toRelationName(rs.getString("PKTABLE_SCHEM"), rs.getString("PKTABLE_NAME"));
                 Attribute primaryColumn = new Attribute(pkTable, rs.getString("PKCOLUMN_NAME"));
-                RelationName fkTable = toRelationName(
-                        rs.getString("FKTABLE_SCHEM"), rs.getString("FKTABLE_NAME"));
+                RelationName fkTable = toRelationName(rs.getString("FKTABLE_SCHEM"), rs.getString("FKTABLE_NAME"));
                 Attribute foreignColumn = new Attribute(fkTable, rs.getString("FKCOLUMN_NAME"));
                 String fkName = rs.getString("FK_NAME");
                 if (!fks.containsKey(fkName)) {
@@ -241,17 +200,15 @@ public class DatabaseSchemaInspector {
                 int keySeq = rs.getInt("KEY_SEQ") - 1;
                 fks.get(fkName).addColumns(keySeq, foreignColumn, primaryColumn);
             }
-            rs.close();
-            List<Join> results = new ArrayList<Join>();
-            Iterator<ForeignKey> it = fks.values().iterator();
-            while (it.hasNext()) {
-                ForeignKey fk = it.next();
-                results.add(fk.toJoin());
-            }
-            return results;
         } catch (SQLException ex) {
             throw new D2RQException("Database exception", ex, D2RQException.D2RQ_SQLEXCEPTION);
         }
+        List<Join> results = new ArrayList<>();
+        for (ForeignKey fk : fks.values()) {
+            results.add(fk.toJoin());
+        }
+        return results;
+
     }
 
     private String schemaName(RelationName tableName) {
@@ -284,37 +241,30 @@ public class DatabaseSchemaInspector {
      * columns are added, a {@link Join} object can be created.
      */
     private class ForeignKey {
-        private TreeMap<Integer, Attribute> primaryColumns =
-                new TreeMap<Integer, Attribute>();
-        private TreeMap<Integer, Attribute> foreignColumns =
-                new TreeMap<Integer, Attribute>();
+        private TreeMap<Integer, Attribute> primaryColumns = new TreeMap<>();
+        private TreeMap<Integer, Attribute> foreignColumns = new TreeMap<>();
 
         private void addColumns(int keySequence, Attribute foreign, Attribute primary) {
-            primaryColumns.put(new Integer(keySequence), primary);
-            foreignColumns.put(new Integer(keySequence), foreign);
+            primaryColumns.put(keySequence, primary);
+            foreignColumns.put(keySequence, foreign);
         }
 
         private Join toJoin() {
-            return new Join(
-                    new ArrayList<Attribute>(foreignColumns.values()),
-                    new ArrayList<Attribute>(primaryColumns.values()),
-                    Join.DIRECTION_RIGHT);
+            return new Join(new ArrayList<>(foreignColumns.values()), new ArrayList<>(primaryColumns.values()), Join.DIRECTION_RIGHT);
         }
     }
 
     /**
      * Looks up a RelationName with the schema in order to retrieve the correct capitalization
      *
-     * @param relationName
+     * @param relationName {@link RelationName}
      * @return The correctly captialized RelationName
      */
     public RelationName getCorrectCapitalization(RelationName relationName) {
         if (!relationName.caseUnspecified() || !db.lowerCaseTableNames())
             return relationName;
 
-        Iterator<RelationName> it = listTableNames(null).iterator();
-        while (it.hasNext()) {
-            RelationName r = it.next();
+        for (RelationName r : listTableNames(null)) {
             if (r.equals(relationName))
                 return r;
         }
