@@ -1,17 +1,17 @@
 package ru.avicomp.ontapi.jena;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.apache.jena.graph.*;
 import org.apache.jena.shared.AddDeniedException;
 import org.apache.jena.shared.DeleteDeniedException;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Implementation of a {@link Hybrid} graph.
@@ -19,41 +19,27 @@ import org.apache.jena.util.iterator.ExtendedIterator;
  * Created by @szuev on 24.02.2017.
  */
 public class HybridImpl implements Hybrid {
-    private final List<Graph> graphs;
-    private int cursor;
+    private final List<Graph> hidden;
+    private final Graph primary;
 
-    public HybridImpl(Collection<Graph> graphs) {
-        ArrayList<Graph> _graphs = OntJenaException.notNull(graphs, "Null graphs collection.")
-                .stream().filter(Objects::nonNull).collect(Collectors.toCollection(ArrayList::new));
-        if (_graphs.isEmpty()) {
-            throw new OntJenaException("Empty graphs collection.");
-        }
-        this.graphs = _graphs;
+    public HybridImpl(Graph primary, Collection<Graph> other) {
+        this.primary = Objects.requireNonNull(primary, "Null primary graph");
+        this.hidden = Objects.requireNonNull(other, "Null graphs collection.")
+                .stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
     }
 
-    @Override
-    public Graph switchTo(Graph graph) {
-        if (!graphs.contains(OntJenaException.notNull(graph, "Null graph."))) {
-            throw new OntJenaException("Unable to find the specified graph.");
-        }
-        Graph current = get();
-        for (int i = 0; i < graphs.size(); i++) {
-            if (graph.equals(graphs.get(i))) {
-                cursor = i;
-                break;
-            }
-        }
-        return current;
+    public HybridImpl(Graph primary, Graph other) {
+        this(primary, Collections.singleton(other));
     }
 
     @Override
     public Graph get() {
-        return graphs.get(cursor);
+        return primary;
     }
 
     @Override
-    public Stream<Graph> graphs() {
-        return graphs.stream();
+    public Stream<Graph> hidden() {
+        return hidden.stream();
     }
 
     @Override

@@ -7,10 +7,8 @@ import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
+import ru.avicomp.ontapi.jena.Hybrid;
 import ru.avicomp.ontapi.jena.HybridImpl;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The document source ({@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}) for loading graph from database.
@@ -88,17 +86,15 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
 
     /**
      * Returns hybrid graph which consists of two graphs:
-     * - the default (primary) {@link org.apache.jena.mem.GraphMem} with the schema inside (editable).
-     * - the virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ} with the schema and data inside (immutable).
-     *
+     * <ul>
+     * <li>the default (primary) {@link org.apache.jena.mem.GraphMem} with the schema inside (editable)</li>
+     * <li>the virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ} with the schema and data inside (immutable)</li>
+     * </ul>
      * @return {@link Graph}
      */
     @Override
-    public Graph getGraph() {
-        List<Graph> graphs = new ArrayList<>();
-        graphs.add(mapping.getVocabularyModel().getGraph());
-        graphs.add(mapping.getDataGraph());
-        return new HybridImpl(graphs);
+    public Hybrid getGraph() {
+        return new HybridImpl(mapping.getVocabularyModel().getGraph(), mapping.getDataGraph());
     }
 
     /**
@@ -109,7 +105,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * @throws OntApiException in case there is no jdbc uri in mapping.
      */
     @Override
-    public IRI getDocumentIRI() {
+    public IRI getDocumentIRI() { // todo:
         return mapping.databases().stream()
                 .map(Database::getJDBCDSN).map(IRI::create)
                 .findFirst().orElseThrow(OntApiException.supplier("No database inside mapping."));

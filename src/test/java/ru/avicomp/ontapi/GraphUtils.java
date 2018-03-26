@@ -41,7 +41,9 @@ public class GraphUtils {
                 .map(GraphUtils::extractD2RQ)
                 .filter(Objects::nonNull)
                 .forEach(g -> {
-                    LOGGER.debug("Close " + g);
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Close " + g);
+                    }
                     g.close();
                 });
     }
@@ -59,7 +61,7 @@ public class GraphUtils {
             return (GraphD2RQ) g;
         }
         if (g instanceof Hybrid) {
-            return ((Hybrid) g).graphs()
+            return ((Hybrid) g).hidden()
                     .filter(GraphD2RQ.class::isInstance)
                     .map(GraphD2RQ.class::cast)
                     .findFirst().orElseThrow(() -> new IllegalStateException("Can't find D2RQ Graph"));
