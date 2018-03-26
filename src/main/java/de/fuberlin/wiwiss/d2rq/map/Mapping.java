@@ -288,7 +288,7 @@ public class Mapping implements AutoCloseable {
             PrefixMapping res = PrefixMapping.Factory.create().withDefaultMappings(Prefixes.SCHEMA);
             Map<String, String> add = mapping.getNsPrefixMap();
             Map<String, String> ignore = calcMapSpecificPrefixes(mapping);
-            ignore.entrySet().forEach(e -> add.remove(e.getKey(), e.getValue()));
+            ignore.forEach(add::remove);
             res.setNsPrefixes(add);
             return res;
         }

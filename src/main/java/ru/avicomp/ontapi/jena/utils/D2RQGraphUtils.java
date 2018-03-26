@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.ontapi.jena.utils;
 
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import org.apache.jena.graph.Graph;
@@ -10,7 +10,6 @@ import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.utils.Graphs;
 
 import java.util.Objects;
 
@@ -19,9 +18,9 @@ import java.util.Objects;
  * <p>
  * Created by @szuev on 23.03.2018.
  */
-public class GraphUtils {
+public class D2RQGraphUtils {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GraphUtils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(D2RQGraphUtils.class);
 
     public static OntGraphModel reassembly(OntGraphModel model) {
         // class-cast-exception if it is not model from manager:
@@ -36,9 +35,14 @@ public class GraphUtils {
         close((UnionGraph) o.getGraph());
     }
 
+    /**
+     * Closes all D2RQ Graphs from a graph-container.
+     *
+     * @param graph {@link UnionGraph}
+     */
     public static void close(UnionGraph graph) {
         Graphs.flat(graph)
-                .map(GraphUtils::extractD2RQ)
+                .map(D2RQGraphUtils::extractD2RQ)
                 .filter(Objects::nonNull)
                 .forEach(g -> {
                     if (LOGGER.isDebugEnabled()) {
@@ -48,6 +52,12 @@ public class GraphUtils {
                 });
     }
 
+    /**
+     * Makes a new {@link UnionGraph} from existing one by extracting hidden {@link GraphD2RQ} graphs.
+     *
+     * @param graph {@link UnionGraph}
+     * @return {@link UnionGraph}
+     */
     public static UnionGraph reassembly(UnionGraph graph) {
         UnionGraph res = new UnionGraph(graph.getBaseGraph() instanceof Hybrid ? extractD2RQ(graph.getBaseGraph()) : graph.getBaseGraph());
         graph.getUnderlying().graphs()
@@ -56,7 +66,13 @@ public class GraphUtils {
         return res;
     }
 
-    private static GraphD2RQ extractD2RQ(Graph g) {
+    /**
+     * Extracts D2RQ Graph from a graph container, if possible.
+     *
+     * @param g {@link Graph}
+     * @return {@link GraphD2RQ} or null.
+     */
+    public static GraphD2RQ extractD2RQ(Graph g) {
         if (g instanceof GraphD2RQ) {
             return (GraphD2RQ) g;
         }
@@ -64,7 +80,8 @@ public class GraphUtils {
             return ((Hybrid) g).hidden()
                     .filter(GraphD2RQ.class::isInstance)
                     .map(GraphD2RQ.class::cast)
-                    .findFirst().orElseThrow(() -> new IllegalStateException("Can't find D2RQ Graph"));
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Can't find D2RQ Graph"));
         }
         return null;
     }

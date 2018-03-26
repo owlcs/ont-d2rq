@@ -14,6 +14,7 @@ import org.topbraid.spin.system.SPINModuleRegistry;
 import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
+import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
 import ru.avicomp.ontapi.tests.SpinMappingTest;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
@@ -52,14 +53,14 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Override
     public void validate(OntGraphModel source, OntGraphModel target) {
-        OntGraphModel src = GraphUtils.reassembly(source);
+        OntGraphModel src = D2RQGraphUtils.reassembly(source);
         super.validate(src, target);
         target.listNamedIndividuals().forEach(LOGGER::debug);
         Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
         OntologyModel o = manager.getOntology(IRI.create(source.getID().getURI()));
         Assert.assertNotNull(o);
         ReadWriteUtils.print(o);
-        GraphUtils.close((UnionGraph) source.getGraph());
+        D2RQGraphUtils.close((UnionGraph) source.getGraph());
     }
 
     public MappingFilter prepareDataFilter() {
@@ -72,9 +73,9 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Override
     public OntGraphModel createSourceModel() throws Exception {
-        LOGGER.info("Create source model based on " + data.getIRI());
+        LOGGER.info("Create source model based on " + data.getIRI("iswc"));
         MappingFilter filter = prepareDataFilter();
-        D2RQGraphDocumentSource source = data.toDocumentSource().filter(filter);
+        D2RQGraphDocumentSource source = data.toDocumentSource("iswc").filter(filter);
         OntologyModel res = manager.loadOntologyFromOntologyDocument(source);
         res.applyChange(new SetOntologyID(res, IRI.create("http://source.avicomp.ru")));
         return res.asGraphModel();
@@ -82,7 +83,7 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Override
     public void runInferences(OntologyModel mapping, Model target) {
-        Graph graph = GraphUtils.reassembly((UnionGraph) mapping.asGraphModel().getGraph());
+        Graph graph = D2RQGraphUtils.reassembly((UnionGraph) mapping.asGraphModel().getGraph());
         Model source = ModelFactory.createModelForGraph(graph);
         LOGGER.info("Run Inferences");
         SPINModuleRegistry.get().init();

@@ -15,6 +15,7 @@ import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntOPE;
 import ru.avicomp.ontapi.jena.model.OntPE;
+import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.*;
@@ -45,7 +46,7 @@ public class FilterTest {
     @Test
     public void test01FilterSchema() throws Exception {
         LOGGER.info("Load full db schema from " + data);
-        D2RQGraphDocumentSource source1 = data.toDocumentSource();
+        D2RQGraphDocumentSource source1 = data.toDocumentSource("iswc");
         OntologyManager manager = OntManagers.createONT();
         OntologyModel full = manager.loadOntologyFromOntologyDocument(source1);
         full.axioms().map(Object::toString).forEach(LOGGER::debug);
@@ -108,11 +109,11 @@ public class FilterTest {
         Assume.assumeNotNull(res);
         res.forEach((ontology, count) -> {
             LOGGER.info("Test data for ontology {}", ontology.getOntologyID());
-            OntGraphModel data = GraphUtils.reassembly(ontology.asGraphModel(), ONTAPITests.createD2RQPersonality());
+            OntGraphModel data = D2RQGraphUtils.reassembly(ontology.asGraphModel(), ONTAPITests.createD2RQPersonality());
             Set<OntIndividual> individuals = data.ontObjects(OntIndividual.class).collect(Collectors.toSet());
             individuals.forEach(x -> LOGGER.debug("{}", x));
             Assert.assertEquals("Wrong individuals count", count.intValue(), individuals.size());
-            GraphUtils.close(data);
+            D2RQGraphUtils.close(data);
         });
 
     }

@@ -10,6 +10,7 @@ import org.semanticweb.owlapi.model.OWLAxiom;
 import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
+import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 
 import java.util.List;
@@ -42,7 +43,7 @@ public class IndividualsTest {
         m.setOntologyLoaderConfiguration(m.getOntologyLoaderConfiguration().setPersonality(newPersonality));
 
         LOGGER.info("Load full db schema from " + data);
-        D2RQGraphDocumentSource source = data.toDocumentSource();
+        D2RQGraphDocumentSource source = data.toDocumentSource("iswc");
         LOGGER.info("Source: " + source);
 
         OntologyModel schema = m.loadOntologyFromOntologyDocument(source);
@@ -51,7 +52,7 @@ public class IndividualsTest {
         int expectedNumberOfIndividuals = 56;
 
         LOGGER.info("Test schema+data ontology.");
-        OntGraphModel data = GraphUtils.reassembly(schema.asGraphModel());
+        OntGraphModel data = D2RQGraphUtils.reassembly(schema.asGraphModel());
         testIndividuals(data, expectedNumberOfIndividuals);
 
         LOGGER.info("Test there is no individuals inside schema ontology.");
@@ -67,7 +68,7 @@ public class IndividualsTest {
         axioms.forEach(LOGGER::debug);
         Assert.assertEquals("Incorrect number of class-assertion axioms", expectedNumberOfIndividuals, axioms.size());
 
-        GraphUtils.close(data);
+        D2RQGraphUtils.close(data);
     }
 
     private void testIndividuals(OntGraphModel model, int expected) {

@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -69,6 +70,17 @@ public abstract class ONTAPITests {
         return new CommonOntObjectFactory(maker, finder, filter);
     }
 
+    public static class IndividualImpl extends OntIndividualImpl.NamedImpl {
+        public IndividualImpl(Node n, EnhGraph m) {
+            super(n, m);
+        }
+
+        public OntStatement getRoot() {
+            OntStatement res = getRoot(RDF.type, OWL.NamedIndividual);
+            return res == null ? types().map(r -> getRoot(RDF.type, r)).findFirst().orElse(null) : res;
+        }
+    }
+
     public enum ConnectionData {
         /**
          * to set up use <a href='file:doc/example/iswc-mysql.sql'>iswc-mysql.sql</a>
@@ -81,8 +93,12 @@ public abstract class ONTAPITests {
 
         private static final Properties PROPERTIES = load("/db.properties");
 
-        public IRI getIRI() {
+        public IRI getBaseIRI() {
             return IRI.create(PROPERTIES.getProperty(prefix() + "uri"));
+        }
+
+        public IRI getIRI(String dbName) {
+            return IRI.create(getBaseIRI() + ("/" + Objects.requireNonNull(dbName)));
         }
 
         public String getUser() {
@@ -97,8 +113,8 @@ public abstract class ONTAPITests {
             return String.format("%s.", name().toLowerCase());
         }
 
-        public D2RQGraphDocumentSource toDocumentSource() {
-            return new D2RQGraphDocumentSource(getIRI(), getUser(), getPwd());
+        public D2RQGraphDocumentSource toDocumentSource(String dbName) {
+            return D2RQGraphDocumentSource.create(getIRI(dbName), getUser(), getPwd());
         }
 
         public IRI toIRI(String uri) {
@@ -109,6 +125,12 @@ public abstract class ONTAPITests {
             return Arrays.asList(values());
         }
 
+        /**
+         * Loads properties, first from System, then from file
+         *
+         * @param file path
+         * @return {@link Properties}
+         */
         public static Properties load(String file) {
             Properties fromFile = new Properties();
             try (InputStream in = ConnectionData.class.getResourceAsStream(file)) {
@@ -129,15 +151,5 @@ public abstract class ONTAPITests {
         }
     }
 
-    public static class IndividualImpl extends OntIndividualImpl.NamedImpl {
-        public IndividualImpl(Node n, EnhGraph m) {
-            super(n, m);
-        }
-
-        public OntStatement getRoot() {
-            OntStatement res = getRoot(RDF.type, OWL.NamedIndividual);
-            return res == null ? types().map(r -> getRoot(RDF.type, r)).findFirst().orElse(null) : res;
-        }
-    }
 
 }

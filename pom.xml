@@ -146,7 +146,7 @@
             <artifactId>jena-arq</artifactId>
             <version>${version.jena}</version>
         </dependency>
-        <!--jdbc-drivers:-->
+        <!--jdbc-drivers: todo: used only in tests and tools. better to be provided by the api consumer-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
