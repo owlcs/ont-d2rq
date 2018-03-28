@@ -64,7 +64,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Creates an {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} from parametrs.
+     * Creates an {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} from parameters.
      *
      * @param baseIRI {@link IRI} the base iri to construct owl-entity iris
      * @param jdbcIRI {@link IRI} jdbc-connection string

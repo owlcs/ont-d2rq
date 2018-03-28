@@ -109,7 +109,7 @@ public class FilterTest {
         Assume.assumeNotNull(res);
         res.forEach((ontology, count) -> {
             LOGGER.info("Test data for ontology {}", ontology.getOntologyID());
-            OntGraphModel data = D2RQGraphUtils.reassembly(ontology.asGraphModel(), ONTAPITests.createD2RQPersonality());
+            OntGraphModel data = D2RQGraphUtils.reassembly(ontology.asGraphModel(), ONTAPITests.D2RQ_PERSONALITY);
             Set<OntIndividual> individuals = data.ontObjects(OntIndividual.class).collect(Collectors.toSet());
             individuals.forEach(x -> LOGGER.debug("{}", x));
             Assert.assertEquals("Wrong individuals count", count.intValue(), individuals.size());

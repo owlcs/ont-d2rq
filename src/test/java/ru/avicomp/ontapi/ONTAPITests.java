@@ -2,13 +2,14 @@ package ru.avicomp.ontapi;
 
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.enhanced.EnhGraph;
+import org.apache.jena.enhanced.EnhNode;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.semanticweb.owlapi.model.IRI;
+import ru.avicomp.ontapi.jena.impl.Entities;
 import ru.avicomp.ontapi.jena.impl.OntIndividualImpl;
-import ru.avicomp.ontapi.jena.impl.configuration.*;
+import ru.avicomp.ontapi.jena.impl.conf.*;
 import ru.avicomp.ontapi.jena.model.OntCE;
-import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntStatement;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
@@ -27,41 +28,34 @@ import java.util.Properties;
  * Created by @szuev on 23.02.2017.
  */
 public abstract class ONTAPITests {
+    public static final Configurable.Mode D2RQ_NAMED_INDIVIDUAL_FACTORY_KEY = new Configurable.Mode() {
+        @Override
+        public String toString() {
+            return "D2RQNamedIndividualFactory";
+        }
+    };
+
+    public static final OntPersonality D2RQ_PERSONALITY = buildD2RQPersonality(OntModelConfig.ONT_PERSONALITY_LAX);
 
     /**
-     * Returns the new {@link OntPersonality} based on {@link OntModelConfig#ONT_PERSONALITY_LAX}.
+     * Builds a new {@link OntPersonality} which is based on {@link OntModelConfig#ONT_PERSONALITY_LAX}.
      * The difference is that it does not require owl:NamedIndividual declaration for named individuals.
-     * <p>
-     * Note!
-     * This ont-personality contains factories which link to the initial individual factory
-     * (with the requirement for an explicit owl:NamedIndividual type):
-     * the following objects are not patched:
-     * - {@link ru.avicomp.ontapi.jena.model.OntDisjoint},
-     * - {@link ru.avicomp.ontapi.jena.model.OntDisjoint.Individuals},
-     * - {@link ru.avicomp.ontapi.jena.model.OntSWRL.IArg}
-     * - {@link ru.avicomp.ontapi.jena.model.OntSWRL.Arg}
-     * But it is okay since we are not going to use it anywhere expect these tests.
      *
      * @return {@link OntPersonality}
      */
-    public static OntPersonality createD2RQPersonality() {
-        return createD2RQPersonality(OntModelConfig.ONT_PERSONALITY_LAX);
+    public static OntPersonality buildD2RQPersonality(OntPersonality from) {
+        Entities.INDIVIDUAL.register(D2RQ_NAMED_INDIVIDUAL_FACTORY_KEY, createNamedIndividualFactory(from.getOntImplementation(OntCE.class)));
+        return OntModelConfig.ONT_PERSONALITY_BUILDER.build(from, D2RQ_NAMED_INDIVIDUAL_FACTORY_KEY);
     }
 
-    private static OntPersonality createD2RQPersonality(OntPersonality from) {
-        OntPersonality res = from.copy();
-        OntObjectFactory ce = res.getOntImplementation(OntCE.class);
-        OntObjectFactory anonymous = res.getOntImplementation(OntIndividual.Anonymous.class);
+    public static OntObjectFactory createNamedIndividualFactory(OntObjectFactory ce) {
+        OntMaker maker = new OntMaker.Default(IndividualImpl.class) {
 
-        OntObjectFactory named = createNamedIndividualFactory(ce);
-        OntObjectFactory all = new MultiOntObjectFactory(OntFinder.ANY_SUBJECT, null, named, anonymous);
-        res.register(OntIndividual.Named.class, named)
-                .register(OntIndividual.class, all);
-        return res;
-    }
-
-    private static OntObjectFactory createNamedIndividualFactory(OntObjectFactory ce) {
-        OntMaker maker = new OntMaker.Default(IndividualImpl.class);
+            @Override
+            public EnhNode instance(Node node, EnhGraph eg) {
+                return new IndividualImpl(node, eg);
+            }
+        };
         OntFinder finder = new OntFinder.ByPredicate(RDF.type);
         OntFilter filter = OntFilter.URI
                 .and(new OntFilter.HasPredicate(RDF.type))
@@ -70,8 +64,11 @@ public abstract class ONTAPITests {
         return new CommonOntObjectFactory(maker, finder, filter);
     }
 
+    /**
+     * Named individual which does not required explicit {@code _:x rdf:type owl:NamedIndividual} declaration, just only class.
+     */
     public static class IndividualImpl extends OntIndividualImpl.NamedImpl {
-        public IndividualImpl(Node n, EnhGraph m) {
+        private IndividualImpl(Node n, EnhGraph m) {
             super(n, m);
         }
 

@@ -8,11 +8,12 @@ import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.SetOntologyID;
 import org.topbraid.spin.inference.SPINInferences;
 import org.topbraid.spin.system.SPINModuleRegistry;
 import ru.avicomp.ontapi.jena.UnionGraph;
-import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
+import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
 import ru.avicomp.ontapi.tests.SpinMappingTest;
@@ -47,7 +48,7 @@ public class D2RQSpinTest extends SpinMappingTest {
     @Override
     public void setUpManager(OntologyManager manager) {
         super.setUpManager(manager);
-        OntPersonality newPersonality = ONTAPITests.createD2RQPersonality();
+        OntPersonality newPersonality = ONTAPITests.D2RQ_PERSONALITY;
         manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setPersonality(newPersonality));
     }
 
@@ -72,11 +73,16 @@ public class D2RQSpinTest extends SpinMappingTest {
     }
 
     @Override
-    public OntGraphModel createSourceModel() throws Exception {
+    public OntGraphModel createSourceModel() {
         LOGGER.info("Create source model based on " + data.getIRI("iswc"));
         MappingFilter filter = prepareDataFilter();
         D2RQGraphDocumentSource source = data.toDocumentSource("iswc").filter(filter);
-        OntologyModel res = manager.loadOntologyFromOntologyDocument(source);
+        OntologyModel res;
+        try {
+            res = manager.loadOntologyFromOntologyDocument(source);
+        } catch (OWLOntologyCreationException e) {
+            throw new AssertionError(e);
+        }
         res.applyChange(new SetOntologyID(res, IRI.create("http://source.avicomp.ru")));
         return res.asGraphModel();
     }

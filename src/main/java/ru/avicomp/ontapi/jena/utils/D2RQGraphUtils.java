@@ -8,7 +8,7 @@ import ru.avicomp.ontapi.internal.ConfigProvider;
 import ru.avicomp.ontapi.jena.Hybrid;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
-import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
+import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 
 import java.util.Objects;

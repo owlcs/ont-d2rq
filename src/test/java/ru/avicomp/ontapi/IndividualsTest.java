@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
-import ru.avicomp.ontapi.jena.impl.configuration.OntPersonality;
+import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
@@ -39,7 +39,7 @@ public class IndividualsTest {
     public void testList() throws Exception {
         OntologyManager m = OntManagers.createONT();
         // overwrite local(manager) individual factories collection (personalities)
-        OntPersonality newPersonality = ONTAPITests.createD2RQPersonality();
+        OntPersonality newPersonality = ONTAPITests.D2RQ_PERSONALITY;
         m.setOntologyLoaderConfiguration(m.getOntologyLoaderConfiguration().setPersonality(newPersonality));
 
         LOGGER.info("Load full db schema from " + data);
