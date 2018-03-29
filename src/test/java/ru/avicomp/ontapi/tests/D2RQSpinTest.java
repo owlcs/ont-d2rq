@@ -70,8 +70,8 @@ public class D2RQSpinTest extends SpinMappingTest {
     }
 
     public MappingFilter prepareDataFilter() {
-        String papersTitleDataPropertyURI = D2RQGraphDocumentSource.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Title";
-        String papersYearDataPropertyURI = D2RQGraphDocumentSource.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Year";
+        String papersTitleDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Title";
+        String papersYearDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Year";
         MappingFilter filter = MappingFilter.create().includeProperty(data.toIRI(papersTitleDataPropertyURI)).includeProperty(data.toIRI(papersYearDataPropertyURI));
         LOGGER.debug(filter);
         return filter;

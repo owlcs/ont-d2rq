@@ -7,8 +7,7 @@
     <version>1.0.1-SNAPSHOT</version>
 
     <name>ont-d2rq</name>
-    <description>The D2R engine incl. some edits as maven project. See also https://github.com/d2rq/d2rq.git
-    </description>
+    <description>A Database to OWL Mapper</description>
     <url>http://d2rq.org</url>
 
     <repositories>
@@ -150,7 +149,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.39</version>
+            <version>5.1.46</version>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.jtds</groupId>
@@ -160,7 +159,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>9.4.1212.jre7</version>
+            <version>42.2.2</version>
         </dependency>
         <!--tests-->
         <dependency>

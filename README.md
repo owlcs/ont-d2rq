@@ -1,4 +1,4 @@
-# ONT-D2RQ (ver 1.0.1) – A Database to RDF Mapper (API and Tools)
+# ONT-D2RQ (ver 1.0.1) – A Database to OWL Mapper (API and Tools)
 ## This is a modified fork of D2RQ (https://github.com/d2rq/d2rq).
 
 There are following major differences with the original:

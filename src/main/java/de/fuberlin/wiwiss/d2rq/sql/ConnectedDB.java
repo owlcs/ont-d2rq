@@ -23,7 +23,7 @@ import java.util.*;
  * @author Richard Cyganiak (richard@cyganiak.de)
  * @author kurtjx (http://github.com/kurtjx)
  */
-public class ConnectedDB {
+public class ConnectedDB implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectedDB.class);
 
     public static final String KEEP_ALIVE_PROPERTY = "keepAlive"; // interval property, value in seconds
@@ -422,6 +422,7 @@ public class ConnectedDB {
     /**
      * Closes the database connection and shuts down the keep alive agent.
      */
+    @Override
     public void close() {
         if (keepAliveAgent != null)
             keepAliveAgent.shutdown();

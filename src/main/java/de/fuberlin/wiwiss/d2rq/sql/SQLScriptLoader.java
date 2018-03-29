@@ -55,13 +55,20 @@ public class SQLScriptLoader {
             String line;
             StringBuilder sql = new StringBuilder();
             while ((line = in.readLine()) != null) {
-                if (line.trim().startsWith("--")) {
+                line = line.trim();
+                if (line.startsWith("--")) {
                     // comment, ignore this line
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("Comment: '{}'", line);
+                    }
                 } else {
-                    if (line.trim().endsWith(";")) {
-                        sql.append(line.substring(0, line.length() - 1));
+                    if (line.endsWith(";")) {
+                        sql.append(line, 0, line.length() - 1);
                         String s = sql.toString().trim();
-                        if (!"".equals(s)) {
+                        if (!s.isEmpty()) {
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.trace("Execute: '{}'", s);
+                            }
                             stmt.execute(s);
                             statements++;
                         }
@@ -74,7 +81,10 @@ public class SQLScriptLoader {
                 lineNumber++;
             }
             String s = sql.toString().trim();
-            if (!"".equals(s)) {
+            if (!s.isEmpty()) {
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Execute: '{}'", s);
+                }
                 stmt.execute(s);
             }
             if (LOGGER.isDebugEnabled())

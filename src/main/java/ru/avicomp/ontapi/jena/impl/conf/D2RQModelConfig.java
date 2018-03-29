@@ -8,6 +8,8 @@ import org.apache.jena.graph.Triple;
 import ru.avicomp.ontapi.jena.impl.Entities;
 import ru.avicomp.ontapi.jena.impl.OntIndividualImpl;
 import ru.avicomp.ontapi.jena.model.OntCE;
+import ru.avicomp.ontapi.jena.model.OntIndividual;
+import ru.avicomp.ontapi.jena.model.OntObject;
 import ru.avicomp.ontapi.jena.model.OntStatement;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
@@ -65,6 +67,11 @@ public class D2RQModelConfig {
         public OntStatement getRoot() {
             OntStatement res = getRoot(RDF.type, OWL.NamedIndividual);
             return res == null ? types().map(r -> getRoot(RDF.type, r)).findFirst().orElse(null) : res;
+        }
+
+        @Override
+        public Class<? extends OntObject> getActualClass() {
+            return OntIndividual.Named.class;
         }
     }
 }
