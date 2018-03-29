@@ -106,7 +106,7 @@ public class PSModelTest {
         ReadWriteUtils.print(psMapping.getMappingModel());
 
         // simple validation of all data in graphs
-        validateNoPKDatabase(data);
+        validatePSDatabase(data);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class PSModelTest {
         OntGraphModel data = D2RQGraphs.reassembly(o.asGraphModel());
         LOGGER.debug("Scheme+Data:");
         ReadWriteUtils.print(data);
-        validateNoPKDatabase(data);
+        validatePSDatabase(data);
     }
 
     @Test
@@ -152,7 +152,7 @@ public class PSModelTest {
         psMapping.close();
     }
 
-    private void validateNoPKDatabase(OntGraphModel model) {
+    private void validatePSDatabase(OntGraphModel model) {
         LOGGER.info("Validate data from pk_table");
         List<String> pkTableColumns = Arrays.asList("id", "numeric_column", "text_column");
         for (String col : pkTableColumns) {

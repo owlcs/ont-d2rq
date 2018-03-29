@@ -34,6 +34,11 @@ public class D2RQGraphs {
         return OntModelFactory.createModel(reassembly((UnionGraph) model.getGraph()), personality);
     }
 
+    /**
+     * Closes all connections linked to underlying D2RQ Graphs
+     *
+     * @param o {@link OntGraphModel}
+     */
     public static void close(OntGraphModel o) {
         close((UnionGraph) o.getGraph());
     }

@@ -40,7 +40,7 @@ public class D2RQModelConfig {
         return OntModelConfig.ONT_PERSONALITY_BUILDER.build(OntModelConfig.ONT_PERSONALITY_LAX, D2RQ_NAMED_INDIVIDUAL_FACTORY_KEY);
     }
 
-    public static OntObjectFactory createNamedIndividualFactory(OntObjectFactory ce) {
+    private static OntObjectFactory createNamedIndividualFactory(OntObjectFactory ce) {
         OntMaker maker = new OntMaker.Default(IndividualImpl.class) {
 
             @Override

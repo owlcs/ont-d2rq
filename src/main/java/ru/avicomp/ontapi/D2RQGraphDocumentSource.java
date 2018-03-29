@@ -37,7 +37,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Creates an {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} from a {@link Mapping}.
+     * Creates a {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI document source} from a {@link Mapping mapping}.
      * A mapping with multi connection strings is not allowed:
      * different databases could contain intersection in schema/table names which requires special treatment.
      * If you want a single ontology made from different sources just import one ontology to another.
@@ -54,7 +54,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
             throw new OntApiException("No jdbc connection string in the mapping");
         }
         if (dbs.size() != 1) {
-            throw new IllegalArgumentException("Should be only single d2rq:jdbcDSN: " + dbs);
+            throw new OntApiException("Should be only single d2rq:jdbcDSN: " + dbs);
         }
         return new D2RQGraphDocumentSource(mapping);
     }
@@ -66,7 +66,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     /**
      * Creates an {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} from parameters.
      *
-     * @param baseIRI {@link IRI} the base iri to construct owl-entity iris
+     * @param baseIRI {@link IRI} the base iri to build owl-entity iris
      * @param jdbcIRI {@link IRI} jdbc-connection string
      * @param user    the connection user login
      * @param pwd     the connection user password

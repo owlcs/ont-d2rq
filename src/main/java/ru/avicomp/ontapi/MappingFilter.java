@@ -1,21 +1,20 @@
 package ru.avicomp.ontapi;
 
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingTransform;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.atlas.iterator.Iter;
+import org.apache.jena.rdf.model.*;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLProperty;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.apache.jena.atlas.iterator.Iter;
-import org.apache.jena.rdf.model.*;
-import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLProperty;
-
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingTransform;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 /**
  * The "filter" to work with {@link Model} which encapsulates D2RQ mapping rules.
@@ -130,7 +129,7 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     /**
      * Returns all classes from model which relate to the properties in this filter.
      *
-     * @param model D2RQ Model
+     * @param model D2RQ Mapping Model
      * @return Stream of classes
      */
     private Stream<Resource> classes(Model model) {
@@ -153,7 +152,7 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     /**
      * Returns all properties (data&object) from model which belong to the classes from this filter.
      *
-     * @param model D2RQ Model
+     * @param model D2RQ Mapping Model
      * @return Stream of properties
      */
     private Stream<Resource> properties(Model model) {

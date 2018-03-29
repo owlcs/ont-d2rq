@@ -11,6 +11,7 @@ import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -68,7 +69,7 @@ public class ConnectedDB implements AutoCloseable {
         public void run() {
             Connection c;
             Statement s = null;
-            Vendor v = null;
+            Vendor v;
             while (!shutdown) {
                 try {
                     Thread.sleep(interval * 1000);
@@ -138,9 +139,7 @@ public class ConnectedDB implements AutoCloseable {
     private final KeepAliveAgent keepAliveAgent;
 
     public ConnectedDB(String jdbcURL, String username, String password) {
-        this(jdbcURL, username, password,
-                Collections.emptyMap(),
-                Database.NO_LIMIT, Database.NO_FETCH_SIZE, null);
+        this(jdbcURL, username, password, Collections.emptyMap(), Database.NO_LIMIT, Database.NO_FETCH_SIZE, null);
     }
 
     public ConnectedDB(String jdbcURL, String username, String password,
@@ -155,8 +154,7 @@ public class ConnectedDB implements AutoCloseable {
         this.connectionProperties = connectionProperties;
 
         for (String columnName : columnTypes.keySet()) {
-            overriddenColumnTypes.put(SQL.parseAttribute(columnName),
-                    columnTypes.get(columnName));
+            overriddenColumnTypes.put(SQL.parseAttribute(columnName), columnTypes.get(columnName));
         }
 
         // create keep alive agent if enabled
@@ -175,8 +173,9 @@ public class ConnectedDB implements AutoCloseable {
             this.keepAliveAgent.start();
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("Keep alive agent is enabled (interval: {} seconds, noop query: '{}').", interval, query);
-        } else
+        } else {
             this.keepAliveAgent = null;
+        }
     }
 
     public String getJdbcURL() {
@@ -251,9 +250,7 @@ public class ConnectedDB implements AutoCloseable {
     }
 
     private Properties getConnectionProperties() {
-        Properties result = (connectionProperties == null)
-                ? new Properties()
-                : (Properties) connectionProperties.clone();
+        Properties result = (connectionProperties == null) ? new Properties() : (Properties) connectionProperties.clone();
         if (username != null) {
             result.setProperty("user", username);
         }
@@ -306,18 +303,6 @@ public class ConnectedDB implements AutoCloseable {
             cachedColumnNullability.put(column, schemaInspector() == null || schemaInspector().isNullable(column));
         }
         return cachedColumnNullability.get(column);
-    }
-
-    /**
-     * Reports the brand of RDBMS.
-     *
-     * @return <tt>true</tt> if this database is of the given brand
-     * @see #vendor()
-     * <p>
-     * TODO make private, use {@link #vendor()} and its methods instead
-     */
-    public boolean vendorIs(Vendor vendor) {
-        return this.vendor.equals(vendor);
     }
 
     /**
@@ -391,7 +376,7 @@ public class ConnectedDB implements AutoCloseable {
     }
 
     private boolean isZerofillColumn(Attribute column) {
-        if (!vendorIs(Vendor.MySQL)) return false;
+        if (!Vendor.MySQL.equals(vendor())) return false;
         if (!zerofillCache.containsKey(column)) {
             zerofillCache.put(column, schemaInspector().isZerofillColumn(column));
         }
@@ -405,18 +390,20 @@ public class ConnectedDB implements AutoCloseable {
     }
 
     /**
-     * In some situations, MySQL stores table names using lowercase only, and then performs
-     * case-insensitive comparison.
+     * In some situations, MySQL stores table names using lowercase only, and then performs case-insensitive comparison.
      * We need to account for this when comparing table names reported by MySQL and those from the mapping.
      *
      * @see <a href="http://dev.mysql.com/doc/refman/5.0/en/identifier-case-sensitivity.html">MySQL Manual, Identifier Case Sensitivity</a>
      */
     public boolean lowerCaseTableNames() {
-        Connection c = connection();
-//		if (c instanceof com.mysql.jdbc.ConnectionImpl)
-//			return ((com.mysql.jdbc.ConnectionImpl)c).lowerCaseTableNames();
-//		else
-        return false;
+        if (!Vendor.MySQL.equals(vendor())) {
+            return false;
+        }
+        try { // tested on mysql:mysql-connector-java:5.1.46
+            return (Boolean) Class.forName("com.mysql.jdbc.MySQLConnection").getMethod("lowerCaseTableNames").invoke(connection());
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
+            throw new IllegalStateException("Can't invoke com.mysql.jdbc.MySQLConnection#lowerCaseTableNames", e);
+        }
     }
 
     /**

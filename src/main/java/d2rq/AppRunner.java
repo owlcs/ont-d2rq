@@ -2,10 +2,10 @@ package d2rq;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import sun.misc.Unsafe;
 
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -78,15 +78,19 @@ public class AppRunner {
         }
     }
 
+    @SuppressWarnings({"unchecked", "JavaReflectionInvocation"})
     private static void forceDisableExternalLogging() {
         try {
-            // java9:
-            Class clazz = Class.forName("jdk.internal.module.IllegalAccessLogger");
-            Field logger = clazz.getDeclaredField("logger");
-            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            // java9 hack:
+            Class loggerClazz = Class.forName("jdk.internal.module.IllegalAccessLogger");
+            Field logger = loggerClazz.getDeclaredField("logger");
+            Class unsafeClass = Class.forName("sun.misc.Unsafe");
+            Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
             theUnsafe.setAccessible(true);
-            Unsafe unsafe = (Unsafe) theUnsafe.get(null);
-            unsafe.putObjectVolatile(clazz, unsafe.staticFieldOffset(logger), null);
+            Object unsafeInstance = theUnsafe.get(null);
+            Method staticFieldOffset = unsafeClass.getMethod("staticFieldOffset", Field.class);
+            Method putObjectVolatile = unsafeClass.getMethod("putObjectVolatile", Object.class, Long.TYPE, Object.class);
+            putObjectVolatile.invoke(unsafeInstance, loggerClazz, staticFieldOffset.invoke(unsafeInstance, logger), null);
         } catch (Exception e) {
             // ignore
         }
