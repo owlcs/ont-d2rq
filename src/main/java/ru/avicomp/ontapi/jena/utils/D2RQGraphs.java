@@ -17,10 +17,13 @@ import java.util.Objects;
  * Utils to work with {@link GraphD2RQ} and with ONT-API Graphs.
  * <p>
  * Created by @szuev on 23.03.2018.
+ * @see GraphD2RQ
+ * @see UnionGraph
+ * @see OntGraphModel
  */
-public class D2RQGraphUtils {
+public class D2RQGraphs {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(D2RQGraphUtils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(D2RQGraphs.class);
 
     public static OntGraphModel reassembly(OntGraphModel model) {
         // class-cast-exception if it is not model from manager:
@@ -42,11 +45,11 @@ public class D2RQGraphUtils {
      */
     public static void close(UnionGraph graph) {
         Graphs.flat(graph)
-                .map(D2RQGraphUtils::extractD2RQ)
+                .map(D2RQGraphs::extractD2RQ)
                 .filter(Objects::nonNull)
                 .forEach(g -> {
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Close " + g);
+                        LOGGER.debug("Close {}", g);
                     }
                     g.close();
                 });
@@ -54,6 +57,7 @@ public class D2RQGraphUtils {
 
     /**
      * Makes a new {@link UnionGraph} from existing one by extracting hidden {@link GraphD2RQ} graphs.
+     * The result graph has the same structure as specified, but instead a {@link Hybrid hybrid} there are {@link GraphD2RQ d2rq} members.
      *
      * @param graph {@link UnionGraph}
      * @return {@link UnionGraph}
@@ -70,7 +74,7 @@ public class D2RQGraphUtils {
      * Extracts D2RQ Graph from a graph container, if possible.
      *
      * @param g {@link Graph}
-     * @return {@link GraphD2RQ} or null.
+     * @return {@link GraphD2RQ} or {@code null}.
      */
     public static GraphD2RQ extractD2RQ(Graph g) {
         if (g instanceof GraphD2RQ) {

@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.ontapi.tests;
 
 import org.apache.jena.rdf.model.Resource;
 import org.junit.Assert;
@@ -11,11 +11,14 @@ import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.ontapi.*;
+import ru.avicomp.ontapi.conf.ConnectionData;
+import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntOPE;
 import ru.avicomp.ontapi.jena.model.OntPE;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
+import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.*;
@@ -30,17 +33,17 @@ import java.util.stream.Collectors;
 @RunWith(Parameterized.class)
 public class FilterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterTest.class);
-    private ONTAPITests.ConnectionData data;
+    private ConnectionData data;
 
-    private static Map<ONTAPITests.ConnectionData, Map<OntologyModel, Integer>> testResult = new HashMap<>();
+    private static Map<ConnectionData, Map<OntologyModel, Integer>> testResult = new HashMap<>();
 
-    public FilterTest(ONTAPITests.ConnectionData data) {
+    public FilterTest(ConnectionData data) {
         this.data = data;
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static List<ONTAPITests.ConnectionData> getData() {
-        return ONTAPITests.ConnectionData.asList();
+    public static List<ConnectionData> getData() {
+        return ConnectionData.asList();
     }
 
     @Test
@@ -107,13 +110,15 @@ public class FilterTest {
     public void test02FilterData() {
         Map<OntologyModel, Integer> res = testResult.get(data);
         Assume.assumeNotNull(res);
-        res.forEach((ontology, count) -> {
-            LOGGER.info("Test data for ontology {}", ontology.getOntologyID());
-            OntGraphModel data = D2RQGraphUtils.reassembly(ontology.asGraphModel(), ONTAPITests.D2RQ_PERSONALITY);
+        res.forEach((schema, expectedCount) -> {
+            LOGGER.info("Test data for ontology {}", schema.getOntologyID());
+            OntGraphModel data = D2RQGraphs.reassembly(schema.asGraphModel(), D2RQModelConfig.D2RQ_PERSONALITY);
+            Assert.assertEquals("Ontology IDs don't match", schema.asGraphModel().getID(), data.getID());
+
             Set<OntIndividual> individuals = data.ontObjects(OntIndividual.class).collect(Collectors.toSet());
             individuals.forEach(x -> LOGGER.debug("{}", x));
-            Assert.assertEquals("Wrong individuals count", count.intValue(), individuals.size());
-            D2RQGraphUtils.close(data);
+            Assert.assertEquals("Wrong individuals count", expectedCount.intValue(), individuals.size());
+            D2RQGraphs.close(data);
         });
 
     }

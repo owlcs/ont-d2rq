@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.ontapi.tests;
 
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import org.apache.jena.graph.Graph;
@@ -12,11 +12,16 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.SetOntologyID;
 import org.topbraid.spin.inference.SPINInferences;
 import org.topbraid.spin.system.SPINModuleRegistry;
+import ru.avicomp.ontapi.D2RQGraphDocumentSource;
+import ru.avicomp.ontapi.MappingFilter;
+import ru.avicomp.ontapi.OntologyManager;
+import ru.avicomp.ontapi.OntologyModel;
+import ru.avicomp.ontapi.conf.ConnectionData;
 import ru.avicomp.ontapi.jena.UnionGraph;
+import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
-import ru.avicomp.ontapi.tests.SpinMappingTest;
+import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.List;
@@ -34,34 +39,34 @@ import java.util.List;
 @RunWith(Parameterized.class)
 public class D2RQSpinTest extends SpinMappingTest {
 
-    private ONTAPITests.ConnectionData data;
+    private ConnectionData data;
 
-    public D2RQSpinTest(ONTAPITests.ConnectionData data) {
+    public D2RQSpinTest(ConnectionData data) {
         this.data = data;
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static List<ONTAPITests.ConnectionData> getData() {
-        return ONTAPITests.ConnectionData.asList();
+    public static List<ConnectionData> getData() {
+        return ConnectionData.asList();
     }
 
     @Override
     public void setUpManager(OntologyManager manager) {
         super.setUpManager(manager);
-        OntPersonality newPersonality = ONTAPITests.D2RQ_PERSONALITY;
+        OntPersonality newPersonality = D2RQModelConfig.D2RQ_PERSONALITY;
         manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setPersonality(newPersonality));
     }
 
     @Override
     public void validate(OntGraphModel source, OntGraphModel target) {
-        OntGraphModel src = D2RQGraphUtils.reassembly(source);
+        OntGraphModel src = D2RQGraphs.reassembly(source);
         super.validate(src, target);
         target.listNamedIndividuals().forEach(LOGGER::debug);
         Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
         OntologyModel o = manager.getOntology(IRI.create(source.getID().getURI()));
         Assert.assertNotNull(o);
         ReadWriteUtils.print(o);
-        D2RQGraphUtils.close((UnionGraph) source.getGraph());
+        D2RQGraphs.close((UnionGraph) source.getGraph());
     }
 
     public MappingFilter prepareDataFilter() {
@@ -89,7 +94,7 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Override
     public void runInferences(OntologyModel mapping, Model target) {
-        Graph graph = D2RQGraphUtils.reassembly((UnionGraph) mapping.asGraphModel().getGraph());
+        Graph graph = D2RQGraphs.reassembly((UnionGraph) mapping.asGraphModel().getGraph());
         Model source = ModelFactory.createModelForGraph(graph);
         LOGGER.info("Run Inferences");
         SPINModuleRegistry.get().init();

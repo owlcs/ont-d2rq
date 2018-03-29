@@ -116,7 +116,11 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * <li>the default (primary) {@link org.apache.jena.mem.GraphMem} with the schema inside (editable)</li>
      * <li>the virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ} with the schema and data inside (immutable)</li>
      * </ul>
-     *
+     * Please note:
+     * <ul>
+     * <li>Any changes in primary graph affects schema-part of D2RQ graph</li>
+     * <li>The D2RQ virtual graph is not distinct: it can contain duplicate triples reflecting duplicated tuples from a db table</li>
+     * </ul>
      * @return {@link Graph}
      */
     @Override

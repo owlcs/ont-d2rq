@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.ontapi.tests;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -7,10 +7,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
+import ru.avicomp.ontapi.D2RQGraphDocumentSource;
+import ru.avicomp.ontapi.OntManagers;
+import ru.avicomp.ontapi.OntologyManager;
+import ru.avicomp.ontapi.OntologyModel;
+import ru.avicomp.ontapi.conf.ConnectionData;
+import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
+import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 
 import java.util.List;
@@ -24,22 +30,22 @@ import java.util.stream.Collectors;
 @RunWith(Parameterized.class)
 public class IndividualsTest {
     private static final Logger LOGGER = Logger.getLogger(IndividualsTest.class);
-    private ONTAPITests.ConnectionData data;
+    private ConnectionData data;
 
-    public IndividualsTest(ONTAPITests.ConnectionData data) {
+    public IndividualsTest(ConnectionData data) {
         this.data = data;
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static List<ONTAPITests.ConnectionData> getData() {
-        return ONTAPITests.ConnectionData.asList();
+    public static List<ConnectionData> getData() {
+        return ConnectionData.asList();
     }
 
     @Test
     public void testList() throws Exception {
         OntologyManager m = OntManagers.createONT();
         // overwrite local(manager) individual factories collection (personalities)
-        OntPersonality newPersonality = ONTAPITests.D2RQ_PERSONALITY;
+        OntPersonality newPersonality = D2RQModelConfig.D2RQ_PERSONALITY;
         m.setOntologyLoaderConfiguration(m.getOntologyLoaderConfiguration().setPersonality(newPersonality));
 
         LOGGER.info("Load full db schema from " + data);
@@ -52,7 +58,7 @@ public class IndividualsTest {
         int expectedNumberOfIndividuals = 56;
 
         LOGGER.info("Test schema+data ontology.");
-        OntGraphModel data = D2RQGraphUtils.reassembly(schema.asGraphModel());
+        OntGraphModel data = D2RQGraphs.reassembly(schema.asGraphModel());
         testIndividuals(data, expectedNumberOfIndividuals);
 
         LOGGER.info("Test there is no individuals inside schema ontology.");
@@ -68,7 +74,7 @@ public class IndividualsTest {
         axioms.forEach(LOGGER::debug);
         Assert.assertEquals("Incorrect number of class-assertion axioms", expectedNumberOfIndividuals, axioms.size());
 
-        D2RQGraphUtils.close(data);
+        D2RQGraphs.close(data);
     }
 
     private void testIndividuals(OntGraphModel model, int expected) {
