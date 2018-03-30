@@ -16,7 +16,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 /**
- * TODO: rewrite and cleanup, looks ugly
  * Command line utility for dumping a database to RDF, using the
  * {@link MappingGenerator} or a mapping file.
  *

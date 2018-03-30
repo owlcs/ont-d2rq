@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- * TODO: rewrite it, looks ugly
  * Command line interface for {@link MappingGenerator}.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)

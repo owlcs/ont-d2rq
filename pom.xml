@@ -43,10 +43,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--The tests depend on configured local databases (mysql, postgres)-->
-        <maven.test.skip>true</maven.test.skip>
         <skipTests>true</skipTests>
         <version.jena>3.6.0</version.jena>
         <version.ontpai>1.2.0-SNAPSHOT</version.ontpai>
+        <version.slf4j>1.7.25</version.slf4j>
     </properties>
 
     <profiles>
@@ -55,6 +55,13 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <version>${version.slf4j}</version>
+                </dependency>
+            </dependencies>
             <build>
                 <resources>
                     <resource>
@@ -118,15 +125,8 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <version>${version.slf4j}</version>
         </dependency>
-        <!-- todo: need to be excluded, log4j is required only for tools: -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.25</version>
-        </dependency>
-
         <!-- ONT-API: -->
         <dependency>
             <groupId>ru.avicomp</groupId>
@@ -166,6 +166,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${version.slf4j}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

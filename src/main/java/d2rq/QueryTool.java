@@ -14,9 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO: rewrite and cleanup, looks ugly
- * Command line utility for executing SPARQL queries
- * against a D2RQ-mapped database
+ * Command line utility for executing SPARQL queries against a D2RQ-mapped database.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */

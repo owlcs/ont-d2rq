@@ -21,9 +21,8 @@ import java.util.function.BiConsumer;
 
 
 /**
- * Base class for the D2RQ command line tools. They share much of their
- * argument list and functionality, therefore this is extracted into
- * this superclass.
+ * Base class for the D2RQ command line tools.
+ * They share much of their argument list and functionality, therefore this is extracted into this superclass.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -118,10 +117,10 @@ public abstract class CommandLineTool {
         }
 
         if (cmd.hasArg(verboseArg)) {
-            Log4jHelper.setVerboseLogging();
+            LogHelper.setVerboseLogging();
         }
         if (cmd.hasArg(debugArg)) {
-            Log4jHelper.setDebugLogging();
+            LogHelper.setDebugLogging();
         }
 
         if (cmd.numItems() == minArguments && supportImplicitJdbcURL && cmd.hasArg(sqlFileArg)) {
@@ -220,6 +219,9 @@ public abstract class CommandLineTool {
     }
 
     /**
+     * A copy-paste from some old Jena.
+     * todo: better to replace with commons-cli
+     *
      * Command line argument processing based on a trigger model.
      * An action is called whenever an argument is encountered. Example:
      * <CODE>
@@ -257,13 +259,11 @@ public abstract class CommandLineTool {
          */
         BiConsumer<String, String> argHook = null;
         Map<String, ArgDecl> argMap = new HashMap<>();
-        //protected boolean ignoreUnknown = false ;
         // Rest of the items found on the command line
         String indirectionMarker = "@";
         boolean allowItemIndirect = false;   // Allow @ to mean contents of file
         boolean ignoreIndirectionMarker = false;       // Allow comand line items to have leading @ but strip it.
         List<String> items = new ArrayList<>();
-
 
         /**
          * Creates new CommandLine
@@ -295,8 +295,6 @@ public abstract class CommandLineTool {
         public Iterator<Arg> args() {
             return args.values().iterator();
         }
-//        public Map args() { return args ; }
-//        public List items() { return items ; }
 
         public int numArgs() {
             return args.size();
@@ -398,9 +396,6 @@ public abstract class CommandLineTool {
                     argDecl.trigger(arg);
                 } else
                     handleUnrecognizedArg(argList.get(i));
-//                    if ( ! getIgnoreUnknown() )
-//                        // Not recognized
-//                        throw new IllegalArgumentException("Unknown argument: "+argStr) ;
             }
 
             // Remainder.
@@ -564,7 +559,6 @@ public abstract class CommandLineTool {
             return arg.getValues();
         }
 
-
         /**
          * Add an argument to those to be accepted on the command line.
          *
@@ -602,9 +596,6 @@ public abstract class CommandLineTool {
                 argMap.put(iter.next(), arg);
             return this;
         }
-
-//        public boolean getIgnoreUnknown() { return ignoreUnknown ; }
-//        public void setIgnoreUnknown(boolean ign) { ignoreUnknown = ign ; }
 
         /**
          * @return Returns whether items starting "@" have the value of named file.

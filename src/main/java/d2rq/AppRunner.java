@@ -4,8 +4,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -16,8 +14,7 @@ import java.util.stream.Stream;
 public class AppRunner {
 
     public static void main(String... args) {
-        forceDisableExternalLogging();
-        Log4jHelper.turnLoggingOff();
+        LogHelper.turnLoggingOff();
         PrintStream out = CommandLineTool.CONSOLE;
         if (args.length == 0 || Stream.of("-h", "--h", "-help", "--help", "/?").anyMatch(h -> h.equalsIgnoreCase(args[0]))) {
             out.println("usage:");
@@ -78,21 +75,4 @@ public class AppRunner {
         }
     }
 
-    @SuppressWarnings({"unchecked", "JavaReflectionInvocation"})
-    private static void forceDisableExternalLogging() {
-        try {
-            // java9 hack:
-            Class loggerClazz = Class.forName("jdk.internal.module.IllegalAccessLogger");
-            Field logger = loggerClazz.getDeclaredField("logger");
-            Class unsafeClass = Class.forName("sun.misc.Unsafe");
-            Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
-            theUnsafe.setAccessible(true);
-            Object unsafeInstance = theUnsafe.get(null);
-            Method staticFieldOffset = unsafeClass.getMethod("staticFieldOffset", Field.class);
-            Method putObjectVolatile = unsafeClass.getMethod("putObjectVolatile", Object.class, Long.TYPE, Object.class);
-            putObjectVolatile.invoke(unsafeInstance, loggerClazz, staticFieldOffset.invoke(unsafeInstance, logger), null);
-        } catch (Exception e) {
-            // ignore
-        }
-    }
 }
