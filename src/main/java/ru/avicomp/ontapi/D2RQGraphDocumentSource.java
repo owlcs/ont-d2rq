@@ -17,45 +17,41 @@ import java.util.stream.Collectors;
  * The graph is provided in the hybrid form (see {@link ru.avicomp.ontapi.jena.Hybrid})
  * and includes DB-schema as primary {@link org.apache.jena.mem.GraphMem} and
  * DB-data (with schema inside also) as virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ} graphs.
- * Currently multi-sources are not allowed:
- * to deal with several db-connections please just concat result using owl:import or by some other graph-union operation.
  * <p>
  * Created by @szuev on 24.02.2017.
  */
+@SuppressWarnings("WeakerAccess")
 public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements AutoCloseable {
     public static final IRI DEFAULT_BASE_IRI = IRI.create("http://d2rq.avc.ru/");
 
-    private final Mapping mapping;
+    protected final Mapping mapping;
+    protected final IRI doc;
 
     /**
      * The main constructor.
      *
      * @param mapping {@link Mapping}
+     * @throws OntApiException if the mapping is not suitable
      */
-    protected D2RQGraphDocumentSource(Mapping mapping) {
-        this.mapping = mapping;
-    }
-
-    /**
-     * Creates a {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI document source} from a {@link Mapping mapping}.
-     * A mapping with multi connection strings is not allowed:
-     * different databases could contain intersection in schema/table names which requires special treatment.
-     * If you want a single ontology made from different sources just import one ontology to another.
-     *
-     * @param mapping {@link Mapping}
-     * @return {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}
-     * @throws OntApiException in case argument is wrong
-     */
-    public static D2RQGraphDocumentSource create(Mapping mapping) {
+    protected D2RQGraphDocumentSource(Mapping mapping) throws OntApiException {
         Set<String> dbs = OntApiException.notNull(mapping, "Null mapping").databases()
                 .stream()
                 .map(Database::getJDBCDSN).collect(Collectors.toSet());
         if (dbs.isEmpty()) {
             throw new OntApiException("No jdbc connection string in the mapping");
         }
-        if (dbs.size() != 1) {
-            throw new OntApiException("Should be only single d2rq:jdbcDSN: " + dbs);
-        }
+        this.doc = IRI.create("d2rq://" + dbs.stream().collect(Collectors.joining(";")));
+        this.mapping = mapping;
+    }
+
+    /**
+     * Creates a {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI document source} from a {@link Mapping mapping}.
+     *
+     * @param mapping {@link Mapping}
+     * @return {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}
+     * @throws OntApiException in case argument is wrong
+     */
+    public static D2RQGraphDocumentSource create(Mapping mapping) {
         return new D2RQGraphDocumentSource(mapping);
     }
 
@@ -129,25 +125,19 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Returns the JDBC connection string as IRI.
-     * It should be the same as specified in the constructor.
+     * Returns an IRI with JDBC connection details.
      *
-     * @return {@link IRI}. There should be always the only single JDBC-connection uri in the mapping.
+     * @return {@link IRI}
      * @throws OntApiException in case there is no jdbc uri in mapping.
      */
     @Override
     public IRI getDocumentIRI() {
-        return mapping.databases()
-                .stream()
-                .map(Database::getJDBCDSN)
-                .map(IRI::create)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No d2rq:jdbcDSN"));
+        return doc;
     }
 
     /**
      * Closes mapping.
-     * note: it will be reopened if we continue work with result ontology.
+     * Note: it will be reopened on demand if you continue work with the result ontology virtual graph data.
      */
     @Override
     public void close() {
