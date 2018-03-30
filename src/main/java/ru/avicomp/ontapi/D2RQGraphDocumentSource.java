@@ -9,14 +9,15 @@ import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
 import ru.avicomp.ontapi.jena.HybridImpl;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * The document source ({@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}) for loading graph from database in form of OWL2 ontology.
+ * This is an extended e ({@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource document source})
+ * for loading graph from database in form of {@link org.semanticweb.owlapi.model.OWLOntology OWL2 ontology}.
  * The graph is provided in the hybrid form (see {@link ru.avicomp.ontapi.jena.Hybrid})
  * and includes DB-schema as primary {@link org.apache.jena.mem.GraphMem} and
- * DB-data (with schema inside also) as virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ} graphs.
+ * DB-data (with schema attached also) as virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ graph}.
  * <p>
  * Created by @szuev on 24.02.2017.
  */
@@ -34,11 +35,14 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * @throws OntApiException if the mapping is not suitable
      */
     protected D2RQGraphDocumentSource(Mapping mapping) throws OntApiException {
-        Set<String> dbs = OntApiException.notNull(mapping, "Null mapping").databases()
+        List<String> dbs = OntApiException.notNull(mapping, "Null mapping").databases()
                 .stream()
-                .map(Database::getJDBCDSN).collect(Collectors.toSet());
+                .map(Database::getJDBCDSN)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
         if (dbs.isEmpty()) {
-            throw new OntApiException("No jdbc connection string in the mapping");
+            throw new OntApiException("No jdbc connection string inside mapping");
         }
         this.doc = IRI.create("d2rq://" + dbs.stream().collect(Collectors.joining(";")));
         this.mapping = mapping;
@@ -67,6 +71,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * @param user    the connection user login
      * @param pwd     the connection user password
      * @return {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}
+     * @throws OntApiException if something is wrong
      */
     public static D2RQGraphDocumentSource create(IRI baseIRI, IRI jdbcIRI, String user, String pwd) {
         SystemLoader loader = new SystemLoader();

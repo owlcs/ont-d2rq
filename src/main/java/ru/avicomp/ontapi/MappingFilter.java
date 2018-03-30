@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * The "filter" to work with {@link Model} which encapsulates D2RQ mapping rules.
- * Using this class you can create new mapping model from an existing one with the specified constrains.
+ * The filter to work with {@link Model} which encapsulates D2RQ mapping rules.
+ * Using this class you can create new D2RQ mapping model from an existing one with the specified constrains.
  * <p>
  * Created by @szuev on 24.02.2017.
  */
@@ -63,10 +63,10 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     }
 
     /**
-     * creates filtered D2RQ mapping model base on specified one.
+     * Creates a filtered D2RQ mapping model based on specified one.
      *
-     * @param model {@link Model} with D2RQ mapping rules.
-     * @return the new Model which corresponds this filter.
+     * @param model {@link Model jena model} with D2RQ mapping rules.
+     * @return the new D2RQ Mapping Model which corresponds this filter.
      * @throws OntApiException in case there some properties or classes are missed.
      */
     public Model filter(Model model) {
@@ -85,15 +85,17 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     }
 
     /**
-     * Creates new {@link MappingFilter} and compiles it using specified {@link Model} with D2RQ mapping rules inside.
+     * Creates a new {@link MappingFilter} and compiles it using specified {@link Model model} with D2RQ mapping rules inside.
      * This means it complements missing properties and classes by analysing mapping graph:
-     * For each property it adds classes which correspond d2rq:belongsToClassMap and d2rq:refersToClassMap predicates;
-     * For each class it adds properties which have the class as an object in statement with predicate d2rq:belongsToClassMap
-     * and satisfy some other conditions to be a valid owl:DatatypeProperty or owl:ObjectProperty.
+     * For each property it adds classes which correspond {@code d2rq:belongsToClassMap} and {@code d2rq:refersToClassMap} predicates;
+     * For each class it adds properties which have the class as an object in statement with predicate {@code d2rq:belongsToClassMap}
+     * and satisfy some other conditions to be a valid {@code owl:DatatypeProperty} or {@code owl:ObjectProperty}.
      * Unfamiliar properties and classes stay untouched.
      *
-     * @param model D2RQ model
+     * @param model D2RQ Mapping model
      * @return the new filter with completed list of properties and classes.
+     * @see D2RQ
+     * @see ru.avicomp.ontapi.jena.vocabulary.OWL
      */
     public MappingFilter compile(Model model) {
         Set<Resource> _classes = new HashSet<>(classes);
@@ -107,7 +109,7 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     }
 
     /**
-     * validate that filter parameters are present in the specified model.
+     * Validates that filter parameters are present in the specified model.
      *
      * @param model {@link Model} with D2RQ rules.
      * @throws OntApiException if some parameters are missed.
@@ -127,7 +129,7 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     }
 
     /**
-     * Returns all classes from model which relate to the properties in this filter.
+     * Returns all classes from model that relate to the properties in this filter.
      *
      * @param model D2RQ Mapping Model
      * @return Stream of classes
@@ -150,7 +152,7 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
     }
 
     /**
-     * Returns all properties (data&object) from model which belong to the classes from this filter.
+     * Returns all properties (data and object) from model which belong to the classes from this filter.
      *
      * @param model D2RQ Mapping Model
      * @return Stream of properties
