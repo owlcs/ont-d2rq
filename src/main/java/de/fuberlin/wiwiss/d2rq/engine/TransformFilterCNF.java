@@ -6,8 +6,7 @@ import org.apache.jena.sparql.algebra.op.OpFilter;
 import org.apache.jena.sparql.expr.*;
 
 /**
- * Checks if any {@link OpFilter} can be split into more
- * parts by translating it to Conjunctive Normal Form (CNF).
+ * Checks if any {@link OpFilter} can be split into more parts by translating it to Conjunctive Normal Form (CNF).
  *
  * @author Herwig Leimer
  * @author Richard Cyganiak (richard@cyganiak.de)
@@ -19,15 +18,14 @@ public class TransformFilterCNF extends TransformCopy {
         ExprList cnfExprList = ExprList.splitConjunction(
                 TransformFilterCNF.translateFilterExpressionsToCNF(opFilter));
         if (cnfExprList.size() > exprList.size()) {
-            return OpFilter.filter(cnfExprList, subOp);
+            return OpFilter.filterBy(cnfExprList, subOp);
         }
-        return OpFilter.filter(exprList, subOp);
+        return OpFilter.filterBy(exprList, subOp);
     }
 
     /**
      * Translates all expressions of a filter to the conjunctive normalform.
-     * To get the conjunctive normalform of a term, first the law of DeMorgan and then
-     * the Distributive-law will be applied
+     * To get the conjunctive normalform of a term, first the law of DeMorgan and then the Distributive-law will be applied
      *
      * @param opFilter - a Filter with some expressions
      * @return ExprList - every entry of the exprlist is in conjunctive normalform
@@ -41,7 +39,7 @@ public class TransformFilterCNF extends TransformCopy {
 
         // workaround to avoid deep copy from the expressions
         // because deep copy is not available in Q_UnaryNot.java
-        copiedOpFilter = (OpFilter) OpFilter.filter(exprList, opFilter.getSubOp());
+        copiedOpFilter = (OpFilter) OpFilter.filterBy(exprList, opFilter.getSubOp());
         exprList = copiedOpFilter.getExprs();
 
         // for every expression of the filter, apply first DeMorgan-law and then Distributive-law
@@ -101,7 +99,7 @@ public class TransformFilterCNF extends TransformCopy {
 
     /**
      * Visitor for a filter-expression. Visits every expression-node of the expression-tree
-     * and applies the DeMorgan-law: !(a || b) will become !a && !b
+     * and applies the DeMorgan-law: {@code !(a || b) will become !a && !b}.
      *
      * @author Herwig Leimer
      */
@@ -248,7 +246,7 @@ public class TransformFilterCNF extends TransformCopy {
 
     /**
      * Visitor for a filter-expression. Visits every expression-node of the expression-tree
-     * and applies the Distributive-law: a || (b && c) will become (a || b) && (a || c)
+     * and applies the Distributive-law: {@code a || (b && c) will become (a || b) && (a || c)}.
      *
      * @author Herwig Leimer
      */

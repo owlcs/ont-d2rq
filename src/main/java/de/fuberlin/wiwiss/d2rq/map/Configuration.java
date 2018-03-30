@@ -1,14 +1,13 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import org.apache.jena.rdf.model.Resource;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
+import org.apache.jena.rdf.model.Resource;
 
 
 /**
  * Representation of a d2rq:Configuration from the mapping file.
  *
- * @author Christian Becker <http://beckr.org#chris>
+ * @author Christian Becker &lt;http://beckr.org#chris&gt;
  */
 public class Configuration extends MapObject {
     private boolean serveVocabulary = true;

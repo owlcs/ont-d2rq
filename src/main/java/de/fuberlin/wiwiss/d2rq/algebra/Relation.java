@@ -1,9 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.*;
-
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+
+import java.util.*;
 
 /**
  * TODO Describe this type
@@ -20,7 +20,7 @@ public abstract class Relation implements RelationalOperators {
             ConnectedDB database, Attribute[] attributes) {
         return new RelationImpl(database, AliasMap.NO_ALIASES, Expression.TRUE, Expression.TRUE,
                 Collections.emptySet(),
-                new HashSet<ProjectionSpec>(Arrays.asList(attributes)),
+                new HashSet<>(Arrays.asList(attributes)),
                 false, Collections.emptyList(), -1, -1);
     }
 
@@ -198,8 +198,9 @@ public abstract class Relation implements RelationalOperators {
     public abstract boolean isUnique();
 
     /**
-     * The expressions (and ascending/descending flag) used for ordering
-     * the relation.
+     * The expressions (and ascending/descending flag) used for ordering  the relation.
+
+     * @return List of {@link OrderSpec}s
      */
     public abstract List<OrderSpec> orderSpecs();
 
@@ -218,7 +219,7 @@ public abstract class Relation implements RelationalOperators {
     public abstract int limitInverse();
 
     public Set<Attribute> allKnownAttributes() {
-        Set<Attribute> results = new HashSet<Attribute>();
+        Set<Attribute> results = new HashSet<>();
         results.addAll(condition().attributes());
         results.addAll(softCondition().attributes());
         for (Join join : joinConditions()) {
@@ -235,7 +236,7 @@ public abstract class Relation implements RelationalOperators {
     }
 
     public Set<RelationName> tables() {
-        Set<RelationName> results = new HashSet<RelationName>();
+        Set<RelationName> results = new HashSet<>();
         for (Attribute attribute : allKnownAttributes()) {
             results.add(attribute.relationName());
         }

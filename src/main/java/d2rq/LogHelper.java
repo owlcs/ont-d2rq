@@ -22,7 +22,6 @@ public class LogHelper {
         //org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
         //Does not work, see description of org.apache.log4j.Logger.getRootLogger()
         //LogCtl.disable("root");
-        LogCtl.setLevel("org.apache.log4j.spi.RootLogger", "OFF");
         try {
             Class<?> logger = Class.forName("org.apache.log4j.Logger");
             Class<?> level = Class.forName("org.apache.log4j.Level");

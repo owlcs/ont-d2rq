@@ -1,16 +1,16 @@
 package de.fuberlin.wiwiss.d2rq.expr;
 
-import java.util.Set;
-
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 
+import java.util.Set;
+
 /**
  * An expression that negates an underlying expression
  *
- * @author Christian Becker <http://beckr.org#chris>
+ * @author Christian Becker &lt;http://beckr.org#chris&gt;
  */
 public class Negation extends Expression {
 

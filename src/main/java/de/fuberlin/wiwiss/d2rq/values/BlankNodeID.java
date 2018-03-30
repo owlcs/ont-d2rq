@@ -1,7 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.values;
 
-import java.util.*;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.algebra.OrderSpec;
@@ -10,9 +8,10 @@ import de.fuberlin.wiwiss.d2rq.expr.*;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeSetFilter;
 import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
 
+import java.util.*;
+
 /**
- * A blank node identifier that uniquely identifies all resources generated from
- * a specific ClassMap.
+ * A blank node identifier that uniquely identifies all resources generated from a specific ClassMap.
  * <p>
  * (Note: The implementation makes some assumptions about the Column
  * class to keep the code simple and fast. This means BlankNodeIdentifier
@@ -29,10 +28,8 @@ public class BlankNodeID implements ValueMaker {
     /**
      * Constructs a new blank node identifier.
      *
-     * @param classMapID A string that is unique for the class map
-     *                   whose resources are identified by this BlankNodeIdentifier
-     * @param attributes A set of {@link Attribute}s that uniquely
-     *                   identify the nodes
+     * @param classMapID A string that is unique for the class map whose resources are identified by this BlankNodeIdentifier
+     * @param attributes A set of {@link Attribute}s that uniquely identify the nodes
      */
     public BlankNodeID(String classMapID, List<Attribute> attributes) {
         this.classMapID = classMapID;
@@ -47,6 +44,7 @@ public class BlankNodeID implements ValueMaker {
         return this.classMapID;
     }
 
+    @Override
     public void describeSelf(NodeSetFilter c) {
         c.limitValuesToBlankNodeID(this);
     }
@@ -55,6 +53,7 @@ public class BlankNodeID implements ValueMaker {
         return !valueExpression(value).isFalse();
     }
 
+    @Override
     public Expression valueExpression(String value) {
         if (value == null) {
             return Expression.FALSE;
@@ -66,7 +65,7 @@ public class BlankNodeID implements ValueMaker {
             return Expression.FALSE;
         }
         int i = 1;    // parts[0] is classMap identifier
-        Collection<Expression> expressions = new ArrayList<Expression>(attributes.size());
+        Collection<Expression> expressions = new ArrayList<>(attributes.size());
         for (Attribute attribute : attributes) {
             expressions.add(Equality.createAttributeValue(attribute, parts[i]));
             i++;
@@ -74,8 +73,9 @@ public class BlankNodeID implements ValueMaker {
         return Conjunction.create(expressions);
     }
 
+    @Override
     public Set<ProjectionSpec> projectionSpecs() {
-        return new HashSet<ProjectionSpec>(this.attributes);
+        return new HashSet<>(this.attributes);
     }
 
     /**
@@ -84,8 +84,9 @@ public class BlankNodeID implements ValueMaker {
      * @param row a database row
      * @return this column's blank node identifier
      */
+    @Override
     public String makeValue(ResultRow row) {
-        StringBuffer result = new StringBuffer(this.classMapID);
+        StringBuilder result = new StringBuilder(this.classMapID);
         for (Attribute attribute : attributes) {
             String value = row.get(attribute);
             if (value == null) {
@@ -97,24 +98,27 @@ public class BlankNodeID implements ValueMaker {
         return result.toString();
     }
 
+    @Override
     public ValueMaker renameAttributes(ColumnRenamer renamer) {
-        List<Attribute> replacedAttributes = new ArrayList<Attribute>();
+        List<Attribute> replacedAttributes = new ArrayList<>();
         for (Attribute attribute : attributes) {
             replacedAttributes.add(renamer.applyTo(attribute));
         }
         return new BlankNodeID(this.classMapID, replacedAttributes);
     }
 
+    @Override
     public List<OrderSpec> orderSpecs(boolean ascending) {
-        List<OrderSpec> result = new ArrayList<OrderSpec>(attributes.size());
+        List<OrderSpec> result = new ArrayList<>(attributes.size());
         for (Attribute column : attributes) {
             result.add(new OrderSpec(new AttributeExpr(column), ascending));
         }
         return result;
     }
 
+    @Override
     public String toString() {
-        StringBuffer result = new StringBuffer("BlankNodeID(");
+        StringBuilder result = new StringBuilder("BlankNodeID(");
         Iterator<Attribute> it = attributes.iterator();
         while (it.hasNext()) {
             Attribute attribute = it.next();
@@ -128,7 +132,7 @@ public class BlankNodeID implements ValueMaker {
     }
 
     public Expression toExpression() {
-        List<Expression> parts = new ArrayList<Expression>();
+        List<Expression> parts = new ArrayList<>();
         parts.add(new Constant(classMapID));
         for (Attribute attribute : attributes) {
             parts.add(new Constant(DELIMITER));

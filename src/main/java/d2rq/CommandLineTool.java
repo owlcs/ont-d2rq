@@ -221,7 +221,7 @@ public abstract class CommandLineTool {
     /**
      * A copy-paste from some old Jena.
      * todo: better to replace with commons-cli
-     *
+     * <p>
      * Command line argument processing based on a trigger model.
      * An action is called whenever an argument is encountered. Example:
      * <CODE>
@@ -231,7 +231,6 @@ public abstract class CommandLineTool {
      * cl.add(false, "verbose")
      * .add(true, "--file") ;
      * cl.process(args) ;
-     * <p>
      * for ( Iterator iter = cl.args() ; iter.hasNext() ; )
      * ...
      * }
@@ -242,14 +241,12 @@ public abstract class CommandLineTool {
      * <CODE>
      * cl.setHook(cl.trace()) ;
      * </CODE>
-     * <p>
      * <ul>
      * <li>Neutral as to whether options have - or --</li>
      * <li>Does not allow multiple single letter options to be concatenated.</li>
      * <li>Options may be ended with - or --</li>
      * <li>Arguments with values can use "="</li>
      * </ul>
-     * <p>
      */
     protected static class CommandLine {
         protected String usage = null;
@@ -411,6 +408,8 @@ public abstract class CommandLineTool {
 
         /**
          * Hook to test whether this argument should be processed further
+         * @param argStr String
+         * @return boolean
          */
         public boolean ignoreArgument(String argStr) {
             return false;
@@ -420,6 +419,9 @@ public abstract class CommandLineTool {
          * Answer true if this argument terminates argument processing for the rest
          * of the command line. Default is to stop just before the first arg that
          * does not start with "-", or is "-" or "--".
+         *
+         * @param argStr String
+         * @return boolean
          */
         public boolean endProcessing(String argStr) {
             return !argStr.startsWith("-") || argStr.equals("--") || argStr.equals("-");
@@ -437,16 +439,19 @@ public abstract class CommandLineTool {
 
         /**
          * Test whether an argument was seen.
-         */
 
+         * @param argDecl String
+         * @return boolean
+         */
         public boolean contains(ArgDecl argDecl) {
             return getArg(argDecl) != null;
         }
 
         /**
          * Test whether an argument was seen.
+         * @param s String
+         * @return boolean
          */
-
         public boolean contains(String s) {
             return getArg(s) != null;
         }
@@ -456,6 +461,7 @@ public abstract class CommandLineTool {
          * Test whether the command line had a particular argument
          *
          * @param argName String
+         * @return boolean
          */
         public boolean hasArg(String argName) {
             return getArg(argName) != null;
@@ -464,9 +470,9 @@ public abstract class CommandLineTool {
         /**
          * Test whether the command line had a particular argument
          *
-         * @param argDecl ArgDecl
+         * @param argDecl {@link ArgDecl}
+         * @return boolean
          */
-
         public boolean hasArg(ArgDecl argDecl) {
             return getArg(argDecl) != null;
         }
@@ -479,7 +485,6 @@ public abstract class CommandLineTool {
          * @param argDecl Argument declaration to find
          * @return Last argument that matched.
          */
-
         public Arg getArg(ArgDecl argDecl) {
             Arg arg = null;
             for (Arg a : args.values()) {
@@ -497,7 +502,6 @@ public abstract class CommandLineTool {
          * @param arg Argument declaration to find
          * @return Arg - Last argument that matched.
          */
-
         public Arg getArg(String arg) {
             arg = ArgDecl.canonicalForm(arg);
             return args.get(arg);
@@ -566,7 +570,6 @@ public abstract class CommandLineTool {
          * @param hasValue True if the command takes a (string) value
          * @return The CommandLine processor object
          */
-
         public CommandLine add(String argName, boolean hasValue) {
             return add(new ArgDecl(hasValue, argName));
         }
@@ -579,7 +582,6 @@ public abstract class CommandLineTool {
          * @param argName  Name
          * @return The CommandLine processor object
          */
-
         public CommandLine add(boolean hasValue, String argName) {
             return add(new ArgDecl(hasValue, argName));
         }
@@ -590,7 +592,6 @@ public abstract class CommandLineTool {
          * @param arg Argument to add
          * @return The CommandLine processor object
          */
-
         public CommandLine add(ArgDecl arg) {
             for (Iterator<String> iter = arg.names(); iter.hasNext(); )
                 argMap.put(iter.next(), arg);
@@ -719,7 +720,6 @@ public abstract class CommandLineTool {
          *
          * @param hasValue Does it take a value or not?
          */
-
         public ArgDecl(boolean hasValue) {
             takesValue = hasValue;
         }
@@ -730,7 +730,6 @@ public abstract class CommandLineTool {
          * @param hasValue Does it take a value or not?
          * @param name     Name of argument
          */
-
         public ArgDecl(boolean hasValue, String name) {
             this(hasValue);
             addName(name);
@@ -741,9 +740,8 @@ public abstract class CommandLineTool {
          *
          * @param hasValue Does it take a value or not?
          * @param name     Name of argument
-         * @param handler  BiConsumer<String, String>
+         * @param handler  BiConsumer&lt;String, String;gt;
          */
-
         public ArgDecl(boolean hasValue, String name, BiConsumer<String, String> handler) {
             this(hasValue);
             addName(name);
@@ -757,7 +755,6 @@ public abstract class CommandLineTool {
          * @param name1    Name of argument
          * @param name2    Name of argument
          */
-
         public ArgDecl(boolean hasValue, String name1, String name2) {
             this(hasValue);
             addName(name1);
@@ -770,9 +767,8 @@ public abstract class CommandLineTool {
          * @param hasValue Does it take a value or not?
          * @param name1    Name of argument
          * @param name2    Name of argument
-         * @param handler  BiConsumer<String, String>
+         * @param handler  BiConsumer&lt;String, String;gt;
          */
-
         public ArgDecl(boolean hasValue, String name1, String name2, BiConsumer<String, String> handler) {
             this(hasValue);
             addName(name1);
@@ -788,7 +784,6 @@ public abstract class CommandLineTool {
          * @param name2    Name of argument
          * @param name3    Name of argument
          */
-
         public ArgDecl(boolean hasValue, String name1, String name2, String name3) {
             this(hasValue);
             addName(name1);
@@ -803,9 +798,8 @@ public abstract class CommandLineTool {
          * @param name1    Name of argument
          * @param name2    Name of argument
          * @param name3    Name of argument
-         * @param handler  BiConsumer<String, String>
+         * @param handler  BiConsumer&lt;String, String;gt;
          */
-
         public ArgDecl(boolean hasValue, String name1, String name2, String name3, BiConsumer<String, String> handler) {
             this(hasValue);
             addName(name1);
@@ -823,7 +817,6 @@ public abstract class CommandLineTool {
          * @param name3    Name of argument
          * @param name4    Name of argument
          */
-
         public ArgDecl(boolean hasValue, String name1, String name2, String name3, String name4) {
             this(hasValue);
             addName(name1);
@@ -840,9 +833,8 @@ public abstract class CommandLineTool {
          * @param name2    Name of argument
          * @param name3    Name of argument
          * @param name4    Name of argument
-         * @param handler  BiConsumer<String, String>
+         * @param handler  BiConsumer&lt;String, String;gt;
          */
-
         public ArgDecl(boolean hasValue, String name1, String name2, String name3, String name4, BiConsumer<String, String> handler) {
             this(hasValue);
             addName(name1);
@@ -861,9 +853,8 @@ public abstract class CommandLineTool {
          * @param name3    Name of argument
          * @param name4    Name of argument
          * @param name5    Name of argument
-         * @param handler  BiConsumer<String, String>
+         * @param handler  BiConsumer&lt;String, String;gt;
          */
-
         public ArgDecl(boolean hasValue, String name1, String name2, String name3, String name4, String name5, BiConsumer<String, String> handler) {
             this(hasValue);
             addName(name1);

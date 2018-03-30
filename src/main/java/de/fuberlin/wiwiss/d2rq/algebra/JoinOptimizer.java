@@ -1,31 +1,27 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.*;
-
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
+
+import java.util.*;
 
 
 /**
  * <p>Removes unnecessary joins from a {@link TripleRelation} in cases
  * where this is possible without affecting the result. This is an
  * optimization.</p>
- * <p>
  * <p>A join J from table T1 to table T2 with join condition
- * <em>T1.c_1 = T2.c_1 && T1.c_2 = T2.c_2 && ...</em>
+ * {@code T1.c_1 = T2.c_1 && T1.c_2 = T2.c_2 && ...}
  * can be removed if these conditions hold:</p>
- * <p>
  * <ol>
  * <li>The only join mentioning T2 is J.</li>
  * <li>All columns of T2 that are selected or constrained or used in
  * an expression occur in J's join condition.</li>
- * <li>All values of <em>T1.c_n</em> are guaranteed to occur
- * in <em>T2.c_n</em>, that is, there is a foreign key constraint
- * on <em>T1.c_n</em>.</li>
+ * <li>All values of {@code T1.c_n} are guaranteed to occur
+ * in {@code T2.c_n}, that is, there is a foreign key constraint
+ * on {@code T1.c_n}.</li>
  * </ol>
- * <p>
- * <p>In this case, J can be dropped, and all mentions of <em>T2.c_n</em>
- * can be replaced with <em>T1.c_n</em>.</p>
- * <p>
+ * <p>In this case, J can be dropped, and all mentions of {@code T2.c_n}
+ * can be replaced with {@code T1.c_n}.</p>
  * TODO: Currently this only is used for TripleRelations in FindQuery but it could be used for NodeRelations in SPARQL queries too
  * TODO: Prune unnecessary aliases after removing joins
  *
@@ -44,9 +40,9 @@ public class JoinOptimizer {
     }
 
     public TripleRelation optimize() {
-        Map<Attribute, Attribute> replacedColumns = new HashMap<Attribute, Attribute>();
+        Map<Attribute, Attribute> replacedColumns = new HashMap<>();
         Set<Attribute> allRequiredColumns = relation.baseRelation().allKnownAttributes();
-        Set<Join> requiredJoins = new HashSet<Join>(this.relation.baseRelation().joinConditions());
+        Set<Join> requiredJoins = new HashSet<>(this.relation.baseRelation().joinConditions());
         for (Join join : relation.baseRelation().joinConditions()) {
             if (!isRemovableJoin(join)) continue;
 
@@ -69,7 +65,7 @@ public class JoinOptimizer {
         NodeMaker s = this.relation.nodeMaker(TripleRelation.SUBJECT);
         NodeMaker p = this.relation.nodeMaker(TripleRelation.PREDICATE);
         NodeMaker o = this.relation.nodeMaker(TripleRelation.OBJECT);
-        Set<ProjectionSpec> projections = new HashSet<ProjectionSpec>();
+        Set<ProjectionSpec> projections = new HashSet<>();
         projections.addAll(s.projectionSpecs());
         projections.addAll(p.projectionSpecs());
         projections.addAll(o.projectionSpecs());
@@ -122,7 +118,7 @@ public class JoinOptimizer {
     }
 
     private Map<Attribute, Attribute> replacementColumns(Collection<Attribute> originalColumns, Join removableJoin) {
-        Map<Attribute, Attribute> result = new HashMap<Attribute, Attribute>();
+        Map<Attribute, Attribute> result = new HashMap<>();
         for (Attribute originalColumn : originalColumns) {
             result.put(originalColumn, removableJoin.equalAttribute(originalColumn));
         }

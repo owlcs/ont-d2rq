@@ -1,19 +1,18 @@
 package de.fuberlin.wiwiss.d2rq.sql.vendor;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Properties;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Properties;
+
 /**
  * Encapsulates differences in SQL syntax between database engines.
- * Methods only exists for SQL features where at least one engine
- * requires custom syntax differing from SQL-92.
+ * Methods only exists for SQL features where at least one engine requires custom syntax differing from SQL-92.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -164,7 +163,8 @@ public interface Vendor {
     /**
      * Vendor-specific initialization for a database connection.
      *
-     * @param connection
+     * @param connection {@link Connection}
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
      */
     void initializeConnection(Connection connection) throws SQLException;
 
@@ -172,7 +172,8 @@ public interface Vendor {
      * Vendor-specific code to execute prior to query execution.
      * Note: only one query can be "active" at a time per connection
      *
-     * @param connection
+     * @param connection {@link Connection}
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
      */
     void beforeQuery(Connection connection) throws SQLException;
 
@@ -180,7 +181,8 @@ public interface Vendor {
      * Vendor-specific code to execute after query execution.
      * Note: only one query can be "active" at a time per connection
      *
-     * @param connection
+     * @param connection {@link Connection}
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
      */
     void afterQuery(Connection connection) throws SQLException;
 
@@ -188,7 +190,8 @@ public interface Vendor {
      * Vendor-specific cleanup code to execute prior to statement close.
      * Note: only one query can be "active" at a time per connection
      *
-     * @param connection
+     * @param connection {@link Connection}
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
      */
     void beforeClose(Connection connection) throws SQLException;
 
@@ -196,7 +199,8 @@ public interface Vendor {
      * Vendor-specific cleanup code to execute after statement close.
      * Note: only one query can be "active" at a time per connection
      *
-     * @param connection
+     * @param connection {@link Connection}
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
      */
     void afterClose(Connection connection) throws SQLException;
 
@@ -204,7 +208,8 @@ public interface Vendor {
      * Vendor-specific cleanup code to execute prior to statement cancel.
      * Note: only one query can be "active" at a time per connection
      *
-     * @param connection
+     * @param connection {@link Connection}
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
      */
     void beforeCancel(Connection connection) throws SQLException;
 
@@ -212,7 +217,8 @@ public interface Vendor {
      * Vendor-specific cleanup code to execute after statement cancel.
      * Note: only one query can be "active" at a time per connection
      *
-     * @param connection
+     * @param connection {@link Connection}
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
      */
     void afterCancel(Connection connection) throws SQLException;
 }

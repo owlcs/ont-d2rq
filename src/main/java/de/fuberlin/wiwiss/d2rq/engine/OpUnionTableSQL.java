@@ -1,9 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import de.fuberlin.wiwiss.d2rq.algebra.CompatibleRelationGroup;
+import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.OpExt;
@@ -18,14 +16,14 @@ import org.apache.jena.sparql.serializer.SerializationContext;
 import org.apache.jena.sparql.sse.writers.WriterOp;
 import org.apache.jena.sparql.util.NodeIsomorphismMap;
 
-import de.fuberlin.wiwiss.d2rq.algebra.CompatibleRelationGroup;
-import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * An {@link Op} that wraps a union of multiple {@link NodeRelation}s.
  * <p>
- * This is typically, but not necessarily, the result of matching a BGP
- * against a D2RQ-mapped database.
+ * This is typically, but not necessarily, the result of matching a BGP against a D2RQ-mapped database.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -35,9 +33,11 @@ public class OpUnionTableSQL extends OpExt {
      * Creates a new instance from a collection of
      * {@link NodeRelation}s, or a simpler equivalent Op
      * if optimizations are possible.
+     * @param tables Collection of {@link NodeRelation}
+     * @return {@link Op}
      */
     public static Op create(Collection<NodeRelation> tables) {
-        Collection<OpTableSQL> nonEmpty = new ArrayList<OpTableSQL>();
+        Collection<OpTableSQL> nonEmpty = new ArrayList<>();
         for (NodeRelation table : tables) {
             if (table.baseRelation().condition().isFalse()) continue;
             nonEmpty.add(new OpTableSQL(table));
@@ -57,7 +57,7 @@ public class OpUnionTableSQL extends OpExt {
 
     public OpUnionTableSQL(Collection<OpTableSQL> tableOps, Op effectiveOp) {
         super("sqlunion");
-        this.tableOps = new ArrayList<OpTableSQL>(tableOps);
+        this.tableOps = new ArrayList<>(tableOps);
         this.effectiveOp = effectiveOp;
     }
 
@@ -67,7 +67,7 @@ public class OpUnionTableSQL extends OpExt {
             @Override
             protected QueryIterator nextStage(Binding binding) {
                 QueryIterConcat resultIt = new QueryIterConcat(execCxt);
-                Collection<NodeRelation> tables = new ArrayList<NodeRelation>();
+                Collection<NodeRelation> tables = new ArrayList<>();
                 for (OpTableSQL tableOp : tableOps) {
                     tables.add(tableOp.table().extendWith(binding));
                 }

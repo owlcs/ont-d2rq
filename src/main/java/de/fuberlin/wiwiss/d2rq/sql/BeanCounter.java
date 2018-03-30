@@ -37,6 +37,8 @@ public class BeanCounter implements Cloneable {
     /**
      * <code>This = This - minus </code>.
      * The difference between this and a <code>start</code> value.
+     *
+     * @param minus {@link BeanCounter}
      */
     public void subtract(BeanCounter minus) {
         numberOfExecutedSQLQueries -= minus.numberOfExecutedSQLQueries;
@@ -47,6 +49,7 @@ public class BeanCounter implements Cloneable {
 
     /**
      * <code>This = This / n </code>. Good for averaging over <code>n</code> runs.
+     * @param n int
      */
     public void div(int n) {
         numberOfExecutedSQLQueries /= n;
@@ -56,9 +59,6 @@ public class BeanCounter implements Cloneable {
     }
 
     // Creating Instances (convenience methods)
-
-    public BeanCounter() {
-    }
 
     public Object clone() {
         try {
@@ -70,7 +70,7 @@ public class BeanCounter implements Cloneable {
     }
 
     /**
-     * Get a copy of the static fields.
+     * Gets a copy of the static fields.
      *
      * @return an instance
      */
@@ -81,8 +81,8 @@ public class BeanCounter implements Cloneable {
     }
 
     /**
-     * Get a difference instance.
-     *
+     * Gets a difference instance.
+     * @param minus {@link BeanCounter}
      * @return a new (static - minus) instance
      */
     public static BeanCounter instanceMinus(BeanCounter minus) {
@@ -92,8 +92,9 @@ public class BeanCounter implements Cloneable {
     }
 
     /**
-     * Get a difference instance.
+     * Gets a difference instance.
      *
+     * @param minus {@link BeanCounter}
      * @return a new (this - minus) instance
      */
     public BeanCounter minus(BeanCounter minus) {
@@ -106,14 +107,15 @@ public class BeanCounter implements Cloneable {
 
     /**
      * Convenience method for presenting information.
+     * @return String
      */
     public String sqlInfoString() {
-        return "" + numberOfExecutedSQLQueries + "/" +
-                numberOfReturnedRows + "/" + numberOfReturnedFields;
+        return "" + numberOfExecutedSQLQueries + "/" + numberOfReturnedRows + "/" + numberOfReturnedFields;
     }
 
     /**
      * Convenience method for presenting information.
+     * @return String
      */
     public String sqlPerformanceString() {
         return "" + timeMillis + "ms(" + sqlInfoString() + ")";

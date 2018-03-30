@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
+import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.OpExt;
@@ -12,8 +13,6 @@ import org.apache.jena.sparql.engine.iterator.QueryIterRepeatApply;
 import org.apache.jena.sparql.serializer.SerializationContext;
 import org.apache.jena.sparql.util.NodeIsomorphismMap;
 
-import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
-
 /**
  * An {@link Op} that wraps a {@link NodeRelation}.
  *
@@ -22,8 +21,11 @@ import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
 public class OpTableSQL extends OpExt {
 
     /**
-     * Creates a new OpTableSQL, or a simpler Op if optimizations
-     * are possible.
+     * Creates a new OpTableSQL, or a simpler Op if optimizations are possible.
+
+     *
+     * @param table {@link NodeRelation}
+     * @return {@link Op}
      */
     public static Op create(NodeRelation table) {
         if (table.baseRelation().condition().isFalse()) {

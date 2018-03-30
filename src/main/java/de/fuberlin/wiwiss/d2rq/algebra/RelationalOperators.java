@@ -1,8 +1,8 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.Set;
-
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
+
+import java.util.Set;
 
 
 public interface RelationalOperators {
@@ -25,7 +25,6 @@ public interface RelationalOperators {
      * <p>Applies the selection operator to this relation.
      * The new relation will contain only the tuples for which
      * the expression evaluates to <tt>true</tt>.</p>
-     * <p>
      * <p>Selection on attributes that don't exist in the relation are
      * considered to be always <tt>false</tt> and will cause an empty
      * relation.</p>
@@ -37,7 +36,6 @@ public interface RelationalOperators {
 
     /**
      * <p>Applies the rename operator to this relation.</p>
-     * <p>
      * <p>Renames of attributes that don't exist in the relation are
      * ignored.</p>
      *
@@ -49,7 +47,6 @@ public interface RelationalOperators {
 
     /**
      * <p>Applies the projection operator to this relation.</p>
-     * <p>
      * <p>The new relation will contain only the attributes given
      * as the argument.</p>
      *

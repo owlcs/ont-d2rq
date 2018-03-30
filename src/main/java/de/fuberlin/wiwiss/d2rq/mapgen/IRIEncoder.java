@@ -5,11 +5,11 @@ import java.nio.charset.StandardCharsets;
 public class IRIEncoder {
 
     /**
-     * %-encodes every character that is not in the
-     * iunreserved production of RFC 3987.
-     * <p>
-     * Behaviour for Unicode surrogates and Unicode
-     * non-characters is undefined.
+     * %-encodes every character that is not in the iunreserved production of RFC 3987.
+     * Behaviour for Unicode surrogates and Unicode non-characters is undefined.
+     *
+     * @param s String
+     * @return String
      */
     public static String encode(String s) {
         StringBuilder sbuffer = new StringBuilder(s.length());

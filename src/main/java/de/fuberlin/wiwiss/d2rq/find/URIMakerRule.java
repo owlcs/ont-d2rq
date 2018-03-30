@@ -1,11 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.find;
 
-import java.util.*;
-
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.graph.Node;
-import org.apache.jena.sparql.core.Var;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationalOperators;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
@@ -15,16 +9,19 @@ import de.fuberlin.wiwiss.d2rq.nodes.NodeSetFilter;
 import de.fuberlin.wiwiss.d2rq.values.BlankNodeID;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.sparql.core.Var;
+
+import java.util.*;
 
 /**
- * <p>The URI maker rule states that any URI that matches a URI pattern is not contained
- * in a URI column. The reasoning is that lookup of a node in a URI pattern is relatively
+ * <p>The URI maker rule states that any URI that matches a URI pattern is not contained in a URI column.
+ * The reasoning is that lookup of a node in a URI pattern is relatively
  * quick -- often it requires just an integer lookup in a primary key table -- but
  * lookup in URI columns may require multiple full table scans. Since URI lookup is
  * such a common operation, this rule can help a lot by reducing full table scans.</p>
- * <p>
  * <p>Checking a number of NodeMakers against the rule works like this:</p>
- * <p>
  * <ol>
  * <li>An URIMakerRuleChecker is created using {@link #createRuleChecker(Node)},</li>
  * <li>node makers are added one by one to the rule checker,</li>
@@ -32,7 +29,6 @@ import de.fuberlin.wiwiss.d2rq.values.Translator;
  * calls to {@link URIMakerRuleChecker#canMatch(NodeMaker)} will return false
  * if the argument is backed by a URI column.</li>
  * </ol>
- * <p>
  * <p>Performance is best when all candidate NodeMakers backed by URI patterns are
  * sent to the rule checker before any NodeMaker backed by a URI column. For this
  * purpose, {@link #sortRDFRelations(Collection)} sorts a collection of
@@ -41,11 +37,11 @@ import de.fuberlin.wiwiss.d2rq.values.Translator;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class URIMakerRule implements Comparator<TripleRelation> {
-    private Map<NodeMaker, URIMakerIdentifier> identifierCache = new HashMap<NodeMaker, URIMakerIdentifier>();
+    private Map<NodeMaker, URIMakerIdentifier> identifierCache = new HashMap<>();
 
     public List<TripleRelation> sortRDFRelations(Collection<TripleRelation> tripleRelations) {
-        ArrayList<TripleRelation> results = new ArrayList<TripleRelation>(tripleRelations);
-        Collections.sort(results, this);
+        ArrayList<TripleRelation> results = new ArrayList<>(tripleRelations);
+        results.sort(this);
         return results;
     }
 
@@ -56,13 +52,7 @@ public class URIMakerRule implements Comparator<TripleRelation> {
     public int compare(TripleRelation o1, TripleRelation o2) {
         int priority1 = priority(o1);
         int priority2 = priority(o2);
-        if (priority1 > priority2) {
-            return -1;
-        }
-        if (priority1 < priority2) {
-            return 1;
-        }
-        return 0;
+        return Integer.compare(priority2, priority1);
     }
 
     private int priority(TripleRelation relation) {

@@ -1,19 +1,18 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
+import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.rdf.model.Resource;
+
 import java.io.IOException;
 import java.net.URI;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import org.apache.jena.rdf.model.Resource;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
-import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
-import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
 
 /**
@@ -164,6 +163,7 @@ public class Database extends MapObject {
      * This is a hack where we can pass a pre-existing ConnectedDB that
      * will be used by this Database, so we avoid that the Database
      * opens another connection to the same DB.
+     * @param db {@link ConnectedDB}
      */
     public void useConnectedDB(ConnectedDB db) {
         this.connection = db;

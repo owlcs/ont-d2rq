@@ -1,10 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.values;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.algebra.OrderSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
@@ -12,16 +7,23 @@ import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeSetFilter;
 import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 /**
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class ValueDecorator implements ValueMaker {
     public static ValueConstraint maxLengthConstraint(final int maxLength) {
         return new ValueConstraint() {
+            @Override
             public boolean matches(String value) {
                 return value == null || value.length() <= maxLength;
             }
 
+            @Override
             public String toString() {
                 return "maxLength=" + maxLength;
             }
@@ -30,10 +32,12 @@ public class ValueDecorator implements ValueMaker {
 
     public static ValueConstraint containsConstraint(final String containsSubstring) {
         return new ValueConstraint() {
+            @Override
             public boolean matches(String value) {
-                return value == null || value.indexOf(containsSubstring) >= 0;
+                return value == null || value.contains(containsSubstring);
             }
 
+            @Override
             public String toString() {
                 return "contains='" + containsSubstring + "'";
             }
@@ -41,12 +45,14 @@ public class ValueDecorator implements ValueMaker {
     }
 
     public static ValueConstraint regexConstraint(final String regex) {
-        final Pattern pattern = Pattern.compile(regex);
+        Pattern pattern = Pattern.compile(regex);
         return new ValueConstraint() {
+            @Override
             public boolean matches(String value) {
                 return value == null || pattern.matcher(value).matches();
             }
 
+            @Override
             public String toString() {
                 return "regex='" + regex + "'";
             }
@@ -67,15 +73,18 @@ public class ValueDecorator implements ValueMaker {
         this.translator = translator;
     }
 
+    @Override
     public String makeValue(ResultRow row) {
         return this.translator.toRDFValue(this.base.makeValue(row));
     }
 
+    @Override
     public void describeSelf(NodeSetFilter c) {
         c.setUsesTranslator(translator);
         this.base.describeSelf(c);
     }
 
+    @Override
     public Expression valueExpression(String value) {
         for (ValueConstraint constraint : constraints) {
             if (!constraint.matches(value)) {
@@ -89,14 +98,17 @@ public class ValueDecorator implements ValueMaker {
         return base.valueExpression(dbValue);
     }
 
+    @Override
     public Set<ProjectionSpec> projectionSpecs() {
         return this.base.projectionSpecs();
     }
 
+    @Override
     public ValueMaker renameAttributes(ColumnRenamer renamer) {
         return new ValueDecorator(this.base.renameAttributes(renamer), this.constraints, this.translator);
     }
 
+    @Override
     public List<OrderSpec> orderSpecs(boolean ascending) {
         return base.orderSpecs(ascending);
     }
@@ -105,8 +117,9 @@ public class ValueDecorator implements ValueMaker {
         boolean matches(String value);
     }
 
+    @Override
     public String toString() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         if (!this.translator.equals(Translator.IDENTITY)) {
             result.append(this.translator);
             result.append("(");

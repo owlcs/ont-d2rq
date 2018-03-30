@@ -59,7 +59,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     /**
      * Creates an expression transformer.
      *
-     * @param nodeRelation
+     * @param nodeRelation {@link NodeRelation}
      */
     public TransformExprToSQLApplyer(NodeRelation nodeRelation) {
         this.convertable = true;
@@ -197,7 +197,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
 
         for (int i = 0; i < function.numArgs(); i++)
             function.getArg(i + 1).visit(this);
-        List<Expression> args = new ArrayList<Expression>(function.numArgs());
+        List<Expression> args = new ArrayList<>(function.numArgs());
 
         for (int i = 0; i < function.numArgs(); i++)
             args.add(expression.pop());
@@ -212,7 +212,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
      * @return List<Expression> - the equivalent sql-expressions
      */
     private List<Expression> toExpression(ExprVar exprVar) {
-        ArrayList<Expression> result = new ArrayList<Expression>();
+        ArrayList<Expression> result = new ArrayList<>();
 
         if (this.nodeRelation != null && exprVar != null) {
             // get the nodemaker for the expr-var
@@ -358,7 +358,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
             Expression e2 = expression.pop();
             Expression e1 = expression.pop();
 
-            List<Expression> args = new ArrayList<Expression>(2);
+            List<Expression> args = new ArrayList<>(2);
 
             args.add(e1);
             args.add(e2);
@@ -1083,7 +1083,6 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     }
 
     // extension mechanism
-
 
     protected boolean extensionSupports(ExprFunction function) {
         return false;

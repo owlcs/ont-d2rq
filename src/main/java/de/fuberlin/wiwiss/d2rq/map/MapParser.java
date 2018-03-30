@@ -14,8 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * Creates a {@link Mapping} from a Jena model representation
- * of a D2RQ mapping file.
+ * Creates a {@link Mapping} from a Jena model representation of a D2RQ mapping file.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -28,10 +27,8 @@ public class MapParser {
     public static final String IRI_CHAR_REGEX = "([:/?#\\[\\]@!$&'()*+,;=a-zA-Z0-9._~\\x80-\\uFFFF-]|%[0-9A-Fa-f][0-9A-Fa-f])*";
 
     /**
-     * Turns a relative URI into an absolute one, by using the
-     * current directory's <tt>file:</tt> URI as a base. This
-     * uses the same algorithm as Jena's Model class when reading
-     * a file.
+     * Turns a relative URI into an absolute one, by using the current directory's <tt>file:</tt> URI as a base.
+     * This uses the same algorithm as Jena's Model class when reading a file.
      *
      * @param uri Any URI
      * @return An absolute URI corresponding to the input
@@ -49,8 +46,7 @@ public class MapParser {
     private Mapping mapping;
 
     /**
-     * Constructs a new MapParser from a Jena model containing the RDF statements
-     * from a D2RQ mapping file.
+     * Constructs a new MapParser from a Jena model containing the RDF statements from a D2RQ mapping file.
      *
      * @param mapModel a Jena model containing the RDF statements from a D2RQ mapping file
      * @param baseURI  used for relative URI patterns. Could be null.
@@ -61,9 +57,10 @@ public class MapParser {
     }
 
     /**
-     * TODO: rewrite this stupid initialization.
+     * TODO: better to rewrite this initialization.
      * Starts the parsing process. Must be called before results can be retrieved
      * from the getter methods.
+     * @return {@link Mapping}
      */
     public Mapping parse() {
         if (this.mapping != null) {
@@ -230,7 +227,7 @@ public class MapParser {
     }
 
     private void parseTranslationTables() {
-        Set<Resource> translationTableResources = new HashSet<Resource>();
+        Set<Resource> translationTableResources = new HashSet<>();
         Iterator<? extends Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.TranslationTable);
         while (it.hasNext()) {
             translationTableResources.add(it.next());
@@ -420,6 +417,7 @@ public class MapParser {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.column);
         while (stmts.hasNext()) {
+            //noinspection EqualsBetweenInconvertibleTypes
             if (r.getProperty(RDF.type).equals(D2RQ.ObjectPropertyBridge)) {
                 // Legacy
                 bridge.setURIColumn(stmts.nextStatement().getString());
@@ -429,6 +427,7 @@ public class MapParser {
         }
         stmts = r.listProperties(D2RQ.pattern);
         while (stmts.hasNext()) {
+            //noinspection EqualsBetweenInconvertibleTypes
             if (r.getProperty(RDF.type).equals(D2RQ.ObjectPropertyBridge)) {
                 // Legacy
                 bridge.setURIPattern(stmts.nextStatement().getString());

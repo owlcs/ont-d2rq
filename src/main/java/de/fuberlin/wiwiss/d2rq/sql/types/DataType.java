@@ -10,11 +10,10 @@ import java.sql.Types;
 
 /**
  * Represents a SQL data type.
- *
  * TODO: Data types should know whether they can be used in DISTINCT queries
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
- * @author Christian Becker <http://beckr.org#chris>
+ * @author Christian Becker &lt;http://beckr.org#chris&gt;
  */
 public abstract class DataType {
 
@@ -47,6 +46,7 @@ public abstract class DataType {
     private final String name;
 
     /**
+     * @param sqlSyntax {@link Vendor}
      * @param name Name as reported by JDBC metadata, for debugging
      */
     public DataType(Vendor sqlSyntax, String name) {
@@ -55,8 +55,8 @@ public abstract class DataType {
     }
 
     /**
-     * Return the appropriate RDF datatype for a SQL data type. <code>null</code>
-     * indicates a known SQL type that cannot be mapped to RDF.
+     * Return the appropriate RDF datatype for a SQL data type.
+     * <code>null</code> indicates a known SQL type that cannot be mapped to RDF.
      *
      * @return RDF datatype as prefixed name: <code>xsd:string</code> etc.
      */
@@ -80,11 +80,8 @@ public abstract class DataType {
     }
 
     /**
-     * Creates a SQL literal for the given value, suitable
-     * for comparison to a column of this indicated type.
-     * If the value is not suitable for the column type
-     * (e.g., not a number for a SQLExactNumeric), <code>NULL</code>
-     * is returned.
+     * Creates a SQL literal for the given value, suitable for comparison to a column of this indicated type.
+     * If the value is not suitable for the column type (e.g., not a number for a SQLExactNumeric), <code>NULL</code> is returned.
      *
      * @param value A value
      * @return A quoted and escaped SQL literal, suitable for comparison to a column
@@ -100,17 +97,15 @@ public abstract class DataType {
      * @param resultSet Result of a SELECT query
      * @param column The column index to retrieve; leftmost columns is 1
      * @return String representation, or <code>null</code> if SQL result was null or is not representable in the XSD type
-     * @throws SQLException
+     * @throws SQLException sql error
      */
     public String value(ResultSet resultSet, int column) throws SQLException {
         return resultSet.getString(column);
     }
 
     /**
-     * A regular expression that covers the lexical form of
-     * all values of this datatype (in their RDF representation).
-     * This is especially important for types that are not mapped
-     * to a typed literal but to plain/xsd:string literals.
+     * A regular expression that covers the lexical form of all values of this datatype (in their RDF representation).
+     * This is especially important for types that are not mapped to a typed literal but to plain/xsd:string literals.
      *
      * @return A regular expression covering the lexical forms of all values of this datatype
      */
@@ -128,8 +123,8 @@ public abstract class DataType {
     }
 
     /**
-     * Returns the datatype's name as reported by JDBC metadata
-     * (or closest equivalent), for debugging
+     * Returns the datatype's name as reported by JDBC metadata (or closest equivalent), for debugging
+     * @return String
      */
     public String name() {
         return name;

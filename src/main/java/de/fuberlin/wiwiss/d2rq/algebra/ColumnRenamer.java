@@ -1,9 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.*;
-import java.util.Map.Entry;
-
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Something that can rename columns in various objects.
@@ -41,20 +43,6 @@ public abstract class ColumnRenamer {
         }
     };
 
-    /**
-     * Returns a new map with keys and values exchanged. Lossy if multiple
-     * keys in the original have equal values.
-     *
-     * @param m The original map
-     * @return An inverse map
-     */
-    protected final static <K, V> Map<V, K> invertMap(Map<K, V> m) {
-        HashMap<V, K> result = new HashMap<V, K>();
-        for (Entry<K, V> entry : m.entrySet()) {
-            result.put(entry.getValue(), entry.getKey());
-        }
-        return result;
-    }
 
     /**
      * @param original A column

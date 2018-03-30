@@ -27,12 +27,11 @@ import java.util.stream.Collectors;
 
 /**
  * Generates a D2RQ mapping by introspecting a database schema.
- * Result is available as a high-quality Turtle serialization, or
- * as a parsed model.
+ * Result is available as a high-quality Turtle serialization, or as a parsed model.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
 public class MappingGenerator {
     public final static Logger LOGGER = LoggerFactory.getLogger(MappingGenerator.class);
 
@@ -185,7 +184,7 @@ public class MappingGenerator {
     }
 
     private static String trimEndSymbol(String s) {
-        return s.replaceAll("(/|#)+$", "");
+        return s.replaceAll("([/#])+$", "");
     }
 
     protected Model createMappingModel() {
@@ -561,6 +560,8 @@ public class MappingGenerator {
      * foreign key constraints, and the constraints reference other
      * tables (not T), and the constraints cover all columns of T,
      * and there are no foreign keys from other tables pointing to this table
+     * @param tableName {@link RelationName}
+     * @return boolean
      */
     public boolean isLinkTable(RelationName tableName) {
         List<Join> foreignKeys = database.schemaInspector().foreignKeys(tableName, DatabaseSchemaInspector.KEYS_IMPORTED);

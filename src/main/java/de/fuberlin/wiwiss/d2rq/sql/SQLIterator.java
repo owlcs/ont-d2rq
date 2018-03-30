@@ -66,13 +66,6 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
         return result;
     }
 
-    /**
-     * @deprecated Use {@link #next()} instead
-     */
-    public ResultRow nextRow() {
-        return next();
-    }
-
     private synchronized void tryFetchNextRow() {
         if (this.resultSet == null) {
             this.prefetchedRow = null;
@@ -94,8 +87,7 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
     }
 
     /**
-     * Make sure the SQL result set is closed and freed. Will auto-close when the
-     * record-set is exhausted.
+     * Make sure the SQL result set is closed and freed. Will auto-close when the record-set is exhausted.
      */
     public void close() {
         if (explicitlyClosed) return;

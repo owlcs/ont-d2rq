@@ -1,15 +1,15 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.algebra.Join;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
+
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Parses different types of SQL fragments from Strings, and turns them
@@ -28,7 +28,7 @@ public class SQL {
                             // Optional schema name and dot, group 1 is schema name
                             "(?:([a-zA-Z_]\\w*)\\.)?" +
                             // Required table name and dot, group 2 is table name. Brackets are MS SQL Server delimiters
-                            "(\\[?[a-zA-Z_][a-zA-Z_0-9-]*\\]?)\\." +
+                            "(\\[?[a-zA-Z_][a-zA-Z_0-9-]*]?)\\." +
                             // Required column name , is group 3
                             "(\\w+)");
     private static final java.util.regex.Pattern attributeRegexLax =
@@ -41,10 +41,10 @@ public class SQL {
                             "([^.]+)");
 
     /**
-     * Constructs an attribute from a fully qualified column name in <tt>[schema.]table.column</tt>
-     * notation.
+     * Constructs an attribute from a fully qualified column name in <tt>[schema.]table.column</tt> notation.
      *
      * @param qualifiedName The attribute's name
+     * @return {@link Attribute}
      */
     public static Attribute parseAttribute(String qualifiedName) {
         Matcher match = attributeRegexLax.matcher(qualifiedName);
@@ -57,7 +57,7 @@ public class SQL {
     }
 
     public static Set<Attribute> findColumnsInExpression(String expression) {
-        Set<Attribute> results = new HashSet<Attribute>();
+        Set<Attribute> results = new HashSet<>();
         Matcher match = attributeRegexConservative.matcher(expression);
         while (match.find()) {
             results.add(new Attribute(match.group(1), match.group(2), match.group(3)));
@@ -66,13 +66,13 @@ public class SQL {
     }
 
     public static String replaceColumnsInExpression(String expression, ColumnRenamer columnRenamer) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         Matcher match = attributeRegexConservative.matcher(expression);
         boolean matched = match.find();
         int firstPartEnd = matched ? (match.start(1) != -1 ? match.start(1)
                 : match.start(2))
                 : expression.length();
-        result.append(expression.substring(0, firstPartEnd));
+        result.append(expression, 0, firstPartEnd);
         while (matched) {
             Attribute column = new Attribute(match.group(1), match.group(2), match.group(3));
             result.append(columnRenamer.applyTo(column).qualifiedName());
@@ -81,20 +81,20 @@ public class SQL {
             int nextPartEnd = matched ? (match.start(1) != -1 ? match.start(1)
                     : match.start(2))
                     : expression.length();
-            result.append(expression.substring(nextPartStart, nextPartEnd));
+            result.append(expression, nextPartStart, nextPartEnd);
         }
         return result.toString();
     }
 
     // TODO: This really should happen in Expression and without string munging
     public static String quoteColumnsInExpression(String expression, ConnectedDB database) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         Matcher match = attributeRegexConservative.matcher(expression);
         boolean matched = match.find();
         int firstPartEnd = matched ? (match.start(1) != -1 ? match.start(1)
                 : match.start(2))
                 : expression.length();
-        result.append(expression.substring(0, firstPartEnd));
+        result.append(expression, 0, firstPartEnd);
         while (matched) {
             result.append(database.vendor().quoteAttribute(
                     new Attribute(match.group(1), match.group(2), match.group(3))));
@@ -103,7 +103,7 @@ public class SQL {
             int nextPartEnd = matched ? (match.start(1) != -1 ? match.start(1)
                     : match.start(2))
                     : expression.length();
-            result.append(expression.substring(nextPartStart, nextPartEnd));
+            result.append(expression, nextPartStart, nextPartEnd);
         }
         return result.toString();
     }
@@ -120,6 +120,7 @@ public class SQL {
      * or <tt>table</tt> notation.
      *
      * @param qualifiedName The relation's name
+     * @return {@link RelationName}
      */
     public static RelationName parseRelationName(String qualifiedName) {
         Matcher match = relationNameRegex.matcher(qualifiedName);
@@ -136,6 +137,9 @@ public class SQL {
 
     /**
      * Constructs an Alias from an SQL "foo AS bar" expression.
+     *
+     * @param aliasExpression String
+     * @return {@link Alias}
      */
     public static Alias parseAlias(String aliasExpression) {
         Matcher matcher = aliasPattern.matcher(aliasExpression);
@@ -143,27 +147,25 @@ public class SQL {
             throw new D2RQException("d2rq:alias '" + aliasExpression +
                     "' is not in 'table AS alias' form", D2RQException.SQL_INVALID_ALIAS);
         }
-        return new Alias(SQL.parseRelationName(matcher.group(1)),
-                SQL.parseRelationName(matcher.group(2)));
+        return new Alias(SQL.parseRelationName(matcher.group(1)), SQL.parseRelationName(matcher.group(2)));
     }
 
     /**
-     * Builds a list of Join objects from a list of join condition
-     * strings. Groups multiple condition that connect the same
-     * two table (multi-column keys) into a single join.
+     * Builds a list of Join objects from a list of join condition strings.
+     * Groups multiple condition that connect the same two table (multi-column keys) into a single join.
      *
      * @param joinConditions a collection of strings
      * @return a set of {@link Join} instances
      */
     public static Set<Join> parseJoins(Collection<String> joinConditions) {
-        List<AttributeEqualityCondition> parsedConditions = new ArrayList<AttributeEqualityCondition>();
+        List<AttributeEqualityCondition> parsedConditions = new ArrayList<>();
         for (String joinCondition : joinConditions) {
             parsedConditions.add(AttributeEqualityCondition.parseJoinCondition(joinCondition));
         }
         Collections.sort(parsedConditions);
-        Set<Join> results = new HashSet<Join>();
-        List<Attribute> attributes1 = new ArrayList<Attribute>();
-        List<Attribute> attributes2 = new ArrayList<Attribute>();
+        Set<Join> results = new HashSet<>();
+        List<Attribute> attributes1 = new ArrayList<>();
+        List<Attribute> attributes2 = new ArrayList<>();
         int joinOperator = Join.DIRECTION_UNDIRECTED;
         AttributeEqualityCondition previousCondition = null;
         for (AttributeEqualityCondition condition : parsedConditions) {
@@ -171,8 +173,8 @@ public class SQL {
                 if (previousCondition != null) {
                     results.add(new Join(attributes1, attributes2, joinOperator));
                 }
-                attributes1 = new ArrayList<Attribute>();
-                attributes2 = new ArrayList<Attribute>();
+                attributes1 = new ArrayList<>();
+                attributes2 = new ArrayList<>();
                 joinOperator = condition.joinOperator();
             }
             attributes1.add(condition.firstAttribute());
@@ -185,8 +187,7 @@ public class SQL {
         return results;
     }
 
-    private static class AttributeEqualityCondition
-            implements Comparable<AttributeEqualityCondition> {
+    private static class AttributeEqualityCondition implements Comparable<AttributeEqualityCondition> {
         private Attribute firstAttribute;
         private Attribute secondAttribute;
         private int joinOperator;
@@ -220,7 +221,7 @@ public class SQL {
         }
 
         public static AttributeEqualityCondition parseJoinCondition(String joinCondition) {
-            int joinOperator = -1;
+            int joinOperator;
             int index = -1;
 
             for (joinOperator = Join.joinOperators.length - 1; joinOperator >= 0; joinOperator--) {

@@ -1,17 +1,16 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.csv.TranslationTableParser;
+import de.fuberlin.wiwiss.d2rq.values.Translator;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.rdf.model.Resource;
+
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.jena.rdf.model.Resource;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.csv.TranslationTableParser;
-import de.fuberlin.wiwiss.d2rq.values.Translator;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
 /**
  * Represents a d2rq:TranslationTable.
@@ -30,6 +29,7 @@ public class TranslationTable extends MapObject {
 
     /**
      * Returns the number of defined mappings.
+     * @return int
      */
     public int size() {
         return this.translations.size();
@@ -42,23 +42,20 @@ public class TranslationTable extends MapObject {
      * @param rdfValue the value on the RDF side (a string or URI)
      */
     public void addTranslation(String dbValue, String rdfValue) {
-        assertArgumentNotNull(dbValue, D2RQ.databaseValue,
-                D2RQException.TRANSLATION_MISSING_DBVALUE);
-        assertArgumentNotNull(rdfValue, D2RQ.rdfValue,
-                D2RQException.TRANSLATION_MISSING_RDFVALUE);
+        assertArgumentNotNull(dbValue, D2RQ.databaseValue, D2RQException.TRANSLATION_MISSING_DBVALUE);
+        assertArgumentNotNull(rdfValue, D2RQ.rdfValue, D2RQException.TRANSLATION_MISSING_RDFVALUE);
         this.translations.add(new Translation(dbValue, rdfValue));
     }
 
     /**
-     * Sets a translation class. The translation class must implement
-     * the {@link Translator} interface. This method will take care
-     * of generating an instance of the class.
+     * Sets a translation class.
+     * The translation class must implement the {@link Translator} interface.
+     * This method will take care of generating an instance of the class.
      *
      * @param className name of a class implementing {@link Translator}
      */
     public void setJavaClass(String className) {
-        assertNotYetDefined(this.javaClass, D2RQ.javaClass,
-                D2RQException.TRANSLATIONTABLE_DUPLICATE_JAVACLASS);
+        assertNotYetDefined(this.javaClass, D2RQ.javaClass, D2RQException.TRANSLATIONTABLE_DUPLICATE_JAVACLASS);
         this.javaClass = className;
     }
 
@@ -117,12 +114,10 @@ public class TranslationTable extends MapObject {
     }
 
     /**
-     * Checks whether the Translator class or a super class of it implements the
-     * Translator class interface.
+     * Checks whether the Translator class or a super class of it implements the Translator class interface.
      *
      * @param translatorClass a specific translator class or a more generic parent
-     * @return true, if the currently checked translator class implements the
-     * Translator class interface
+     * @return true, if the currently checked translator class implements the Translator class interface
      */
     private boolean checkTranslatorClassImplementation(Class<?> translatorClass) {
         if (implementsTranslator(translatorClass)) {
@@ -197,10 +192,12 @@ public class TranslationTable extends MapObject {
             return this.rdfValue;
         }
 
+        @Override
         public int hashCode() {
             return this.dbValue.hashCode() ^ this.rdfValue.hashCode();
         }
 
+        @Override
         public boolean equals(Object otherObject) {
             if (!(otherObject instanceof Translation)) return false;
             Translation other = (Translation) otherObject;
@@ -208,14 +205,15 @@ public class TranslationTable extends MapObject {
                     && this.rdfValue.equals(other.rdfValue);
         }
 
+        @Override
         public String toString() {
             return "'" + this.dbValue + "'=>'" + this.rdfValue + "'";
         }
     }
 
     private class TableTranslator implements Translator {
-        private Map<String, Translation> translationsByDBValue = new HashMap<String, Translation>();
-        private Map<String, Translation> translationsByRDFValue = new HashMap<String, Translation>();
+        private Map<String, Translation> translationsByDBValue = new HashMap<>();
+        private Map<String, Translation> translationsByRDFValue = new HashMap<>();
 
         TableTranslator(Collection<Translation> translations) {
             for (Translation translation : translations) {
@@ -224,11 +222,13 @@ public class TranslationTable extends MapObject {
             }
         }
 
+        @Override
         public String toDBValue(String rdfValue) {
             Translation translation = translationsByRDFValue.get(rdfValue);
             return (translation == null) ? null : translation.dbValue();
         }
 
+        @Override
         public String toRDFValue(String dbValue) {
             Translation translation = translationsByDBValue.get(dbValue);
             return (translation == null) ? null : translation.rdfValue();

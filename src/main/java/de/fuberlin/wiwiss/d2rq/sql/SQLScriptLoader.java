@@ -14,15 +14,17 @@ import java.sql.Statement;
 /**
  * Reads SQL statements from a file or other source.
  * <p>
- * Statements must end with semicolon and must end
- * at the end of a line. Lines starting
- * with -- are considered comments and are ignored.
+ * Statements must end with semicolon and must end at the end of a line. Lines starting with -- are considered comments and are ignored.
  */
 public class SQLScriptLoader {
     private final static Logger LOGGER = LoggerFactory.getLogger(SQLScriptLoader.class);
 
     /**
      * Loads a SQL script from a file and executes it.
+     * @param file {@link File}
+     * @param conn {@link Connection}
+     * @throws FileNotFoundException no file found
+     * @throws SQLException sql trouble
      */
     public static void loadFile(File file, Connection conn)
             throws FileNotFoundException, SQLException {
@@ -32,6 +34,10 @@ public class SQLScriptLoader {
 
     /**
      * Loads a SQL script from a URL and executes it.
+     * @param url {@link URI}
+     * @param conn {@link Connection}
+     * @throws FileNotFoundException no file found
+     * @throws SQLException sql trouble
      */
     public static void loadURI(URI url, Connection conn)
             throws IOException, SQLException {

@@ -12,6 +12,7 @@ import org.apache.jena.rdf.model.Resource;
  *
  * @author Richard Cyganiak
  */
+@SuppressWarnings("unused")
 public class JDBC {
 
     /**
@@ -27,7 +28,7 @@ public class JDBC {
     /**
      * The namespace of the vocabulary as a string.
      *
-     * @see #NS
+     * @return String
      */
     public static String getURI() {
         return NS;

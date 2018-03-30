@@ -21,9 +21,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 /**
- * A {@link QueryIterator} over the bindings produced by a
- * {@link Relation}. Works by running the underlying SQL
- * query using a {@link SQLIterator}.
+ * A {@link QueryIterator} over the bindings produced by a {@link Relation}.
+ * Works by running the underlying SQL query using a {@link SQLIterator}.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -31,9 +30,11 @@ public class QueryIterTableSQL extends QueryIter {
     private final static Logger LOGGER = LoggerFactory.getLogger(QueryIterTableSQL.class);
 
     /**
-     * Creates an instance, or a simpler QueryIterator
-     * if optimization is possible (e.g., the relation is empty).
+     * Creates an instance, or a simpler QueryIterator if optimization is possible (e.g., the relation is empty).
      *
+     * @param relation {@link Relation}
+     * @param bindingMakers Collection of {@link BindingMaker}s
+     * @param execCxt {@link ExecutionContext}
      * @return A query iterator over the contents of the relation
      */
     public static QueryIterator create(Relation relation,
@@ -42,7 +43,7 @@ public class QueryIterTableSQL extends QueryIter {
             return new QueryIterNullIterator(execCxt);
         }
         if (relation.isTrivial()) {
-            ArrayList<Binding> bindingList = new ArrayList<Binding>();
+            ArrayList<Binding> bindingList = new ArrayList<>();
             for (BindingMaker bindingMaker : bindingMakers) {
                 Binding t = bindingMaker.makeBinding(ResultRow.NO_ATTRIBUTES);
                 if (t == null) continue;
@@ -54,9 +55,12 @@ public class QueryIterTableSQL extends QueryIter {
     }
 
     /**
-     * Creates an instance, or a simpler QueryIterator
-     * if optimization is possible (e.g., the relation is empty).
+     * Creates an instance, or a simpler QueryIterator if optimization is possible (e.g., the relation is empty).
      *
+
+     *
+     * @param table {@link NodeRelation}
+     * @param execCxt {@link ExecutionContext}
      * @return A query iterator over the contents of the node relation
      */
     public static QueryIterator create(NodeRelation table, ExecutionContext execCxt) {
@@ -72,10 +76,9 @@ public class QueryIterTableSQL extends QueryIter {
 
     private final SQLIterator wrapped;
     private final Collection<BindingMaker> bindingMakers;
-    private final LinkedList<Binding> queue = new LinkedList<Binding>();
+    private final LinkedList<Binding> queue = new LinkedList<>();
 
-    private QueryIterTableSQL(Relation relation,
-                              Collection<BindingMaker> bindingMakers, ExecutionContext execCxt) {
+    private QueryIterTableSQL(Relation relation, Collection<BindingMaker> bindingMakers, ExecutionContext execCxt) {
         super(execCxt);
         this.bindingMakers = bindingMakers;
         SelectStatementBuilder builder = new SelectStatementBuilder(relation);
@@ -110,8 +113,9 @@ public class QueryIterTableSQL extends QueryIter {
     }
 
     /**
-     * Create bindings from one database result row and put
-     * them onto the queue
+     * Create bindings from one database result row and put them onto the queue
+
+     * @param row {@link ResultRow}
      */
     private void enqueueBindings(ResultRow row) {
         for (BindingMaker bindingMaker : bindingMakers) {

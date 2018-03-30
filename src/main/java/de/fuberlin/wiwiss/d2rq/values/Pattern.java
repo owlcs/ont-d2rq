@@ -19,8 +19,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 
 /**
- * A pattern that combines one or more database columns into a String. Often
- * used as an UriPattern for generating URIs from a column's primary key.
+ * A pattern that combines one or more database columns into a String.
+ * Often used as an UriPattern for generating URIs from a column's primary key.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -31,9 +31,9 @@ public class Pattern implements ValueMaker {
 
     private String pattern;
     private String firstLiteralPart;
-    private List<Attribute> columns = new ArrayList<Attribute>(3);
-    private List<ColumnFunction> columnFunctions = new ArrayList<ColumnFunction>(3);
-    private List<String> literalParts = new ArrayList<String>(3);
+    private List<Attribute> columns = new ArrayList<>(3);
+    private List<ColumnFunction> columnFunctions = new ArrayList<>(3);
+    private List<String> literalParts = new ArrayList<>(3);
     private Set<ProjectionSpec> columnsAsSet;
     private java.util.regex.Pattern regex;
 
@@ -46,7 +46,7 @@ public class Pattern implements ValueMaker {
     public Pattern(String pattern) {
         this.pattern = pattern;
         parsePattern();
-        this.columnsAsSet = new HashSet<ProjectionSpec>(this.columns);
+        this.columnsAsSet = new HashSet<>(this.columns);
     }
 
     public String firstLiteralPart() {
@@ -76,6 +76,7 @@ public class Pattern implements ValueMaker {
         return this.columns;
     }
 
+    @Override
     public void describeSelf(NodeSetFilter c) {
         c.limitValuesToPattern(this);
     }
@@ -84,6 +85,7 @@ public class Pattern implements ValueMaker {
         return !valueExpression(value).isFalse();
     }
 
+    @Override
     public Expression valueExpression(String value) {
         if (value == null) {
             return Expression.FALSE;
@@ -92,7 +94,7 @@ public class Pattern implements ValueMaker {
         if (!match.matches()) {
             return Expression.FALSE;
         }
-        Collection<Expression> expressions = new ArrayList<Expression>(columns.size());
+        Collection<Expression> expressions = new ArrayList<>(columns.size());
         for (int i = 0; i < this.columns.size(); i++) {
             Attribute attribute = columns.get(i);
             ColumnFunction function = columnFunctions.get(i);
@@ -105,6 +107,7 @@ public class Pattern implements ValueMaker {
         return Conjunction.create(expressions);
     }
 
+    @Override
     public Set<ProjectionSpec> projectionSpecs() {
         return this.columnsAsSet;
     }
@@ -115,9 +118,10 @@ public class Pattern implements ValueMaker {
      * @param row a database row
      * @return the pattern's value for the given row
      */
+    @Override
     public String makeValue(ResultRow row) {
         int index = 0;
-        StringBuffer result = new StringBuffer(this.firstLiteralPart);
+        StringBuilder result = new StringBuilder(this.firstLiteralPart);
         while (index < this.columns.size()) {
             Attribute column = columns.get(index);
             ColumnFunction function = columnFunctions.get(index);
@@ -136,18 +140,21 @@ public class Pattern implements ValueMaker {
         return result.toString();
     }
 
+    @Override
     public List<OrderSpec> orderSpecs(boolean ascending) {
-        List<OrderSpec> result = new ArrayList<OrderSpec>(columns.size());
+        List<OrderSpec> result = new ArrayList<>(columns.size());
         for (Attribute column : columns) {
             result.add(new OrderSpec(new AttributeExpr(column), ascending));
         }
         return result;
     }
 
+    @Override
     public String toString() {
         return "Pattern(" + this.pattern + ")";
     }
 
+    @Override
     public boolean equals(Object otherObject) {
         if (!(otherObject instanceof Pattern)) {
             return false;
@@ -156,13 +163,14 @@ public class Pattern implements ValueMaker {
         return this.pattern.equals(other.pattern);
     }
 
+    @Override
     public int hashCode() {
         return this.pattern.hashCode();
     }
 
     /**
-     * @return <code>true</code> if the pattern is identical or differs only in
-     * the column names
+     * @param p {@link Pattern}
+     * @return <code>true</code> if the pattern is identical or differs only in the column names
      */
     public boolean isEquivalentTo(Pattern p) {
         return this.firstLiteralPart.equals(p.firstLiteralPart)
@@ -170,9 +178,10 @@ public class Pattern implements ValueMaker {
                 && this.columnFunctions.equals(p.columnFunctions);
     }
 
+    @Override
     public ValueMaker renameAttributes(ColumnRenamer renames) {
         int index = 0;
-        StringBuffer newPattern = new StringBuffer(this.firstLiteralPart);
+        StringBuilder newPattern = new StringBuilder(this.firstLiteralPart);
         while (index < this.columns.size()) {
             Attribute column = columns.get(index);
             ColumnFunction function = columnFunctions.get(index);
@@ -194,7 +203,7 @@ public class Pattern implements ValueMaker {
         boolean matched = match.find();
         int firstLiteralEnd = matched ? match.start() : this.pattern.length();
         this.firstLiteralPart = this.pattern.substring(0, firstLiteralEnd);
-        String regexPattern = "\\Q" + this.firstLiteralPart + "\\E";
+        StringBuilder regexPattern = new StringBuilder("\\Q" + this.firstLiteralPart + "\\E");
         while (matched) {
             this.columns.add(SQL.parseAttribute(match.group(1)));
             this.columnFunctions.add(getColumnFunction(match.group(2)));
@@ -203,19 +212,21 @@ public class Pattern implements ValueMaker {
             int nextLiteralEnd = matched ? match.start() : this.pattern.length();
             String nextLiteralPart = this.pattern.substring(nextLiteralStart, nextLiteralEnd);
             this.literalParts.add(nextLiteralPart);
-            regexPattern += "(.*?)\\Q" + nextLiteralPart + "\\E";
+            regexPattern.append("(.*?)\\Q").append(nextLiteralPart).append("\\E");
         }
-        this.regex = java.util.regex.Pattern.compile(regexPattern, java.util.regex.Pattern.DOTALL);
+        this.regex = java.util.regex.Pattern.compile(regexPattern.toString(), java.util.regex.Pattern.DOTALL);
     }
 
     public Iterator<Object> partsIterator() {
         return new Iterator<Object>() {
             private int i = 0;
 
+            @Override
             public boolean hasNext() {
                 return i < columns.size() + literalParts.size() + 1;
             }
 
+            @Override
             public Object next() {
                 i++;
                 if (i == 1) {
@@ -226,6 +237,7 @@ public class Pattern implements ValueMaker {
                 return literalParts.get(i / 2 - 1);
             }
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }
@@ -235,7 +247,7 @@ public class Pattern implements ValueMaker {
     // FIXME: This doesn't take column functions other than IDENTITY into account
     // The usesColumnFunctions() method is here to allow detection of this case.
     public Expression toExpression() {
-        List<Expression> parts = new ArrayList<Expression>(literalParts.size() * 2 + 1);
+        List<Expression> parts = new ArrayList<>(literalParts.size() * 2 + 1);
         parts.add(new Constant(firstLiteralPart));
         for (int i = 0; i < columns.size(); i++) {
             parts.add(new AttributeExpr(columns.get(i)));
@@ -299,6 +311,7 @@ public class Pattern implements ValueMaker {
     }
 
     static class URLEncodeFunction implements ColumnFunction {
+        @Override
         public String encode(String s) {
             try {
                 return URLEncoder.encode(s, StandardCharsets.UTF_8.name());
@@ -308,6 +321,7 @@ public class Pattern implements ValueMaker {
             }
         }
 
+        @Override
         public String decode(String s) {
             try {
                 return URLDecoder.decode(s, StandardCharsets.UTF_8.name());
@@ -320,12 +334,14 @@ public class Pattern implements ValueMaker {
             }
         }
 
+        @Override
         public String name() {
             return "urlencode";
         }
     }
 
     static class URLifyFunction implements ColumnFunction {
+        @Override
         public String encode(String s) {
             try {
                 return URLEncoder.encode(s, StandardCharsets.UTF_8.name()).replaceAll("_", "%5F").replace('+', '_');
@@ -335,6 +351,7 @@ public class Pattern implements ValueMaker {
             }
         }
 
+        @Override
         public String decode(String s) {
             try {
                 return URLDecoder.decode(s.replace('_', '+'), StandardCharsets.UTF_8.name());
@@ -347,16 +364,19 @@ public class Pattern implements ValueMaker {
             }
         }
 
+        @Override
         public String name() {
             return "urlify";
         }
     }
 
     public static class EncodeFunction implements ColumnFunction {
+        @Override
         public String encode(String s) {
             return IRIEncoder.encode(s);
         }
 
+        @Override
         public String decode(String s) {
             try {
                 return URLDecoder.decode(s.replaceAll("%20", "+"), StandardCharsets.UTF_8.name());
@@ -369,6 +389,7 @@ public class Pattern implements ValueMaker {
             }
         }
 
+        @Override
         public String name() {
             return "encode";
         }

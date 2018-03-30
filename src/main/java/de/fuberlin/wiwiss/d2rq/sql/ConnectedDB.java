@@ -348,9 +348,7 @@ public class ConnectedDB implements AutoCloseable {
     }
 
     /**
-     * <p>Checks if two columns are formatted by the database in a compatible
-     * fashion.</p>
-     * <p>
+     * <p>Checks if two columns are formatted by the database in a compatible fashion.</p>
      * <p>Assuming <tt>v1</tt> is a value from column1, and <tt>v2</tt> a value
      * from column2, and <tt>v1 = v2</tt> evaluates to <tt>true</tt> within the
      * database, then we call the values have <em>compatible formatting</em> if
@@ -361,13 +359,14 @@ public class ConnectedDB implements AutoCloseable {
      * <tt>ZEROFILL</tt>, then <tt>SELECT</tt>ing will result in a different
      * character string, e.g. <tt>1 = 0000000001</tt>. The two columns wouldn't
      * be compatible.</p>
-     * <p>
      * <p>This is used by the engine when removing unnecessary joins. If
      * two columns have compatible formatting, then we can sometimes use
      * one in place of the other when they are known to have equal values.
      * But not if they are incompatible, because e.g. <tt>http://example.org/id/1</tt>
      * is different from <tt>http://example.org/id/0000000001</tt>.</p>
      *
+     * @param column1 {@link Attribute}
+     * @param column2 {@link Attribute}
      * @return <tt>true</tt> if both arguments have compatible formatting
      */
     public boolean areCompatibleFormats(Attribute column1, Attribute column2) {
@@ -393,6 +392,7 @@ public class ConnectedDB implements AutoCloseable {
      * In some situations, MySQL stores table names using lowercase only, and then performs case-insensitive comparison.
      * We need to account for this when comparing table names reported by MySQL and those from the mapping.
      *
+     * @return boolean
      * @see <a href="http://dev.mysql.com/doc/refman/5.0/en/identifier-case-sensitivity.html">MySQL Manual, Identifier Case Sensitivity</a>
      */
     public boolean lowerCaseTableNames() {
@@ -425,6 +425,7 @@ public class ConnectedDB implements AutoCloseable {
         }
     }
 
+    @Override
     public boolean equals(Object otherObject) {
         if (!(otherObject instanceof ConnectedDB)) {
             return false;
@@ -433,6 +434,7 @@ public class ConnectedDB implements AutoCloseable {
         return this.jdbcURL.equals(other.jdbcURL);
     }
 
+    @Override
     public int hashCode() {
         return this.jdbcURL.hashCode();
     }
@@ -440,8 +442,7 @@ public class ConnectedDB implements AutoCloseable {
 
     /**
      * Tries to guess the class name of a suitable JDBC driver from a JDBC URL.
-     * This only works in the unlikely case that the driver has been registered
-     * earlier using Class.forName(classname).
+     * This only works in the unlikely case that the driver has been registered earlier using Class.forName(classname).
      *
      * @param jdbcURL A JDBC URL
      * @return The corresponding JDBC driver class name, or <tt>null</tt> if not known

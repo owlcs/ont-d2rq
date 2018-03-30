@@ -1,8 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.sparql.algebra.Op;
@@ -12,9 +9,11 @@ import org.apache.jena.sparql.algebra.op.*;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
- * Collects the variables mentioned in an {@link Op} and its
- * children.
+ * Collects the variables mentioned in an {@link Op} and its children.
  *
  * @author Herwig Leimer
  * @author Richard Cyganiak (richard@cyganiak.de)
@@ -22,6 +21,7 @@ import org.apache.jena.sparql.core.Var;
 public class VarCollector extends OpVisitorBase {
 
     /**
+     * @param op {@link Op}
      * @return All variables mentioned in the op and its children
      */
     public static Set<Var> mentionedVars(Op op) {

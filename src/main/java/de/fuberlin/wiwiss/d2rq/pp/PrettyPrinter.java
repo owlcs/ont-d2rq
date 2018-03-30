@@ -1,5 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.pp;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RConfig;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.JenaRuntime;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -9,11 +13,6 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RConfig;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
 /**
  * Pretty printer for various kinds of objects.
@@ -41,10 +40,10 @@ public class PrettyPrinter {
     }
 
     /**
-     * Pretty-prints an RDF node and shortens URIs into QNames according to a
-     * {@link PrefixMapping}.
+     * Pretty-prints an RDF node and shortens URIs into QNames according to a {@link PrefixMapping}.
      *
      * @param n An RDF node
+     * @param prefixes {@link PrefixMapping}
      * @return An N-Triples style textual representation with URIs shortened to QNames
      */
     public static String toString(Node n, PrefixMapping prefixes) {

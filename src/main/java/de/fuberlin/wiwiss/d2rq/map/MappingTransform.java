@@ -1,18 +1,15 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
 
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-
 /**
- * To convert {@link Mapping} -> {@link Model}
- * <p>
+ * To convert {@link Mapping D2RQ mapping} -&gt; {@link Model Jena model}.
  * Currently there is only one model builder ({@link OWLModelBuilder}), which makes simple OWL2 DL ontology.
- * <p>
  * Created by @szuev on 19.02.2017.
  */
 public class MappingTransform {
