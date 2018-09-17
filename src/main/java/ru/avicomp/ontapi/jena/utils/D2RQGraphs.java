@@ -4,10 +4,10 @@ import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import org.apache.jena.graph.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.internal.ConfigProvider;
 import ru.avicomp.ontapi.jena.Hybrid;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
+import ru.avicomp.ontapi.jena.impl.OntGraphModelImpl;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 
@@ -27,7 +27,8 @@ public class D2RQGraphs {
 
     public static OntGraphModel reassembly(OntGraphModel model) {
         // class-cast-exception if it is not model from manager:
-        return reassembly(model, ((ConfigProvider) model).getConfig().loaderConfig().getPersonality());
+        OntGraphModelImpl impl = (OntGraphModelImpl) model;
+        return reassembly(model, impl.getPersonality());
     }
 
     public static OntGraphModel reassembly(OntGraphModel model, OntPersonality personality) {

@@ -124,9 +124,8 @@ public class Mapping implements AutoCloseable {
     }
 
     /**
-     * Connects all databases. This is done automatically if
-     * needed. The method can be used to test the connections
-     * earlier.
+     * Connects all databases. This is done automatically if needed.
+     * The method can be used to test the connections earlier.
      *
      * @throws D2RQException on connection failure
      */

@@ -14,7 +14,7 @@ import org.apache.jena.n3.turtle.TurtleParseException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.shared.JenaException;
-import org.apache.jena.system.JenaSystem;
+import org.apache.jena.sys.JenaSystem;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.util.FileUtils;
 import org.slf4j.Logger;

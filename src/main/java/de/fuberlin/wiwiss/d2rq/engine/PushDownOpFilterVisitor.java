@@ -1,10 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.OpVisitor;
 import org.apache.jena.sparql.algebra.TransformCopy;
@@ -12,6 +7,11 @@ import org.apache.jena.sparql.algebra.op.*;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprList;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
 
 /**
@@ -348,7 +348,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         if (filterExpr.isEmpty()) {
             stack.push(op);
         } else {
-            stack.push(OpFilter.filter(new ExprList(filters), op));
+            stack.push(OpFilter.filterBy(new ExprList(filters), op));
         }
     }
 
@@ -431,7 +431,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         // an opFilter must be inserted that contains this filterexpressions
         if (!notMoveableFilterExpr.isEmpty()) {
             // create the filter
-            newOp = OpFilter.filter(OpUnion.create(left, right));
+            newOp = OpFilter.ensureFilter(OpUnion.create(left, right));
             // add the conditions
             ((OpFilter) newOp).getExprs().getList()
                     .addAll(notMoveableFilterExpr);
@@ -500,7 +500,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         // an opFilter must be inserted that contains this filterexpressions
         if (!notMoveableFilterExpr.isEmpty()) {
             // create the filter
-            newOp = OpFilter.filter(OpJoin.create(left, right));
+            newOp = OpFilter.ensureFilter(OpJoin.create(left, right));
             // add the conditions
             ((OpFilter) newOp).getExprs().getList()
                     .addAll(notMoveableFilterExpr);
@@ -587,7 +587,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         // an opFilter must be inserted that contains this filterexpressions
         if (!notMoveableFilterExpr.isEmpty()) {
             // create the filter for an opleftjoin
-            newOp = OpFilter.filter(OpLeftJoin.create(left, right,
+            newOp = OpFilter.ensureFilter(OpLeftJoin.create(left, right,
                     opLeftJoin.getExprs()));
             // add the conditions
             ((OpFilter) newOp).getExprs().getList()
@@ -661,7 +661,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         // an opFilter must be inserted that contains this filterexpressions
         if (!notMoveableFilterExpr.isEmpty()) {
             // create the filter
-            newOp = OpFilter.filter(OpDiff.create(left, right));
+            newOp = OpFilter.ensureFilter(OpDiff.create(left, right));
             // add the conditions
             ((OpFilter) newOp).getExprs().getList()
                     .addAll(notMoveableFilterExpr);

@@ -75,7 +75,7 @@ public class TransformOpBGP extends TransformCopy {
 
         Op op = OpUnionTableSQL.create(tables);
         if (!filters.isEmpty()) {
-            op = OpFilter.filter(filters, op);
+            op = OpFilter.filterBy(filters, op);
         }
         return op;
     }

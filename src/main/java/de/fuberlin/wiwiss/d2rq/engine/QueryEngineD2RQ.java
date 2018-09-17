@@ -39,13 +39,13 @@ public class QueryEngineD2RQ extends QueryEngineMain {
     }
 
     public QueryEngineD2RQ(GraphD2RQ graph, Query query, Binding input, Context context) {
-        super(query, DatasetGraphFactory.createOneGraph(graph), input, context);
+        super(query, DatasetGraphFactory.wrap(graph), input, context);
         this.mapping = graph.getMapping();
         this.inputBinding = input;
     }
 
     public QueryEngineD2RQ(GraphD2RQ graph, Op op, Binding input, Context context) {
-        super(op, DatasetGraphFactory.createOneGraph(graph), input, context);
+        super(op, DatasetGraphFactory.wrap(graph), input, context);
         this.mapping = graph.getMapping();
         this.inputBinding = input;
     }

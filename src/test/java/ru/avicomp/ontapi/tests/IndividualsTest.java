@@ -69,6 +69,7 @@ public class IndividualsTest {
         inMemory.asGraphModel().add(data);
         // add owl:NamedIndividual declarations
         data.listNamedIndividuals().forEach(i -> inMemory.asGraphModel().createResource(i.getURI(), OWL.NamedIndividual));
+        inMemory.asGraphModel().write(System.out, "ttl");
 
         List<OWLAxiom> axioms = inMemory.axioms(AxiomType.CLASS_ASSERTION).collect(Collectors.toList());
         axioms.forEach(LOGGER::debug);

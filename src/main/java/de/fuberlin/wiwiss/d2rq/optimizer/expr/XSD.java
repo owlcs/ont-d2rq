@@ -2,10 +2,10 @@ package de.fuberlin.wiwiss.d2rq.optimizer.expr;
 
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.ext.xerces.impl.dv.XSSimpleType;
+import org.apache.jena.ext.xerces.xs.XSConstants;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.xerces.impl.dv.XSSimpleType;
-import org.apache.xerces.xs.XSConstants;
 
 public class XSD {
 

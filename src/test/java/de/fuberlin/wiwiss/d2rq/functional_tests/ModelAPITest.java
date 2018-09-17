@@ -12,7 +12,7 @@ import org.junit.Test;
 
 /**
  * Functional tests that exercise a ModelD2RQ by calling Model API functions. For
- * notes on running the tests, see {@link AllTests}.
+ * notes on running the tests, see {@code AllTests}.
  * <p>
  * To see debug information, uncomment the enableDebug() call in the setUp() method.
  *

@@ -19,7 +19,7 @@ import ru.avicomp.ontapi.OntologyModel;
 import ru.avicomp.ontapi.conf.ConnectionData;
 import ru.avicomp.ontapi.config.OntLoaderConfiguration;
 import ru.avicomp.ontapi.internal.AxiomParserProvider;
-import ru.avicomp.ontapi.internal.InternalObject;
+import ru.avicomp.ontapi.internal.ONTObject;
 import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntStatement;
@@ -58,13 +58,19 @@ public class PSModelTest {
                 s.executeUpdate(String.format("CREATE DATABASE %s", psDbName));
             }
         }
-        try (ConnectedDB db = psConnectionData.toConnectedDB(psDbName); Connection conn = db.connection()) {
+        try (ConnectedDB db = psConnectionData.toConnectedDB(psDbName);
+             Connection conn = db.connection()) {
             LOGGER.info("Execute script: {}", script);
             new SQLScriptLoader(Files.newBufferedReader(script, StandardCharsets.UTF_8), conn).execute();
             conn.commit();
         }
+        LOGGER.info("Preparation is done.");
     }
 
+    /**
+     * @throws Exception something is wrong
+     * @see <a href='https://dba.stackexchange.com/questions/11893/force-drop-db-while-others-may-be-connected'>ps force drop</a>
+     */
     @AfterClass
     public static void clear() throws Exception {
         try (ConnectedDB db = psConnectionData.toConnectedDB();
@@ -72,9 +78,12 @@ public class PSModelTest {
             conn.setAutoCommit(true);
             try (Statement s = conn.createStatement()) {
                 LOGGER.info("Drop database <{}>", psDbName);
+                s.executeUpdate(String.format("ALTER DATABASE %s CONNECTION LIMIT 0;", psDbName));
+                s.executeQuery(String.format("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '%s'", psDbName));
                 s.executeUpdate(String.format("DROP DATABASE %s;", psDbName));
             }
         }
+        LOGGER.info("DB {} has been deleted", psDbName);
     }
 
     private static IRI psIRI = IRI.create("d2rq://no-pk.test/");
@@ -94,7 +103,7 @@ public class PSModelTest {
         List<OWLAxiom> axioms = AxiomType.AXIOM_TYPES.stream()
                 .map(AxiomParserProvider::get)
                 .flatMap(t -> t.axioms(data))
-                .map(InternalObject::getObject)
+                .map(ONTObject::getObject)
                 .collect(Collectors.toList());
         axioms.forEach(x -> LOGGER.debug("AXIOM:::{}", x));
         Assert.assertEquals(34, axioms.size());
@@ -132,7 +141,9 @@ public class PSModelTest {
         o2.asGraphModel().addImport(o1.asGraphModel());
 
         OntologyManager m2 = OntManagers.createONT();
-        OntLoaderConfiguration conf = m2.getOntologyLoaderConfiguration().setPerformTransformation(false).setPersonality(D2RQModelConfig.D2RQ_PERSONALITY);
+        OntLoaderConfiguration conf = m2.getOntologyLoaderConfiguration()
+                .setPerformTransformation(false)
+                .setPersonality(D2RQModelConfig.D2RQ_PERSONALITY);
         OntologyModel o3 = m2.addOntology(D2RQGraphs.reassembly(o2.asGraphModel()).getGraph(), conf);
 
         Assert.assertEquals(2, m2.ontologies().count());

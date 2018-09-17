@@ -14,6 +14,8 @@ import ru.avicomp.ontapi.jena.model.OntStatement;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
+import java.util.Optional;
+
 /**
  * Personalities holder.
  * <p>
@@ -64,9 +66,9 @@ public class D2RQModelConfig {
             super(n, m);
         }
 
-        public OntStatement getRoot() {
-            OntStatement res = getRoot(RDF.type, OWL.NamedIndividual);
-            return res == null ? types().map(r -> getRoot(RDF.type, r)).findFirst().orElse(null) : res;
+        @Override
+        public Optional<OntStatement> findRootStatement() {
+            return getOptionalRootStatement(this, OWL.NamedIndividual);
         }
 
         @Override
