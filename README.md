@@ -1,19 +1,24 @@
-# ONT-D2RQ (ver 1.0.1) – A Database to OWL Mapper (API and Tools)
+# ONT-D2RQ (ver 1.0.2) – A Database to OWL Mapper (API and Tools)
 ## This is a modified fork of D2RQ (https://github.com/d2rq/d2rq).
 
 There are following major differences with the original:
 
-* It is a maven project while original is ant
+* It is a maven project while the original is ant
 * Up-to-date dependencies (java 8, Apache Jena 3.x, etc)
 * Supporting OWL2 DL syntax
 * No D2R Server
-* ONT-API (OWL-API over Jena, see https://github.com/avicomp/ont-api) in dependencies
+* [ONT-API](https://github.com/avicomp/ont-api) ([OWL-API](https://github.com/owlcs/owlapi) over [Apache Jena](https://github.com/apache/jena)) in dependencies
 
 
 ## Usage
 * to build command-line tools use `mvn clean package -Ptools`
 * to run tools: `$ java -jar target\d2rq.jar`
 * to include in dependencies [jitpack.io](https://jitpack.io/) can be used
+
+## Notes and propositions
+* For integration within ONT-API there is a special kind of `OWLDocumentSource`: `ru.avicomp.ontapi.D2RQGraphDocumentSource` 
+* It is assumed that `ru.avicomp.ontapi.MappingFilter` will be used to filter database schema
+* to transform db data into a more suitable form [ONT-MAP](https://github.com/avicomp/ont-map) can be used
 
 
 ## Tests
