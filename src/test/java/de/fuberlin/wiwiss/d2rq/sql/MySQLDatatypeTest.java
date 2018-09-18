@@ -1,6 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -22,8 +21,7 @@ public class MySQLDatatypeTest extends DatatypeTestBase {
 
     @Before
     public void setUp() {
-        initDB("jdbc:mysql:///d2rq_test", "com.mysql.jdbc.Driver", "root", null,
-                D2RQTestHelper.DIRECTORY + "sql/mysql_datatypes.sql", null);
+        initDB("jdbc:mysql:///d2rq_test", "com.mysql.jdbc.Driver", "root", null, "/sql/mysql_datatypes.sql", null);
     }
 
     @Test

@@ -11,20 +11,20 @@ public class JenaAPITest {
 
     @Test
     public void testCopyPrefixesFromMapModelToD2RQModel() {
-        Model m = MappingFactory.load(D2RQTestHelper.DIRECTORY_URL + "prefixes.ttl").getDataModel();
+        Model m = MappingFactory.load(JenaAPITest.class.getResource("/prefixes.ttl").toString()).getDataModel();
         Assert.assertEquals("http://example.org/", m.getNsPrefixURI("ex"));
     }
 
     @Test
     public void testCopyPrefixesFromMapModelToD2RQGraph() {
-        Model model = FileManager.get().loadModel(D2RQTestHelper.DIRECTORY_URL + "prefixes.ttl");
+        Model model = FileManager.get().loadModel(JenaAPITest.class.getResource("/prefixes.ttl").toString());
         GraphD2RQ g = MappingFactory.create(model, "http://localhost/resource/").getDataGraph();
         Assert.assertEquals("http://example.org/", g.getPrefixMapping().getNsPrefixURI("ex"));
     }
 
     @Test
     public void testDontCopyD2RQPrefixFromMapModel() {
-        Model m = MappingFactory.load(D2RQTestHelper.DIRECTORY_URL + "prefixes.ttl").getDataModel();
+        Model m = MappingFactory.load(JenaAPITest.class.getResource("/prefixes.ttl").toString()).getDataModel();
         Assert.assertNull(m.getNsPrefixURI("d2rq"));
     }
 }

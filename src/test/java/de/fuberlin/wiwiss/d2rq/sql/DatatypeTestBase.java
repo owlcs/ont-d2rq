@@ -13,6 +13,7 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.junit.After;
 import org.junit.Assert;
 
+import java.net.URL;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
@@ -40,6 +41,7 @@ public abstract class DatatypeTestBase {
         if (graph != null) graph.close();
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected void initDB(String jdbcURL, String driver, String user, String password, String script, String schema) {
         this.jdbcURL = jdbcURL;
         this.driver = driver;
@@ -50,10 +52,10 @@ public abstract class DatatypeTestBase {
         dropAllTables();
     }
 
+    @SuppressWarnings("TryFinallyCanBeTryWithResources")
     private void dropAllTables() {
         ConnectedDB.registerJDBCDriver(driver);
-        ConnectedDB db = new ConnectedDB(jdbcURL, user, password);
-        try {
+        try (ConnectedDB db = new ConnectedDB(jdbcURL, user, password)) {
             Statement stmt = db.connection().createStatement();
             try {
                 for (String table : allTables()) {
@@ -66,8 +68,6 @@ public abstract class DatatypeTestBase {
             }
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
-        } finally {
-            db.close();
         }
     }
 
@@ -113,16 +113,13 @@ public abstract class DatatypeTestBase {
 
     private Set<String> allTables() {
         ConnectedDB.registerJDBCDriver(driver);
-        ConnectedDB db = new ConnectedDB(jdbcURL, user, password);
-        try {
-            Set<String> result = new HashSet<String>();
+        try (ConnectedDB db = new ConnectedDB(jdbcURL, user, password)) {
+            Set<String> result = new HashSet<>();
             inspector = db.schemaInspector();
             for (RelationName name : inspector.listTableNames(schema)) {
                 result.add(name.toString());
             }
             return result;
-        } finally {
-            db.close();
         }
     }
 
@@ -131,13 +128,14 @@ public abstract class DatatypeTestBase {
     }
 
     private Mapping generateMapping() {
+        URL script = DatatypeTestBase.class.getResource(this.script);
         Mapping mapping = MappingFactory.createEmpty();
         Database database = new Database(dbURI);
         database.setJDBCDSN(jdbcURL);
         database.setJDBCDriver(driver);
         database.setUsername(user);
         database.setPassword(password);
-        database.setStartupSQLScript(ResourceFactory.createResource("file:" + script));
+        database.setStartupSQLScript(ResourceFactory.createResource(script.toString()));
         mapping.addDatabase(database);
         ClassMap classMap = new ClassMap(classMapURI);
         classMap.setDatabase(database);

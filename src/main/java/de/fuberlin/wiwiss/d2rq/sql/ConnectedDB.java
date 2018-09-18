@@ -413,13 +413,13 @@ public class ConnectedDB implements AutoCloseable {
     public void close() {
         if (keepAliveAgent != null)
             keepAliveAgent.shutdown();
-
-        if (connection != null) try {
+        if (connection == null) return;
+        try {
             LOGGER.info("Closing connection to {}", jdbcURL);
             this.connection.close();
-        } catch (SQLException sqlExc) {
+        } catch (SQLException e) {
             // ignore...
-            LOGGER.error("Error while closing current connection: {}", sqlExc.getMessage(), sqlExc);
+            LOGGER.error("Error while closing current connection: '{}'", e.getMessage(), e);
         } finally {
             connection = null;
         }

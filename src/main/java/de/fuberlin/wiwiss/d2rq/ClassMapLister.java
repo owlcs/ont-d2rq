@@ -37,8 +37,8 @@ public class ClassMapLister {
 
     private final Mapping mapping;
 
-    private Map<String, List<TripleRelation>> classMapInventoryBridges = new HashMap<String, List<TripleRelation>>();
-    private Map<String, NodeMaker> classMapNodeMakers = new HashMap<String, NodeMaker>();
+    private Map<String, List<TripleRelation>> classMapInventoryBridges = new HashMap<>();
+    private Map<String, NodeMaker> classMapNodeMakers = new HashMap<>();
 
     public ClassMapLister(Mapping mapping) {
         this.mapping = mapping;
@@ -51,7 +51,7 @@ public class ClassMapLister {
             NodeMaker resourceMaker = this.mapping.classMap(classMapResource).nodeMaker();
             Node classMap = classMapResource.asNode();
             this.classMapNodeMakers.put(toClassMapName(classMap), resourceMaker);
-            List<TripleRelation> inventoryBridges = new ArrayList<TripleRelation>();
+            List<TripleRelation> inventoryBridges = new ArrayList<>();
             for (TripleRelation bridge : mapping.classMap(classMapResource).compiledPropertyBridges()) {
                 bridge = bridge.orderBy(TripleRelation.SUBJECT, true);
                 if (bridge.selectTriple(new Triple(Node.ANY, RDF.Nodes.type, Node.ANY)) != null) {
@@ -113,7 +113,7 @@ public class ClassMapLister {
         if (!resource.isURI()) {
             return Collections.emptyList();
         }
-        List<String> results = new ArrayList<String>();
+        List<String> results = new ArrayList<>();
         for (Entry<String, NodeMaker> entry : classMapNodeMakers.entrySet()) {
             String classMapName = entry.getKey();
             NodeMaker nodeMaker = entry.getValue();

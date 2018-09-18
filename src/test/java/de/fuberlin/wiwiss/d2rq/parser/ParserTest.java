@@ -67,7 +67,7 @@ public class ParserTest {
 
     @Test
     public void testParseAlias() {
-        Mapping mapping = MappingHelper.readFromTestFile("parser/alias.ttl");
+        Mapping mapping = MappingHelper.readFromTestFile("/parser/alias.ttl");
         MappingHelper.connectToDummyDBs(mapping);
         Assert.assertEquals(1, mapping.compiledPropertyBridges().size());
         TripleRelation bridge = mapping.compiledPropertyBridges().iterator().next();
@@ -80,7 +80,7 @@ public class ParserTest {
     @Test
     public void testParseResourceInsteadOfLiteral() {
         try {
-            MappingHelper.readFromTestFile("parser/resource-instead-of-literal.ttl");
+            MappingHelper.readFromTestFile("/parser/resource-instead-of-literal.ttl");
         } catch (D2RQException ex) {
             Assert.assertEquals(D2RQException.MAPPING_RESOURCE_INSTEADOF_LITERAL, ex.errorCode());
         }
@@ -89,7 +89,7 @@ public class ParserTest {
     @Test
     public void testParseLiteralInsteadOfResource() {
         try {
-            MappingHelper.readFromTestFile("parser/literal-instead-of-resource.ttl");
+            MappingHelper.readFromTestFile("/parser/literal-instead-of-resource.ttl");
         } catch (D2RQException ex) {
             Assert.assertEquals(D2RQException.MAPPING_LITERAL_INSTEADOF_RESOURCE, ex.errorCode());
         }
@@ -97,14 +97,14 @@ public class ParserTest {
 
     @Test
     public void testTranslationTableRDFValueCanBeLiteral() {
-        Mapping m = MappingHelper.readFromTestFile("parser/translation-table.ttl");
+        Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
         TranslationTable tt = m.translationTable(ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.translator().toRDFValue("literal"));
     }
 
     @Test
     public void testTranslationTableRDFValueCanBeURI() {
-        Mapping m = MappingHelper.readFromTestFile("parser/translation-table.ttl");
+        Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
         TranslationTable tt = m.translationTable(ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.translator().toRDFValue("uri"));
     }
@@ -112,7 +112,7 @@ public class ParserTest {
     @Test
     public void testTypeConflictClassMapAndBridgeIsDetected() {
         try {
-            MappingHelper.readFromTestFile("parser/type-classmap-and-propertybridge.ttl");
+            MappingHelper.readFromTestFile("/parser/type-classmap-and-propertybridge.ttl");
         } catch (D2RQException ex) {
             Assert.assertEquals(D2RQException.MAPPING_TYPECONFLICT, ex.errorCode());
         }
@@ -120,7 +120,7 @@ public class ParserTest {
 
     @Test
     public void testGenerateDownloadMap() {
-        Mapping m = MappingHelper.readFromTestFile("parser/download-map.ttl");
+        Mapping m = MappingHelper.readFromTestFile("/parser/download-map.ttl");
         MappingHelper.connectToDummyDBs(m);
         Resource name = ResourceFactory.createResource("http://example.org/dm");
         Assert.assertTrue(m.downloadMapResources().contains(name));
@@ -146,6 +146,7 @@ public class ParserTest {
         return this.model.createResource(TABLE_URI, D2RQ.TranslationTable);
     }
 
+    @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
     private Resource addTranslationResource(Resource table, String dbValue, String rdfValue) {
         Resource translation = this.model.createResource();
         translation.addProperty(D2RQ.databaseValue, dbValue);

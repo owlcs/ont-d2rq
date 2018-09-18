@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.StringReader;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -27,16 +28,14 @@ public class TranslationTableParserTest {
 
     @Test
     public void testEmpty() {
-        Collection<Translation> translations = new TranslationTableParser(
-                new StringReader("")).parseTranslations();
+        Collection<Translation> translations = new TranslationTableParser(new StringReader("")).parseTranslations();
         Assert.assertTrue(translations.isEmpty());
     }
 
     @Test
     public void testSimple() {
         String csv = "key,value";
-        Collection<Translation> translations = new TranslationTableParser(
-                new StringReader(csv)).parseTranslations();
+        Collection<Translation> translations = new TranslationTableParser(new StringReader(csv)).parseTranslations();
         Assert.assertEquals(1, translations.size());
         Translation t = translations.iterator().next();
         Assert.assertEquals("key", t.dbValue());
@@ -46,23 +45,27 @@ public class TranslationTableParserTest {
     @Test
     public void testTwoRows() {
         String csv = "db1,rdf1\ndb2,rdf2";
-        Collection<Translation> translations = new TranslationTableParser(
-                new StringReader(csv)).parseTranslations();
+        Collection<Translation> translations = new TranslationTableParser(new StringReader(csv)).parseTranslations();
         Assert.assertEquals(2, translations.size());
-        Assert.assertEquals(this.simpleTranslations, new HashSet<Translation>(translations));
+        Assert.assertEquals(this.simpleTranslations, new HashSet<>(translations));
     }
 
     @Test
     public void testParseFromFile() {
-        Collection<Translation> translations = new TranslationTableParser(
-                D2RQTestHelper.DIRECTORY + "csv/translationtable.csv").parseTranslations();
-        Assert.assertEquals(this.simpleTranslations, new HashSet<Translation>(translations));
+        String file = D2RQTestHelper.getRelativeResourcePath("/csv/translationtable.csv");
+        Collection<Translation> translations = new TranslationTableParser(file).parseTranslations();
+        Assert.assertEquals(this.simpleTranslations, new HashSet<>(translations));
     }
 
     @Test
     public void testParseFromFileWithProtocol() {
-        Collection<Translation> translations = new TranslationTableParser(
-                D2RQTestHelper.DIRECTORY_URL + "csv/translationtable.csv").parseTranslations();
-        Assert.assertEquals(this.simpleTranslations, new HashSet<Translation>(translations));
+        URL url = TranslationTableParser.class.getResource("/csv/translationtable.csv");
+        Collection<Translation> translations = new TranslationTableParser(url.toString()).parseTranslations();
+        Assert.assertEquals(this.simpleTranslations, new HashSet<>(translations));
+    }
+
+    private static Collection<Translation> parseTranslations(String name) {
+        URL url = TranslationTableParser.class.getResource(name);
+        return new TranslationTableParser(url.toString()).parseTranslations();
     }
 }

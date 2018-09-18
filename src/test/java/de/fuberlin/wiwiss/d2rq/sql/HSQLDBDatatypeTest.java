@@ -1,7 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,8 +16,7 @@ public class HSQLDBDatatypeTest extends DatatypeTestBase {
 
     @Before
     public void setUp() {
-        initDB("jdbc:hsqldb:mem:d2rq_test", "org.hsqldb.jdbcDriver", null, null,
-                D2RQTestHelper.DIRECTORY + "sql/hsqldb_datatypes.sql", null);
+        initDB("jdbc:hsqldb:mem:d2rq_test", "org.hsqldb.jdbcDriver", null, null, "/sql/hsqldb_datatypes.sql", null);
     }
 
     @Test

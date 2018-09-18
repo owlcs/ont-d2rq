@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.d2rq_sdb;
 
+import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sdb.SDBFactory;
@@ -33,7 +34,7 @@ public abstract class LoadDataTest {
     private static boolean loadHsqlData = true;
     private static boolean loadSDBData = true;
     // directories and data-files and config-files
-    protected static final String CURR_DIR = "src/test/java/de/fuberlin/wiwiss/d2rq/d2rq_sdb";
+    protected static final String CURR_DIR = D2RQTestHelper.getRelativeResourcePath("/d2rq_sdb");
     private static final String DATA_DIR = "dataset";
     private static final String CONFIG_DIR = "config";
     private static final String FILENAME_TTL_DATA = "dataset.ttl.zip";
@@ -155,7 +156,7 @@ public abstract class LoadDataTest {
         entry = zipInputStream.getNextEntry();
 
         if (entry != null) {
-            Assert.assertFalse("Entry-Name is not empty", "".equals(entry.getName()));
+            Assert.assertFalse("Entry-Name is not empty", entry.getName().isEmpty());
             sdbDataModel = sdbDataModel.read(zipInputStream, null, "TTL");
             Assert.assertTrue("sdbModel is not emtpy", sdbDataModel.size() > 0);
         }
