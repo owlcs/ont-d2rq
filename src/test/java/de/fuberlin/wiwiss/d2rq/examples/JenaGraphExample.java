@@ -1,7 +1,8 @@
 package de.fuberlin.wiwiss.d2rq.examples;
 
-import java.util.Iterator;
-
+import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -10,9 +11,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.vocabulary.DC;
 
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import java.util.Iterator;
 
 public class JenaGraphExample {
 
@@ -24,7 +23,7 @@ public class JenaGraphExample {
         Mapping mapping = MappingFactory.create(mapModel, "http://localhost:2020/");
 
         // Set up the GraphD2RQ
-        GraphD2RQ g = mapping.getDataModel().getGraph();
+        GraphD2RQ g = mapping.getDataGraph();
 
         // Create a find(spo) pattern
         Node subject = Node.ANY;

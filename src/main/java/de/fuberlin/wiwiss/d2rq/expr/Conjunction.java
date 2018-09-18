@@ -1,16 +1,16 @@
 package de.fuberlin.wiwiss.d2rq.expr;
 
-import java.util.*;
-
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 
+import java.util.*;
+
 public class Conjunction extends Expression {
 
     public static Expression create(Collection<Expression> expressions) {
-        Set<Expression> elements = new HashSet<Expression>(expressions.size());
+        Set<Expression> elements = new HashSet<>(expressions.size());
         for (Expression expression : expressions) {
             if (expression.isFalse()) {
                 return Expression.FALSE;
@@ -34,7 +34,7 @@ public class Conjunction extends Expression {
     }
 
     private Set<Expression> expressions;
-    private Set<Attribute> attributes = new HashSet<Attribute>();
+    private Set<Attribute> attributes = new HashSet<>();
 
     private Conjunction(Set<Expression> expressions) {
         this.expressions = expressions;
@@ -43,33 +43,38 @@ public class Conjunction extends Expression {
         }
     }
 
+    @Override
     public boolean isTrue() {
         return false;
     }
 
+    @Override
     public boolean isFalse() {
         return false;
     }
 
+    @Override
     public Set<Attribute> attributes() {
         return this.attributes;
     }
 
+    @Override
     public Expression renameAttributes(ColumnRenamer columnRenamer) {
-        Set<Expression> renamedExpressions = new HashSet<Expression>();
+        Set<Expression> renamedExpressions = new HashSet<>();
         for (Expression expression : expressions) {
             renamedExpressions.add(expression.renameAttributes(columnRenamer));
         }
         return Conjunction.create(renamedExpressions);
     }
 
+    @Override
     public String toSQL(ConnectedDB database, AliasMap aliases) {
-        List<String> fragments = new ArrayList<String>(this.expressions.size());
+        List<String> fragments = new ArrayList<>(this.expressions.size());
         for (Expression expression : expressions) {
             fragments.add(expression.toSQL(database, aliases));
         }
         Collections.sort(fragments);
-        StringBuffer result = new StringBuffer("(");
+        StringBuilder result = new StringBuilder("(");
         Iterator<String> it = fragments.iterator();
         while (it.hasNext()) {
             String fragment = it.next();
@@ -82,13 +87,14 @@ public class Conjunction extends Expression {
         return result.toString();
     }
 
+    @Override
     public String toString() {
-        List<String> fragments = new ArrayList<String>(this.expressions.size());
+        List<String> fragments = new ArrayList<>(this.expressions.size());
         for (Expression expression : expressions) {
             fragments.add(expression.toString());
         }
         Collections.sort(fragments);
-        StringBuffer result = new StringBuffer("Conjunction(");
+        StringBuilder result = new StringBuilder("Conjunction(");
         Iterator<String> it = fragments.iterator();
         while (it.hasNext()) {
             String fragment = it.next();
@@ -101,6 +107,7 @@ public class Conjunction extends Expression {
         return result.toString();
     }
 
+    @Override
     public boolean equals(Object other) {
         if (!(other instanceof Conjunction)) {
             return false;
@@ -109,6 +116,7 @@ public class Conjunction extends Expression {
         return this.expressions.equals(otherConjunction.expressions);
     }
 
+    @Override
     public int hashCode() {
         return this.expressions.hashCode();
     }

@@ -18,6 +18,7 @@ import java.util.Map;
  * @author Richard Cyganiak (richard@cyganiak.de)
  * @author zazi (http://github.com/zazi)
  */
+@SuppressWarnings("WeakerAccess")
 public class TranslationTable extends MapObject {
     private Collection<Translation> translations = new ArrayList<Translation>();
     private String javaClass = null;
@@ -76,6 +77,7 @@ public class TranslationTable extends MapObject {
         return new TableTranslator(this.translations);
     }
 
+    @Override
     public void validate() throws D2RQException {
         if (!this.translations.isEmpty() && this.javaClass != null) {
             throw new D2RQException("Can't combine d2rq:translation and d2rq:javaClass on " + this,
@@ -91,6 +93,7 @@ public class TranslationTable extends MapObject {
         }
     }
 
+    @Override
     public String toString() {
         return "d2rq:TranslationTable " + super.toString();
     }

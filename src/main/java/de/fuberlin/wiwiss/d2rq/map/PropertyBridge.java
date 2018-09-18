@@ -1,13 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.OrderSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
@@ -19,18 +11,27 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+
+@SuppressWarnings("WeakerAccess")
 public class PropertyBridge extends ResourceMap {
     private Resource resource;
     private ClassMap belongsToClassMap = null;
-    private Collection<Resource> properties = new HashSet<Resource>();
-    private Collection<String> dynamicPropertyPatterns = new HashSet<String>();
+    private Collection<Resource> properties = new HashSet<>();
+    private Collection<String> dynamicPropertyPatterns = new HashSet<>();
 
     public PropertyBridge(Resource resource) {
         super(resource, true);
         this.resource = resource;
     }
 
+    @Override
     public Resource resource() {
         return this.resource;
     }
@@ -145,6 +146,7 @@ public class PropertyBridge extends ResourceMap {
         this.dynamicPropertyPatterns.add(dynamicPropertyPattern);
     }
 
+    @Override
     public void validate() throws D2RQException {
         if (this.refersToClassMap != null) {
             if (!this.refersToClassMap.database().equals(this.belongsToClassMap.database())) {
@@ -181,6 +183,7 @@ public class PropertyBridge extends ResourceMap {
         }
     }
 
+    @Override
     protected Relation buildRelation() {
         ConnectedDB database = belongsToClassMap.database().connectedDB();
         RelationBuilder builder = belongsToClassMap.relationBuilder(database);
@@ -206,7 +209,7 @@ public class PropertyBridge extends ResourceMap {
 
     public Collection<TripleRelation> toTripleRelations() {
         this.validate();
-        Collection<TripleRelation> results = new ArrayList<TripleRelation>();
+        Collection<TripleRelation> results = new ArrayList<>();
         for (Resource property : properties) {
             NodeMaker s = this.belongsToClassMap.nodeMaker();
             NodeMaker p = new FixedNodeMaker(property.asNode(), false);
@@ -222,7 +225,8 @@ public class PropertyBridge extends ResourceMap {
         return results;
     }
 
+    @Override
     public String toString() {
-        return "d2rq:PropertyBridge " + PrettyPrinter.toString(this.resource);
+        return String.format("d2rq:PropertyBridge %s", PrettyPrinter.toString(this.resource));
     }
 }

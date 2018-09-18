@@ -1,31 +1,32 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import java.util.Objects;
-
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.util.FileManager;
 
+import java.util.Objects;
+
 /**
- * Helper(Factory) to create/load {@link Mapping}.
+ * Helper-factory to create/load {@link Mapping}.
  * <p>
  * Created by szuev on 22.02.2017.
  */
 public class MappingFactory {
-    protected static Inner instance = (model, base) -> new MapParser(Objects.requireNonNull(model, "Null mapping model."), base).parse();
+    protected static Inner instance = (m, b) -> new MapParser(Objects.requireNonNull(m, "Null mapping model."), b).parse();
 
     public static Inner getFactory() {
         return instance;
     }
 
     public static Inner setFactory(Inner newInstance) {
+        Objects.requireNonNull(newInstance, "Null factory");
         Inner res = MappingFactory.instance;
         MappingFactory.instance = newInstance;
         return res;
     }
 
     /**
-     * creates an empty mapping.
+     * Creates an empty mapping.
      *
      * @return {@link Mapping}
      */
@@ -34,7 +35,7 @@ public class MappingFactory {
     }
 
     /**
-     * creates a mapping based on specified model.
+     * Creates a mapping based on specified model.
      *
      * @param mapModel {@link Model} the mapping model contained D2RQ rules.
      * @param baseURI  the URL to fix relative URIs inside model. Optional.
@@ -55,9 +56,9 @@ public class MappingFactory {
     }
 
     /**
-     * Creates a non-RDF database-based model. The model is created
+     * Creates a non-RDF database based model. The model is created
      * from a D2RQ map that may be in "RDF/XML", "N-TRIPLES" or "TURTLE" format.
-     * Initially it was a constructor inside {@link de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ}.
+     * Initially it was a constructor inside {@code de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ}.
      *
      * @param mapURL              URL of the D2RQ map to be used for this model
      * @param serializationFormat the format of the map, or <tt>null</tt> for guessing based on the file extension
@@ -71,10 +72,10 @@ public class MappingFactory {
     }
 
     /**
-     * Creates a non-RDF database-based model.
+     * Creates a non-RDF database based model.
      * The model is created from a D2RQ map that will be loaded from the given URL.
      * Its serialization format will be guessed from the file extension and defaults to RDF/XML.
-     * Initially it was a constructor inside {@link de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ}.
+     * Initially it was a constructor inside {@code de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ}.
      *
      * @param mapURL URL of the D2RQ map to be used for this model
      * @return {@link Mapping}

@@ -6,11 +6,11 @@ import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.vocabulary.OWL;
@@ -24,14 +24,14 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * A D2RQ mapping. Consists of {@link ClassMap}s,
- * {@link PropertyBridge}s, and several other classes.
+ * A D2RQ mapping. Consists of {@link ClassMap}s, {@link PropertyBridge}s, and several other classes.
  * <p>
  * TODO: Move TripleRelation/NodeMaker building and ConnectedDB to a separate class (MappingRunner?)
  * TODO: #add* methods should write to mapping model also.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class Mapping implements AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Mapping.class);
@@ -67,8 +67,8 @@ public class Mapping implements AutoCloseable {
         return vocabularyModel == null ? vocabularyModel = MappingTransform.getModelBuilder().build(this) : vocabularyModel;
     }
 
-    public ModelD2RQ getDataModel() {
-        return new ModelD2RQ(getDataGraph());
+    public Model getDataModel() {
+        return ModelFactory.createModelForGraph(getDataGraph());
     }
 
     public GraphD2RQ getDataGraph() {
@@ -227,7 +227,7 @@ public class Mapping implements AutoCloseable {
         for (ClassMap classMap : classMaps.values()) {
             this.compiledPropertyBridges.addAll(classMap.compiledPropertyBridges());
         }
-        LOGGER.info("Compiled " + compiledPropertyBridges.size() + " property bridges");
+        LOGGER.info("Compiled {} property bridges", compiledPropertyBridges.size());
         if (LOGGER.isDebugEnabled()) {
             compiledPropertyBridges.stream().map(String::valueOf).forEach(LOGGER::debug);
         }

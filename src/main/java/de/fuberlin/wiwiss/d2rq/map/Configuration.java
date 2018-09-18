@@ -37,10 +37,12 @@ public class Configuration extends MapObject {
         this.useAllOptimizations = useAllOptimizations;
     }
 
+    @Override
     public String toString() {
         return "d2rq:Configuration " + super.toString();
     }
 
+    @Override
     public void validate() throws D2RQException {
         /* All settings are optional */
     }

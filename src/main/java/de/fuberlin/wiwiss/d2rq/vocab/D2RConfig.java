@@ -13,10 +13,11 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("unused")
 public class D2RConfig {
+
     /**
      * <p>The RDF model that holds the vocabulary terms</p>
      */
-    private static Model m_model = ModelFactory.createDefaultModel();
+    private static Model model = ModelFactory.createDefaultModel();
 
     /**
      * <p>The namespace of the vocabulary as a string</p>
@@ -36,81 +37,89 @@ public class D2RConfig {
     /**
      * <p>The namespace of the vocabulary as a resource</p>
      */
-    public static final Resource NAMESPACE = m_model.createResource(NS);
+    public static final Resource NAMESPACE = model.createResource(NS);
 
     /**
      * <p>Whether D2R Server should check for an updated mapping file with every request.</p>
      */
-    public static final Property autoReloadMapping = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#autoReloadMapping");
+    public static final Property autoReloadMapping = property("autoReloadMapping");
 
     /**
      * <p>Base URI for a D2R Server installation; the URI of the running server's start
      * page.</p>
      */
-    public static final Property baseURI = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#baseURI");
+    public static final Property baseURI = property("baseURI");
 
     /**
      * <p>A RDF dataset metadata template.</p>
      */
-    public static final Property datasetMetadataTemplate = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#datasetMetadataTemplate");
+    public static final Property datasetMetadataTemplate = property("datasetMetadataTemplate");
 
     /**
      * <p>A template resource whose properties will be attached as metadata to all RDF
      * documents published by a D2R Server installation.</p>
      */
-    public static final Property documentMetadata = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#documentMetadata");
+    public static final Property documentMetadata = property("documentMetadata");
 
     /**
      * <p>Whether to enable all metadata generation.</p>
      */
-    public static final Property enableMetadata = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#enableMetadata");
+    public static final Property enableMetadata = property("enableMetadata");
 
     /**
      * <p>Maximum number of values for each class map that will be displayed in the
      * web interface when browsing resources. A value of false means no limit.</p>
      */
-    public static final Property limitPerClassMap = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#limitPerClassMap");
+    public static final Property limitPerClassMap = property("limitPerClassMap");
 
     /**
      * <p>Maximum number of values for each property bridge that will be displayed in
      * the web interface when browsing resources. A value of false means no limit.</p>
      */
-    public static final Property limitPerPropertyBridge = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#limitPerPropertyBridge");
+    public static final Property limitPerPropertyBridge = property("limitPerPropertyBridge");
 
     /**
      * <p>A RDF metadata template.</p>
      */
-    public static final Property metadataTemplate = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#metadataTemplate");
+    public static final Property metadataTemplate = property("metadataTemplate");
 
     /**
      * <p>Timeout for generating HTML pages and RDF descriptions, in seconds. 0 for
      * no timeout.</p>
      */
-    public static final Property pageTimeout = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#pageTimeout");
+    public static final Property pageTimeout = property("pageTimeout");
 
     /**
      * <p>The TCP port on which a D2R Server installation listens.</p>
      */
-    public static final Property port = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#port");
+    public static final Property port = property("port");
 
     /**
      * <p>The D2RQ-mapped database that is published by a D2R Server installation.</p>
      */
-    public static final Property publishes = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#publishes");
+    public static final Property publishes = property("publishes");
 
     /**
      * <p>Timeout for executing SPARQL queries, in seconds. 0 for no timeout.</p>
      */
-    public static final Property sparqlTimeout = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#sparqlTimeout");
+    public static final Property sparqlTimeout = property("sparqlTimeout");
 
     /**
      * <p>Whether views of vocabulary resources should include instance data.</p>
      */
-    public static final Property vocabularyIncludeInstances = m_model.createProperty("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#vocabularyIncludeInstances");
+    public static final Property vocabularyIncludeInstances = property("vocabularyIncludeInstances");
 
     /**
      * <p>A configuration for a D2R Server installation.</p>
      */
-    public static final Resource Server = m_model.createResource("http://sites.wiwiss.fu-berlin.de/suhl/bizer/d2r-server/config.rdf#Server");
+    public static final Resource Server = resource("Server");
+
+    protected static Resource resource(String localName) {
+        return model.createResource(NS + localName);
+    }
+
+    protected static Property property(String localName) {
+        return model.createProperty(NS + localName);
+    }
 
 }

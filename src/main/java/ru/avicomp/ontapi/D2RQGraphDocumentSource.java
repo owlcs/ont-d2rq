@@ -9,7 +9,10 @@ import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
 import ru.avicomp.ontapi.jena.HybridImpl;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -26,7 +29,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     public static final IRI DEFAULT_BASE_IRI = IRI.create("http://d2rq.avc.ru/");
 
     protected final Mapping mapping;
-    protected final IRI doc;
+    protected final URI doc;
 
     /**
      * The main constructor.
@@ -35,6 +38,22 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * @throws OntApiException if the mapping is not suitable
      */
     protected D2RQGraphDocumentSource(Mapping mapping) throws OntApiException {
+        this.mapping = Objects.requireNonNull(mapping, "Null mapping");
+        this.doc = calculateURI(mapping, () -> D2RQGraphDocumentSource.super.getDocumentIRI().toURI());
+    }
+
+    /**
+     * Calculates document URI from the given mapping.
+     * there are only two restrictions on document iri:
+     * 1) it must be unique within the ontology manager
+     * 2) it is desirable that it will be also a valid URI (some systems, such as Protege, requires that)
+     *
+     * @param mapping   {@link Mapping}, not {@code null}
+     * @param orDefault to get default value in case the valid uri can not be built from mappings settings, not {@code null}
+     * @return {@link URI}, not {@code null}
+     * @throws OntApiException if something is wrong with mapping
+     */
+    protected static URI calculateURI(Mapping mapping, Supplier<URI> orDefault) throws OntApiException {
         List<String> dbs = OntApiException.notNull(mapping, "Null mapping").databases()
                 .stream()
                 .map(Database::getJDBCDSN)
@@ -44,8 +63,12 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
         if (dbs.isEmpty()) {
             throw new OntApiException("No jdbc connection string inside mapping");
         }
-        this.doc = IRI.create("d2rq://" + dbs.stream().collect(Collectors.joining(";")));
-        this.mapping = mapping;
+        try {
+            return URI.create("d2rq://" + String.join(";", dbs));
+        } catch (IllegalArgumentException i) {
+            // just in case
+            return orDefault.get();
+        }
     }
 
     /**
@@ -91,7 +114,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     /**
      * Makes a new {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} with restrictions from {@link MappingFilter}
      *
-     * @param filter {@link MappingFilter}, could be null.
+     * @param filter {@link MappingFilter}, can be {@code null}
      * @return {@link D2RQGraphDocumentSource}
      */
     public D2RQGraphDocumentSource filter(MappingFilter filter) {
@@ -122,6 +145,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * <li>Any changes in primary graph affects schema-part of D2RQ graph</li>
      * <li>The D2RQ virtual graph is not distinct: it can contain duplicate triples reflecting duplicated tuples from a db table</li>
      * </ul>
+     *
      * @return {@link Graph}
      */
     @Override
@@ -137,12 +161,12 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      */
     @Override
     public IRI getDocumentIRI() {
-        return doc;
+        return IRI.create(doc);
     }
 
     /**
      * Closes mapping.
-     * Note: it will be reopened on demand if you continue work with the result ontology virtual graph data.
+     * Note: it will be reopened on demand if you continue work with the result ontology virtual data graph.
      */
     @Override
     public void close() {

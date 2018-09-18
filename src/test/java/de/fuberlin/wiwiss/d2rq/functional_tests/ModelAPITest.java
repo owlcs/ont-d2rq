@@ -1,14 +1,18 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.DC;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.avicomp.ontapi.jena.utils.Models;
 
 /**
  * Functional tests that exercise a ModelD2RQ by calling Model API functions. For
@@ -19,7 +23,8 @@ import org.junit.Test;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class ModelAPITest {
-    private ModelD2RQ model;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModelAPITest.class);
+    private Model model;
 
     @Before
     public void setUp() {
@@ -37,30 +42,15 @@ public class ModelAPITest {
         StmtIterator iter = this.model.listStatements();
         int count = 0;
         while (iter.hasNext()) {
-            Statement stmt = iter.nextStatement();
-            stmt.toString();
-//			dumpStatement(stmt);
+            Statement s = iter.nextStatement();
+            LOGGER.debug("S={}", Models.toString(s));
             count++;
         }
         Assert.assertEquals(358, count);
-        //assertEquals(322, count);
     }
 
     @Test
     public void testHasProperty() {
         Assert.assertTrue(this.model.getResource("http://test/papers/1").hasProperty(DC.creator));
-    }
-
-    void dumpStatement(Statement stmt) {
-        Resource subject = stmt.getSubject();
-        Property predicate = stmt.getPredicate();
-        RDFNode object = stmt.getObject();
-        System.out.print(subject + " " + predicate + " ");
-        if (object instanceof Resource) {
-            System.out.print(object);
-        } else { // object is a literal
-            System.out.print(" \"" + object + "\"");
-        }
-        System.out.println(" .");
     }
 }

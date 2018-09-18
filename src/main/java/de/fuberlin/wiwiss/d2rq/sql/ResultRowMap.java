@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
+import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
-
-import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 
 /**
  * A result row returned by a database query, presented as a
@@ -16,9 +16,9 @@ import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 public class ResultRowMap implements ResultRow {
 
     public static ResultRowMap fromResultSet(ResultSet resultSet,
-                                             List<ProjectionSpec> projectionSpecs, ConnectedDB database)
-            throws SQLException {
-        Map<ProjectionSpec, String> result = new HashMap<ProjectionSpec, String>();
+                                             List<ProjectionSpec> projectionSpecs,
+                                             ConnectedDB database) throws SQLException {
+        Map<ProjectionSpec, String> result = new HashMap<>();
         ResultSetMetaData metaData = resultSet.getMetaData();
         for (int i = 0; i < projectionSpecs.size(); i++) {
             ProjectionSpec key = projectionSpecs.get(i);
@@ -35,14 +35,16 @@ public class ResultRowMap implements ResultRow {
         this.projectionsToValues = projectionsToValues;
     }
 
+    @Override
     public String get(ProjectionSpec projection) {
         return this.projectionsToValues.get(projection);
     }
 
+    @Override
     public String toString() {
-        List<ProjectionSpec> columns = new ArrayList<ProjectionSpec>(this.projectionsToValues.keySet());
+        List<ProjectionSpec> columns = new ArrayList<>(this.projectionsToValues.keySet());
         Collections.sort(columns);
-        StringBuffer result = new StringBuffer("{");
+        StringBuilder result = new StringBuilder("{");
         Iterator<ProjectionSpec> it = columns.iterator();
         while (it.hasNext()) {
             ProjectionSpec projection = it.next();

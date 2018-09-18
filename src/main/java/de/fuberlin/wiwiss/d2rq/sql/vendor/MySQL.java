@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class MySQL extends SQL92 {
 
     public MySQL() {
@@ -24,7 +25,7 @@ public class MySQL extends SQL92 {
 
     @Override
     public String getConcatenationExpression(String[] sqlFragments) {
-        StringBuffer result = new StringBuffer("CONCAT(");
+        StringBuilder result = new StringBuilder("CONCAT(");
         for (int i = 0; i < sqlFragments.length; i++) {
             if (i > 0) {
                 result.append(", ");

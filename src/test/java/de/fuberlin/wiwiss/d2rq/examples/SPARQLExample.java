@@ -1,14 +1,13 @@
 package de.fuberlin.wiwiss.d2rq.examples;
 
-import org.apache.jena.query.*;
-
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Model;
 
 public class SPARQLExample {
 
     public static void main(String[] args) {
-        ModelD2RQ m = MappingFactory.load("file:doc/example/mapping-iswc.mysql.ttl").getDataModel();
+        Model m = MappingFactory.load("file:doc/example/mapping-iswc.mysql.ttl").getDataModel();
         String sparql =
                 "PREFIX dc: <http://purl.org/dc/elements/1.1/>" +
                         "PREFIX foaf: <http://xmlns.com/foaf/0.1/>" +

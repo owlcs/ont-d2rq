@@ -1,15 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.*;
-
-import org.apache.jena.graph.Node;
-import org.apache.jena.sparql.core.Var;
-import org.apache.jena.sparql.engine.binding.Binding;
-
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
+import org.apache.jena.graph.Node;
+import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.engine.binding.Binding;
+
+import java.util.*;
 
 /**
  * A {@link Relation} associated with a number of named {@link NodeMaker}s.
@@ -20,11 +19,10 @@ import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
  */
 public class NodeRelation {
 
-    public static final NodeRelation TRUE =
-            new NodeRelation(Relation.TRUE, Collections.emptyMap());
+    public static final NodeRelation TRUE = new NodeRelation(Relation.TRUE, Collections.emptyMap());
 
     public static NodeRelation empty(Set<Var> variables) {
-        Map<Var, NodeMaker> map = new HashMap<Var, NodeMaker>();
+        Map<Var, NodeMaker> map = new HashMap<>();
         for (Var variable : variables) {
             map.put(variable, NodeMaker.EMPTY);
         }
@@ -52,12 +50,12 @@ public class NodeRelation {
     }
 
     public NodeRelation withPrefix(int index) {
-        Collection<Alias> newAliases = new ArrayList<Alias>();
+        Collection<Alias> newAliases = new ArrayList<>();
         for (RelationName tableName : baseRelation().tables()) {
             newAliases.add(new Alias(tableName, tableName.withPrefix(index)));
         }
         AliasMap renamer = new AliasMap(newAliases);
-        Map<Var, NodeMaker> renamedNodeMakers = new HashMap<Var, NodeMaker>();
+        Map<Var, NodeMaker> renamedNodeMakers = new HashMap<>();
         for (Var variable : variables()) {
             renamedNodeMakers.put(variable, nodeMaker(variable).renameAttributes(renamer));
         }
@@ -66,7 +64,7 @@ public class NodeRelation {
 
     public NodeRelation renameSingleRelation(RelationName oldName, RelationName newName) {
         AliasMap renamer = AliasMap.create1(oldName, newName);
-        Map<Var, NodeMaker> renamedNodeMakers = new HashMap<Var, NodeMaker>();
+        Map<Var, NodeMaker> renamedNodeMakers = new HashMap<>();
 
         // This is only done for consistency as the NodeMakers won't be used
         for (Var variable : variables()) {
@@ -87,7 +85,7 @@ public class NodeRelation {
     public NodeRelation extendWith(Binding binding) {
         if (binding.isEmpty()) return this;
         MutableRelation mutator = new MutableRelation(baseRelation());
-        Map<Var, NodeMaker> columns = new HashMap<Var, NodeMaker>();
+        Map<Var, NodeMaker> columns = new HashMap<>();
         for (Var variable : variables()) {
             columns.put(variable, nodeMaker(variable));
         }
@@ -125,8 +123,9 @@ public class NodeRelation {
         return new NodeRelation(mutator.immutableSnapshot(), nodeMakers);
     }
 
+    @Override
     public String toString() {
-        StringBuffer result = new StringBuffer("NodeRelation(");
+        StringBuilder result = new StringBuilder("NodeRelation(");
         result.append(base.toString());
         result.append("\n");
         for (Var variable : variables()) {

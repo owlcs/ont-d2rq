@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.helpers;
 
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.BeanCounter;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
 import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DC;
@@ -23,11 +23,12 @@ import java.util.*;
  * @author Richard Cyganiak (richard@cyganiak.de)
  * @author jgarbers
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class QueryLanguageTestFramework {
-    protected ModelD2RQ model;
+    protected Model model;
     protected Set<Map<String, RDFNode>> results;
     protected String queryString;
-    protected Map<String, RDFNode> currentSolution = new HashMap<String, RDFNode>();
+    protected Map<String, RDFNode> currentSolution = new HashMap<>();
 
     // compare fields
     int nTimes = 1;
@@ -193,7 +194,7 @@ public abstract class QueryLanguageTestFramework {
     }
 
     private String printArray(String[] a) {
-        StringBuffer b = new StringBuffer("[");
+        StringBuilder b = new StringBuilder("[");
         for (int i = 0; i < a.length; i++) {
             if (i > 0)
                 b.append(",");
@@ -231,15 +232,14 @@ public abstract class QueryLanguageTestFramework {
 
     protected void sparql(String sparql) {
         queryString = sparql;
-        sparql =
-                "PREFIX dc: <" + DC.NS + ">\n" +
+        sparql = "PREFIX dc: <" + DC.NS + ">\n" +
                         "PREFIX foaf: <" + FOAF.NS + ">\n" +
                         "PREFIX skos: <" + SKOS.NS + ">\n" +
                         "PREFIX iswc: <" + ISWC.NS + ">\n" +
                         sparql;
         Query query = QueryFactory.create(sparql);
         QueryExecution qe = QueryExecutionFactory.create(query, this.model);
-        this.results = new HashSet<Map<String, RDFNode>>();
+        this.results = new HashSet<>();
         ResultSet resultSet = qe.execSelect();
         while (resultSet.hasNext()) {
             QuerySolution solution = resultSet.nextSolution();
@@ -248,7 +248,7 @@ public abstract class QueryLanguageTestFramework {
     }
 
     private void addSolution(QuerySolution solution) {
-        Map<String, RDFNode> map = new HashMap<String, RDFNode>();
+        Map<String, RDFNode> map = new HashMap<>();
         Iterator<String> it = solution.varNames();
         while (it.hasNext()) {
             String variable = it.next();
@@ -274,7 +274,7 @@ public abstract class QueryLanguageTestFramework {
     }
 
     public static Map<String, RDFNode> solutionToMap(QuerySolution solution, List<String> variables) {
-        Map<String, RDFNode> result = new HashMap<String, RDFNode>();
+        Map<String, RDFNode> result = new HashMap<>();
         Iterator<String> it = solution.varNames();
         while (it.hasNext()) {
             String variableName = it.next();

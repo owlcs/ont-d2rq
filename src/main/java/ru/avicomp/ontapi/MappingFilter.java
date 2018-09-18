@@ -12,7 +12,6 @@ import ru.avicomp.ontapi.jena.vocabulary.RDF;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -136,17 +135,14 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
      */
     private Stream<Resource> classes(Model model) {
         return properties().map(p -> model.listResourcesWithProperty(D2RQ.property, p))
-                .map(Iter::asStream)
-                .flatMap(Function.identity())
+                .flatMap(Iter::asStream)
                 .map(p -> p.listProperties(D2RQ.belongsToClassMap).andThen(p.listProperties(D2RQ.refersToClassMap)))
-                .map(Iter::asStream)
-                .flatMap(Function.identity())
+                .flatMap(Iter::asStream)
                 .map(Statement::getObject)
                 .filter(RDFNode::isURIResource)
                 .map(RDFNode::asResource)
                 .map(c -> model.listObjectsOfProperty(c, D2RQ.clazz))
-                .map(Iter::asStream)
-                .flatMap(Function.identity())
+                .flatMap(Iter::asStream)
                 .filter(RDFNode::isURIResource)
                 .map(RDFNode::asResource);
     }
@@ -159,18 +155,15 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
      */
     private Stream<Resource> properties(Model model) {
         Set<Resource> classMaps = classes().map(c -> model.listResourcesWithProperty(D2RQ.clazz, c))
-                .map(Iter::asStream)
-                .flatMap(Function.identity())
+                .flatMap(Iter::asStream)
                 .filter(RDFNode::isURIResource)
                 .collect(Collectors.toSet());
         return classMaps.stream()
                 .map(c -> model.listResourcesWithProperty(D2RQ.belongsToClassMap, c))
-                .map(Iter::asStream)
-                .flatMap(Function.identity())
+                .flatMap(Iter::asStream)
                 .filter(p -> isValidPropertyBridge(p, classMaps))
                 .map(p -> model.listObjectsOfProperty(p, D2RQ.property))
-                .map(Iter::asStream)
-                .flatMap(Function.identity())
+                .flatMap(Iter::asStream)
                 .filter(Objects::nonNull)
                 .filter(RDFNode::isURIResource)
                 .map(RDFNode::asResource);

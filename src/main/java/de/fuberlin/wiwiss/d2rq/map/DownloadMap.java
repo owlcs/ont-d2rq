@@ -63,15 +63,12 @@ public class DownloadMap extends ResourceMap {
 
     @Override
     public void validate() throws D2RQException {
-        assertHasPrimarySpec(new Property[]{
-                D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue
-        });
+        assertHasPrimarySpec(new Property[]{D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue});
         if (database == null && belongsToClassMap == null) {
             throw new D2RQException("Download map " + toString() + " needs a d2rq:dataStorage (or d2rq:belongsToClassMap)",
                     D2RQException.DOWNLOADMAP_NO_DATASTORAGE);
         }
-        assertHasBeenDefined(contentDownloadColumn, D2RQ.contentDownloadColumn,
-                D2RQException.DOWNLOADMAP_NO_CONTENTCOLUMN);
+        assertHasBeenDefined(contentDownloadColumn, D2RQ.contentDownloadColumn, D2RQException.DOWNLOADMAP_NO_CONTENTCOLUMN);
         if (this.constantValue != null && !this.constantValue.isURIResource()) {
             throw new D2RQException("d2rq:constantValue for download map " + toString() + " must be a URI",
                     D2RQException.DOWNLOADMAP_INVALID_CONSTANTVALUE);

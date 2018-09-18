@@ -12,10 +12,11 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("unused")
 public class D2RQ {
+
     /**
      * <p>The RDF model that holds the vocabulary terms</p>
      */
-    private static Model m_model = ModelFactory.createDefaultModel();
+    private static Model model = ModelFactory.createDefaultModel();
 
     /**
      * The URI.
@@ -415,10 +416,10 @@ public class D2RQ {
 
 
     protected static Resource resource(String local) {
-        return m_model.createResource(NS + local);
+        return model.createResource(NS + local);
     }
 
     protected static Property property(String local) {
-        return m_model.createProperty(NS + local);
+        return model.createProperty(NS + local);
     }
 }

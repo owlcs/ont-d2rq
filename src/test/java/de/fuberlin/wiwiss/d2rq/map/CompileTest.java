@@ -20,12 +20,9 @@ public class CompileTest {
     private Model model;
     private Mapping mapping;
     private Database database;
-    private ClassMap employees;
     private PropertyBridge managerBridge;
-    private ClassMap cities;
     private PropertyBridge citiesTypeBridge;
     private PropertyBridge citiesNameBridge;
-    private ClassMap countries;
     private PropertyBridge countriesTypeBridge;
 
     @Before
@@ -33,24 +30,24 @@ public class CompileTest {
         this.model = ModelFactory.createDefaultModel();
         this.mapping = MappingFactory.createEmpty();
         this.database = new Database(this.model.createResource());
-        database.useConnectedDB(new DummyDB());
+        this.database.useConnectedDB(new DummyDB());
         this.mapping.addDatabase(this.database);
 
-        employees = createClassMap("http://test/employee@@e.ID@@");
+        ClassMap employees = createClassMap("http://test/employee@@e.ID@@");
         employees.addAlias("employees AS e");
         employees.addJoin("e.ID = foo.bar");
         employees.addCondition("e.status = 'active'");
         managerBridge = createPropertyBridge(employees, "http://terms.example.org/manager");
         managerBridge.addAlias("e AS m");
-        managerBridge.setRefersToClassMap(this.employees);
+        managerBridge.setRefersToClassMap(employees);
         managerBridge.addJoin("e.manager = m.ID");
 
-        cities = createClassMap("http://test/city@@c.ID@@");
+        ClassMap cities = createClassMap("http://test/city@@c.ID@@");
         citiesTypeBridge = createPropertyBridge(cities, RDF.type.getURI());
         citiesTypeBridge.setConstantValue(model.createResource("http://terms.example.org/City"));
         citiesNameBridge = createPropertyBridge(cities, "http://terms.example.org/name");
         citiesNameBridge.setColumn("c.name");
-        countries = createClassMap("http://test/countries/@@c.country@@");
+        ClassMap countries = createClassMap("http://test/countries/@@c.country@@");
         countries.setContainsDuplicates(true);
         countriesTypeBridge = createPropertyBridge(countries, RDF.type.getURI());
         countriesTypeBridge.setConstantValue(model.createResource("http://terms.example.org/Country"));

@@ -418,7 +418,7 @@ public class MapParser {
         stmts = r.listProperties(D2RQ.column);
         while (stmts.hasNext()) {
             //noinspection EqualsBetweenInconvertibleTypes
-            if (r.getProperty(RDF.type).equals(D2RQ.ObjectPropertyBridge)) {
+            if (D2RQ.ObjectPropertyBridge.equals(r.getProperty(RDF.type))) {
                 // Legacy
                 bridge.setURIColumn(stmts.nextStatement().getString());
             } else {
@@ -428,7 +428,7 @@ public class MapParser {
         stmts = r.listProperties(D2RQ.pattern);
         while (stmts.hasNext()) {
             //noinspection EqualsBetweenInconvertibleTypes
-            if (r.getProperty(RDF.type).equals(D2RQ.ObjectPropertyBridge)) {
+            if (D2RQ.ObjectPropertyBridge.equals(r.getProperty(RDF.type))) {
                 // Legacy
                 bridge.setURIPattern(stmts.nextStatement().getString());
             } else {

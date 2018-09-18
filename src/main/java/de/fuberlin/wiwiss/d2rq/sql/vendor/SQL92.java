@@ -1,11 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.sql.vendor;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Properties;
-import java.util.regex.Pattern;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
@@ -14,12 +8,19 @@ import de.fuberlin.wiwiss.d2rq.sql.Quoter;
 import de.fuberlin.wiwiss.d2rq.sql.Quoter.PatternDoublingQuoter;
 import de.fuberlin.wiwiss.d2rq.sql.types.*;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Properties;
+import java.util.regex.Pattern;
+
 /**
  * This base class implements SQL-92 compatible syntax. Subclasses
  * can override individual methods to implement different syntax.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("RedundantThrows")
 public class SQL92 implements Vendor {
     private boolean useAS;
 
@@ -32,8 +33,9 @@ public class SQL92 implements Vendor {
         this.useAS = useAS;
     }
 
+    @Override
     public String getConcatenationExpression(String[] sqlFragments) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < sqlFragments.length; i++) {
             if (i > 0) {
                 result.append(" || ");
@@ -43,16 +45,18 @@ public class SQL92 implements Vendor {
         return result.toString();
     }
 
+    @Override
     public String getRelationNameAliasExpression(RelationName relationName,
                                                  RelationName aliasName) {
         return quoteRelationName(relationName) + (useAS ? " AS " : " ") + quoteRelationName(aliasName);
     }
 
+    @Override
     public String quoteAttribute(Attribute attribute) {
-        return quoteRelationName(attribute.relationName()) + "." +
-                quoteIdentifier(attribute.attributeName());
+        return quoteRelationName(attribute.relationName()) + "." + quoteIdentifier(attribute.attributeName());
     }
 
+    @Override
     public String quoteRelationName(RelationName relationName) {
         if (relationName.schemaName() == null) {
             return quoteIdentifier(relationName.tableName());
@@ -60,36 +64,41 @@ public class SQL92 implements Vendor {
         return quoteIdentifier(relationName.schemaName()) + "." + quoteIdentifier(relationName.tableName());
     }
 
+    @Override
     public String quoteIdentifier(String identifier) {
         return doubleQuoteEscaper.quote(identifier);
     }
 
-    private final static Quoter doubleQuoteEscaper =
-            new PatternDoublingQuoter(Pattern.compile("(\")"), "\"");
+    private final static Quoter doubleQuoteEscaper = new PatternDoublingQuoter(Pattern.compile("(\")"), "\"");
 
+    @Override
     public String quoteStringLiteral(String s) {
         return singleQuoteEscaper.quote(s);
     }
 
-    private final static Quoter singleQuoteEscaper =
-            new PatternDoublingQuoter(Pattern.compile("(')"), "'");
+    private final static Quoter singleQuoteEscaper = new PatternDoublingQuoter(Pattern.compile("(')"), "'");
 
+    @Override
     public String quoteBinaryLiteral(String hexString) {
         return "X" + quoteStringLiteral(hexString);
     }
 
+    @Override
     public String quoteDateLiteral(String date) {
         return "DATE " + quoteStringLiteral(date);
     }
 
+    @Override
     public String quoteTimeLiteral(String time) {
         return "TIME " + quoteStringLiteral(time);
     }
 
+    @Override
     public String quoteTimestampLiteral(String timestamp) {
         return "TIMESTAMP " + quoteStringLiteral(timestamp);
     }
 
+    @Override
     public Expression getRowNumLimitAsExpression(int limit) {
         return Expression.TRUE;
     }
@@ -99,19 +108,23 @@ public class SQL92 implements Vendor {
      * result sets (ROW_NUMBER appeared in SQL 2003). We will
      * just use MySQL's LIMIT as it appears to be widely implemented.
      */
+    @Override
     public String getRowNumLimitAsQueryAppendage(int limit) {
         if (limit == Database.NO_LIMIT) return "";
         return "LIMIT " + limit;
     }
 
+    @Override
     public String getRowNumLimitAsSelectModifier(int limit) {
         return "";
     }
 
+    @Override
     public Properties getDefaultConnectionProperties() {
         return new Properties();
     }
 
+    @Override
     public DataType getDataType(int jdbcType, String name, int size) {
         // TODO: These are in java.sql.Types as of Java 6 but not yet in Java 1.5
         if ("NCHAR".equals(name) || "NVARCHAR".equals(name) || "NCLOB".equals(name)) {
@@ -179,38 +192,47 @@ public class SQL92 implements Vendor {
      * In most databases, we don't have to do anything because boolean
      * expressions are allowed anywhere.
      */
+    @Override
     public Expression booleanExpressionToSimpleExpression(Expression expression) {
         return expression;
     }
 
+    @Override
     public boolean isIgnoredTable(String schema, String table) {
         return false;
     }
 
+    @Override
     public void initializeConnection(Connection connection) throws SQLException {
         // Do nothing for standard SQL 92. Subclasses can override.
     }
 
+    @Override
     public void beforeQuery(Connection connection) throws SQLException {
         // Do nothing for standard SQL 92. Subclasses can override.
     }
 
+    @Override
     public void afterQuery(Connection connection) throws SQLException {
         // Do nothing for standard SQL 92. Subclasses can override.
     }
 
+    @Override
     public void beforeClose(Connection connection) throws SQLException {
         // Do nothing for standard SQL 92. Subclasses can override.
     }
 
+    @Override
     public void afterClose(Connection connection) throws SQLException {
         // Do nothing for standard SQL 92. Subclasses can override.
     }
 
+    @Override
     public void beforeCancel(Connection connection) throws SQLException {
         // Do nothing for standard SQL 92. Subclasses can override.
     }
 
+    @Override
     public void afterCancel(Connection connection) throws SQLException {
         // Do nothing for standard SQL 92. Subclasses can override.
     }

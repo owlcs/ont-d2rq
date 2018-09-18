@@ -7,24 +7,39 @@ import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
 
+import java.util.Objects;
+
 /**
  * To convert {@link Mapping D2RQ mapping} -&gt; {@link Model Jena model}.
  * Currently there is only one model builder ({@link OWLModelBuilder}), which makes simple OWL2 DL ontology.
+ * <p>
  * Created by @szuev on 19.02.2017.
  */
+@SuppressWarnings("WeakerAccess")
 public class MappingTransform {
-    private static ModelBuilder owlBuilder = new OWLModelBuilder();
+    private static ModelBuilder defaultFactory = new OWLModelBuilder();
 
     public static ModelBuilder getModelBuilder() {
-        return owlBuilder;
+        return defaultFactory;
     }
 
+    /**
+     * Sets new default {@link ModelBuilder}.
+     *
+     * @param b {@link ModelBuilder} to set, not {@code null}
+     * @return {@link ModelBuilder} the previously associated factory-builder
+     */
     public static ModelBuilder setModelBuilder(ModelBuilder b) {
-        ModelBuilder prev = MappingTransform.owlBuilder;
-        MappingTransform.owlBuilder = b;
+        Objects.requireNonNull(b, "Null factory");
+        ModelBuilder prev = MappingTransform.defaultFactory;
+        MappingTransform.defaultFactory = b;
         return prev;
     }
 
+    /**
+     * Mapping factory-builder.
+     */
+    @FunctionalInterface
     public interface ModelBuilder {
         Model build(Mapping mapping);
     }
@@ -55,9 +70,9 @@ public class MappingTransform {
         }
 
         protected void addDefinitions(Model model, ResourceMap map, Resource targetResource) {
-            if (ClassMap.class.isInstance(map)) {
+            if (map instanceof ClassMap) {
                 model.add(targetResource, RDF.type, OWL.Class);
-            } else if (PropertyBridge.class.isInstance(map)) {
+            } else if (map instanceof PropertyBridge) {
                 PropertyBridge prop = (PropertyBridge) map;
                 ClassMap range = prop.getRefersToClassMap();
                 ClassMap domain = prop.getBelongsToClassMap();

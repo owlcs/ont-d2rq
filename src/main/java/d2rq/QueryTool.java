@@ -3,11 +3,11 @@ package d2rq;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
-import de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ;
 import org.apache.jena.query.QueryCancelledException;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sparql.resultset.ResultsFormat;
 import org.apache.jena.sparql.util.QueryExecUtils;
 import org.slf4j.Logger;
@@ -81,7 +81,7 @@ public class QueryTool extends CommandLineTool {
         }
 
         loader.setFastMode(true);
-        ModelD2RQ d2rqModel = loader.getMapping().getDataModel();
+        Model d2rqModel = loader.getMapping().getDataModel();
 
         StringBuilder prefixes = new StringBuilder();
         for (String prefix : d2rqModel.getNsPrefixMap().keySet()) {

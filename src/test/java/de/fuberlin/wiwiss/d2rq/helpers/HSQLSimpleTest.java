@@ -90,7 +90,7 @@ public class HSQLSimpleTest {
     public void testGenerateEmptyGraphFromSimpleD2RQMapping() {
         Mapping m = MappingHelper.readFromTestFile("helpers/simple.ttl");
         m.configuration().setServeVocabulary(false);
-        GraphD2RQ g = m.getDataModel().getGraph();
+        GraphD2RQ g = m.getDataGraph();
         Assert.assertTrue(g.isEmpty());
     }
 
@@ -99,7 +99,7 @@ public class HSQLSimpleTest {
         Mapping m = MappingHelper.readFromTestFile("helpers/simple.ttl");
         m.configuration().setServeVocabulary(false);
         db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
-        GraphD2RQ g = m.getDataModel().getGraph();
+        GraphD2RQ g = m.getDataGraph();
         Assert.assertTrue(g.contains(
                 NodeFactory.createURI(EX + "test/1"), RDF.Nodes.type, NodeFactory.createURI(EX + "Test")));
         Assert.assertEquals(1, g.size());
@@ -116,6 +116,6 @@ public class HSQLSimpleTest {
     }
 
     private GraphD2RQ generateDefaultGraphD2RQ() {
-        return generateDefaultMapping().getDataModel().getGraph();
+        return generateDefaultMapping().getDataGraph();
     }
 }

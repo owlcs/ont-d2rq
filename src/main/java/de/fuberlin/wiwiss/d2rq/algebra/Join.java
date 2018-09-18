@@ -8,11 +8,11 @@ import java.util.*;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class Join {
-    private List<Attribute> attributes1 = new ArrayList<Attribute>();
-    private List<Attribute> attributes2 = new ArrayList<Attribute>();
-    private RelationName table1 = null;
-    private RelationName table2 = null;
-    private Map<Attribute, Attribute> otherSide = new HashMap<Attribute, Attribute>(4);
+    private List<Attribute> attributes1;
+    private List<Attribute> attributes2;
+    private RelationName table1;
+    private RelationName table2;
+    private Map<Attribute, Attribute> otherSide = new HashMap<>(4);
 
     private int joinDirection;
 
@@ -76,7 +76,7 @@ public class Join {
     }
 
     public String toString() {
-        StringBuffer result = new StringBuffer("Join(");
+        StringBuilder result = new StringBuilder("Join(");
         Iterator<Attribute> it = this.attributes1.iterator();
         while (it.hasNext()) {
             Attribute attribute = it.next();
@@ -126,8 +126,8 @@ public class Join {
     }
 
     public Join renameColumns(ColumnRenamer columnRenamer) {
-        List<Attribute> oneSide = new ArrayList<Attribute>();
-        List<Attribute> otherSide = new ArrayList<Attribute>();
+        List<Attribute> oneSide = new ArrayList<>();
+        List<Attribute> otherSide = new ArrayList<>();
         for (Attribute column : attributes1) {
             oneSide.add(columnRenamer.applyTo(column));
             otherSide.add(columnRenamer.applyTo(equalAttribute(column)));

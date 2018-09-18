@@ -14,32 +14,37 @@ public class FilterMatchColumn extends Filter {
         this.matchParents = matchParents;
     }
 
+    @Override
     public boolean matchesSchema(String schema) {
         if (!matchParents) return false;
         return this.schema.matches(schema);
     }
 
+    @Override
     public boolean matchesTable(String schema, String table) {
         if (!matchParents) return false;
         return this.schema.matches(schema) && this.table.matches(table);
     }
 
+    @Override
     public boolean matchesColumn(String schema, String table, String column) {
         return this.schema.matches(schema) && this.table.matches(table)
                 && this.column.matches(column);
     }
 
+    @Override
     public String getSingleSchema() {
         return schema.getSingleString();
     }
 
+    @Override
     public String toString() {
-        StringBuffer result = new StringBuffer("column(");
+        StringBuilder result = new StringBuilder("column(");
         if (schema != Filter.NULL_MATCHER) {
-            result.append(schema + ".");
+            result.append(schema).append(".");
         }
         if (table != Filter.NULL_MATCHER) {
-            result.append(table + ".");
+            result.append(table).append(".");
         }
         result.append(column);
         result.append(")");

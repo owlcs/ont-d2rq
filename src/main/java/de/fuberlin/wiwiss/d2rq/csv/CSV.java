@@ -45,7 +45,7 @@ class CSV {
     /**
      * The fields in the current String
      */
-    private ArrayList<String> list = new ArrayList<String>();
+    private ArrayList<String> list = new ArrayList<>();
 
     /**
      * the separator char for this parser
@@ -59,7 +59,7 @@ class CSV {
      * from the original as a String, in order.
      */
     public String[] parse(String line) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         this.list.clear();                   // discard previous, if any
         int i = 0;
 
@@ -70,7 +70,7 @@ class CSV {
 
         do {
             sb.setLength(0);
-            if (i < line.length() && line.charAt(i) == '"')
+            if (line.charAt(i) == '"')
                 i = advQuoted(line, sb, ++i);   // skip quote
             else
                 i = advPlain(line, sb, i);
@@ -84,7 +84,7 @@ class CSV {
     /**
      * advQuoted: quoted field; return index of next separator
      */
-    private int advQuoted(String s, StringBuffer sb, int i) {
+    private int advQuoted(String s, StringBuilder sb, int i) {
         int j;
         int len = s.length();
         for (j = i; j < len; j++) {
@@ -106,7 +106,7 @@ class CSV {
     /**
      * advPlain: unquoted field; return index of next separator
      */
-    private int advPlain(String s, StringBuffer sb, int i) {
+    private int advPlain(String s, StringBuilder sb, int i) {
         int j;
 
         j = s.indexOf(this.fieldSep, i); // look for separator
@@ -115,7 +115,7 @@ class CSV {
             sb.append(s.substring(i));
             return s.length();
         }
-        sb.append(s.substring(i, j));
+        sb.append(s, i, j);
         return j;
     }
 }

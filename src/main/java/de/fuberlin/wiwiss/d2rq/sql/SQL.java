@@ -198,15 +198,15 @@ public class SQL {
             this.joinOperator = joinOperator;
         }
 
-        public Attribute firstAttribute() {
+        Attribute firstAttribute() {
             return this.firstAttribute;
         }
 
-        public Attribute secondAttribute() {
+        Attribute secondAttribute() {
             return this.secondAttribute;
         }
 
-        public int joinOperator() {
+        int joinOperator() {
             return this.joinOperator;
         }
 
@@ -220,7 +220,7 @@ public class SQL {
             return this.firstAttribute.compareTo(other.firstAttribute);
         }
 
-        public static AttributeEqualityCondition parseJoinCondition(String joinCondition) {
+        static AttributeEqualityCondition parseJoinCondition(String joinCondition) {
             int joinOperator;
             int index = -1;
 

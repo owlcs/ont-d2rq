@@ -1,10 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
 
 /**
  * Abstract base class for classes that represent things in
@@ -12,6 +11,7 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class MapObject {
     private Resource resource;
 
@@ -25,6 +25,7 @@ public abstract class MapObject {
 
     public abstract void validate() throws D2RQException;
 
+    @Override
     public String toString() {
         return PrettyPrinter.toString(this.resource);
     }
@@ -41,15 +42,13 @@ public abstract class MapObject {
         if (object != null) {
             return;
         }
-        throw new D2RQException("Missing " + PrettyPrinter.toString(property) +
-                " for " + this, errorCode);
+        throw new D2RQException("Missing " + PrettyPrinter.toString(property) + " for " + this, errorCode);
     }
 
     protected void assertArgumentNotNull(Object object, Property property, int errorCode) {
         if (object != null) {
             return;
         }
-        throw new D2RQException("Object for " + PrettyPrinter.toString(property) +
-                " not found at " + this, errorCode);
+        throw new D2RQException("Object for " + PrettyPrinter.toString(property) + " not found at " + this, errorCode);
     }
 }

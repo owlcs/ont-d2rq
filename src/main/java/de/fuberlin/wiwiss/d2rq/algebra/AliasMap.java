@@ -58,8 +58,8 @@ public class AliasMap extends ColumnRenamer {
         }
     }
 
-    private Map<RelationName, Alias> byAlias = new HashMap<RelationName, Alias>();
-    private Map<RelationName, Alias> byOriginal = new HashMap<RelationName, Alias>();
+    private Map<RelationName, Alias> byAlias = new HashMap<>();
+    private Map<RelationName, Alias> byOriginal = new HashMap<>();
 
     public AliasMap(Collection<Alias> aliases) {
         for (Alias alias : aliases) {
@@ -135,7 +135,7 @@ public class AliasMap extends ColumnRenamer {
         if (other.byAlias.isEmpty()) {
             return this;
         }
-        Collection<Alias> newAliases = new ArrayList<Alias>();
+        Collection<Alias> newAliases = new ArrayList<>();
         for (Alias alias : other.byAlias.values()) {
             newAliases.add(applyTo(alias));
         }
@@ -159,9 +159,9 @@ public class AliasMap extends ColumnRenamer {
     }
 
     public String toString() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append("AliasMap(");
-        List<RelationName> tables = new ArrayList<RelationName>(this.byAlias.keySet());
+        List<RelationName> tables = new ArrayList<>(this.byAlias.keySet());
         Collections.sort(tables);
         Iterator<RelationName> it = tables.iterator();
         while (it.hasNext()) {

@@ -1,19 +1,18 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
+import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
+import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
+import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
 import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingHashMap;
 import org.apache.jena.sparql.engine.binding.BindingMap;
 
-import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
-import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
-import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
-import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Produces {@link Binding}s from {@link ResultRow}s.
@@ -23,7 +22,7 @@ import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
 public class BindingMaker {
 
     public static BindingMaker createFor(NodeRelation relation) {
-        Map<Var, NodeMaker> vars = new HashMap<Var, NodeMaker>();
+        Map<Var, NodeMaker> vars = new HashMap<>();
         for (Var variable : relation.variables()) {
             vars.put(variable, relation.nodeMaker(variable));
         }
@@ -60,7 +59,6 @@ public class BindingMaker {
         return nodeMakers.keySet();
     }
 
-
     public NodeMaker nodeMaker(Var var) {
         return nodeMakers.get(var);
     }
@@ -69,8 +67,9 @@ public class BindingMaker {
         return condition;
     }
 
+    @Override
     public String toString() {
-        StringBuffer result = new StringBuffer("BindingMaker(\n");
+        StringBuilder result = new StringBuilder("BindingMaker(\n");
         for (Var variable : nodeMakers.keySet()) {
             result.append("    ");
             result.append(variable);

@@ -12,7 +12,7 @@ import org.junit.Test;
 
 /**
  * Functional tests that exercise a ModelD2RQ by running SPARQL queries against it.
- * For notes on running the tests, see {@link AllTests}.
+ * For notes on running the tests, see {@code AllTests}.
  * <p>
  * Each test method runs one SPARQL query and automatically compares the actual
  * results to the expected results. For some tests, only the number of returned triples

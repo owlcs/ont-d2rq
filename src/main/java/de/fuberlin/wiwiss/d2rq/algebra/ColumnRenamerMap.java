@@ -28,9 +28,9 @@ public class ColumnRenamerMap extends ColumnRenamer {
     }
 
     public String toString() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append("ColumnRenamerMap(");
-        List<Attribute> columns = new ArrayList<Attribute>(this.originalsToReplacements.keySet());
+        List<Attribute> columns = new ArrayList<>(this.originalsToReplacements.keySet());
         Collections.sort(columns);
         Iterator<Attribute> it = columns.iterator();
         while (it.hasNext()) {

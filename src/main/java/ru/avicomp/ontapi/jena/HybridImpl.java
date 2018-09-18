@@ -18,6 +18,7 @@ import java.util.stream.Stream;
  * <p>
  * Created by @szuev on 24.02.2017.
  */
+@SuppressWarnings("WeakerAccess")
 public class HybridImpl implements Hybrid {
     private final List<Graph> hidden;
     private final Graph primary;

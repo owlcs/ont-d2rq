@@ -8,6 +8,7 @@ import ru.avicomp.ontapi.jena.Hybrid;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.OntGraphModelImpl;
+import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 
@@ -17,6 +18,7 @@ import java.util.Objects;
  * Utils to work with {@link GraphD2RQ} and with ONT-API Graphs.
  * <p>
  * Created by @szuev on 23.03.2018.
+ * @see Graphs
  * @see GraphD2RQ
  * @see UnionGraph
  * @see OntGraphModel
@@ -26,9 +28,13 @@ public class D2RQGraphs {
     private static final Logger LOGGER = LoggerFactory.getLogger(D2RQGraphs.class);
 
     public static OntGraphModel reassembly(OntGraphModel model) {
-        // class-cast-exception if it is not model from manager:
-        OntGraphModelImpl impl = (OntGraphModelImpl) model;
-        return reassembly(model, impl.getPersonality());
+        OntPersonality personality;
+        if (model instanceof OntGraphModelImpl) {
+            personality = ((OntGraphModelImpl) model).getPersonality();
+        } else {
+            personality = D2RQModelConfig.D2RQ_PERSONALITY;
+        }
+        return reassembly(model, personality);
     }
 
     public static OntGraphModel reassembly(OntGraphModel model, OntPersonality personality) {
@@ -45,7 +51,7 @@ public class D2RQGraphs {
     }
 
     /**
-     * Closes all D2RQ Graphs from a graph-container.
+     * Closes all D2RQ Graphs from the given graph-container.
      *
      * @param graph {@link UnionGraph}
      */
@@ -77,10 +83,10 @@ public class D2RQGraphs {
     }
 
     /**
-     * Extracts D2RQ Graph from a graph container, if possible.
+     * Extracts D2RQ Graph from a graph container, if it is possible.
      *
      * @param g {@link Graph}
-     * @return {@link GraphD2RQ} or {@code null}.
+     * @return {@link GraphD2RQ} or {@code null}
      */
     public static GraphD2RQ extractD2RQ(Graph g) {
         if (g instanceof GraphD2RQ) {

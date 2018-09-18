@@ -21,6 +21,7 @@ import java.util.Properties;
  * @author Chris Bizer chris@bizer.de
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class Database extends MapObject {
     public static final int NO_LIMIT = -1;
     public static final int NO_FETCH_SIZE = -1;
@@ -29,7 +30,7 @@ public class Database extends MapObject {
     private String jdbcDriver;
     private String username;
     private String password;
-    private final Map<String, GenericType> columnTypes = new HashMap<String, GenericType>();
+    private final Map<String, GenericType> columnTypes = new HashMap<>();
     private int limit = NO_LIMIT;
     private int fetchSize = NO_FETCH_SIZE;
     private String startupSQLScript = null;
@@ -41,8 +42,7 @@ public class Database extends MapObject {
     }
 
     public void setJDBCDSN(String jdbcDSN) {
-        assertNotYetDefined(this.jdbcDSN, D2RQ.jdbcDSN,
-                D2RQException.DATABASE_DUPLICATE_JDBCDSN);
+        assertNotYetDefined(this.jdbcDSN, D2RQ.jdbcDSN, D2RQException.DATABASE_DUPLICATE_JDBCDSN);
         checkNotConnected();
         this.jdbcDSN = jdbcDSN;
     }
@@ -163,6 +163,7 @@ public class Database extends MapObject {
      * This is a hack where we can pass a pre-existing ConnectedDB that
      * will be used by this Database, so we avoid that the Database
      * opens another connection to the same DB.
+     *
      * @param db {@link ConnectedDB}
      */
     public void useConnectedDB(ConnectedDB db) {

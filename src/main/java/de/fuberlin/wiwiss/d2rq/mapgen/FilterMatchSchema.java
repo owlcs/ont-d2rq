@@ -8,26 +8,28 @@ public class FilterMatchSchema extends Filter {
         this.schema = schema;
     }
 
+    @Override
     public boolean matchesSchema(String schema) {
         return this.schema.matches(schema);
     }
 
+    @Override
     public boolean matchesTable(String schema, String table) {
         return matchesSchema(schema);
     }
 
+    @Override
     public boolean matchesColumn(String schema, String table, String column) {
         return matchesSchema(schema);
     }
 
+    @Override
     public String getSingleSchema() {
         return schema.getSingleString();
     }
 
+    @Override
     public String toString() {
-        StringBuffer result = new StringBuffer("schema(");
-        result.append(schema);
-        result.append(")");
-        return result.toString();
+        return String.format("schema(%s)", schema);
     }
 }

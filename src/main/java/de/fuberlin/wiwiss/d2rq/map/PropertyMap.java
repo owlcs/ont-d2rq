@@ -7,6 +7,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.Relation;
  * @author J&ouml;rg Hen&szlig;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class PropertyMap extends ResourceMap {
     private Database database;
 
@@ -26,7 +27,8 @@ public class PropertyMap extends ResourceMap {
         // Nothing to validate
     }
 
+    @Override
     public String toString() {
-        return "d2rq:dynamicProperty \"" + this.uriPattern + "\"";
+        return String.format("d2rq:dynamicProperty \"%s\"", this.uriPattern);
     }
 }

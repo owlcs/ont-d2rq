@@ -13,10 +13,11 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("unused")
 public class ISWC {
+
     /**
      * <p>The RDF model that holds the vocabulary terms</p>
      */
-    private static Model m_model = ModelFactory.createDefaultModel();
+    private static Model model = ModelFactory.createDefaultModel();
 
     /**
      * <p>The namespace of the vocabulary as a string</p>
@@ -35,242 +36,250 @@ public class ISWC {
     /**
      * <p>The namespace of the vocabulary as a resource</p>
      */
-    public static final Resource NAMESPACE = m_model.createResource(NS);
+    public static final Resource NAMESPACE = model.createResource(NS);
 
-    public static final Property persons_involved = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#persons_involved");
+    public static final Property persons_involved = property("persons_involved");
 
-    public static final Property conference = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#conference");
+    public static final Property conference = property("conference");
 
-    public static final Property formal_language = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#formal_language");
+    public static final Property formal_language = property("formal_language");
 
-    public static final Property application_domain = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#application_domain");
+    public static final Property application_domain = property("application_domain");
 
-    public static final Property algorithm = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#algorithm");
+    public static final Property algorithm = property("algorithm");
 
-    public static final Property tool = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#tool");
+    public static final Property tool = property("tool");
 
-    public static final Property hasSubtopic = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#hasSubtopic");
+    public static final Property hasSubtopic = property("hasSubtopic");
 
-    public static final Property has_affiliate = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#has_affiliate");
+    public static final Property has_affiliate = property("has_affiliate");
 
-    public static final Property is_about = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#is_about");
+    public static final Property is_about = property("is_about");
 
-    public static final Property funding_by = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#funding_by");
+    public static final Property funding_by = property("funding_by");
 
-    public static final Property involved_in_project = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#involved_in_project");
+    public static final Property involved_in_project = property("involved_in_project");
 
-    public static final Property application = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#application");
+    public static final Property application = property("application");
 
-    public static final Property has_affiliation = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#has_affiliation");
+    public static final Property has_affiliation = property("has_affiliation");
 
-    public static final Property topic = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#topic");
+    public static final Property topic = property("topic");
 
-    public static final Property author = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#author");
+    public static final Property author = property("author");
 
-    public static final Property organizations_involved = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#organizations_involved");
+    public static final Property organizations_involved = property("organizations_involved");
 
-    public static final Property research_topics = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#research_topics");
+    public static final Property research_topics = property("research_topics");
 
-    public static final Property method = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#method");
+    public static final Property method = property("method");
 
-    public static final Property name = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#name");
+    public static final Property name = property("name");
 
-    public static final Property phone = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#phone");
+    public static final Property phone = property("phone");
 
-    public static final Property country = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#country");
+    public static final Property country = property("country");
 
-    public static final Property location = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#location");
+    public static final Property location = property("location");
 
-    public static final Property email = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#email");
+    public static final Property email = property("email");
 
-    public static final Property eventTitle = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#eventTitle");
+    public static final Property eventTitle = property("eventTitle");
 
-    public static final Property address = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#address");
+    public static final Property address = property("address");
 
-    public static final Property fax = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#fax");
+    public static final Property fax = property("fax");
 
-    public static final Property first_Name = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#first_Name");
+    public static final Property first_Name = property("first_Name");
 
-    public static final Property title = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#title");
+    public static final Property title = property("title");
 
-    public static final Property year = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#year");
+    public static final Property year = property("year");
 
-    public static final Property middle_Initial = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#middle_Initial");
+    public static final Property middle_Initial = property("middle_Initial");
 
-    public static final Property date = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#date");
+    public static final Property date = property("date");
 
-    public static final Property project_title = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#project_title");
+    public static final Property project_title = property("project_title");
 
-    public static final Property last_Name = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#last_Name");
+    public static final Property last_Name = property("last_Name");
 
-    public static final Property photo = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#photo");
+    public static final Property photo = property("photo");
 
-    public static final Property homepage = m_model.createProperty("http://annotation.semanticweb.org/iswc/iswc.daml#homepage");
+    public static final Property homepage = property("homepage");
 
-    public static final Resource Researcher = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Researcher");
+    public static final Resource Researcher = resource("Researcher");
 
-    public static final Resource Research_Funding_Institution = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Research_Funding_Institution");
+    public static final Resource Research_Funding_Institution = resource("Research_Funding_Institution");
 
-    public static final Resource Formal_Language = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Formal_Language");
+    public static final Resource Formal_Language = resource("Formal_Language");
 
-    public static final Resource Event = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Event");
+    public static final Resource Event = resource("Event");
 
-    public static final Resource Algorithm = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Algorithm");
+    public static final Resource Algorithm = resource("Algorithm");
 
-    public static final Resource Application = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Application");
+    public static final Resource Application = resource("Application");
 
-    public static final Resource Faculty_Member = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Faculty_Member");
+    public static final Resource Faculty_Member = resource("Faculty_Member");
 
-    public static final Resource Full_Professor = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Full_Professor");
+    public static final Resource Full_Professor = resource("Full_Professor");
 
-    public static final Resource Organization = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Organization");
+    public static final Resource Organization = resource("Organization");
 
-    public static final Resource Association = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Association");
+    public static final Resource Association = resource("Association");
 
-    public static final Resource Tutorial = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Tutorial");
+    public static final Resource Tutorial = resource("Tutorial");
 
-    public static final Resource Employee = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Employee");
+    public static final Resource Employee = resource("Employee");
 
-    public static final Resource Proceedings = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Proceedings");
+    public static final Resource Proceedings = resource("Proceedings");
 
-    public static final Resource University = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#University");
+    public static final Resource University = resource("University");
 
-    public static final Resource PhDStudent = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#PhDStudent");
+    public static final Resource PhDStudent = resource("PhDStudent");
 
-    public static final Resource Topic = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Topic");
+    public static final Resource Topic = resource("Topic");
 
-    public static final Resource Application_Domain = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Application_Domain");
+    public static final Resource Application_Domain = resource("Application_Domain");
 
-    public static final Resource Institute = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Institute");
+    public static final Resource Institute = resource("Institute");
 
-    public static final Resource Enterprise = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Enterprise");
+    public static final Resource Enterprise = resource("Enterprise");
 
-    public static final Resource Project = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Project");
+    public static final Resource Project = resource("Project");
 
-    public static final Resource Associate_Professor = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Associate_Professor");
+    public static final Resource Associate_Professor = resource("Associate_Professor");
 
-    public static final Resource Person = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Person");
+    public static final Resource Person = resource("Person");
 
-    public static final Resource Book = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Book");
+    public static final Resource Book = resource("Book");
 
-    public static final Resource Method = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Method");
+    public static final Resource Method = resource("Method");
 
-    public static final Resource Lecturer = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Lecturer");
+    public static final Resource Lecturer = resource("Lecturer");
 
-    public static final Resource Tool = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Tool");
+    public static final Resource Tool = resource("Tool");
 
-    public static final Resource Student = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Student");
+    public static final Resource Student = resource("Student");
 
-    public static final Resource Report = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Report");
+    public static final Resource Report = resource("Report");
 
-    public static final Resource Conference = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Conference");
+    public static final Resource Conference = resource("Conference");
 
-    public static final Resource InProceedings = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#InProceedings");
+    public static final Resource InProceedings = resource("InProceedings");
 
-    public static final Resource Department = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Department");
+    public static final Resource Department = resource("Department");
 
-    public static final Resource Workshop = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Workshop");
+    public static final Resource Workshop = resource("Workshop");
 
-    public static final Resource Publication = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Publication");
+    public static final Resource Publication = resource("Publication");
 
-    public static final Resource Development_of_Knowledge_Management_Systems = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Development_of_Knowledge_Management_Systems");
+    public static final Resource Development_of_Knowledge_Management_Systems = resource("Development_of_Knowledge_Management_Systems");
 
-    public static final Resource e_Business = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#e-Business");
+    public static final Resource e_Business = resource("e-Business");
 
-    public static final Resource Knowledge_Reasoning = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Knowledge_Reasoning");
+    public static final Resource Knowledge_Reasoning = resource("Knowledge_Reasoning");
 
-    public static final Resource Knowledge_Discovery = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Knowledge_Discovery");
+    public static final Resource Knowledge_Discovery = resource("Knowledge_Discovery");
 
-    public static final Resource Text_Mining = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Text_Mining");
+    public static final Resource Text_Mining = resource("Text_Mining");
 
-    public static final Resource World_Wide_Web = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#World_Wide_Web");
+    public static final Resource World_Wide_Web = resource("World_Wide_Web");
 
-    public static final Resource C = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#C");
+    public static final Resource C = resource("C");
 
-    public static final Resource OXML = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#OXML");
+    public static final Resource OXML = resource("OXML");
 
-    public static final Resource Knowledge_Systems = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Knowledge_Systems");
+    public static final Resource Knowledge_Systems = resource("Knowledge_Systems");
 
-    public static final Resource Web_Services = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Web_Services");
+    public static final Resource Web_Services = resource("Web_Services");
 
-    public static final Resource Information_Systems = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Information_Systems");
+    public static final Resource Information_Systems = resource("Information_Systems");
 
-    public static final Resource Agents = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Agents");
+    public static final Resource Agents = resource("Agents");
 
-    public static final Resource Logic = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Logic");
+    public static final Resource Logic = resource("Logic");
 
-    public static final Resource Information_Extraction = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Information_Extraction");
+    public static final Resource Information_Extraction = resource("Information_Extraction");
 
-    public static final Resource Agent_Systems = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Agent_Systems");
+    public static final Resource Agent_Systems = resource("Agent_Systems");
 
-    public static final Resource Knowledge_Management = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Knowledge_Management");
+    public static final Resource Knowledge_Management = resource("Knowledge_Management");
 
-    public static final Resource DAML_OIL = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#DAML_OIL");
+    public static final Resource DAML_OIL = resource("DAML_OIL");
 
-    public static final Resource Artificial_Intelligence = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Artificial_Intelligence");
+    public static final Resource Artificial_Intelligence = resource("Artificial_Intelligence");
 
-    public static final Resource Semantic_Web = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Semantic_Web");
+    public static final Resource Semantic_Web = resource("Semantic_Web");
 
-    public static final Resource KAON = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#KAON");
+    public static final Resource KAON = resource("KAON");
 
-    public static final Resource Databases = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Databases");
+    public static final Resource Databases = resource("Databases");
 
-    public static final Resource RDFS = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#RDFS");
+    public static final Resource RDFS = resource("RDFS");
 
-    public static final Resource ISWC_2002 = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#ISWC_2002");
+    public static final Resource ISWC_2002 = resource("ISWC_2002");
 
-    public static final Resource Data_Mining = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Data_Mining");
+    public static final Resource Data_Mining = resource("Data_Mining");
 
-    public static final Resource Knowledge_Portals = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Knowledge_Portals");
+    public static final Resource Knowledge_Portals = resource("Knowledge_Portals");
 
-    public static final Resource TowardsSemanticWebMining = m_model.createResource("http://annotation.semanticweb.org/iswc/Towards_Semantic_Web_Mining.html#TowardsSemanticWebMining");
+    public static final Resource TowardsSemanticWebMining = model.createResource("http://annotation.semanticweb.org/iswc/Towards_Semantic_Web_Mining.html#TowardsSemanticWebMining");
 
-    public static final Resource Knowledge_Management_Methodology = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Knowledge_Management_Methodology");
+    public static final Resource Knowledge_Management_Methodology = resource("Knowledge_Management_Methodology");
 
-    public static final Resource Knowledge_Representation_Languages = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Knowledge_Representation_Languages");
+    public static final Resource Knowledge_Representation_Languages = resource("Knowledge_Representation_Languages");
 
-    public static final Resource Ontology_Learning = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Ontology_Learning");
+    public static final Resource Ontology_Learning = resource("Ontology_Learning");
 
-    public static final Resource Ontology_based_Knowledge_Management_Systems = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Ontology-based_Knowledge_Management_Systems");
+    public static final Resource Ontology_based_Knowledge_Management_Systems = resource("Ontology-based_Knowledge_Management_Systems");
 
-    public static final Resource XML = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#XML");
+    public static final Resource XML = resource("XML");
 
-    public static final Resource Machine_Learning = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Machine_Learning");
+    public static final Resource Machine_Learning = resource("Machine_Learning");
 
-    public static final Resource Network_Infrastructure = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Network_Infrastructure");
+    public static final Resource Network_Infrastructure = resource("Network_Infrastructure");
 
-    public static final Resource Modeling = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Modeling");
+    public static final Resource Modeling = resource("Modeling");
 
-    public static final Resource SQL = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#SQL");
+    public static final Resource SQL = resource("SQL");
 
-    public static final Resource Business_Engineering = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Business_Engineering");
+    public static final Resource Business_Engineering = resource("Business_Engineering");
 
-    public static final Resource Information_Retrieval = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Information_Retrieval");
+    public static final Resource Information_Retrieval = resource("Information_Retrieval");
 
-    public static final Resource Office_Information_Systems = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Office_Information_Systems");
+    public static final Resource Office_Information_Systems = resource("Office_Information_Systems");
 
-    public static final Resource RDF = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#RDF");
+    public static final Resource RDF = resource("RDF");
 
-    public static final Resource Semantic_Annotation = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Semantic_Annotation");
+    public static final Resource Semantic_Annotation = resource("Semantic_Annotation");
 
-    public static final Resource Java = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Java");
+    public static final Resource Java = resource("Java");
 
-    public static final Resource Knowledge_Representation_And_Reasoning = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Knowledge_Representation_And_Reasoning");
+    public static final Resource Knowledge_Representation_And_Reasoning = resource("Knowledge_Representation_And_Reasoning");
 
-    public static final Resource Semantic_Web_Iinfrastructure = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Semantic_Web_Iinfrastructure");
+    public static final Resource Semantic_Web_Iinfrastructure = resource("Semantic_Web_Iinfrastructure");
 
-    public static final Resource Query_Languages = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Query_Languages");
+    public static final Resource Query_Languages = resource("Query_Languages");
 
-    public static final Resource Matching = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Matching");
+    public static final Resource Matching = resource("Matching");
 
-    public static final Resource Human_Computer_Interaction = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Human_Computer_Interaction");
+    public static final Resource Human_Computer_Interaction = resource("Human_Computer_Interaction");
 
-    public static final Resource Semantic_Web_Languages = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Semantic_Web_Languages");
+    public static final Resource Semantic_Web_Languages = resource("Semantic_Web_Languages");
 
-    public static final Resource Ontology_Engineering = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#Ontology_Engineering");
+    public static final Resource Ontology_Engineering = resource("Ontology_Engineering");
 
-    public static final Resource University_of_Karlsruhe = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#University_of_Karlsruhe");
+    public static final Resource University_of_Karlsruhe = resource("University_of_Karlsruhe");
 
-    public static final Resource AIFB = m_model.createResource("http://annotation.semanticweb.org/iswc/iswc.daml#AIFB");
+    public static final Resource AIFB = resource("AIFB");
+
+    protected static Property property(String localName) {
+        return model.createProperty(NS + localName);
+    }
+
+    protected static Resource resource(String localName) {
+        return model.createResource(NS + localName);
+    }
 
 }

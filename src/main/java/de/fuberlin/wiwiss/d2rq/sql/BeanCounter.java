@@ -8,6 +8,7 @@ package de.fuberlin.wiwiss.d2rq.sql;
  *
  * @author jgarbers
  */
+@SuppressWarnings("WeakerAccess")
 public class BeanCounter implements Cloneable {
 
     // Static global state information to be copied into an instance with update(). 

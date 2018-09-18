@@ -31,7 +31,7 @@ public abstract class FindTestFramework {
     @Before
     public void setUp() {
         LOGGER.debug("SET UP");
-        this.graph = MappingFactory.load(D2RQTestHelper.ISWC_MAP, "TURTLE", "http://test/").getDataModel().getGraph();
+        this.graph = MappingFactory.load(D2RQTestHelper.ISWC_MAP, "TURTLE", "http://test/").getDataGraph();
     }
 
     @After
@@ -40,7 +40,7 @@ public abstract class FindTestFramework {
     }
 
     protected void find(RDFNode s, RDFNode p, RDFNode o) {
-        this.resultTriples = new HashSet<Triple>();
+        this.resultTriples = new HashSet<>();
         ExtendedIterator<Triple> it = this.graph.find(toNode(s), toNode(p), toNode(o));
         while (it.hasNext()) {
             this.resultTriples.add(it.next());

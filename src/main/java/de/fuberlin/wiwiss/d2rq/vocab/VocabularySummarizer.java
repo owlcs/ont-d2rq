@@ -1,16 +1,15 @@
 package de.fuberlin.wiwiss.d2rq.vocab;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.RDF;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.RDF;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 
 /**
  * Lists all the classes and properties in a schemagen-generated
@@ -18,13 +17,14 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class VocabularySummarizer {
-    private final Class<? extends Object> vocabularyJavaClass;
+    private final Class<?> vocabularyJavaClass;
     private final String namespace;
     private final Set<Property> properties;
     private final Set<Resource> classes;
 
-    public VocabularySummarizer(Class<? extends Object> vocabularyJavaClass) {
+    public VocabularySummarizer(Class<?> vocabularyJavaClass) {
         this.vocabularyJavaClass = vocabularyJavaClass;
         namespace = findNamespace();
         properties = findAllProperties();
@@ -36,7 +36,7 @@ public class VocabularySummarizer {
     }
 
     private Set<Property> findAllProperties() {
-        Set<Property> results = new HashSet<Property>();
+        Set<Property> results = new HashSet<>();
         for (int i = 0; i < vocabularyJavaClass.getFields().length; i++) {
             Field field = vocabularyJavaClass.getFields()[i];
             if (!Modifier.isStatic(field.getModifiers())) continue;
@@ -55,7 +55,7 @@ public class VocabularySummarizer {
     }
 
     private Set<Resource> findAllClasses() {
-        Set<Resource> results = new HashSet<Resource>();
+        Set<Resource> results = new HashSet<>();
         for (int i = 0; i < vocabularyJavaClass.getFields().length; i++) {
             Field field = vocabularyJavaClass.getFields()[i];
             if (!Modifier.isStatic(field.getModifiers())) continue;
@@ -81,21 +81,19 @@ public class VocabularySummarizer {
                 return (String) o;
             }
             return null;
-        } catch (NoSuchFieldException ex) {
-            return null;
-        } catch (IllegalAccessException ex) {
+        } catch (NoSuchFieldException | IllegalAccessException ex) {
             return null;
         }
     }
 
     public Collection<Resource> getUndefinedClasses(Model model) {
-        Set<Resource> result = new HashSet<Resource>();
+        Set<Resource> result = new HashSet<>();
         StmtIterator it = model.listStatements(null, RDF.type, (RDFNode) null);
         while (it.hasNext()) {
             Statement stmt = it.nextStatement();
             if (stmt.getObject().isURIResource()
                     && stmt.getResource().getURI().startsWith(namespace)
-                    && !classes.contains(stmt.getObject())) {
+                    && !classes.contains(stmt.getResource())) {
                 result.add(stmt.getResource());
             }
         }
@@ -103,7 +101,7 @@ public class VocabularySummarizer {
     }
 
     public Collection<Property> getUndefinedProperties(Model model) {
-        Set<Property> result = new HashSet<Property>();
+        Set<Property> result = new HashSet<>();
         StmtIterator it = model.listStatements();
         while (it.hasNext()) {
             Statement stmt = it.nextStatement();
@@ -115,8 +113,7 @@ public class VocabularySummarizer {
         return result;
     }
 
-    public void assertNoUndefinedTerms(Model model,
-                                       int undefinedPropertyErrorCode, int undefinedClassErrorCode) {
+    public void assertNoUndefinedTerms(Model model, int undefinedPropertyErrorCode, int undefinedClassErrorCode) {
         Collection<Property> unknownProperties = getUndefinedProperties(model);
         if (!unknownProperties.isEmpty()) {
             throw new D2RQException(

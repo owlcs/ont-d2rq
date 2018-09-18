@@ -1,7 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import java.util.*;
-
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.*;
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;
@@ -10,20 +8,23 @@ import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.expr.SQLExpression;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 
+import java.util.*;
+
 /**
  * TODO Describe this type
  * TODO isUnique is not properly handled yet
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class RelationBuilder {
     private final ConnectedDB database;
     private Expression condition = Expression.TRUE;
-    private Set<Join> joinConditions = new HashSet<Join>();
-    private Set<Alias> aliases = new HashSet<Alias>();
-    private final Set<ProjectionSpec> projections = new HashSet<ProjectionSpec>();
+    private Set<Join> joinConditions = new HashSet<>();
+    private Set<Alias> aliases = new HashSet<>();
+    private final Set<ProjectionSpec> projections = new HashSet<>();
     private boolean isUnique = false;
-    private List<OrderSpec> orderSpecs = new ArrayList<OrderSpec>();
+    private List<OrderSpec> orderSpecs = new ArrayList<>();
     private int limit = Relation.NO_LIMIT;
     private int limitInverse = Relation.NO_LIMIT;
 
@@ -118,13 +119,12 @@ public class RelationBuilder {
         if (!isUnique) {
             for (ProjectionSpec projection : projections) {
                 for (Attribute column : projection.requiredAttributes()) {
-                    if (!database.columnType(column).supportsDistinct()) {
-                        throw new D2RQException("The datatype of " + column + " (" +
-                                database.columnType(column) + ") does not support " +
-                                "SELECT DISTINCT and therefore cannot be used in a " +
-                                "context where d2rq:containsDuplicates is true.",
-                                D2RQException.DATATYPE_DOES_NOT_SUPPORT_DISTINCT);
-                    }
+                    if (database.columnType(column).supportsDistinct()) continue;
+                    throw new D2RQException("The datatype of " + column + " (" +
+                            database.columnType(column) + ") does not support " +
+                            "SELECT DISTINCT and therefore cannot be used in a " +
+                            "context where d2rq:containsDuplicates is true.",
+                            D2RQException.DATATYPE_DOES_NOT_SUPPORT_DISTINCT);
                 }
             }
         }
@@ -133,7 +133,7 @@ public class RelationBuilder {
         // The contract is that all projections are required (must not be NULL).
         // So let's add them all as soft conditions. The soft condition for
         // a non-nullable column is TRUE.
-        Collection<Expression> softConditions = new HashSet<Expression>(projections.size());
+        Collection<Expression> softConditions = new HashSet<>(projections.size());
         for (ProjectionSpec projection : projections) {
             softConditions.add(projection.notNullExpression(database, aliases));
         }

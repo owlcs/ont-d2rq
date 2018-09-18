@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@SuppressWarnings("WeakerAccess")
 public class ClassMap extends ResourceMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassMap.class);
 
@@ -29,6 +30,7 @@ public class ClassMap extends ResourceMap {
         this.resource = classMapResource;
     }
 
+    @Override
     public Resource resource() {
         return this.resource;
     }
@@ -59,6 +61,7 @@ public class ClassMap extends ResourceMap {
         return this.propertyBridges;
     }
 
+    @Override
     public void validate() throws D2RQException {
         assertHasBeenDefined(this.database, D2RQ.dataStorage, D2RQException.CLASSMAP_NO_DATABASE);
         assertHasPrimarySpec(new Property[]{
@@ -106,10 +109,12 @@ public class ClassMap extends ResourceMap {
         }
     }
 
+    @Override
     protected Relation buildRelation() {
         return this.relationBuilder(database.connectedDB()).buildRelation();
     }
 
+    @Override
     public String toString() {
         return "d2rq:ClassMap " + PrettyPrinter.toString(this.resource);
     }

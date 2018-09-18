@@ -6,32 +6,33 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
 public class SD {
-    private static Model vocabModel = ModelFactory.createDefaultModel();
-
+    private static Model model = ModelFactory.createDefaultModel();
+    
     public static final String NS = "http://www.w3.org/ns/sparql-service-description#";
 
-    public static final Resource NAMESPACE = vocabModel.createResource(NS);
+    public static final Resource NAMESPACE = model.createResource(NS);
 
-    public static final Resource Service = vocabModel.createResource(NS
-            + "Service");
+    public static final Resource Service = resource("Service");
 
-    public static final Resource Dataset = vocabModel.createResource(NS
-            + "Dataset");
+    public static final Resource Dataset = resource("Dataset");
 
-    public static final Resource Graph = vocabModel.createResource(NS
-            + "Graph");
+    public static final Resource Graph = resource("Graph");
 
-    public static final Property url = vocabModel
-            .createProperty(NS + "url");
+    public static final Property url = property("url");
 
-    public static final Property defaultDatasetDescription = vocabModel
-            .createProperty(NS + "defaultDatasetDescription");
+    public static final Property defaultDatasetDescription = property("defaultDatasetDescription");
 
-    public static final Property defaultGraph = vocabModel
-            .createProperty(NS + "defaultGraph");
+    public static final Property defaultGraph = property("defaultGraph");
 
-    public static final Property resultFormat = vocabModel
-            .createProperty(NS + "resultFormat");
+    public static final Property resultFormat = property("resultFormat");
+
+    protected static Resource resource(String localName) {
+        return model.createResource(localName);
+    }
+
+    protected static Property property(String localName) {
+        return model.createProperty(localName);
+    }
 
 
 }
