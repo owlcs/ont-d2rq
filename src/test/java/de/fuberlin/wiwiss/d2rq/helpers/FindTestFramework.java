@@ -31,7 +31,7 @@ public abstract class FindTestFramework {
     @Before
     public void setUp() {
         LOGGER.debug("SET UP");
-        this.graph = MappingFactory.load(D2RQTestHelper.ISWC_MAP, "TURTLE", "http://test/").getDataGraph();
+        this.graph = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "TURTLE", "http://test/").getDataGraph();
     }
 
     @After

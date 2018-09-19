@@ -28,7 +28,7 @@ import org.junit.Test;
 public class SPARQLTest extends QueryLanguageTestFramework {
 
     protected String mapURL() {
-        return D2RQTestHelper.ISWC_MAP;
+        return D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl");
     }
 
     @Test

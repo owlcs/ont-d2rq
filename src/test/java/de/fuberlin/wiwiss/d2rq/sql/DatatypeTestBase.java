@@ -77,7 +77,7 @@ public abstract class DatatypeTestBase {
         mapping.configuration().setServeVocabulary(false);
         mapping.configuration().setUseAllOptimizations(true);
         mapping.connect();
-        graph = getGraph(mapping);
+        graph = mapping.getDataGraph();
         inspector = mapping.databases().iterator().next().connectedDB().schemaInspector();
     }
 
@@ -92,7 +92,7 @@ public abstract class DatatypeTestBase {
 
     protected void assertValues(String[] expectedValues, boolean searchValues) {
         ExtendedIterator<Triple> it = graph.find(Node.ANY, Node.ANY, Node.ANY);
-        List<String> listedValues = new ArrayList<String>();
+        List<String> listedValues = new ArrayList<>();
         while (it.hasNext()) {
             listedValues.add(it.next().getObject().getLiteralLexicalForm());
         }
@@ -122,11 +122,6 @@ public abstract class DatatypeTestBase {
             return result;
         }
     }
-
-    private GraphD2RQ getGraph(Mapping mapping) {
-        return mapping.getDataGraph();
-    }
-
     private Mapping generateMapping() {
         URL script = DatatypeTestBase.class.getResource(this.script);
         Mapping mapping = MappingFactory.createEmpty();

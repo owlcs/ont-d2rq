@@ -28,7 +28,8 @@ public class ModelAPITest {
 
     @Before
     public void setUp() {
-        this.model = MappingFactory.load(D2RQTestHelper.ISWC_MAP, "TURTLE", "http://test/").getDataModel();
+        this.model = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"),
+                "TURTLE", "http://test/").getDataModel();
 //		this.model.enableDebug();
     }
 

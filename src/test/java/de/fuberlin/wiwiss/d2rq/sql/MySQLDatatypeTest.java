@@ -1,403 +1,219 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
-import org.junit.Before;
-import org.junit.Ignore;
+import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
+import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.*;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.util.iterator.ExtendedIterator;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.ontapi.jena.vocabulary.XSD;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * TODO: Put MySQL connection details into a properties file
- *
  * @author Richard Cyganiak (richard@cyganiak.de)
+ * Created by @szz on 19.09.2018.
  */
-@Ignore //TODO: temporary ignore: MySQL tests are just too bloody slow
-public class MySQLDatatypeTest extends DatatypeTestBase {
+@RunWith(Parameterized.class)
+public class MySQLDatatypeTest {
 
-    private final static String[] DECIMAL_VALUE = {"0", "1", "100000000", "-100000000"};
-    private final static String[] FLOAT_VALUES = {"0.0E0", "1.0E0", "-1.0E0", "-3.0E38", "-1.0E-38", "1.0E-38", "3.0E38"};
-    private final static String[] DOUBLE_VALUES = {"0.0E0", "1.0E0", "-1.0E0", "-1.0E308", "-2.0E-308", "2.0E-308", "1.0E308"};
-    private final static String[] CHAR_VALUES = {"", "A", "\u00C4"};
-    private final static String[] VARCHAR_VALUES = {"", "   ", "AOU", "\u00C4\u00D6\u00DC"};
-    private final static String[] VARBINARY_VALUES = {"", "00", "01", "F001F001F001F001"};
+    private final static String EX = "http://example.com/";
+    private final static String DB_URI = EX + "db";
+    private final static String CLASS_MAP_URI = EX + "classmap";
+    private final static String PROPERTY_BRIDGE_URI = EX + "propertybridge";
+    private final static String VALUE_PROPERTY = EX + "value";
 
-    @Before
-    public void setUp() {
-        initDB("jdbc:mysql:///d2rq_test", "com.mysql.jdbc.Driver", "root", null, "/sql/mysql_datatypes.sql", null);
+    private static ConnectionData connection = ConnectionData.MYSQL;
+    private static String database = MySQLDatatypeTest.class.getSimpleName().toLowerCase() + "_" + System.currentTimeMillis();
+
+    private final Data data;
+
+    public MySQLDatatypeTest(Data data) {
+        this.data = data;
+    }
+
+    @Parameterized.Parameters(name = "{0}")
+    public static List<Data> getData() {
+        return Arrays.stream(Data.values()).filter(Data::enabled).collect(Collectors.toList());
+    }
+
+    @BeforeClass
+    public static void prepareData() throws Exception {
+        connection.createDatabase("/sql/mysql_datatypes.sql", database);
+    }
+
+    @AfterClass
+    public static void clear() throws Exception {
+        connection.dropDatabase(database);
+    }
+
+    private static void assertMappedType(DatabaseSchemaInspector inspector, String datatype, String rdfType) {
+        Assert.assertEquals(rdfType, inspector.columnType(SQL.parseAttribute("T_" + datatype + ".VALUE")).rdfType());
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static void assertValues(GraphD2RQ graph, String[] expectedValues, boolean searchValues) {
+        ExtendedIterator<Triple> it = graph.find(Node.ANY, Node.ANY, Node.ANY);
+        List<String> listedValues = new ArrayList<>();
+        while (it.hasNext()) {
+            listedValues.add(it.next().getObject().getLiteralLexicalForm());
+        }
+        Assert.assertEquals(Arrays.asList(expectedValues), listedValues);
+        if (!searchValues) return;
+        for (String value : expectedValues) {
+            Assert.assertTrue("Expected literal not in graph: '" + value + "'",
+                    graph.contains(Node.ANY, Node.ANY, NodeFactory.createLiteral(value)));
+        }
+    }
+
+    private static Mapping createMapping(String datatype) {
+        Mapping mapping = generateMapping(datatype);
+        mapping.configuration().setServeVocabulary(false);
+        mapping.configuration().setUseAllOptimizations(true);
+        mapping.connect();
+        return mapping;
+    }
+
+    private static Mapping generateMapping(String datatype) {
+        Mapping mapping = MappingFactory.createEmpty();
+        Database database = connection.createDatabaseMapObject(DB_URI, MySQLDatatypeTest.database);
+        //database.setStartupSQLScript(ResourceFactory.createResource(scriptFile.toString()));
+
+        mapping.addDatabase(database);
+        ClassMap classMap = new ClassMap(ResourceFactory.createResource(CLASS_MAP_URI));
+        classMap.setDatabase(database);
+        classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");
+        mapping.addClassMap(classMap);
+        PropertyBridge propertyBridge = new PropertyBridge(ResourceFactory.createResource(PROPERTY_BRIDGE_URI));
+        propertyBridge.setBelongsToClassMap(classMap);
+        propertyBridge.addProperty(ResourceFactory.createProperty(VALUE_PROPERTY));
+        propertyBridge.setColumn("T_" + datatype + ".VALUE");
+        classMap.addPropertyBridge(propertyBridge);
+        return mapping;
     }
 
     @Test
-    public void testSerial() {
-        createMapping("SERIAL");
-        assertMappedType("xsd:unsignedLong");
-        assertValues(new String[]{"1", "2", "18446744073709551615"});
+    public void testDatatype() {
+        Mapping mapping = createMapping(data.name());
+        GraphD2RQ graph = mapping.getDataGraph();
+        Assert.assertNotNull(graph);
+        DatabaseSchemaInspector inspector = mapping.databases().iterator().next().connectedDB().schemaInspector();
+        Assert.assertNotNull(inspector);
+
+        assertMappedType(inspector, data.name(), data.getDataType());
+
+        assertValues(graph, data.getTestData(), true);
     }
 
-    @Test
-    public void testBit_4() {
-        createMapping("BIT_4");
-        assertMappedType("xsd:string");
-        assertValues(new String[]{"0", "1", "1000", "1111"});
-    }
 
-    @Test
-    public void testBit() {
-        createMapping("BIT");
-        assertMappedType("xsd:string");
-        assertValues(new String[]{"0", "1"});
-    }
-
-    @Test
-    public void testTinyInt() {
-        createMapping("TINYINT");
-        assertMappedType("xsd:byte");
-        assertValues(new String[]{"0", "1", "-128", "127"});
-    }
-
-    @Test
-    public void testTinyInt1() {
-        createMapping("TINYINT_1");
-        assertMappedType("xsd:boolean");
-        assertValues(new String[]{"false", "true", "true"});
-    }
-
-    @Test
-    public void testTinyIntUnsigned() {
-        createMapping("TINYINT_UNSIGNED");
-        assertMappedType("xsd:unsignedByte");
-        assertValues(new String[]{"0", "1", "255"});
-    }
-
-    @Test
-    public void testSmallInt() {
-        createMapping("SMALLINT");
-        assertMappedType("xsd:short");
-        assertValues(new String[]{"0", "1", "-32768", "32767"});
-    }
-
-    @Test
-    public void testSmallIntUnsigned() {
-        createMapping("SMALLINT_UNSIGNED");
-        assertMappedType("xsd:unsignedShort");
-        assertValues(new String[]{"0", "1", "65535"});
-    }
-
-    @Test
-    public void testMediumInt() {
-        createMapping("MEDIUMINT");
-        assertMappedType("xsd:int");
-        assertValues(new String[]{"0", "1", "-8388608", "8388607"});
-    }
-
-    @Test
-    public void testMediumIntUnsigned() {
-        createMapping("MEDIUMINT_UNSIGNED");
-        assertMappedType("xsd:unsignedInt");
-        assertValues(new String[]{"0", "1", "16777215"});
-    }
-
-    @Test
-    public void testInteger() {
-        createMapping("INTEGER");
-        assertMappedType("xsd:int");
-        assertValues(new String[]{"0", "1", "-2147483648", "2147483647"});
-    }
-
-    @Test
-    public void testIntegerUnsigned() {
-        createMapping("INTEGER_UNSIGNED");
-        assertMappedType("xsd:unsignedInt");
-        assertValues(new String[]{"0", "1", "4294967295"});
-    }
-
-    @Test
-    public void testInt() {
-        createMapping("INT");
-        assertMappedType("xsd:int");
-        assertValues(new String[]{"0", "1", "-2147483648", "2147483647"});
-    }
-
-    @Test
-    public void testIntUnsigned() {
-        createMapping("INT_UNSIGNED");
-        assertMappedType("xsd:unsignedInt");
-        assertValues(new String[]{"0", "1", "4294967295"});
-    }
-
-    @Test
-    public void testBigInt() {
-        createMapping("BIGINT");
-        assertMappedType("xsd:long");
-        assertValues(new String[]{"0", "1", "-9223372036854775808", "9223372036854775807"});
-    }
-
-    @Test
-    public void testBigIntUnsigned() {
-        createMapping("BIGINT_UNSIGNED");
-        assertMappedType("xsd:unsignedLong");
-        assertValues(new String[]{"0", "1", "18446744073709551615"});
-    }
-
-    @Test
-    public void testDecimal() {
-        createMapping("DECIMAL");
-        assertMappedType("xsd:decimal");
-        assertValues(DECIMAL_VALUE);
-    }
-
-    @Test
-    public void testDecimal_4_2() {
-        createMapping("DECIMAL_4_2");
-        assertMappedType("xsd:decimal");
-        assertValues(new String[]{"0", "1", "4.95", "99.99", "-99.99"});
-    }
-
-    @Test
-    public void testDec() {
-        createMapping("DEC");
-        assertMappedType("xsd:decimal");
-        assertValues(DECIMAL_VALUE);
-    }
-
-    @Test
-    public void testDec_4_2() {
-        createMapping("DEC_4_2");
-        assertMappedType("xsd:decimal");
-        assertValues(new String[]{"0", "1", "4.95", "99.99", "-99.99"});
-    }
-
-    @Test
-    public void testFloat() {
-        createMapping("FLOAT");
-        assertMappedType("xsd:double");
-        // TODO: Fuzzy match to search for floating-point values
-        assertValues(FLOAT_VALUES, false);
-    }
-
-    @Test
-    public void testDouble() {
-        createMapping("DOUBLE");
-        assertMappedType("xsd:double");
-        // TODO: Fuzzy match to search for floating-point values
-        assertValues(DOUBLE_VALUES, false);
-    }
-
-    @Test
-    public void testReal() {
-        createMapping("REAL");
-        assertMappedType("xsd:double");
-        // TODO: Fuzzy match to search for floating-point values
-        assertValues(DOUBLE_VALUES, false);
-    }
-
-    @Test
-    public void testDoublePrecision() {
-        createMapping("DOUBLE_PRECISION");
-        assertMappedType("xsd:double");
-        // TODO: Fuzzy match to search for floating-point values
-        assertValues(DOUBLE_VALUES, false);
-    }
-
-    @Test
-    public void testChar_3() {
-        createMapping("CHAR_3");
-        assertMappedType("xsd:string");
-        assertValues(new String[]{"", "AOU", "\u00C4\u00D6\u00DC"});
-    }
-
-    @Test
-    public void testChar() {
-        createMapping("CHAR");
-        assertMappedType("xsd:string");
-        assertValues(CHAR_VALUES);
-    }
-
-    @Test
-    public void testCharacter() {
-        createMapping("CHARACTER");
-        assertMappedType("xsd:string");
-        assertValues(CHAR_VALUES);
-    }
-
-    @Test
-    public void testNationalCharacter() {
-        createMapping("NATIONAL_CHARACTER");
-        assertMappedType("xsd:string");
-        assertValues(CHAR_VALUES);
-    }
-
-    @Test
-    public void testNChar() {
-        createMapping("NCHAR");
-        assertMappedType("xsd:string");
-        assertValues(CHAR_VALUES);
-    }
-
-    @Test
-    public void testVarchar() {
-        createMapping("VARCHAR");
-        assertMappedType("xsd:string");
-        assertValues(VARCHAR_VALUES);
-    }
-
-    @Test
-    public void testNVarchar() {
-        createMapping("NVARCHAR");
-        assertMappedType("xsd:string");
-        assertValues(VARCHAR_VALUES);
-    }
-
-    @Test
-    public void testNationalVarchar() {
-        createMapping("NATIONAL_VARCHAR");
-        assertMappedType("xsd:string");
-        assertValues(VARCHAR_VALUES);
-    }
-
-    @Test
-    public void testTinyText() {
-        createMapping("TINYTEXT");
-        assertMappedType("xsd:string");
-        assertValues(VARCHAR_VALUES);
-    }
-
-    @Test
-    public void testMediumText() {
-        createMapping("MEDIUMTEXT");
-        assertMappedType("xsd:string");
-        assertValues(VARCHAR_VALUES);
-    }
-
-    @Test
-    public void testText() {
-        createMapping("TEXT");
-        assertMappedType("xsd:string");
-        assertValues(VARCHAR_VALUES);
-    }
-
-    @Test
-    public void testLongText() {
-        createMapping("LONGTEXT");
-        assertMappedType("xsd:string");
-        assertValues(VARCHAR_VALUES);
-    }
-
-    @Test
-    public void testBinary_4() {
-        createMapping("BINARY_4");
-        assertMappedType("xsd:hexBinary");
-        assertValues(new String[]{"00000000", "FFFFFFFF", "F001F001"});
-    }
-
-    @Test
-    public void testBinary() {
-        createMapping("BINARY");
-        assertMappedType("xsd:hexBinary");
-        assertValues(new String[]{"00", "01", "FF"});
-    }
-
-    @Test
-    public void testVarBinary() {
-        createMapping("VARBINARY");
-        assertMappedType("xsd:hexBinary");
-        assertValues(VARBINARY_VALUES);
-    }
-
-    @Test
-    public void testTinyBLOB() {
-        createMapping("TINYBLOB");
-        assertMappedType("xsd:hexBinary");
-        assertValues(VARBINARY_VALUES);
-    }
-
-    @Test
-    public void testMediumBLOB() {
-        createMapping("MEDIUMBLOB");
-        assertMappedType("xsd:hexBinary");
-        assertValues(VARBINARY_VALUES);
-    }
-
-    @Test
-    public void testBLOB() {
-        createMapping("BLOB");
-        assertMappedType("xsd:hexBinary");
-        assertValues(VARBINARY_VALUES);
-    }
-
-    @Test
-    public void testLongBLOB() {
-        createMapping("LONGBLOB");
-        assertMappedType("xsd:hexBinary");
-        assertValues(VARBINARY_VALUES);
-    }
-
-    @Test
-    public void testDate() {
-        createMapping("DATE");
-        assertMappedType("xsd:date");
-        assertValues(new String[]{"1000-01-01", "2012-03-07",
-                "9999-12-31", "1978-11-30", "1978-11-30"});
-    }
-
-    @Test
-    public void testDateTime() {
-        createMapping("DATETIME");
-        assertMappedType("xsd:dateTime");
-        assertValues(new String[]{
-                "1000-01-01T00:00:00",
+    enum Data {
+        SERIAL(XSD.unsignedLong, "1", "2", "18446744073709551615"),
+        BIT_4(XSD.xstring, "0", "1", "1000", "1111"),
+        BIT(XSD.xstring, "0", "1"),
+        TINYINT(XSD.xbyte, "0", "1", "-128", "127"),
+        TINYINT_1(XSD.xboolean, "false", "true", "true"),
+        TINYINT_UNSIGNED(XSD.unsignedByte, "0", "1", "255"),
+        SMALLINT(XSD.xshort, "0", "1", "-32768", "32767"),
+        SMALLINT_UNSIGNED(XSD.unsignedShort, "0", "1", "65535"),
+        MEDIUMINT(XSD.xint, "0", "1", "-8388608", "8388607"),
+        MEDIUMINT_UNSIGNED(XSD.unsignedInt, "0", "1", "16777215"),
+        INTEGER(XSD.xint, "0", "1", "-2147483648", "2147483647"),
+        INTEGER_UNSIGNED(XSD.unsignedInt, "0", "1", "4294967295"),
+        INT(XSD.xint, "0", "1", "-2147483648", "2147483647"),
+        INT_UNSIGNED(XSD.unsignedInt, "0", "1", "4294967295"),
+        BIGINT(XSD.xlong, "0", "1", "-9223372036854775808", "9223372036854775807"),
+        BIGINT_UNSIGNED(XSD.unsignedLong, "0", "1", "18446744073709551615"),
+        DECIMAL(XSD.decimal, "0", "1", "100000000", "-100000000"),
+        DECIMAL_4_2(XSD.decimal, "0", "1", "4.95", "99.99", "-99.99"),
+        DEC(XSD.decimal, "0", "1", "100000000", "-100000000"),
+        DEC_4_2(XSD.decimal, "0", "1", "4.95", "99.99", "-99.99"),
+        // TODO: FLOAT - Fuzzy match to search for floating-point values
+        FLOAT(XSD.xdouble, "0.0E0", "1.0E0", "-1.0E0", "-3.0E38", "-1.0E-38", "1.0E-38", "3.0E38"),
+        // TODO: DOUBLE - Fuzzy match to search for floating-point values
+        DOUBLE(XSD.xdouble, "0.0E0", "1.0E0", "-1.0E0", "-1.0E308", "-2.0E-308", "2.0E-308", "1.0E308"),
+        // TODO: REAL - Fuzzy match to search for floating-point values
+        REAL(XSD.xdouble, "0.0E0", "1.0E0", "-1.0E0", "-1.0E308", "-2.0E-308", "2.0E-308", "1.0E308"),
+        // TODO: DOUBLE_PRECISION - Fuzzy match to search for floating-point values
+        DOUBLE_PRECISION(XSD.xdouble, "0.0E0", "1.0E0", "-1.0E0", "-1.0E308", "-2.0E-308", "2.0E-308", "1.0E308"),
+        CHAR_3(XSD.xstring, "", "AOU", "\u00C4\u00D6\u00DC"),
+        CHAR(XSD.xstring, "", "A", "\u00C4"),
+        CHARACTER(XSD.xstring, "", "A", "\u00C4"),
+        NATIONAL_CHARACTER(XSD.xstring, "", "A", "\u00C4"),
+        NCHAR(XSD.xstring, "", "A", "\u00C4"),
+        VARCHAR(XSD.xstring, "", "   ", "AOU", "\u00C4\u00D6\u00DC"),
+        NATIONAL_VARCHAR(XSD.xstring, "", "   ", "AOU", "\u00C4\u00D6\u00DC"),
+        NVARCHAR(XSD.xstring, "", "   ", "AOU", "\u00C4\u00D6\u00DC"),
+        TINYTEXT(XSD.xstring, "", "   ", "AOU", "\u00C4\u00D6\u00DC"),
+        MEDIUMTEXT(XSD.xstring, "", "   ", "AOU", "\u00C4\u00D6\u00DC"),
+        TEXT(XSD.xstring, "", "   ", "AOU", "\u00C4\u00D6\u00DC"),
+        LONGTEXT(XSD.xstring, "", "   ", "AOU", "\u00C4\u00D6\u00DC"),
+        BINARY_4(XSD.hexBinary, "00000000", "FFFFFFFF", "F001F001"),
+        BINARY(XSD.hexBinary, "00", "01", "FF"),
+        VARBINARY(XSD.hexBinary, "", "00", "01", "F001F001F001F001"),
+        TINYBLOB(XSD.hexBinary, "", "00", "01", "F001F001F001F001"),
+        MEDIUMBLOB(XSD.hexBinary, "", "00", "01", "F001F001F001F001"),
+        BLOB(XSD.hexBinary, "", "00", "01", "F001F001F001F001"),
+        LONGBLOB(XSD.hexBinary, "", "00", "01", "F001F001F001F001"),
+        DATE(XSD.date, "1000-01-01", "2012-03-07", "9999-12-31", "1978-11-30", "1978-11-30"),
+        DATETIME(XSD.dateTime, "1000-01-01T00:00:00",
                 "2012-03-07T20:39:21",
                 "9999-12-31T23:59:59",
                 "1978-11-30T00:00:00",
-                "1978-11-30T00:00:00"});
-    }
-
-    @Test
-    public void testTimestamp() {
-        createMapping("TIMESTAMP");
-        assertMappedType("xsd:dateTime");
-        assertValues(new String[]{
-                "1970-01-01T00:00:01",
+                "1978-11-30T00:00:00"),
+        TIMESTAMP(XSD.dateTime, "1970-01-01T00:00:01",
                 "2012-03-07T20:39:21",
-                "2038-01-19T03:14:07"});
-    }
+                "2038-01-19T03:14:07"),
+        TIME(XSD.time, "00:00:00", "20:39:21", "23:59:59"),
+        YEAR(XSD.date, "1901-01-01", "2012-01-01", "2155-01-01"),
+        YEAR_4(XSD.date, "1901-01-01", "2012-01-01", "2155-01-01"),
+        YEAR_2(XSD.date, "1970-01-01", "2012-01-01", "2069-01-01") {
+            /**
+             * This type is disabled since mysql 5.7.5+ does not support YEAR_2:
+             * {@code Error Code: 1818. Supports only YEAR or YEAR(4) column}
+             * @return {@code false}
+             */
+            @Override
+            public boolean enabled() {
+                return false;
+            }
+        },
+        ENUM(XSD.xstring, "foo", "bar"),
+        SET(XSD.xstring, "", "foo", "bar", "foo,bar", "foo,bar"),
+        ;
 
-    @Test
-    public void testTime() {
-        createMapping("TIME");
-        assertMappedType("xsd:time");
-        assertValues(new String[]{"00:00:00", "20:39:21", "23:59:59"});
-    }
+        private static final PrefixMapping PM = PrefixMapping.Standard;
+        final String[] data;
+        final Resource type;
 
-    @Test
-    public void testYear() {
-        createMapping("YEAR");
-        assertMappedType("xsd:date");
-        assertValues(new String[]{"1901-01-01", "2012-01-01", "2155-01-01"});
-    }
+        Data(Resource r, String... d) {
+            this.data = d;
+            this.type = r;
+        }
 
-    @Test
-    public void testYear4() {
-        createMapping("YEAR_4");
-        assertMappedType("xsd:date");
-        assertValues(new String[]{"1901-01-01", "2012-01-01", "2155-01-01"});
-    }
+        public String getDataType() {
+            return PM.shortForm(type.getURI());
+        }
 
-    @Test
-    public void testYear2() {
-        createMapping("YEAR_2");
-        assertMappedType("xsd:date");
-        assertValues(new String[]{"1970-01-01", "2012-01-01", "2069-01-01"});
-    }
+        public String[] getTestData() {
+            return data;
+        }
 
-    @Test
-    public void testEnum() {
-        createMapping("ENUM");
-        assertMappedType("xsd:string");
-        assertValues(new String[]{"foo", "bar"});
-    }
-
-    @Test
-    public void testSet() {
-        createMapping("SET");
-        assertMappedType("xsd:string");
-        assertValues(new String[]{"", "foo", "bar", "foo,bar", "foo,bar"});
+        public boolean enabled() {
+            return true;
+        }
     }
 }

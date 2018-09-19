@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi.tests;
+package ru.avicomp.ontapi;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -7,11 +7,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
-import ru.avicomp.ontapi.D2RQGraphDocumentSource;
-import ru.avicomp.ontapi.OntManagers;
-import ru.avicomp.ontapi.OntologyManager;
-import ru.avicomp.ontapi.OntologyModel;
-import ru.avicomp.ontapi.conf.ConnectionData;
+import ru.avicomp.conf.ConnectionData;
 import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
@@ -37,8 +33,8 @@ public class IndividualsTest {
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static List<ConnectionData> getData() {
-        return ConnectionData.asList();
+    public static ConnectionData[] getData() {
+        return ConnectionData.values();
     }
 
     @Test

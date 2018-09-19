@@ -3,7 +3,7 @@ package de.fuberlin.wiwiss.d2rq.helpers;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +68,7 @@ public class HSQLDatabase {
     public void executeScript(String filename) {
         try {
             SQLScriptLoader.loadFile(new File(filename), conn);
-        } catch (FileNotFoundException | SQLException ex) {
+        } catch (IOException | SQLException ex) {
             throw new RuntimeException(ex);
         }
     }

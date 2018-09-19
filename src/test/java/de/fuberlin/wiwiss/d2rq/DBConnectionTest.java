@@ -35,7 +35,7 @@ public class DBConnectionTest {
     @Before
     public void setUp() {
         mapModel = ModelFactory.createDefaultModel();
-        mapModel.read(D2RQTestHelper.ISWC_MAP, "http://test/", "TURTLE");
+        mapModel.read(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "http://test/", "TURTLE");
         databases = MappingFactory.create(mapModel, null).databases();
         firstDatabase = databases.iterator().next();
         simplestQuery = "SELECT 1;";

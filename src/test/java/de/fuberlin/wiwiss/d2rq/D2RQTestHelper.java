@@ -15,7 +15,6 @@ import java.nio.file.Paths;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class D2RQTestHelper {
-    public static final String ISWC_MAP = "file:doc/example/mapping-iswc.mysql.ttl";
 
     public static Model loadTurtle(String fileName) {
         Model m = ModelFactory.createDefaultModel();
@@ -25,6 +24,10 @@ public class D2RQTestHelper {
             throw new AssertionError(e);
         }
         return m;
+    }
+
+    public static String getResourceURI(String path) {
+        return D2RQTestHelper.class.getResource(path).toString();
     }
 
     public static String getRelativeResourcePath(String path) {

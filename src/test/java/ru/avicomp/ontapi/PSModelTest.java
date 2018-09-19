@@ -1,8 +1,6 @@
-package ru.avicomp.ontapi.tests;
+package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
-import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -12,11 +10,7 @@ import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.model.parameters.Imports;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.D2RQGraphDocumentSource;
-import ru.avicomp.ontapi.OntManagers;
-import ru.avicomp.ontapi.OntologyManager;
-import ru.avicomp.ontapi.OntologyModel;
-import ru.avicomp.ontapi.conf.ConnectionData;
+import ru.avicomp.conf.ConnectionData;
 import ru.avicomp.ontapi.config.OntLoaderConfiguration;
 import ru.avicomp.ontapi.internal.AxiomParserProvider;
 import ru.avicomp.ontapi.internal.ONTObject;
@@ -26,13 +20,6 @@ import ru.avicomp.ontapi.jena.model.OntStatement;
 import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,46 +31,17 @@ import java.util.stream.Collectors;
 public class PSModelTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PSModelTest.class);
 
-    private static URL psBackupFile = PSModelTest.class.getResource("/no_pk.sql");
     private static ConnectionData psConnectionData = ConnectionData.POSTGRES;
     private static String psDbName = PSModelTest.class.getSimpleName().toLowerCase() + "_" + System.currentTimeMillis();
 
     @BeforeClass
     public static void prepareData() throws Exception {
-        Path script = Paths.get(psBackupFile.toURI()).toRealPath();
-        try (ConnectedDB db = psConnectionData.toConnectedDB(); Connection conn = db.connection()) {
-            conn.setAutoCommit(true);
-            try (Statement s = conn.createStatement()) {
-                LOGGER.info("Create database <{}>", psDbName);
-                s.executeUpdate(String.format("CREATE DATABASE %s", psDbName));
-            }
-        }
-        try (ConnectedDB db = psConnectionData.toConnectedDB(psDbName);
-             Connection conn = db.connection()) {
-            LOGGER.info("Execute script: {}", script);
-            new SQLScriptLoader(Files.newBufferedReader(script, StandardCharsets.UTF_8), conn).execute();
-            conn.commit();
-        }
-        LOGGER.info("Preparation is done.");
+        psConnectionData.createDatabase("/no_pk.sql", psDbName);
     }
 
-    /**
-     * @throws Exception something is wrong
-     * @see <a href='https://dba.stackexchange.com/questions/11893/force-drop-db-while-others-may-be-connected'>ps force drop</a>
-     */
     @AfterClass
     public static void clear() throws Exception {
-        try (ConnectedDB db = psConnectionData.toConnectedDB();
-             Connection conn = db.connection()) {
-            conn.setAutoCommit(true);
-            try (Statement s = conn.createStatement()) {
-                LOGGER.info("Drop database <{}>", psDbName);
-                s.executeUpdate(String.format("ALTER DATABASE %s CONNECTION LIMIT 0;", psDbName));
-                s.executeQuery(String.format("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '%s'", psDbName));
-                s.executeUpdate(String.format("DROP DATABASE %s;", psDbName));
-            }
-        }
-        LOGGER.info("DB {} has been deleted", psDbName);
+        psConnectionData.dropDatabase(psDbName);
     }
 
     private static IRI psIRI = IRI.create("d2rq://no-pk.test/");

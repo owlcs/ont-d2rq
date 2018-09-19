@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi.tests;
+package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import org.apache.jena.graph.Graph;
@@ -12,19 +12,14 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.SetOntologyID;
 import org.topbraid.spin.inference.SPINInferences;
 import org.topbraid.spin.system.SPINModuleRegistry;
-import ru.avicomp.ontapi.D2RQGraphDocumentSource;
-import ru.avicomp.ontapi.MappingFilter;
-import ru.avicomp.ontapi.OntologyManager;
-import ru.avicomp.ontapi.OntologyModel;
-import ru.avicomp.ontapi.conf.ConnectionData;
+import ru.avicomp.conf.ConnectionData;
 import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
+import ru.avicomp.ontapi.tests.SpinMappingTest;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
-
-import java.util.List;
 
 /**
  * To test SPIN + D2RQ + ONT-API.
@@ -46,8 +41,8 @@ public class D2RQSpinTest extends SpinMappingTest {
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static List<ConnectionData> getData() {
-        return ConnectionData.asList();
+    public static ConnectionData[] getData() {
+        return ConnectionData.values();
     }
 
     @Override
@@ -79,7 +74,7 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Override
     public OntGraphModel createSourceModel() {
-        LOGGER.info("Create source model based on " + data.getIRI("iswc"));
+        LOGGER.info("Create source model based on " + data.getJdbcIRI("iswc"));
         MappingFilter filter = prepareDataFilter();
         D2RQGraphDocumentSource source = data.toDocumentSource("iswc").filter(filter);
         OntologyModel res;
