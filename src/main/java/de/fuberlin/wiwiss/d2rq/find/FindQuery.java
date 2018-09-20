@@ -1,20 +1,19 @@
 package de.fuberlin.wiwiss.d2rq.find;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.jena.graph.Triple;
-import org.apache.jena.sparql.engine.ExecutionContext;
-import org.apache.jena.sparql.engine.iterator.QueryIter;
-import org.apache.jena.sparql.engine.iterator.QueryIterConcat;
-
 import de.fuberlin.wiwiss.d2rq.algebra.CompatibleRelationGroup;
 import de.fuberlin.wiwiss.d2rq.algebra.JoinOptimizer;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.engine.QueryIterTableSQL;
 import de.fuberlin.wiwiss.d2rq.find.URIMakerRule.URIMakerRuleChecker;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.engine.ExecutionContext;
+import org.apache.jena.sparql.engine.iterator.QueryIter;
+import org.apache.jena.sparql.engine.iterator.QueryIterConcat;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 
 /**
@@ -33,12 +32,15 @@ public class FindQuery {
     private final int limitPerRelation;
     private final ExecutionContext context;
 
-    public FindQuery(Triple triplePattern, Collection<TripleRelation> tripleRelations,
+    public FindQuery(Triple triplePattern,
+                     Collection<TripleRelation> tripleRelations,
                      ExecutionContext context) {
         this(triplePattern, tripleRelations, Relation.NO_LIMIT, context);
     }
 
-    public FindQuery(Triple triplePattern, Collection<TripleRelation> tripleRelations, int limit,
+    public FindQuery(Triple triplePattern,
+                     Collection<TripleRelation> tripleRelations,
+                     int limit,
                      ExecutionContext context) {
         this.triplePattern = triplePattern;
         this.tripleRelations = tripleRelations;
@@ -52,7 +54,7 @@ public class FindQuery {
         URIMakerRuleChecker subjectChecker = rule.createRuleChecker(triplePattern.getSubject());
         URIMakerRuleChecker predicateChecker = rule.createRuleChecker(triplePattern.getPredicate());
         URIMakerRuleChecker objectChecker = rule.createRuleChecker(triplePattern.getObject());
-        List<TripleRelation> result = new ArrayList<TripleRelation>();
+        List<TripleRelation> result = new ArrayList<>();
         for (TripleRelation tripleRelation : sortedTripleRelations) {
             TripleRelation selectedTripleRelation = tripleRelation.selectTriple(triplePattern);
             if (selectedTripleRelation != null

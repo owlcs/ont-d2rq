@@ -1,10 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.*;
-
 import de.fuberlin.wiwiss.d2rq.engine.BindingMaker;
 import de.fuberlin.wiwiss.d2rq.expr.Disjunction;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
+
+import java.util.*;
 
 /**
  * A group of {@link Relation}s that can be combined into a single
@@ -25,11 +25,11 @@ import de.fuberlin.wiwiss.d2rq.expr.Expression;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class CompatibleRelationGroup {
 
-    public static Collection<CompatibleRelationGroup> groupNodeRelations(
-            Collection<? extends NodeRelation> nodeRelations) {
-        Collection<CompatibleRelationGroup> result = new ArrayList<CompatibleRelationGroup>();
+    public static Collection<CompatibleRelationGroup> groupNodeRelations(Collection<? extends NodeRelation> nodeRelations) {
+        Collection<CompatibleRelationGroup> result = new ArrayList<>();
         for (NodeRelation nodeRelation : nodeRelations) {
             addNodeRelation(nodeRelation, result);
         }
@@ -40,25 +40,23 @@ public class CompatibleRelationGroup {
                                         Collection<CompatibleRelationGroup> groups) {
         for (CompatibleRelationGroup group : groups) {
             if (group.isCompatible(nodeRelation.baseRelation())) {
-                group.addBindingMaker(
-                        nodeRelation.baseRelation(), BindingMaker.createFor(nodeRelation));
+                group.addBindingMaker(nodeRelation.baseRelation(), BindingMaker.createFor(nodeRelation));
                 return;
             }
         }
         CompatibleRelationGroup newGroup = new CompatibleRelationGroup();
-        newGroup.addBindingMaker(
-                nodeRelation.baseRelation(), BindingMaker.createFor(nodeRelation));
+        newGroup.addBindingMaker(nodeRelation.baseRelation(), BindingMaker.createFor(nodeRelation));
         groups.add(newGroup);
     }
 
-    private final List<BiningMakerAndCondition> makers = new ArrayList<BiningMakerAndCondition>();
+    private final List<BiningMakerAndCondition> makers = new ArrayList<>();
     private Relation firstBaseRelation = null;
     private boolean differentConditions = false;
     private boolean differentSoftConditions = false;
     private boolean allUnique = true;
     private int relationCounter = 0;
-    private Set<ProjectionSpec> projections = new HashSet<ProjectionSpec>();
-    private List<OrderSpec> longestOrderSpecs = new ArrayList<OrderSpec>();
+    private Set<ProjectionSpec> projections = new HashSet<>();
+    private List<OrderSpec> longestOrderSpecs = new ArrayList<>();
 
     public boolean isCompatible(Relation otherRelation) {
         if (firstBaseRelation == null) {
@@ -128,8 +126,8 @@ public class CompatibleRelationGroup {
             // Multiple relations and different conditions, add the conditions
             // as boolean clauses to the SELECT list, and add a new condition
             // consisting of the disjunction (OR) of all conditions
-            Set<Expression> allConditions = new HashSet<Expression>();
-            Set<ProjectionSpec> projectionsAndConditions = new HashSet<ProjectionSpec>(projections);
+            Set<Expression> allConditions = new HashSet<>();
+            Set<ProjectionSpec> projectionsAndConditions = new HashSet<>(projections);
             for (BiningMakerAndCondition maker : makers) {
                 // If relations A and B have different soft conditions, we want to end up
                 // with: (A.cond && A.soft) || (B.cond && B.soft)
@@ -156,7 +154,7 @@ public class CompatibleRelationGroup {
             // Multiple relations with same condition
             Expression softCondition = firstBaseRelation.softCondition();
             if (differentSoftConditions) {
-                Set<Expression> allSoftConditions = new HashSet<Expression>();
+                Set<Expression> allSoftConditions = new HashSet<>();
                 for (BiningMakerAndCondition maker : makers) {
                     allSoftConditions.add(maker.softCondition);
                 }
@@ -177,7 +175,7 @@ public class CompatibleRelationGroup {
     }
 
     public Collection<BindingMaker> bindingMakers() {
-        Collection<BindingMaker> results = new ArrayList<BindingMaker>();
+        Collection<BindingMaker> results = new ArrayList<>();
         if (relationCounter == 1 || !differentConditions) {
             // Return list of unchanged triple makers
             for (BiningMakerAndCondition maker : makers) {
@@ -203,7 +201,8 @@ public class CompatibleRelationGroup {
         private final Expression condition;
         private final Expression softCondition;
 
-        BiningMakerAndCondition(BindingMaker maker, Expression condition,
+        BiningMakerAndCondition(BindingMaker maker,
+                                Expression condition,
                                 Expression softCondition) {
             this.bMaker = maker;
             this.condition = condition;

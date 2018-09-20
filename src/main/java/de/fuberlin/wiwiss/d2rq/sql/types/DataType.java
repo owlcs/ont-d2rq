@@ -31,12 +31,15 @@ public abstract class DataType {
         TIMESTAMP(Types.TIMESTAMP, "TIMESTAMP"),
         INTERVAL(Types.VARCHAR, "INTERVAL"),
         BIT(Types.BIT, "BIT");
+
         private final int jdbcType;
         private final String name;
+
         GenericType(int jdbcType, String name) {
             this.jdbcType = jdbcType;
             this.name = name.toUpperCase();
         }
+
         public DataType dataTypeFor(Vendor vendor) {
             return vendor.getDataType(jdbcType, name, 0);
         }
@@ -47,7 +50,7 @@ public abstract class DataType {
 
     /**
      * @param sqlSyntax {@link Vendor}
-     * @param name Name as reported by JDBC metadata, for debugging
+     * @param name      Name as reported by JDBC metadata, for debugging
      */
     public DataType(Vendor sqlSyntax, String name) {
         this.sqlSyntax = sqlSyntax;
@@ -91,11 +94,10 @@ public abstract class DataType {
     }
 
     /**
-     * Retrieves a string value in preferred format (canonical form
-     * of the closest XSD type) from a SQL ResultSet.
+     * Retrieves a string value in preferred format (canonical form of the closest XSD type) from a SQL ResultSet.
      *
      * @param resultSet Result of a SELECT query
-     * @param column The column index to retrieve; leftmost columns is 1
+     * @param column    The column index to retrieve; leftmost columns is 1
      * @return String representation, or <code>null</code> if SQL result was null or is not representable in the XSD type
      * @throws SQLException sql error
      */
@@ -124,9 +126,33 @@ public abstract class DataType {
 
     /**
      * Returns the datatype's name as reported by JDBC metadata (or closest equivalent), for debugging
+     *
      * @return String
      */
     public String name() {
         return name;
+    }
+
+    /**
+     * Auxiliary method to make warning message if {@link #value(ResultSet, int)} fails.
+     *
+     * @param res    {@link ResultSet}
+     * @param column int
+     * @param ex     {@link Throwable}
+     * @return String
+     */
+    protected String makeWarning(ResultSet res, int column, Throwable ex) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getSimpleName()).append("#value");
+        try {
+            String table = res.getMetaData().getTableName(column);
+            sb.append(":::table:").append(table);
+        } catch (SQLException e) {
+            // ignore
+        }
+        if (ex != null && ex.getMessage() != null) {
+            sb.append(":::'").append(ex.getMessage()).append("'");
+        }
+        return sb.toString();
     }
 }

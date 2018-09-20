@@ -134,6 +134,7 @@ public class MySQL extends SQL92 {
             try {
                 return super.value(resultSet, column);
             } catch (SQLException ex) {
+                LOGGER.warn(makeWarning(resultSet, column, ex));
                 return null;
             }
         }
@@ -151,7 +152,7 @@ public class MySQL extends SQL92 {
             try {
                 return super.value(resultSet, column);
             } catch (SQLException ex) {
-                LOGGER.warn("MySQLCompatibilityTimeDataType#value:", ex);
+                LOGGER.warn(makeWarning(resultSet, column, ex));
                 return null;
             }
         }
@@ -169,8 +170,10 @@ public class MySQL extends SQL92 {
             try {
                 return super.value(resultSet, column);
             } catch (SQLException ex) {
+                LOGGER.warn(makeWarning(resultSet, column, ex));
                 return null;
             }
         }
     }
+
 }

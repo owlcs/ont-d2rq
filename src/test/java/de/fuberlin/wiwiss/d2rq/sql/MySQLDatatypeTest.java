@@ -61,6 +61,23 @@ public class MySQLDatatypeTest {
         connection.dropDatabase(database);
     }
 
+    @Test
+    public void testDatatype() {
+        Mapping mapping = createMapping(data.name());
+        GraphD2RQ graph = mapping.getDataGraph();
+        Assert.assertNotNull(graph);
+
+        //debug:
+        //ru.avicomp.ontapi.utils.ReadWriteUtils.print(org.apache.jena.rdf.model.ModelFactory.createModelForGraph(graph));
+
+        DatabaseSchemaInspector inspector = mapping.databases().iterator().next().connectedDB().schemaInspector();
+        Assert.assertNotNull(inspector);
+
+        assertMappedType(inspector, data.name(), data.getDataType());
+
+        assertValues(graph, data.getTestData(), true);
+    }
+
     private static void assertMappedType(DatabaseSchemaInspector inspector, String datatype, String rdfType) {
         Assert.assertEquals(rdfType, inspector.columnType(SQL.parseAttribute("T_" + datatype + ".VALUE")).rdfType());
     }
@@ -75,8 +92,8 @@ public class MySQLDatatypeTest {
         Assert.assertEquals(Arrays.asList(expectedValues), listedValues);
         if (!searchValues) return;
         for (String value : expectedValues) {
-            Assert.assertTrue("Expected literal not in graph: '" + value + "'",
-                    graph.contains(Node.ANY, Node.ANY, NodeFactory.createLiteral(value)));
+            Node literal = NodeFactory.createLiteral(value);
+            Assert.assertTrue("Expected literal not in graph: " + literal, graph.contains(Node.ANY, Node.ANY, literal));
         }
     }
 
@@ -91,6 +108,7 @@ public class MySQLDatatypeTest {
     private static Mapping generateMapping(String datatype) {
         Mapping mapping = MappingFactory.createEmpty();
         Database database = connection.createDatabaseMapObject(DB_URI, MySQLDatatypeTest.database);
+        //do not inject script to prevent database rebuilt:
         //database.setStartupSQLScript(ResourceFactory.createResource(scriptFile.toString()));
 
         mapping.addDatabase(database);
@@ -106,20 +124,11 @@ public class MySQLDatatypeTest {
         return mapping;
     }
 
-    @Test
-    public void testDatatype() {
-        Mapping mapping = createMapping(data.name());
-        GraphD2RQ graph = mapping.getDataGraph();
-        Assert.assertNotNull(graph);
-        DatabaseSchemaInspector inspector = mapping.databases().iterator().next().connectedDB().schemaInspector();
-        Assert.assertNotNull(inspector);
-
-        assertMappedType(inspector, data.name(), data.getDataType());
-
-        assertValues(graph, data.getTestData(), true);
-    }
-
-
+    /**
+     * @see <a href='https://www.w3.org/2001/sw/rdb2rdf/wiki/Mapping_SQL_datatypes_to_XML_Schema_datatypes'>Mapping SQL datatypes to XML Schema datatypes</a>
+     * @see <a href='https://www.w3.org/TR/r2rml/#natural-mapping'>R2RML: Natural Mapping of SQL Values</a>
+     * @see de.fuberlin.wiwiss.d2rq.sql.types.SQLExactNumeric
+     */
     enum Data {
         SERIAL(XSD.unsignedLong, "1", "2", "18446744073709551615"),
         BIT_4(XSD.xstring, "0", "1", "1000", "1111"),

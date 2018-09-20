@@ -7,6 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+/**
+ * @see <a href='https://www.w3.org/2001/sw/rdb2rdf/wiki/Mapping_SQL_datatypes_to_XML_Schema_datatypes'>Mapping SQL datatypes to XML Schema datatypes</a>
+ * @see <a href='https://www.w3.org/TR/r2rml/#natural-mapping'>R2RML: Natural Mapping of SQL Values</a>
+ */
 public class SQLExactNumeric extends DataType {
     private final String rdfType;
 

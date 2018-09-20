@@ -11,7 +11,6 @@ import org.apache.jena.datatypes.xsd.impl.RDFLangString;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 
 /**
@@ -22,6 +21,7 @@ import org.apache.jena.shared.PrefixMapping;
 public class PrettyPrinter {
 
     static {
+        // todo: wrong logic: vocabulary constants must not contain nonnull model
         // Make sure that the model behind all the
         // D2RQ vocabulary terms has the d2rq prefix
         D2RQ.ClassMap.getModel().setNsPrefix(Mapping.Prefixes.D2RQ_PREFIX, D2RQ.NS);
@@ -107,10 +107,6 @@ public class PrettyPrinter {
     }
 
     public static String toString(RDFNode n) {
-        if (n.isURIResource()) {
-            Resource r = (Resource) n;
-            return toString(r.asNode(), r.getModel());
-        }
-        return toString(n.asNode());
+        return toString(n.asNode(), n.getModel());
     }
 }
