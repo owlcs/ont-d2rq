@@ -45,8 +45,8 @@ public class SQLExpressionTest {
 
     @Test
     public void testTwoExpressionsAreNotEqual() {
-        Assert.assertFalse(SQLExpression.create("1=1").equals(SQLExpression.create("2=2")));
-        Assert.assertFalse(SQLExpression.create("1=1").hashCode() == SQLExpression.create("2=2").hashCode());
+        Assert.assertNotEquals(SQLExpression.create("1=1"), SQLExpression.create("2=2"));
+        Assert.assertNotEquals(SQLExpression.create("1=1").hashCode(), SQLExpression.create("2=2").hashCode());
     }
 
     @Test

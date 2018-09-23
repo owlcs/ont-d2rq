@@ -19,17 +19,15 @@ import java.util.Map;
 import java.util.Set;
 
 public class CompatibleRelationGroupTest {
-    Set<ProjectionSpec> projections1;
-    Set<ProjectionSpec> projections2;
-    RelationImpl unique;
-    RelationImpl notUnique;
-    DummyDB db;
+    private RelationImpl unique;
+    private RelationImpl notUnique;
+    private DummyDB db;
 
     @Before
     public void setUp() {
         db = new DummyDB();
-        projections1 = Collections.singleton(new Attribute(null, "table", "unique"));
-        projections2 = Collections.singleton(new Attribute(null, "table", "not_unique"));
+        Set<ProjectionSpec> projections1 = Collections.singleton(new Attribute(null, "table", "unique"));
+        Set<ProjectionSpec> projections2 = Collections.singleton(new Attribute(null, "table", "not_unique"));
         unique = new RelationImpl(
                 db, AliasMap.NO_ALIASES, Expression.TRUE, Expression.TRUE,
                 Collections.emptySet(),

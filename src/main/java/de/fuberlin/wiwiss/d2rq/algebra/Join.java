@@ -75,6 +75,7 @@ public class Join {
         return this.otherSide.get(column);
     }
 
+    @Override
     public String toString() {
         StringBuilder result = new StringBuilder("Join(");
         Iterator<Attribute> it = this.attributes1.iterator();
@@ -98,6 +99,7 @@ public class Join {
         return result.toString();
     }
 
+    @Override
     public int hashCode() {
         switch (this.joinDirection) {
             case DIRECTION_RIGHT:
@@ -110,7 +112,9 @@ public class Join {
         }
     }
 
+    @Override
     public boolean equals(Object otherObject) {
+        if (this == otherObject) return true;
         if (!(otherObject instanceof Join)) {
             return false;
         }

@@ -30,7 +30,7 @@ public class VarCollector extends OpVisitorBase {
         return collector.mentionedVariables();
     }
 
-    private Set<Var> variables = new HashSet<Var>();
+    private Set<Var> variables = new HashSet<>();
 
     public Set<Var> mentionedVariables() {
         return variables;
@@ -103,6 +103,7 @@ public class VarCollector extends OpVisitorBase {
         }
     }
 
+    @Override
     public void visit(OpPath opPath) {
         visit(opPath.getTriplePath().asTriple());
     }

@@ -38,7 +38,8 @@ public class QueryIterTableSQL extends QueryIter {
      * @return A query iterator over the contents of the relation
      */
     public static QueryIterator create(Relation relation,
-                                       Collection<BindingMaker> bindingMakers, ExecutionContext execCxt) {
+                                       Collection<BindingMaker> bindingMakers,
+                                       ExecutionContext execCxt) {
         if (relation.equals(Relation.EMPTY) || relation.condition().isFalse() || bindingMakers.isEmpty()) {
             return new QueryIterNullIterator(execCxt);
         }

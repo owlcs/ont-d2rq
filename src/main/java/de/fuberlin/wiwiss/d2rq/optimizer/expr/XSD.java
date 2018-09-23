@@ -7,6 +7,7 @@ import org.apache.jena.ext.xerces.xs.XSConstants;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 
+@SuppressWarnings("WeakerAccess")
 public class XSD {
 
     private static final XSSimpleType integerType = (XSSimpleType) XSDDatatype.XSDinteger.extendedTypeDefinition();

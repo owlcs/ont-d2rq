@@ -1,9 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
+import de.fuberlin.wiwiss.d2rq.expr.Expression;
+
 import java.util.List;
 import java.util.Set;
-
-import de.fuberlin.wiwiss.d2rq.expr.Expression;
 
 
 /**
@@ -25,6 +25,7 @@ public class MutableRelation implements RelationalOperators {
         return this.relation;
     }
 
+    @Override
     public Relation renameColumns(ColumnRenamer renamer) {
         return this.relation = this.relation.renameColumns(renamer);
     }
@@ -33,6 +34,7 @@ public class MutableRelation implements RelationalOperators {
         return this.relation = Relation.EMPTY;
     }
 
+    @Override
     public Relation select(Expression condition) {
         if (condition.isFalse()) {
             return empty();
@@ -68,6 +70,7 @@ public class MutableRelation implements RelationalOperators {
                 relation.limit());
     }
 
+    @Override
     public Relation project(Set<? extends ProjectionSpec> projectionSpecs) {
         return relation = relation.project(projectionSpecs);
     }

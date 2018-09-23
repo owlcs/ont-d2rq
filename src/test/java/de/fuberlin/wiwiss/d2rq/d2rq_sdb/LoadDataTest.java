@@ -30,11 +30,9 @@ import java.util.zip.ZipInputStream;
  */
 public abstract class LoadDataTest {
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoadDataTest.class);
-    
-    private static boolean loadHsqlData = true;
-    private static boolean loadSDBData = true;
+
     // directories and data-files and config-files
-    protected static final String CURR_DIR = D2RQTestHelper.getRelativeResourcePath("/d2rq_sdb");
+    static final String CURR_DIR = D2RQTestHelper.getRelativeResourcePath("/d2rq_sdb");
     private static final String DATA_DIR = "dataset";
     private static final String CONFIG_DIR = "config";
     private static final String FILENAME_TTL_DATA = "dataset.ttl.zip";
@@ -44,14 +42,14 @@ public abstract class LoadDataTest {
     private static final String SDB_URL = "jdbc:hsqldb:mem:sdbdata";
     private static final String SDB_USER = "sa";
     private static final String SDB_PASS = "";
-    protected Model sdbDataModel;
+    Model sdbDataModel;
     // hsql-config
     private static final String HSQL_DRIVER_NAME = "org.hsqldb.jdbcDriver";
     private static final String HSQL_URL = "jdbc:hsqldb:mem:hsqldata;create=true";
     private static final String HSQL_USER = "sa";
     private static final String HSQL_PASS = "";
 
-    protected Model hsqlDataModel;
+    Model hsqlDataModel;
 
 
     /**
@@ -69,11 +67,13 @@ public abstract class LoadDataTest {
      */
     private void initDatabases() {
         try {
+            boolean loadHsqlData = true;
             if (loadHsqlData) {
                 createHsqlDatabase();
                 Assert.assertNotNull("Hsql-DataModel is not null", hsqlDataModel);
             }
 
+            boolean loadSDBData = true;
             if (loadSDBData) {
                 createSemanticDatabase();
                 Assert.assertNotNull("SDBDataModel is not null", sdbDataModel);

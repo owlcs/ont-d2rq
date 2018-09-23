@@ -127,31 +127,23 @@ public class URIMakerRuleTest {
 
     @Test
     public void testRuleCheckerUnaffectedByNonURIPattern() {
-        this.employeeChecker.addPotentialMatch(
-                this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT));
-        Assert.assertTrue(this.employeeChecker.canMatch(
-                this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
+        this.employeeChecker.addPotentialMatch(this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT));
+        Assert.assertTrue(this.employeeChecker.canMatch(this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
         Assert.assertTrue(this.employeeChecker.canMatch(
                 this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
     }
 
     @Test
     public void testRuleCheckerRejectsAfterMatch() {
-        this.employeeChecker.addPotentialMatch(
-                this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT));
-        Assert.assertFalse(this.employeeChecker.canMatch(
-                this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
-        Assert.assertTrue(this.employeeChecker.canMatch(
-                this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
+        this.employeeChecker.addPotentialMatch(this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT));
+        Assert.assertFalse(this.employeeChecker.canMatch(this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
+        Assert.assertTrue(this.employeeChecker.canMatch(this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
     }
 
     @Test
     public void testRuleCheckerDoesNotRejectAfterNonMatch() {
-        this.foobarChecker.addPotentialMatch(
-                this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT));
-        Assert.assertTrue(this.foobarChecker.canMatch(
-                this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
-        Assert.assertTrue(this.foobarChecker.canMatch(
-                this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
+        this.foobarChecker.addPotentialMatch(this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT));
+        Assert.assertTrue(this.foobarChecker.canMatch(this.withURIColumnSubject.nodeMaker(TripleRelation.SUBJECT)));
+        Assert.assertTrue(this.foobarChecker.canMatch(this.withURIPatternSubject.nodeMaker(TripleRelation.SUBJECT)));
     }
 }

@@ -7,7 +7,6 @@ import org.apache.jena.shared.JenaException;
  *
  * @author Chris Bizer chris@bizer.de
  */
-
 public class D2RQException extends JenaException {
     public static final int UNSPECIFIED = 0;
     public static final int MAPPING_NO_DATABASE = 1;

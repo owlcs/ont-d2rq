@@ -41,7 +41,7 @@ public class ExpressionTest {
 
     @Test
     public void testTrueNotEqualFalse() {
-        Assert.assertFalse(Expression.TRUE.equals(Expression.FALSE));
+        Assert.assertNotEquals(Expression.TRUE, Expression.FALSE);
     }
 
     @Test
@@ -55,15 +55,15 @@ public class ExpressionTest {
 
     @Test
     public void testConstantEquals() {
-        Assert.assertTrue(new Constant("foo").equals(new Constant("foo")));
-        Assert.assertFalse(new Constant("foo").equals(new Constant("bar")));
-        Assert.assertFalse(new Constant("foo").equals(Expression.TRUE));
+        Assert.assertEquals(new Constant("foo"), new Constant("foo"));
+        Assert.assertNotEquals(new Constant("foo"), new Constant("bar"));
+        Assert.assertNotEquals(new Constant("foo"), Expression.TRUE);
     }
 
     @Test
     public void testConstantHashCode() {
         Assert.assertEquals(new Constant("foo").hashCode(), new Constant("foo").hashCode());
-        Assert.assertFalse(new Constant("foo").hashCode() == new Constant("bar").hashCode());
+        Assert.assertNotEquals(new Constant("foo").hashCode(), new Constant("bar").hashCode());
     }
 
     @Test

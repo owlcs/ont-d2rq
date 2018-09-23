@@ -16,13 +16,14 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * This is an extended e ({@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource document source})
+ * This is an extended {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource document source}
  * for loading graph from database in form of {@link org.semanticweb.owlapi.model.OWLOntology OWL2 ontology}.
  * The graph is provided in the hybrid form (see {@link ru.avicomp.ontapi.jena.Hybrid})
  * and includes DB-schema as primary {@link org.apache.jena.mem.GraphMem} and
  * DB-data (with schema attached also) as virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ graph}.
  * <p>
  * Created by @szuev on 24.02.2017.
+ * @see <a href='https://www.w3.org/TR/rdb-direct-mapping/'>Direct Mapping</a>
  */
 @SuppressWarnings("WeakerAccess")
 public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements AutoCloseable {
@@ -151,6 +152,17 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     @Override
     public Graph getGraph() {
         return new HybridImpl(mapping.getVocabularyModel().getGraph(), mapping.getDataGraph());
+    }
+
+    /**
+     * {@inheritDoc}
+     * Transformations are disabled.
+     *
+     * @return {@code false}
+     */
+    @Override
+    public boolean withTransforms() {
+        return false;
     }
 
     /**

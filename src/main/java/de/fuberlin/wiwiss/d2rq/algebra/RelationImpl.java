@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
+import de.fuberlin.wiwiss.d2rq.expr.Expression;
+import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import de.fuberlin.wiwiss.d2rq.expr.Expression;
-import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 
 public class RelationImpl extends Relation {
     private final ConnectedDB database;
@@ -35,46 +35,57 @@ public class RelationImpl extends Relation {
         this.limitInverse = limitInverse;
     }
 
+    @Override
     public ConnectedDB database() {
         return this.database;
     }
 
+    @Override
     public AliasMap aliases() {
         return this.aliases;
     }
 
+    @Override
     public Expression condition() {
         return this.condition;
     }
 
+    @Override
     public Expression softCondition() {
         return softCondition;
     }
 
+    @Override
     public Set<Join> joinConditions() {
         return this.joinConditions;
     }
 
+    @Override
     public Set<ProjectionSpec> projections() {
         return projections;
     }
 
+    @Override
     public boolean isUnique() {
         return isUnique;
     }
 
+    @Override
     public int limit() {
         return limit;
     }
 
+    @Override
     public int limitInverse() {
         return limitInverse;
     }
 
+    @Override
     public List<OrderSpec> orderSpecs() {
         return orderSpecs;
     }
 
+    @Override
     public Relation select(Expression selectCondition) {
         if (selectCondition.isTrue()) {
             return this;
@@ -87,6 +98,7 @@ public class RelationImpl extends Relation {
                 projections, isUnique, orderSpecs, limit, limitInverse);
     }
 
+    @Override
     public Relation renameColumns(ColumnRenamer renames) {
         return new RelationImpl(database, renames.applyTo(aliases),
                 renames.applyTo(condition), renames.applyTo(softCondition),
@@ -94,13 +106,15 @@ public class RelationImpl extends Relation {
                 renames.applyToProjectionSet(projections), isUnique, renames.applyTo(orderSpecs), limit, limitInverse);
     }
 
+    @Override
     public Relation project(Set<? extends ProjectionSpec> projectionSpecs) {
-        Set<ProjectionSpec> newProjections = new HashSet<ProjectionSpec>(projectionSpecs);
+        Set<ProjectionSpec> newProjections = new HashSet<>(projectionSpecs);
         newProjections.retainAll(projections);
         return new RelationImpl(database, aliases, condition, softCondition, joinConditions,
                 newProjections, isUnique, orderSpecs, limit, limitInverse);
     }
 
+    @Override
     public String toString() {
         StringBuilder result = new StringBuilder("RelationImpl(");
         if (isUnique) {

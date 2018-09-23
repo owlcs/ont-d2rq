@@ -51,14 +51,14 @@ public class AttributeTest {
         Attribute col2 = new Attribute(null, "table", "col2");
         Attribute col3 = new Attribute(null, "table2", "col1");
         Integer other = 42;
-        Assert.assertFalse(col1.equals(col2));
-        Assert.assertFalse(col1.equals(col3));
-        Assert.assertFalse(col1.equals(other));
-        Assert.assertFalse(col2.equals(col1));
-        Assert.assertFalse(col3.equals(col1));
-        Assert.assertFalse(other.equals(col1));
-        Assert.assertTrue(col1.equals(col1b));
-        Assert.assertFalse(col1.equals(null));
+        Assert.assertNotEquals(col1, col2);
+        Assert.assertNotEquals(col1, col3);
+        Assert.assertNotEquals(col1, other);
+        Assert.assertNotEquals(col2, col1);
+        Assert.assertNotEquals(col3, col1);
+        Assert.assertNotEquals(other, col1);
+        Assert.assertEquals(col1, col1b);
+        Assert.assertNotEquals(null, col1);
     }
 
     @Test
@@ -67,14 +67,14 @@ public class AttributeTest {
         Attribute schema1 = new Attribute("schema1", "table", "column");
         Attribute schema2 = new Attribute("schema2", "table", "column");
         Attribute schema2b = new Attribute("schema2", "table", "column");
-        Assert.assertFalse(schema0.equals(schema1));
-        Assert.assertFalse(schema1.equals(schema2));
-        Assert.assertTrue(schema2.equals(schema2b));
+        Assert.assertNotEquals(schema0, schema1);
+        Assert.assertNotEquals(schema1, schema2);
+        Assert.assertEquals(schema2, schema2b);
     }
 
     @Test
     public void testAttributeHashCode() {
-        Map<Attribute, String> map = new HashMap<Attribute, String>();
+        Map<Attribute, String> map = new HashMap<>();
         Attribute col1 = new Attribute(null, "table", "col1");
         Attribute col1b = new Attribute(null, "table", "col1");
         Attribute col2 = new Attribute(null, "table", "col2");
@@ -145,10 +145,8 @@ public class AttributeTest {
 
     @Test
     public void testRelationNameToString() {
-        Assert.assertEquals("table",
-                new RelationName(null, "table").toString());
-        Assert.assertEquals("schema.table",
-                new RelationName("schema", "table").toString());
+        Assert.assertEquals("table", new RelationName(null, "table").toString());
+        Assert.assertEquals("schema.table", new RelationName("schema", "table").toString());
     }
 
     @Test
@@ -160,9 +158,9 @@ public class AttributeTest {
 
     @Test
     public void testDifferentRelationNamesAreNotEqual() {
-        Assert.assertFalse(table1.equals(table2));
-        Assert.assertFalse(table2.equals(table1));
-        Assert.assertFalse(table1.hashCode() == table2.hashCode());
+        Assert.assertNotEquals(table1, table2);
+        Assert.assertNotEquals(table2, table1);
+        Assert.assertNotEquals(table1.hashCode(), table2.hashCode());
     }
 
     @Test
@@ -174,16 +172,16 @@ public class AttributeTest {
 
     @Test
     public void testDifferentSchemaNamesAreNotEqual() {
-        Assert.assertFalse(xTable1.equals(yTable1));
-        Assert.assertFalse(yTable1.equals(xTable1));
-        Assert.assertFalse(xTable1.hashCode() == yTable1.hashCode());
+        Assert.assertNotEquals(xTable1, yTable1);
+        Assert.assertNotEquals(yTable1, xTable1);
+        Assert.assertNotEquals(xTable1.hashCode(), yTable1.hashCode());
     }
 
     @Test
     public void testSchemaAndNoSchemaAreNotEqual() {
-        Assert.assertFalse(xTable1.equals(table1));
-        Assert.assertFalse(table1.equals(xTable1));
-        Assert.assertFalse(table1.hashCode() == xTable1.hashCode());
+        Assert.assertNotEquals(xTable1, table1);
+        Assert.assertNotEquals(table1, xTable1);
+        Assert.assertNotEquals(table1.hashCode(), xTable1.hashCode());
     }
 
     @Test

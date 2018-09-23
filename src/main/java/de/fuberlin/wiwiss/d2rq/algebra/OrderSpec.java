@@ -1,10 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.Collections;
-import java.util.List;
-
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+
+import java.util.Collections;
+import java.util.List;
 
 public class OrderSpec {
     public final static List<OrderSpec> NONE = Collections.emptyList();
@@ -33,11 +33,14 @@ public class OrderSpec {
         return ascending;
     }
 
+    @Override
     public String toString() {
         return (ascending ? "ASC(" : "DESC(") + expression + ")";
     }
 
+    @Override
     public boolean equals(Object other) {
+        if (this == other) return true;
         if (other instanceof OrderSpec) {
             return ascending == ((OrderSpec) other).ascending &&
                     expression.equals(((OrderSpec) other).expression);

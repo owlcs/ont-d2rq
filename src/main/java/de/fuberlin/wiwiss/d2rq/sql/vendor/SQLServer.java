@@ -113,6 +113,7 @@ public class SQLServer extends SQL92 {
             }
         }
 
+        @Override
         public String valueRegex() {
             return "^[01]$";
         }

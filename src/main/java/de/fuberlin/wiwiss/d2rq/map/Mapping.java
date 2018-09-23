@@ -99,7 +99,7 @@ public class Mapping implements AutoCloseable {
         for (TranslationTable table : translationTables.values()) {
             table.validate();
         }
-        Collection<ClassMap> classMapsWithoutProperties = new ArrayList<>(classMaps.values());
+        List<ClassMap> classMapsWithoutProperties = new ArrayList<>(classMaps.values());
         for (ClassMap classMap : classMaps.values()) {
             classMap.validate();    // Also validates attached bridges
             if (classMap.hasProperties()) {
@@ -279,6 +279,7 @@ public class Mapping implements AutoCloseable {
                 .withDefaultMappings(COMMON)
                 .setNsPrefix(D2RQ_PREFIX, D2RQ.getURI())
                 .setNsPrefix(JDBC_PREFIX, JDBC.getURI()).lock();
+
         public static final PrefixMapping SCHEMA = PrefixMapping.Factory.create()
                 .withDefaultMappings(COMMON)
                 .setNsPrefix("owl", OWL.getURI()).lock();

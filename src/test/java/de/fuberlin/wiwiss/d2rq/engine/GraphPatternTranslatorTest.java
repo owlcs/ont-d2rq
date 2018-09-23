@@ -179,11 +179,11 @@ public class GraphPatternTranslatorTest {
     private NodeRelation[] translate(String pattern, String mappingFile) {
         Collection<NodeRelation> rels = new GraphPatternTranslator(triplesToList(pattern),
                 MapFixture.loadPropertyBridges(mappingFile), true).translate();
-        return rels.toArray(new NodeRelation[rels.size()]);
+        return rels.toArray(new NodeRelation[0]);
     }
 
     private List<Triple> triplesToList(String pattern) {
-        List<Triple> results = new ArrayList<Triple>();
+        List<Triple> results = new ArrayList<>();
         String[] parts = pattern.split("\\s+\\.\\s*");
         for (String part : parts) {
             results.add(NodeCreateUtils.createTriple(MapFixture.prefixes(), part));

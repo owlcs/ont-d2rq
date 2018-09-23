@@ -1,16 +1,15 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-
+import de.fuberlin.wiwiss.d2rq.expr.Expression;
+import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.sparql.core.Var;
 
-import de.fuberlin.wiwiss.d2rq.expr.Expression;
-import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A collection of virtual triples obtained by applying a {@link Relation} to a
@@ -26,8 +25,7 @@ public class TripleRelation extends NodeRelation {
     public static final Var PREDICATE = Var.alloc("predicate");
     public static final Var OBJECT = Var.alloc("object");
 
-    private static final Set<Var> SPO =
-            new HashSet<Var>(Arrays.asList(new Var[]{SUBJECT, PREDICATE, OBJECT}));
+    private static final Set<Var> SPO = new HashSet<>(Arrays.asList(SUBJECT, PREDICATE, OBJECT));
 
     private static final TripleRelation EMPTY = fromNodeRelation(NodeRelation.empty(SPO));
 
@@ -68,7 +66,7 @@ public class TripleRelation extends NodeRelation {
         if (p.equals(NodeMaker.EMPTY)) return null;
         NodeMaker o = nodeMaker(OBJECT).selectNode(t.getObject(), newBase);
         if (o.equals(NodeMaker.EMPTY)) return null;
-        Set<ProjectionSpec> projections = new HashSet<ProjectionSpec>();
+        Set<ProjectionSpec> projections = new HashSet<>();
         projections.addAll(s.projectionSpecs());
         projections.addAll(p.projectionSpecs());
         projections.addAll(o.projectionSpecs());

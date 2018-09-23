@@ -15,6 +15,7 @@ public interface Quoter {
             this.quote = quote;
         }
 
+        @Override
         public String quote(String s) {
             return quote + pattern.matcher(s).replaceAll("$1$1") + quote;
         }

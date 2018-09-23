@@ -1,5 +1,12 @@
 package de.fuberlin.wiwiss.d2rq.sql.vendor;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.expr.BooleanToIntegerCaseExpression;
+import de.fuberlin.wiwiss.d2rq.expr.Expression;
+import de.fuberlin.wiwiss.d2rq.expr.SQLExpression;
+import de.fuberlin.wiwiss.d2rq.map.Database;
+import de.fuberlin.wiwiss.d2rq.sql.types.*;
+
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.text.DateFormat;
@@ -9,13 +16,6 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.expr.BooleanToIntegerCaseExpression;
-import de.fuberlin.wiwiss.d2rq.expr.Expression;
-import de.fuberlin.wiwiss.d2rq.expr.SQLExpression;
-import de.fuberlin.wiwiss.d2rq.map.Database;
-import de.fuberlin.wiwiss.d2rq.sql.types.*;
 
 /**
  * This syntax class implements MySQL-compatible SQL syntax.
@@ -88,17 +88,14 @@ public class Oracle extends SQL92 {
     }
 
     @Override
-    public void initializeConnection(Connection connection) throws SQLException {
+    public void initializeConnection(Connection connection) {
         // Set Oracle date formats
-        Statement stmt = connection.createStatement();
-        try {
+        try (Statement stmt = connection.createStatement()) {
             stmt.execute("ALTER SESSION SET NLS_DATE_FORMAT = 'SYYYY-MM-DD'");
             stmt.execute("ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'SYYYY-MM-DD HH24:MI:SS'");
             setSessionTimeZone(connection, getTimeZoneForSession().getID());
         } catch (Exception ex) {
             throw new D2RQException(ex);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -195,7 +192,7 @@ public class Oracle extends SQL92 {
         }
 
         @Override
-        public String value(ResultSet resultSet, int column) throws SQLException {
+        public String value(ResultSet resultSet, int column) {
             // Hack for Oracle TIMESTAMP WITH TIME ZONE data type
             try {
                 return super.value(resultSet, column);

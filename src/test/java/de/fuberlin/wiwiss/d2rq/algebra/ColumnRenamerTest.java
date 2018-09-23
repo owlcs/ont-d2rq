@@ -23,7 +23,7 @@ public class ColumnRenamerTest {
 
     @Before
     public void setUp() {
-        Map<Attribute, Attribute> m = new HashMap<Attribute, Attribute>();
+        Map<Attribute, Attribute> m = new HashMap<>();
         m.put(col1, col2);
         this.col1ToCol2 = new ColumnRenamerMap(m);
     }
@@ -73,7 +73,7 @@ public class ColumnRenamerTest {
 
     @Test
     public void testToStringTwoAliases() {
-        Map<Attribute, Attribute> m = new HashMap<Attribute, Attribute>();
+        Map<Attribute, Attribute> m = new HashMap<>();
         m.put(col1, col3);
         m.put(col2, col3);
         // Order is alphabetical by original column name

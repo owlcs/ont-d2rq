@@ -49,8 +49,8 @@ public class ClassMap extends ResourceMap {
         return this.database;
     }
 
-    public void addClass(Resource class_) {
-        this.classes.add(class_);
+    public void addClass(Resource clazz) {
+        this.classes.add(clazz);
     }
 
     public void addPropertyBridge(PropertyBridge bridge) {
@@ -100,11 +100,11 @@ public class ClassMap extends ResourceMap {
         for (PropertyBridge bridge : propertyBridges) {
             this.compiledPropertyBridges.addAll(bridge.toTripleRelations());
         }
-        for (Resource class_ : classes) {
+        for (Resource clazz : classes) {
             PropertyBridge bridge = new PropertyBridge(this.resource);
             bridge.setBelongsToClassMap(this);
             bridge.addProperty(RDF.type);
-            bridge.setConstantValue(class_);
+            bridge.setConstantValue(clazz);
             this.compiledPropertyBridges.addAll(bridge.toTripleRelations());
         }
     }

@@ -80,9 +80,8 @@ public class TransformOpBGP extends TransformCopy {
         return op;
     }
 
-    private List<NodeRelation> applyFilter(
-            List<NodeRelation> nodeRelations, Expr filter, ExprList allFilters) {
-        List<NodeRelation> result = new ArrayList<NodeRelation>();
+    private List<NodeRelation> applyFilter(List<NodeRelation> nodeRelations, Expr filter, ExprList allFilters) {
+        List<NodeRelation> result = new ArrayList<>();
         boolean convertable = true;
         for (NodeRelation nodeRelation : nodeRelations) {
             // TODO: The transformation from Expr to Expression should happen in NodeRelation.select()

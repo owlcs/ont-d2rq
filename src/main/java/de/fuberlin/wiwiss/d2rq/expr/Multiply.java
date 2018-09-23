@@ -9,11 +9,14 @@ public class Multiply extends BinaryOperator {
         super(expr1, expr2, "*");
     }
 
+    @Override
     public Expression renameAttributes(ColumnRenamer columnRenamer) {
         return new Multiply(expr1.renameAttributes(columnRenamer), expr2.renameAttributes(columnRenamer));
     }
 
+    @Override
     public boolean equals(Object other) {
+        if (this == other) return true;
         if (!(other instanceof Multiply)) {
             return false;
         }

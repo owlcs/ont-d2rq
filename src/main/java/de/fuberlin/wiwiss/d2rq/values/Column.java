@@ -58,8 +58,7 @@ public class Column implements ValueMaker {
 
     @Override
     public List<OrderSpec> orderSpecs(boolean ascending) {
-        return Collections.singletonList(
-                new OrderSpec(new AttributeExpr(attribute), ascending));
+        return Collections.singletonList(new OrderSpec(new AttributeExpr(attribute), ascending));
     }
 
     @Override

@@ -70,6 +70,7 @@ public class RelationName implements Comparable<RelationName> {
         return this.caseUnspecified;
     }
 
+    @Override
     public int hashCode() {
         return this.qualifiedName.hashCode();
     }
@@ -79,7 +80,9 @@ public class RelationName implements Comparable<RelationName> {
      * they share the same name and schema, or they
      * share the same name and both have no schema.
      */
+    @Override
     public boolean equals(Object otherObject) {
+        if (this == otherObject) return true;
         if (!(otherObject instanceof RelationName)) {
             return false;
         }
@@ -91,6 +94,7 @@ public class RelationName implements Comparable<RelationName> {
             return this.qualifiedName.equals(other.qualifiedName);
     }
 
+    @Override
     public String toString() {
         return this.qualifiedName;
     }
@@ -100,6 +104,7 @@ public class RelationName implements Comparable<RelationName> {
      * Relations without schema are ordered by table name, those with
      * schema are ordered by schema name.
      */
+    @Override
     public int compareTo(RelationName other) {
         if (this.schemaName == null && other.schemaName == null) {
             return this.tableName.compareTo(other.tableName);

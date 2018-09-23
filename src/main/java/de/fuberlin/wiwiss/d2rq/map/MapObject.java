@@ -34,8 +34,7 @@ public abstract class MapObject {
         if (object == null) {
             return;
         }
-        throw new D2RQException("Duplicate " + PrettyPrinter.toString(property) +
-                " for " + this, errorCode);
+        throw new D2RQException("Duplicate " + PrettyPrinter.toString(property) + " for " + this, errorCode);
     }
 
     protected void assertHasBeenDefined(Object object, Property property, int errorCode) {

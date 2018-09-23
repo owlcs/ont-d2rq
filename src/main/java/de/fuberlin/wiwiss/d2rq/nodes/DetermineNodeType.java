@@ -42,9 +42,10 @@ public class DetermineNodeType implements NodeSetFilter {
         return limitedToLiterals;
     }
 
+    @Override
     public void limitTo(Node node) {
-        LOGGER.debug("limitting to {}", node);
-
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("limitting to {}", node);
         if (node.isURI())
             limitedToURIs = true;
         else if (node.isLiteral())
@@ -53,56 +54,66 @@ public class DetermineNodeType implements NodeSetFilter {
             limitedToBlankNodes = true;
     }
 
+    @Override
     public void limitToBlankNodes() {
-        LOGGER.debug("limitting to blank nodes");
-
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("limitting to blank nodes");
         limitedToBlankNodes = true;
     }
 
+    @Override
     public void limitToEmptySet() {
         LOGGER.warn("TODO DetermineNodeType.limitToEmptySet()");
     }
 
+    @Override
     public void limitToLiterals(String language, RDFDatatype datatype) {
-        LOGGER.debug("limitting to literals");
-
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("limitting to literals");
         limitedToLiterals = true;
         this.datatype = datatype;
         this.language = language;
     }
 
+    @Override
     public void limitToURIs() {
-        LOGGER.debug("limitting to URIs");
-
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("limitting to URIs");
         limitedToURIs = true;
     }
 
     // FIXME Implement!
+    @Override
     public void limitValues(String constant) {
         LOGGER.warn("TODO DetermineNodeType.limitValues() {}", constant);
     }
 
     // FIXME Implement!
+    @Override
     public void limitValuesToAttribute(Attribute attribute) {
         LOGGER.warn("TODO DetermineNodeType.limitValuesToAttribute() {}", attribute);
     }
 
     // FIXME Implement!
+    @Override
     public void limitValuesToBlankNodeID(BlankNodeID id) {
         LOGGER.warn("TODO DetermineNodeType.limitValuesToBlankNodeID() {}", id);
     }
 
     // FIXME Implement!
+    @Override
     public void limitValuesToExpression(Expression expression) {
         LOGGER.warn("TODO DetermineNodeType.limitValuesToExpression() {}", expression);
     }
 
     // FIXME Implement!
+    @Override
     public void limitValuesToPattern(Pattern pattern) {
         LOGGER.warn("TODO DetermineNodeType.limitValuesToPattern() {}", pattern);
     }
 
     // FIXME Implement!
+    @Override
     public void setUsesTranslator(Translator translator) {
         if (translator != Translator.IDENTITY) {
             LOGGER.warn("TODO DetermineNodeType.setUsesTranslator() {}", translator);

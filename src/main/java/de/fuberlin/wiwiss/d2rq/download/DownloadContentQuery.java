@@ -94,7 +94,7 @@ public class DownloadContentQuery {
         NodeMaker x = downloadMap.nodeMaker().selectNode(NodeFactory.createURI(uri), newRelation);
         // URI didn't fit the node maker
         if (x.equals(NodeMaker.EMPTY)) return;
-        Set<ProjectionSpec> requiredProjections = new HashSet<ProjectionSpec>();
+        Set<ProjectionSpec> requiredProjections = new HashSet<>();
         requiredProjections.add(downloadMap.getContentDownloadColumn());
         requiredProjections.addAll(mediaTypeValueMaker.projectionSpecs());
         newRelation.project(requiredProjections);

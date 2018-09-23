@@ -16,6 +16,7 @@ public class ColumnRenamerMap extends ColumnRenamer {
         this.originalsToReplacements = originalsToReplacements;
     }
 
+    @Override
     public Attribute applyTo(Attribute original) {
         if (this.originalsToReplacements.containsKey(original)) {
             return this.originalsToReplacements.get(original);
@@ -23,10 +24,12 @@ public class ColumnRenamerMap extends ColumnRenamer {
         return original;
     }
 
+    @Override
     public AliasMap applyTo(AliasMap aliases) {
         return aliases;
     }
 
+    @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
         result.append("ColumnRenamerMap(");

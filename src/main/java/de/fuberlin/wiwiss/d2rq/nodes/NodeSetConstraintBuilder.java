@@ -32,33 +32,37 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
     private final static int NODE_TYPE_LITERAL = 2;
     private final static int NODE_TYPE_BLANK = 3;
 
-    private boolean isEmpty = false;
-    private boolean unsupported = false;
+    private boolean isEmpty;
+    private boolean unsupported;
     private int type = NODE_TYPE_UNKNOWN;
-    private String constantValue = null;
-    private String constantLanguage = null;
-    private RDFDatatype constantDatatype = null;
-    private Node fixedNode = null;
-    private Collection<Attribute> attributes = new HashSet<Attribute>();
-    private Collection<Pattern> patterns = new HashSet<Pattern>();
-    private Collection<Expression> expressions = new HashSet<Expression>();
-    private Collection<BlankNodeID> blankNodeIDs = new HashSet<BlankNodeID>();
-    private Set<Translator> translators = new HashSet<Translator>();
+    private String constantValue;
+    private String constantLanguage;
+    private RDFDatatype constantDatatype;
+    private Node fixedNode;
+    private Collection<Attribute> attributes = new HashSet<>();
+    private Collection<Pattern> patterns = new HashSet<>();
+    private Collection<Expression> expressions = new HashSet<>();
+    private Collection<BlankNodeID> blankNodeIDs = new HashSet<>();
+    private Set<Translator> translators = new HashSet<>();
     private String valueStart = "";
     private String valueEnd = "";
 
+    @Override
     public void limitToEmptySet() {
         isEmpty = true;
     }
 
+    @Override
     public void limitToURIs() {
         limitToNodeType(NODE_TYPE_URI);
     }
 
+    @Override
     public void limitToBlankNodes() {
         limitToNodeType(NODE_TYPE_BLANK);
     }
 
+    @Override
     public void limitToLiterals(String language, RDFDatatype datatype) {
         if (isEmpty) return;
         limitToNodeType(NODE_TYPE_LITERAL);
@@ -90,6 +94,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
         limitToEmptySet();
     }
 
+    @Override
     public void limitTo(Node node) {
         if (isEmpty) return;
         if (Node.ANY.equals(node) || node.isVariable()) {
@@ -114,6 +119,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
         }
     }
 
+    @Override
     public void limitValues(String constant) {
         if (isEmpty) return;
         if (constantValue == null) {
@@ -146,11 +152,13 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
         }
     }
 
+    @Override
     public void limitValuesToAttribute(Attribute attribute) {
         if (isEmpty) return;
         attributes.add(attribute);
     }
 
+    @Override
     public void limitValuesToBlankNodeID(BlankNodeID id) {
         if (isEmpty) return;
         if (!blankNodeIDs.isEmpty()) {
@@ -162,6 +170,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
         blankNodeIDs.add(id);
     }
 
+    @Override
     public void limitValuesToPattern(Pattern pattern) {
         if (isEmpty) return;
         patterns.add(pattern);
@@ -182,11 +191,13 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
         }
     }
 
+    @Override
     public void limitValuesToExpression(Expression expression) {
         if (isEmpty) return;
         expressions.add(expression);
     }
 
+    @Override
     public void setUsesTranslator(Translator translator) {
         translators.add(translator);
         if (translators.size() > 1) {
@@ -199,7 +210,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
     }
 
     private List<Expression> matchPatterns(Pattern p1, Pattern p2) {
-        List<Expression> results = new ArrayList<Expression>(p1.attributes().size());
+        List<Expression> results = new ArrayList<>(p1.attributes().size());
         if (p1.isEquivalentTo(p2)) {
             for (int i = 0; i < p1.attributes().size(); i++) {
                 Attribute col1 = p1.attributes().get(i);
@@ -218,7 +229,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
     }
 
     private List<Expression> matchBlankNodeIDs(BlankNodeID id1, BlankNodeID id2) {
-        List<Expression> results = new ArrayList<Expression>(id1.attributes().size());
+        List<Expression> results = new ArrayList<>(id1.attributes().size());
         for (int i = 0; i < id1.attributes().size(); i++) {
             Attribute col1 = id1.attributes().get(i);
             Attribute col2 = id2.attributes().get(i);
@@ -231,7 +242,7 @@ public class NodeSetConstraintBuilder implements NodeSetFilter {
         if (isEmpty()) {
             return Expression.FALSE;
         }
-        List<Expression> translated = new ArrayList<Expression>();
+        List<Expression> translated = new ArrayList<>();
         if (attributes.size() >= 2) {
             Iterator<Attribute> it = attributes.iterator();
             Attribute first = it.next();

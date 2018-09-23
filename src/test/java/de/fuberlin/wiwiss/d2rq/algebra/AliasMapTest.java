@@ -90,43 +90,43 @@ public class AliasMapTest {
     @Test
     public void testNoAliasesConstantEqualsNewEmptyAliasMap() {
         AliasMap noAliases = new AliasMap(Collections.emptyList());
-        Assert.assertTrue(AliasMap.NO_ALIASES.equals(noAliases));
-        Assert.assertTrue(noAliases.equals(AliasMap.NO_ALIASES));
+        Assert.assertEquals(AliasMap.NO_ALIASES, noAliases);
+        Assert.assertEquals(noAliases, AliasMap.NO_ALIASES);
     }
 
     @Test
     public void testEmptyMapEqualsItself() {
-        Assert.assertTrue(AliasMap.NO_ALIASES.equals(AliasMap.NO_ALIASES));
+        Assert.assertEquals(AliasMap.NO_ALIASES, AliasMap.NO_ALIASES);
     }
 
     @Test
     public void testEmptyMapDoesntEqualPopulatedMap() {
-        Assert.assertFalse(AliasMap.NO_ALIASES.equals(fooAsBarMap));
+        Assert.assertNotEquals(AliasMap.NO_ALIASES, fooAsBarMap);
     }
 
     @Test
     public void testPopulatedMapDoesntEqualEmptyMap() {
-        Assert.assertFalse(fooAsBarMap.equals(AliasMap.NO_ALIASES));
+        Assert.assertNotEquals(fooAsBarMap, AliasMap.NO_ALIASES);
     }
 
     @Test
     public void testPopulatedMapEqualsItself() {
         AliasMap fooAsBar2 = new AliasMap(Collections.singleton(new Alias(foo, bar)));
-        Assert.assertTrue(fooAsBarMap.equals(fooAsBar2));
-        Assert.assertTrue(fooAsBar2.equals(fooAsBarMap));
+        Assert.assertEquals(fooAsBarMap, fooAsBar2);
+        Assert.assertEquals(fooAsBar2, fooAsBarMap);
     }
 
     @Test
     public void testPopulatedMapDoesNotEqualDifferentMap() {
         AliasMap fooAsBaz = new AliasMap(Collections.singleton(new Alias(foo, baz)));
-        Assert.assertFalse(fooAsBarMap.equals(fooAsBaz));
-        Assert.assertFalse(fooAsBaz.equals(fooAsBarMap));
+        Assert.assertNotEquals(fooAsBarMap, fooAsBaz);
+        Assert.assertNotEquals(fooAsBaz, fooAsBarMap);
     }
 
     @Test
     public void testEqualMapsHaveSameHashCode() {
-        AliasMap m1 = new AliasMap(new ArrayList<Alias>());
-        AliasMap m2 = new AliasMap(new ArrayList<Alias>());
+        AliasMap m1 = new AliasMap(new ArrayList<>());
+        AliasMap m2 = new AliasMap(new ArrayList<>());
         Assert.assertEquals(m1.hashCode(), m2.hashCode());
     }
 
@@ -140,12 +140,12 @@ public class AliasMapTest {
 
     @Test
     public void testAliasNotEquals() {
-        Assert.assertFalse(fooAsBar.equals(fooAsBaz));
-        Assert.assertFalse(fooAsBaz.equals(fooAsBar));
-        Assert.assertFalse(fooAsBar.equals(bazAsBar));
-        Assert.assertFalse(bazAsBar.equals(fooAsBar));
-        Assert.assertFalse(fooAsBar.hashCode() == fooAsBaz.hashCode());
-        Assert.assertFalse(fooAsBar.hashCode() == bazAsBar.hashCode());
+        Assert.assertNotEquals(fooAsBar, fooAsBaz);
+        Assert.assertNotEquals(fooAsBaz, fooAsBar);
+        Assert.assertNotEquals(fooAsBar, bazAsBar);
+        Assert.assertNotEquals(bazAsBar, fooAsBar);
+        Assert.assertNotEquals(fooAsBar.hashCode(), fooAsBaz.hashCode());
+        Assert.assertNotEquals(fooAsBar.hashCode(), bazAsBar.hashCode());
     }
 
     @Test

@@ -270,12 +270,12 @@ public class TransformFilterCNF extends TransformCopy {
 
         @Override
         public void visit(ExprFunction1 curExpr) {
-            Expr subExpr;
+            ExprFunction1 subExpr;
             if (curExpr instanceof E_LogicalNot) {
                 subExpr = curExpr;
                 // step down
                 this.resultExpr = curExpr;
-                ((ExprFunction1) subExpr).getArg().visit(this);
+                subExpr.getArg().visit(this);
                 this.resultExpr = new E_LogicalNot(this.resultExpr);
             } else {
                 this.resultExpr = curExpr;

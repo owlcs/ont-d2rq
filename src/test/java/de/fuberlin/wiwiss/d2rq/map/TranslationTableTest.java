@@ -13,7 +13,7 @@ import org.junit.Test;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class TranslationTableTest {
-    Resource table1 = ResourceFactory.createResource("http://test/table1");
+    private Resource table1 = ResourceFactory.createResource("http://test/table1");
 
     @Test
     public void testNewTranslationTableIsEmpty() {
@@ -72,11 +72,11 @@ public class TranslationTableTest {
         Translation t1 = new Translation("foo", "bar");
         Translation t2 = new Translation("foo", "bar2");
         Translation t3 = new Translation("foo2", "bar");
-        Assert.assertFalse(t1.equals(t2));
-        Assert.assertFalse(t2.equals(t1));
-        Assert.assertFalse(t1.hashCode() == t2.hashCode());
-        Assert.assertFalse(t1.equals(t3));
-        Assert.assertFalse(t3.equals(t1));
-        Assert.assertFalse(t1.hashCode() == t3.hashCode());
+        Assert.assertNotEquals(t1, t2);
+        Assert.assertNotEquals(t2, t1);
+        Assert.assertNotEquals(t1.hashCode(), t2.hashCode());
+        Assert.assertNotEquals(t1, t3);
+        Assert.assertNotEquals(t3, t1);
+        Assert.assertNotEquals(t1.hashCode(), t3.hashCode());
     }
 }

@@ -52,8 +52,7 @@ public class Database extends MapObject {
     }
 
     public void setJDBCDriver(String jdbcDriver) {
-        assertNotYetDefined(this.jdbcDriver, D2RQ.jdbcDriver,
-                D2RQException.DATABASE_DUPLICATE_JDBCDRIVER);
+        assertNotYetDefined(this.jdbcDriver, D2RQ.jdbcDriver, D2RQException.DATABASE_DUPLICATE_JDBCDRIVER);
         checkNotConnected();
         this.jdbcDriver = jdbcDriver;
     }
@@ -63,8 +62,7 @@ public class Database extends MapObject {
     }
 
     public void setUsername(String username) {
-        assertNotYetDefined(this.username, D2RQ.username,
-                D2RQException.DATABASE_DUPLICATE_USERNAME);
+        assertNotYetDefined(this.username, D2RQ.username, D2RQException.DATABASE_DUPLICATE_USERNAME);
         checkNotConnected();
         this.username = username;
     }
@@ -74,8 +72,7 @@ public class Database extends MapObject {
     }
 
     public void setPassword(String password) {
-        assertNotYetDefined(this.password, D2RQ.password,
-                D2RQException.DATABASE_DUPLICATE_PASSWORD);
+        assertNotYetDefined(this.password, D2RQ.password, D2RQException.DATABASE_DUPLICATE_PASSWORD);
         checkNotConnected();
         this.password = password;
     }
@@ -149,8 +146,7 @@ public class Database extends MapObject {
 
     public void setStartupSQLScript(Resource script) {
         checkNotConnected();
-        assertNotYetDefined(startupSQLScript, D2RQ.startupSQLScript,
-                D2RQException.DATABASE_DUPLICATE_STARTUPSCRIPT);
+        assertNotYetDefined(startupSQLScript, D2RQ.startupSQLScript, D2RQException.DATABASE_DUPLICATE_STARTUPSCRIPT);
         startupSQLScript = script.getURI();
     }
 
@@ -171,37 +167,38 @@ public class Database extends MapObject {
     }
 
     public ConnectedDB connectedDB() {
-        if (this.connection == null) {
-            if (jdbcDriver != null) {
-                ConnectedDB.registerJDBCDriver(jdbcDriver);
-            }
-            connection = new ConnectedDB(jdbcDSN, username, password,
-                    columnTypes, limit, fetchSize, connectionProperties);
-            if (startupSQLScript != null) {
-                try {
-                    URI url = URI.create(startupSQLScript);
-                    SQLScriptLoader.loadURI(url, connection.connection());
-                } catch (IOException | SQLException ex) {
-                    connection.close();
-                    throw new D2RQException(ex);
-                }
+        if (this.connection != null) {
+            return connection;
+        }
+        if (jdbcDriver != null) {
+            ConnectedDB.registerJDBCDriver(jdbcDriver);
+        }
+        this.connection = new ConnectedDB(jdbcDSN, username, password,
+                columnTypes, limit, fetchSize, connectionProperties);
+        if (startupSQLScript != null) {
+            try {
+                URI url = URI.create(startupSQLScript);
+                SQLScriptLoader.loadURI(url, this.connection.connection());
+            } catch (IOException | SQLException ex) {
+                this.connection.close();
+                throw new D2RQException(ex);
             }
         }
         return connection;
     }
 
+    @Override
     public String toString() {
         return "d2rq:Database " + super.toString();
     }
 
+    @Override
     public void validate() throws D2RQException {
         if (this.jdbcDSN == null) {
-            throw new D2RQException("d2rq:Database must have d2rq:jdbcDSN",
-                    D2RQException.DATABASE_MISSING_DSN);
+            throw new D2RQException("d2rq:Database must have d2rq:jdbcDSN", D2RQException.DATABASE_MISSING_DSN);
         }
         if (this.jdbcDriver == null) {
-            throw new D2RQException("Missing d2rq:jdbcDriver",
-                    D2RQException.DATABASE_MISSING_JDBCDRIVER);
+            throw new D2RQException("Missing d2rq:jdbcDriver", D2RQException.DATABASE_MISSING_JDBCDRIVER);
         }
         // TODO
     }

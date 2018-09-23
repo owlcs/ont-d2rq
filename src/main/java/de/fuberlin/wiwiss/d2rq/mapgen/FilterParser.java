@@ -1,15 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.mapgen;
 
+import de.fuberlin.wiwiss.d2rq.mapgen.Filter.IdentifierMatcher;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import de.fuberlin.wiwiss.d2rq.mapgen.Filter.IdentifierMatcher;
-
 public class FilterParser {
     private final String s;
-    private final List<List<IdentifierMatcher>> result =
-            new ArrayList<List<IdentifierMatcher>>();
+    private final List<List<IdentifierMatcher>> result = new ArrayList<>();
     private int index = 0;
 
     public FilterParser(String filterSpec) {
@@ -17,7 +16,7 @@ public class FilterParser {
     }
 
     public Filter parseSchemaFilter() throws ParseException {
-        List<Filter> result = new ArrayList<Filter>();
+        List<Filter> result = new ArrayList<>();
         for (List<IdentifierMatcher> list : parse()) {
             if (list.size() != 1) {
                 throw new ParseException("Syntax error in schema filter list; expected list of comma- or newline-separated schema names: '" + s + "'");
@@ -28,7 +27,7 @@ public class FilterParser {
     }
 
     public Filter parseTableFilter(boolean matchParents) throws ParseException {
-        List<Filter> result = new ArrayList<Filter>();
+        List<Filter> result = new ArrayList<>();
         for (List<IdentifierMatcher> list : parse()) {
             if (list.size() < 1 || list.size() > 2) {
                 throw new ParseException("Syntax error in table filter list; expected list of comma- or newline-separated names in [schema.]table notation: '" + s + "'");
@@ -43,7 +42,7 @@ public class FilterParser {
     }
 
     public Filter parseColumnFilter(boolean matchParents) throws ParseException {
-        List<Filter> result = new ArrayList<Filter>();
+        List<Filter> result = new ArrayList<>();
         for (List<IdentifierMatcher> list : parse()) {
             if (list.size() < 2 || list.size() > 3) {
                 throw new ParseException("Syntax error in column filter list; expected list of comma- or newline-separated names in [schema.]table.column notation: '" + s + "'");
@@ -60,7 +59,7 @@ public class FilterParser {
     public List<List<IdentifierMatcher>> parse() throws ParseException {
         eatSeparators();
         while (!atEnd()) {
-            List<IdentifierMatcher> list = new ArrayList<IdentifierMatcher>();
+            List<IdentifierMatcher> list = new ArrayList<>();
             while (!atEnd()) {
                 if (current() == '/') {
                     list.add(parseRegex());

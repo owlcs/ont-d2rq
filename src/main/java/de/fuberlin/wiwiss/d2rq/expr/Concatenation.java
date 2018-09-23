@@ -73,6 +73,7 @@ public class Concatenation extends Expression {
 
     @Override
     public boolean equals(Object other) {
+        if (this == other) return true;
         if (!(other instanceof Concatenation)) return false;
         return parts.equals(((Concatenation) other).parts);
     }

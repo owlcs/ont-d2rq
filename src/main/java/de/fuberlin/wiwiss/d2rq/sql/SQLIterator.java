@@ -26,13 +26,13 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
     private String sql;
     private List<ProjectionSpec> columns;
     private ConnectedDB database;
-    private volatile Statement statement = null;
-    private ResultSet resultSet = null;
-    private ResultRow prefetchedRow = null;
-    private int numCols = 0;
-    private boolean queryExecuted = false;
-    private boolean explicitlyClosed = false;
-    private volatile boolean cancelled = false;
+    private volatile Statement statement;
+    private ResultSet resultSet;
+    private ResultRow prefetchedRow;
+    private int numCols;
+    private boolean queryExecuted;
+    private boolean explicitlyClosed;
+    private volatile boolean cancelled;
 
     public SQLIterator(String sql, List<ProjectionSpec> columns, ConnectedDB db) {
         this.sql = sql;
@@ -40,6 +40,7 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
         this.database = db;
     }
 
+    @Override
     public boolean hasNext() {
         if (cancelled) {
             throw new QueryCancelledException();
@@ -57,6 +58,7 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
     /**
      * @return The next query ResultRow.
      */
+    @Override
     public ResultRow next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
@@ -89,6 +91,7 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
     /**
      * Make sure the SQL result set is closed and freed. Will auto-close when the record-set is exhausted.
      */
+    @Override
     public void close() {
         if (explicitlyClosed) return;
         if (LOGGER.isDebugEnabled())
@@ -127,6 +130,7 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
         }
     }
 
+    @Override
     public void remove() {
         throw new RuntimeException("Operation not supported");
     }

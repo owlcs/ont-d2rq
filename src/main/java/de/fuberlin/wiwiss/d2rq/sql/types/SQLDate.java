@@ -8,8 +8,7 @@ import java.sql.SQLException;
 import java.util.regex.Pattern;
 
 public class SQLDate extends DataType {
-    private final static Pattern DATE_PATTERN =
-            Pattern.compile("^\\d?\\d?\\d?\\d-\\d\\d-\\d\\d$");
+    private final static Pattern DATE_PATTERN = Pattern.compile("^\\d?\\d?\\d?\\d-\\d\\d-\\d\\d$");
 
     public SQLDate(Vendor syntax, String name) {
         super(syntax, name);

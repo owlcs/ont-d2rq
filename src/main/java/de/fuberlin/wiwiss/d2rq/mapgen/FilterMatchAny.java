@@ -20,6 +20,7 @@ public class FilterMatchAny extends Filter {
         this.elements = elements;
     }
 
+    @Override
     public boolean matchesSchema(String schema) {
         for (Filter filter : elements) {
             if (filter.matchesSchema(schema)) return true;
@@ -27,6 +28,7 @@ public class FilterMatchAny extends Filter {
         return false;
     }
 
+    @Override
     public boolean matchesTable(String schema, String table) {
         for (Filter filter : elements) {
             if (filter.matchesTable(schema, table)) return true;
@@ -34,6 +36,7 @@ public class FilterMatchAny extends Filter {
         return false;
     }
 
+    @Override
     public boolean matchesColumn(String schema, String table, String column) {
         for (Filter filter : elements) {
             if (filter.matchesColumn(schema, table, column)) return true;
@@ -41,6 +44,7 @@ public class FilterMatchAny extends Filter {
         return false;
     }
 
+    @Override
     public String getSingleSchema() {
         String result = null;
         for (Filter filter : elements) {
@@ -54,6 +58,7 @@ public class FilterMatchAny extends Filter {
         return null;
     }
 
+    @Override
     public String toString() {
         if (elements.size() == 0) {
             return "any(-)";

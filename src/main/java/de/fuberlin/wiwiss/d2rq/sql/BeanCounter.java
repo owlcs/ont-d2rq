@@ -60,7 +60,7 @@ public class BeanCounter implements Cloneable {
     }
 
     // Creating Instances (convenience methods)
-
+    @Override
     public Object clone() {
         try {
             return super.clone();

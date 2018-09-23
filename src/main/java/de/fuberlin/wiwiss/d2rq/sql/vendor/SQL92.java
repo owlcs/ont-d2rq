@@ -46,8 +46,7 @@ public class SQL92 implements Vendor {
     }
 
     @Override
-    public String getRelationNameAliasExpression(RelationName relationName,
-                                                 RelationName aliasName) {
+    public String getRelationNameAliasExpression(RelationName relationName, RelationName aliasName) {
         return quoteRelationName(relationName) + (useAS ? " AS " : " ") + quoteRelationName(aliasName);
     }
 

@@ -24,14 +24,14 @@ public class SelectStatementBuilder {
     private ConnectedDB database;
     private List<ProjectionSpec> selectSpecs = new ArrayList<>(10);
     private List<Expression> conditions = new ArrayList<>();
-    private Expression cachedCondition = null;
+    private Expression cachedCondition;
     private boolean eliminateDuplicates;
     private AliasMap aliases;
     private Collection<RelationName> mentionedTables = new HashSet<>(5); // in their alias forms
     private List<OrderSpec> orderSpecs;
     private int limit;
 
-    public SelectStatementBuilder(Relation relation) {
+    public SelectStatementBuilder(Relation relation) throws D2RQException {
         if (relation.isTrivial()) {
             throw new IllegalArgumentException("Cannot create SQL for trivial relation");
         }
@@ -58,16 +58,19 @@ public class SelectStatementBuilder {
 
         addMentionedTablesFromConditions();
 
-        if (eliminateDuplicates) {
-            for (ProjectionSpec projection : selectSpecs) {
-                for (Attribute column : projection.requiredAttributes()) {
-                    if (!database.columnType(aliases.originalOf(column)).supportsDistinct()) {
-                        LOGGER.info("Attempting to apply DISTINCT to relation: {}", relation);
-                        throw new D2RQException(String.format("Bug in engine logic: DISTINCT used with datatype (%s) that doesn't support it",
-                                database.columnType(column)),
-                                D2RQException.DATATYPE_DOES_NOT_SUPPORT_DISTINCT);
-                    }
-                }
+        if (!eliminateDuplicates) {
+            return;
+        }
+        for (ProjectionSpec projection : selectSpecs) {
+            for (Attribute column : projection.requiredAttributes()) {
+                if (database.columnType(aliases.originalOf(column)).supportsDistinct())
+                    continue;
+
+                LOGGER.info("Attempting to apply DISTINCT to relation: {}", relation);
+                throw new D2RQException(String.format("Bug in engine logic: DISTINCT used with datatype (%s) that doesn't support it",
+                        database.columnType(column)),
+                        D2RQException.DATATYPE_DOES_NOT_SUPPORT_DISTINCT);
+
             }
         }
     }
@@ -157,7 +160,7 @@ public class SelectStatementBuilder {
     /**
      * Adds a {@link ProjectionSpec} to the SELECT part of the query.
      *
-     * @param projection
+     * @param projection {@link ProjectionSpec}
      */
     private void addSelectSpec(ProjectionSpec projection) {
         if (this.selectSpecs.contains(projection)) {

@@ -1,12 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.util.*;
-
-import org.apache.jena.graph.Triple;
-
 import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import org.apache.jena.graph.Triple;
+
+import java.util.*;
 
 /**
  * Matches a BGP against a collection of {@link TripleRelation}s
@@ -21,10 +20,11 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 public class GraphPatternTranslator {
     private final List<Triple> triplePatterns;
     private final Collection<TripleRelation> tripleRelations;
-    boolean useAllOptimizations;
+    private boolean useAllOptimizations;
 
     public GraphPatternTranslator(List<Triple> triplePatterns,
-                                  Collection<TripleRelation> tripleRelations, boolean useAllOptimizations) {
+                                  Collection<TripleRelation> tripleRelations,
+                                  boolean useAllOptimizations) {
         this.triplePatterns = triplePatterns;
         this.tripleRelations = tripleRelations;
         this.useAllOptimizations = useAllOptimizations;
@@ -38,7 +38,7 @@ public class GraphPatternTranslator {
             return Collections.singletonList(NodeRelation.TRUE);
         }
         Iterator<Triple> it = triplePatterns.iterator();
-        List<CandidateList> candidateLists = new ArrayList<CandidateList>(triplePatterns.size());
+        List<CandidateList> candidateLists = new ArrayList<>(triplePatterns.size());
         int index = 1;
         while (it.hasNext()) {
             Triple triplePattern = it.next();
@@ -54,16 +54,16 @@ public class GraphPatternTranslator {
             index++;
         }
         Collections.sort(candidateLists);
-        List<TripleRelationJoiner> joiners = new ArrayList<TripleRelationJoiner>();
+        List<TripleRelationJoiner> joiners = new ArrayList<>();
         joiners.add(TripleRelationJoiner.create(this.useAllOptimizations));
         for (CandidateList candidates : candidateLists) {
-            List<TripleRelationJoiner> nextJoiners = new ArrayList<TripleRelationJoiner>();
+            List<TripleRelationJoiner> nextJoiners = new ArrayList<>();
             for (TripleRelationJoiner joiner : joiners) {
                 nextJoiners.addAll(joiner.joinAll(candidates.triplePattern(), candidates.all()));
             }
             joiners = nextJoiners;
         }
-        List<NodeRelation> results = new ArrayList<NodeRelation>(joiners.size());
+        List<NodeRelation> results = new ArrayList<>(joiners.size());
         for (TripleRelationJoiner joiner : joiners) {
             NodeRelation nodeRelation = joiner.toNodeRelation();
             if (!nodeRelation.baseRelation().equals(Relation.EMPTY) || !useAllOptimizations)
@@ -98,19 +98,13 @@ public class GraphPatternTranslator {
             return candidates;
         }
 
+        @Override
         public int compareTo(CandidateList other) {
-            CandidateList otherList = other;
-            if (candidates.size() < otherList.candidates.size()) {
-                return -1;
-            }
-            if (candidates.size() > otherList.candidates.size()) {
-                return 1;
-            }
-            return 0;
+            return Integer.compare(candidates.size(), other.candidates.size());
         }
 
         private List<NodeRelation> findMatchingTripleRelations(Triple triplePattern) {
-            List<NodeRelation> results = new ArrayList<NodeRelation>();
+            List<NodeRelation> results = new ArrayList<>();
             for (TripleRelation tripleRelation : tripleRelations) {
                 TripleRelation selected = tripleRelation.selectTriple(triplePattern);
                 if (selected == null) continue;
@@ -120,13 +114,14 @@ public class GraphPatternTranslator {
         }
 
         private List<NodeRelation> prefixTripleRelations(List<NodeRelation> tripleRelations, int index) {
-            List<NodeRelation> results = new ArrayList<NodeRelation>(tripleRelations.size());
+            List<NodeRelation> results = new ArrayList<>(tripleRelations.size());
             for (NodeRelation tripleRelation : tripleRelations) {
                 results.add(tripleRelation.withPrefix(index));
             }
             return results;
         }
 
+        @Override
         public String toString() {
             return "CandidateList(" + triplePattern + ")[" + candidates + "]";
         }

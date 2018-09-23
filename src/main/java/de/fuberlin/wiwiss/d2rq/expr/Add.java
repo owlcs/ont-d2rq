@@ -9,12 +9,15 @@ public class Add extends BinaryOperator {
         super(expr1, expr2, "+");
     }
 
+    @Override
     public Expression renameAttributes(ColumnRenamer columnRenamer) {
         return new Add(expr1.renameAttributes(columnRenamer), expr2.renameAttributes(columnRenamer));
     }
 
 
+    @Override
     public boolean equals(Object other) {
+        if (this == other) return true;
         if (!(other instanceof Add)) {
             return false;
         }

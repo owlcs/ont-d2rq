@@ -18,26 +18,32 @@ public abstract class ColumnRenamer {
      * An optimized ColumnRenamer that leaves every column unchanged
      */
     public final static ColumnRenamer NULL = new ColumnRenamer() {
+        @Override
         public AliasMap applyTo(AliasMap aliases) {
             return aliases;
         }
 
+        @Override
         public Attribute applyTo(Attribute original) {
             return original;
         }
 
+        @Override
         public Expression applyTo(Expression original) {
             return original;
         }
 
+        @Override
         public Join applyTo(Join original) {
             return original;
         }
 
+        @Override
         public Set<Join> applyToJoinSet(Set<Join> joins) {
             return joins;
         }
 
+        @Override
         public String toString() {
             return "ColumnRenamer.NULL";
         }
@@ -68,7 +74,7 @@ public abstract class ColumnRenamer {
     }
 
     public Set<Join> applyToJoinSet(Set<Join> joins) {
-        Set<Join> result = new HashSet<Join>();
+        Set<Join> result = new HashSet<>();
         for (Join join : joins) {
             result.add(applyTo(join));
         }
@@ -80,7 +86,7 @@ public abstract class ColumnRenamer {
     }
 
     public Set<ProjectionSpec> applyToProjectionSet(Set<ProjectionSpec> projections) {
-        Set<ProjectionSpec> result = new HashSet<ProjectionSpec>();
+        Set<ProjectionSpec> result = new HashSet<>();
         for (ProjectionSpec projection : projections) {
             result.add(applyTo(projection));
         }
@@ -88,7 +94,7 @@ public abstract class ColumnRenamer {
     }
 
     public List<OrderSpec> applyTo(List<OrderSpec> orderSpecs) {
-        List<OrderSpec> result = new ArrayList<OrderSpec>(orderSpecs.size());
+        List<OrderSpec> result = new ArrayList<>(orderSpecs.size());
         for (OrderSpec spec : orderSpecs) {
             result.add(new OrderSpec(applyTo(spec.expression()), spec.isAscending()));
         }

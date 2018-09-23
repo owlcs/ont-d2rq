@@ -1,14 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.expr;
 
-import java.util.Collections;
-import java.util.Set;
-
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * A constant-valued expression.
@@ -40,18 +40,22 @@ public class Constant extends Expression {
         return value;
     }
 
+    @Override
     public Set<Attribute> attributes() {
         return Collections.emptySet();
     }
 
+    @Override
     public boolean isFalse() {
         return false;
     }
 
+    @Override
     public boolean isTrue() {
         return false;
     }
 
+    @Override
     public Expression renameAttributes(ColumnRenamer columnRenamer) {
         if (attributeForTrackingType == null) {
             return this;
@@ -59,15 +63,16 @@ public class Constant extends Expression {
         return new Constant(value, columnRenamer.applyTo(attributeForTrackingType));
     }
 
+    @Override
     public String toSQL(ConnectedDB database, AliasMap aliases) {
         if (attributeForTrackingType == null) {
             // TODO: This is an unsafe assumption
             return GenericType.CHARACTER.dataTypeFor(database.vendor()).toSQLLiteral(value);
         }
-        return database.columnType(
-                aliases.originalOf(attributeForTrackingType)).toSQLLiteral(value);
+        return database.columnType(aliases.originalOf(attributeForTrackingType)).toSQLLiteral(value);
     }
 
+    @Override
     public String toString() {
         if (attributeForTrackingType == null) {
             return "Constant(" + value + ")";
@@ -75,7 +80,9 @@ public class Constant extends Expression {
         return "Constant(" + value + "@" + attributeForTrackingType.qualifiedName() + ")";
     }
 
+    @Override
     public boolean equals(Object other) {
+        if (this == other) return true;
         if (!(other instanceof Constant)) return false;
         Constant otherConstant = (Constant) other;
         if (!value.equals(otherConstant.value)) return false;
@@ -85,6 +92,7 @@ public class Constant extends Expression {
         return attributeForTrackingType.equals(otherConstant.attributeForTrackingType);
     }
 
+    @Override
     public int hashCode() {
         if (attributeForTrackingType == null) {
             return value.hashCode();

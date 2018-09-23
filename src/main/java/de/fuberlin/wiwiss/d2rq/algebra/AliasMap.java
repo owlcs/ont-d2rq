@@ -44,15 +44,19 @@ public class AliasMap extends ColumnRenamer {
             return this.alias;
         }
 
+        @Override
         public int hashCode() {
             return this.original.hashCode() ^ this.alias.hashCode();
         }
 
+        @Override
         public boolean equals(Object o) {
+            if (this == o) return true;
             if (!(o instanceof Alias)) return false;
             return this.alias.equals(((Alias) o).alias) && this.original.equals(((Alias) o).original);
         }
 
+        @Override
         public String toString() {
             return this.original + " AS " + this.alias;
         }
@@ -121,6 +125,7 @@ public class AliasMap extends ColumnRenamer {
         return new Alias(originalOf(alias.original()), alias.alias());
     }
 
+    @Override
     public Join applyTo(Join join) {
         if (!hasAlias(join.table1()) && !hasAlias(join.table2())) {
             return join;
@@ -128,6 +133,7 @@ public class AliasMap extends ColumnRenamer {
         return super.applyTo(join);
     }
 
+    @Override
     public AliasMap applyTo(AliasMap other) {
         if (this.byAlias.isEmpty()) {
             return other;
@@ -146,7 +152,9 @@ public class AliasMap extends ColumnRenamer {
         return new AliasMap(newAliases);
     }
 
+    @Override
     public boolean equals(Object other) {
+        if (this == other) return true;
         if (!(other instanceof AliasMap)) {
             return false;
         }
@@ -154,10 +162,12 @@ public class AliasMap extends ColumnRenamer {
         return this.byAlias.equals(otherAliasMap.byAlias);
     }
 
+    @Override
     public int hashCode() {
         return this.byAlias.hashCode();
     }
 
+    @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
         result.append("AliasMap(");

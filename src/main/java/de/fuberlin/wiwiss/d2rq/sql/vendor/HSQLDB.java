@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.sql.vendor;
 
+import de.fuberlin.wiwiss.d2rq.sql.types.*;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-
-import de.fuberlin.wiwiss.d2rq.sql.types.*;
 
 public class HSQLDB extends SQL92 {
 
@@ -58,6 +58,7 @@ public class HSQLDB extends SQL92 {
             super(syntax, "DOUBLE");
         }
 
+        @Override
         public String toSQLLiteral(String value) {
             if ("NaN".equals(value)) {
                 return "(0E0/0E0)";

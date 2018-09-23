@@ -8,8 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SQLTime extends DataType {
-    private final static Pattern TIME_PATTERN =
-            Pattern.compile("^\\d?\\d:\\d\\d:\\d\\d(.\\d+)?([+-]\\d?\\d:\\d\\d|Z)?$");
+    private final static Pattern TIME_PATTERN = Pattern.compile("^\\d?\\d:\\d\\d:\\d\\d(.\\d+)?([+-]\\d?\\d:\\d\\d|Z)?$");
 
     public SQLTime(Vendor syntax, String name) {
         super(syntax, name);

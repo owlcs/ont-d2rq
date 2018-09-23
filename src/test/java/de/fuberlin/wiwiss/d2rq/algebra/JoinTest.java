@@ -78,17 +78,17 @@ public class JoinTest {
     public void testDifferentAttributesNotEqual() {
         Join j1 = new Join(table1foo, table2foo, Join.DIRECTION_RIGHT);
         Join j2 = new Join(table1foo, table2bar, Join.DIRECTION_RIGHT);
-        Assert.assertFalse(j1.equals(j2));
-        Assert.assertFalse(j2.equals(j1));
-        Assert.assertFalse(j1.hashCode() == j2.hashCode());
+        Assert.assertNotEquals(j1, j2);
+        Assert.assertNotEquals(j2, j1);
+        Assert.assertNotEquals(j1.hashCode(), j2.hashCode());
     }
 
     @Test
     public void testDifferentDirectionsNotEqual() {
         Join j1 = new Join(table1foo, table2foo, Join.DIRECTION_RIGHT);
         Join j2 = new Join(table1foo, table2foo, Join.DIRECTION_UNDIRECTED);
-        Assert.assertFalse(j1.equals(j2));
-        Assert.assertFalse(j2.equals(j1));
-        Assert.assertFalse(j1.hashCode() == j2.hashCode());
+        Assert.assertNotEquals(j1, j2);
+        Assert.assertNotEquals(j2, j1);
+        Assert.assertNotEquals(j1.hashCode(), j2.hashCode());
     }
 }

@@ -156,6 +156,7 @@ public class Pattern implements ValueMaker {
 
     @Override
     public boolean equals(Object otherObject) {
+        if (this == otherObject) return true;
         if (!(otherObject instanceof Pattern)) {
             return false;
         }
@@ -297,14 +298,17 @@ public class Pattern implements ValueMaker {
     }
 
     static class IdentityFunction implements ColumnFunction {
+        @Override
         public String encode(String s) {
             return s;
         }
 
+        @Override
         public String decode(String s) {
             return s;
         }
 
+        @Override
         public String name() {
             return null;
         }

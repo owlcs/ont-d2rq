@@ -24,6 +24,7 @@ import java.util.*;
  * @author Richard Cyganiak (richard@cyganiak.de)
  * @author kurtjx (http://github.com/kurtjx)
  */
+@SuppressWarnings("WeakerAccess")
 public class ConnectedDB implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectedDB.class);
 
@@ -38,11 +39,11 @@ public class ConnectedDB implements AutoCloseable {
     private final Map<Attribute, Boolean> cachedColumnNullability = new HashMap<>();
     private final Map<Attribute, DataType> cachedColumnTypes = new HashMap<>();
     private final Map<Attribute, GenericType> overriddenColumnTypes = new HashMap<>();
-    private Connection connection = null;
-    private DatabaseSchemaInspector schemaInspector = null;
+    private Connection connection;
+    private DatabaseSchemaInspector schemaInspector;
 
     // Lazy initialization -- use vendor() for access!
-    private Vendor vendor = null;
+    private Vendor vendor;
 
     private int limit;
     private int fetchSize;
@@ -66,6 +67,7 @@ public class ConnectedDB implements AutoCloseable {
             this.query = query;
         }
 
+        @Override
         public void run() {
             Connection c;
             Statement s = null;
@@ -142,9 +144,13 @@ public class ConnectedDB implements AutoCloseable {
         this(jdbcURL, username, password, Collections.emptyMap(), Database.NO_LIMIT, Database.NO_FETCH_SIZE, null);
     }
 
-    public ConnectedDB(String jdbcURL, String username, String password,
+    public ConnectedDB(String jdbcURL,
+                       String username,
+                       String password,
                        Map<String, GenericType> columnTypes,
-                       int limit, int fetchSize, Properties connectionProperties) {
+                       int limit,
+                       int fetchSize,
+                       Properties connectionProperties) {
         // TODO replace column type arguments with a single column => type map
         this.jdbcURL = jdbcURL;
         this.username = username;
@@ -427,6 +433,7 @@ public class ConnectedDB implements AutoCloseable {
 
     @Override
     public boolean equals(Object otherObject) {
+        if (this == otherObject) return true;
         if (!(otherObject instanceof ConnectedDB)) {
             return false;
         }

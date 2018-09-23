@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +21,8 @@ import java.sql.Statement;
  */
 @SuppressWarnings("WeakerAccess")
 public class SQLScriptLoader implements AutoCloseable {
-    private final static Logger LOGGER = LoggerFactory.getLogger(SQLScriptLoader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SQLScriptLoader.class);
+    private static final Charset CHARACTER = StandardCharsets.UTF_8;
 
     /**
      * Loads a SQL script from a file and executes it.
@@ -44,7 +46,7 @@ public class SQLScriptLoader implements AutoCloseable {
      */
     public static void loadFile(Path file, Connection conn) throws IOException, SQLException {
         LOGGER.info("Reading SQL script from {}", file);
-        load(() -> Files.newBufferedReader(file, StandardCharsets.UTF_8), conn);
+        load(() -> Files.newBufferedReader(file, CHARACTER), conn);
     }
 
     /**
@@ -57,7 +59,7 @@ public class SQLScriptLoader implements AutoCloseable {
      */
     public static void loadURI(URI url, Connection conn) throws IOException, SQLException {
         LOGGER.info("Reading SQL script from <{}>", url);
-        load(() -> new InputStreamReader(url.toURL().openStream(), StandardCharsets.UTF_8), conn);
+        load(() -> new InputStreamReader(url.toURL().openStream(), CHARACTER), conn);
     }
 
     /**
@@ -82,7 +84,7 @@ public class SQLScriptLoader implements AutoCloseable {
         this.conn = conn;
     }
 
-    public void execute() throws SQLException {
+    public void execute() throws SQLException, UncheckedIOException {
         int lineNumber = 1;
         int statements = 0;
 
@@ -123,11 +125,11 @@ public class SQLScriptLoader implements AutoCloseable {
                 stmt.execute(s);
             }
             if (LOGGER.isDebugEnabled())
-                LOGGER.info("Done, {} lines, {} statements", (lineNumber - 1), statements);
+                LOGGER.debug("Done, {} lines, {} statements", (lineNumber - 1), statements);
         } catch (SQLException ex) {
             throw new SQLException("in line " + lineNumber + ": " + ex.getMessage(), ex);
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -144,8 +146,14 @@ public class SQLScriptLoader implements AutoCloseable {
         } catch (SQLException sql) {
             res.addSuppressed(sql);
         }
-        if (res.getSuppressed().length != 0) {
+        if (res.getSuppressed().length == 2) {
             throw res;
+        }
+        if (res.getSuppressed().length == 1) {
+            Throwable t = res.getSuppressed()[0];
+            if (t instanceof IOException)
+                throw (IOException) t;
+            throw (SQLException) t;
         }
     }
 

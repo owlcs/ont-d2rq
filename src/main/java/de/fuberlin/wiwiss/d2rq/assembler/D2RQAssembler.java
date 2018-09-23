@@ -1,14 +1,13 @@
 package de.fuberlin.wiwiss.d2rq.assembler;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.assembler.Assembler;
 import org.apache.jena.assembler.Mode;
 import org.apache.jena.assembler.assemblers.AssemblerBase;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 
 /**
  * A Jena assembler that builds ModelD2RQs.
@@ -17,6 +16,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
  */
 public class D2RQAssembler extends AssemblerBase {
 
+    @Override
     public Object open(Assembler ignore, Resource description, Mode ignore2) {
         if (!description.hasProperty(D2RQ.mappingFile)) {
             throw new D2RQException("Error in assembler specification " + description + ": missing property d2rq:mappingFile");

@@ -31,8 +31,8 @@ public class PushDownOpFilterVisitor implements OpVisitor {
     }
 
     private final TransformCopy copy = new TransformCopy(false);
-    private final Stack<Op> stack = new Stack<Op>();
-    private List<Expr> filterExpr = new ArrayList<Expr>();
+    private final Stack<Op> stack = new Stack<>();
+    private List<Expr> filterExpr = new ArrayList<>();
 
     /**
      * Returns the changed operator-tree
@@ -51,6 +51,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * the top-down-stepping. During the bottom-up-stepping all filterconditions
      * which were moved down, are removed
      */
+    @Override
     public void visit(final OpFilter opFilter) {
         List<Expr> exprs = new ArrayList<>(opFilter.getExprs().getList());
         filterExpr.addAll(exprs);
@@ -86,6 +87,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * 3) Filter(Union(M1, M2), F)) will become Join(Union(M1, F), Union(M2, F))
      * when the filterexpression is referenced to M1 and M2
      */
+    @Override
     public void visit(OpUnion opUnion) {
         checkMoveDownFilterExprAndVisitOpUnion(opUnion);
     }
@@ -104,6 +106,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * will become Join(Filter(M1, F), Filter(M2, F)) when the filterexpression
      * is referenced to M1 and M2
      */
+    @Override
     public void visit(OpJoin opJoin) {
         checkMoveDownFilterExprAndVisitOpJoin(opJoin);
     }
@@ -115,6 +118,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * the coresponding filter-conditions, because in the transforming-process
      * of the OpBGPs to OpD2RQs a link to the above OpFilter is needed.
      */
+    @Override
     public void visit(OpBGP op) {
         wrapInCurrentFilter(op);
     }
@@ -133,30 +137,36 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * will become Diff(Filter(M1, F), Filter(M2, F)) when the filterexpression
      * is referenced to M1 and M2
      */
+    @Override
     public void visit(OpDiff opDiff) {
         // TODO: Regel nochmal ueberdenken !!!
         checkMoveDownFilterExprAndVisitOpDiff(opDiff);
     }
 
+    @Override
     public void visit(OpConditional opCondition) {
         // TODO moving down / improvements possible!! Check this
         wrapInCurrentFilterAndRecurse(opCondition);
     }
 
+    @Override
     public void visit(OpProcedure opProc) {
         // TODO What is this?
         wrapInCurrentFilterAndRecurse(opProc);
     }
 
+    @Override
     public void visit(OpPropFunc opPropFunc) {
         // TODO What is this?
         wrapInCurrentFilterAndRecurse(opPropFunc);
     }
 
+    @Override
     public void visit(OpTable opTable) {
         wrapInCurrentFilter(opTable);
     }
 
+    @Override
     public void visit(OpQuadPattern quadPattern) {
         wrapInCurrentFilter(quadPattern);
     }
@@ -166,18 +176,22 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         wrapInCurrentFilter(quadBlock);
     }
 
+    @Override
     public void visit(OpPath opPath) {
         wrapInCurrentFilter(opPath);
     }
 
+    @Override
     public void visit(OpTriple opTriple) {
         wrapInCurrentFilter(opTriple);
     }
 
+    @Override
     public void visit(OpDatasetNames dsNames) {
         wrapInCurrentFilter(dsNames);
     }
 
+    @Override
     public void visit(OpSequence opSequence) {
         // TODO What is this?
         wrapInCurrentFilterAndRecurse(opSequence);
@@ -195,69 +209,84 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * to M1 2) Filter(LeftJoin(M1, M2), F)) will become LeftJoin(Filter(M1, F),
      * Filter(M2, F)) when the filterexpression is referenced to M1 and M2
      */
+    @Override
     public void visit(OpLeftJoin opLeftJoin) {
         checkMoveDownFilterExprAndVisitOpLeftJoin(opLeftJoin);
     }
 
+    @Override
     public void visit(OpGraph opGraph) {
         // TODO Pushing down might be possible
         wrapInCurrentFilterAndRecurse(opGraph);
     }
 
+    @Override
     public void visit(OpService opService) {
         // Don't recurse into the OpService, just return it
         // (with any filters that were pushed down to us applied)
         wrapInCurrentFilter(opService);
     }
 
+    @Override
     public void visit(OpExt opExt) {
         wrapInCurrentFilter(opExt);
     }
 
+    @Override
     public void visit(OpNull opNull) {
         wrapInCurrentFilter(opNull);
     }
 
+    @Override
     public void visit(OpLabel opLabel) {
         moveFilterPast(opLabel);
     }
 
+    @Override
     public void visit(OpList opList) {
         // TODO Might be able to move down filter past the op
         wrapInCurrentFilterAndRecurse(opList);
     }
 
+    @Override
     public void visit(OpOrder opOrder) {
         // TODO Might be able to move down filter past the op
         wrapInCurrentFilterAndRecurse(opOrder);
     }
 
+    @Override
     public void visit(OpProject opProject) {
         // TODO Might be able to move down filter past the op
         wrapInCurrentFilterAndRecurse(opProject);
     }
 
+    @Override
     public void visit(OpDistinct opDistinct) {
         wrapInCurrentFilterAndRecurse(opDistinct);
     }
 
+    @Override
     public void visit(OpReduced opReduced) {
         wrapInCurrentFilterAndRecurse(opReduced);
     }
 
+    @Override
     public void visit(OpAssign opAssign) {
         // TODO Might be able to move down filter past the op
         wrapInCurrentFilterAndRecurse(opAssign);
     }
 
+    @Override
     public void visit(OpSlice opSlice) {
         wrapInCurrentFilterAndRecurse(opSlice);
     }
 
+    @Override
     public void visit(OpGroup opGroup) {
         wrapInCurrentFilterAndRecurse(opGroup);
     }
 
+    @Override
     public void visit(OpExtend opExtend) {
         // TODO Might be able to move down filter past the OpExtend
         wrapInCurrentFilterAndRecurse(opExtend);
@@ -268,6 +297,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * <p>
      * Filter(A-B,e) = Filter(A,e)-B
      */
+    @Override
     public void visit(OpMinus opMinus) {
         // Walk into A subtree
         opMinus.getLeft().visit(this);
@@ -275,7 +305,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
 
         // Walk into B subtree with empty expression list
         List<Expr> tmp = filterExpr;
-        filterExpr = new ArrayList<Expr>();
+        filterExpr = new ArrayList<>();
         opMinus.getRight().visit(this);
         Op right = stack.pop();
 
@@ -285,22 +315,25 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         stack.push(OpMinus.create(leftWithFilter, right));
     }
 
+    @Override
     public void visit(OpDisjunction opDisjunction) {
         // TODO What the heck is an OpDisjunction anyway?
         wrapInCurrentFilterAndRecurse(opDisjunction);
     }
 
+    @Override
     public void visit(OpTopN opTop) {
         // TODO Might be able to move down filter past the OpTopN
         wrapInCurrentFilterAndRecurse(opTop);
     }
 
+    @Override
     public void visit(OpQuad opQuad) {
         wrapInCurrentFilter(opQuad);
     }
 
     private void wrapInCurrentFilterAndRecurse(Op1 op1) {
-        List<Expr> retainedFilterExpr = new ArrayList<Expr>(filterExpr);
+        List<Expr> retainedFilterExpr = new ArrayList<>(filterExpr);
         filterExpr.clear();
         Op subOp = null;
         if (op1.getSubOp() != null) {
@@ -312,7 +345,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
     }
 
     private void wrapInCurrentFilterAndRecurse(Op2 op2) {
-        List<Expr> retainedFilterExpr = new ArrayList<Expr>(filterExpr);
+        List<Expr> retainedFilterExpr = new ArrayList<>(filterExpr);
         filterExpr.clear();
         Op left = null;
         if (op2.getLeft() != null) {
@@ -329,9 +362,9 @@ public class PushDownOpFilterVisitor implements OpVisitor {
     }
 
     private void wrapInCurrentFilterAndRecurse(OpN opN) {
-        List<Expr> retainedFilterExpr = new ArrayList<Expr>(filterExpr);
+        List<Expr> retainedFilterExpr = new ArrayList<>(filterExpr);
         filterExpr.clear();
-        List<Op> children = new ArrayList<Op>();
+        List<Op> children = new ArrayList<>();
         for (Op child : opN.getElements()) {
             child.visit(this);
             children.add(stack.pop());
@@ -361,12 +394,12 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * set of possibilities.
      *
      * @param candidates - the whole set
-     * @param op
+     * @param op         {@link Op}
      * @return List - the subset from the set of possiblities
      */
     private List<Expr> calcValidFilterExpr(List<Expr> candidates, Op op) {
         Set<Var> mentionedVars = VarCollector.mentionedVars(op);
-        List<Expr> result = new ArrayList<Expr>();
+        List<Expr> result = new ArrayList<>();
         for (Expr expr : candidates) {
             if (mentionedVars.containsAll(expr.getVarsMentioned())) {
                 result.add(expr);
@@ -380,20 +413,20 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * the operator
      */
     private void checkMoveDownFilterExprAndVisitOpUnion(OpUnion opUnion) {
-        Op left = null;
-        Op right = null;
+        Op left;
+        Op right;
         Op newOp;
         List<Expr> filterExprBeforeOpUnion, filterExprAfterOpUnion, notMoveableFilterExpr;
 
         // contains the filterexpressions that are valid before this op2
-        filterExprBeforeOpUnion = new ArrayList<Expr>(this.filterExpr);
+        filterExprBeforeOpUnion = new ArrayList<>(this.filterExpr);
         // contains the filterexpressions that are valid after this op2
         // this is needed because during the bottom-up-stepping all
         // filterexpressions
         // which could not be transformed down, must be inserted by means of an
         // OpFilter
         // above this op2
-        filterExprAfterOpUnion = new ArrayList<Expr>();
+        filterExprAfterOpUnion = new ArrayList<>();
 
         // check left subtree
         if ((left = opUnion.getLeft()) != null) {
@@ -412,8 +445,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
             // calculate the set of filterexpressions that are also valid for
             // the
             // right subtree
-            this.filterExpr = calcValidFilterExpr(filterExprBeforeOpUnion,
-                    right);
+            this.filterExpr = calcValidFilterExpr(filterExprBeforeOpUnion, right);
             filterExprAfterOpUnion.addAll(this.filterExpr);
             // step down
             opUnion.getRight().visit(this);
@@ -424,7 +456,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         // could
         // be moved down
         // now calculate all filterexpressions which were not moveable
-        notMoveableFilterExpr = new ArrayList<Expr>(filterExprBeforeOpUnion);
+        notMoveableFilterExpr = new ArrayList<>(filterExprBeforeOpUnion);
         notMoveableFilterExpr.removeAll(filterExprAfterOpUnion);
 
         // if there are some filterexpressions which could not be moved down,
@@ -433,8 +465,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
             // create the filter
             newOp = OpFilter.ensureFilter(OpUnion.create(left, right));
             // add the conditions
-            ((OpFilter) newOp).getExprs().getList()
-                    .addAll(notMoveableFilterExpr);
+            ((OpFilter) newOp).getExprs().getList().addAll(notMoveableFilterExpr);
         } else {
             newOp = opUnion;
         }
@@ -450,20 +481,20 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * the operator
      */
     private void checkMoveDownFilterExprAndVisitOpJoin(OpJoin opJoin) {
-        Op left = null;
-        Op right = null;
+        Op left;
+        Op right;
         Op newOp;
         List<Expr> filterExprBeforeOpJoin, filterExprAfterOpJoin, notMoveableFilterExpr;
 
         // contains the filterexpressions that are valid before this op2
-        filterExprBeforeOpJoin = new ArrayList<Expr>(this.filterExpr);
+        filterExprBeforeOpJoin = new ArrayList<>(this.filterExpr);
         // contains the filterexpressions that are valid after this op2
         // this is needed because during the bottom-up-stepping all
         // filterexpressions
         // which could not be transformed down, must be inserted by means of an
         // OpFilter
         // above this op2
-        filterExprAfterOpJoin = new ArrayList<Expr>();
+        filterExprAfterOpJoin = new ArrayList<>();
 
         // check left subtree
         if ((left = opJoin.getLeft()) != null) {
@@ -493,7 +524,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         // could
         // be moved down
         // now calculate all filterexpressions which were not moveable
-        notMoveableFilterExpr = new ArrayList<Expr>(filterExprBeforeOpJoin);
+        notMoveableFilterExpr = new ArrayList<>(filterExprBeforeOpJoin);
         notMoveableFilterExpr.removeAll(filterExprAfterOpJoin);
 
         // if there are some filterexpressions which could not be moved down,
@@ -502,8 +533,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
             // create the filter
             newOp = OpFilter.ensureFilter(OpJoin.create(left, right));
             // add the conditions
-            ((OpFilter) newOp).getExprs().getList()
-                    .addAll(notMoveableFilterExpr);
+            ((OpFilter) newOp).getExprs().getList().addAll(notMoveableFilterExpr);
         } else {
             // nothing must be done
             newOp = opJoin;
@@ -520,28 +550,28 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * the operator
      */
     private void checkMoveDownFilterExprAndVisitOpLeftJoin(OpLeftJoin opLeftJoin) {
-        Op left = null;
-        Op right = null;
+        Op left;
+        Op right;
         Op newOp;
-        List<Expr> filterExprBeforeOpLeftJoin, filterExprAfterOpLeftJoin, notMoveableFilterExpr, filterExprRightSide, validFilterExprRightSide;
+        List<Expr> filterExprBeforeOpLeftJoin, filterExprAfterOpLeftJoin,
+                notMoveableFilterExpr, filterExprRightSide, validFilterExprRightSide;
 
         // contains the filterexpressions that are valid before this op2
-        filterExprBeforeOpLeftJoin = new ArrayList<Expr>(this.filterExpr);
+        filterExprBeforeOpLeftJoin = new ArrayList<>(this.filterExpr);
         // contains the filterexpressions that are valid after this op2
         // this is needed because during the bottom-up-stepping all
         // filterexpressions
         // which could not be transformed down, must be inserted by means of an
         // OpFilter
         // above this op2
-        filterExprAfterOpLeftJoin = new ArrayList<Expr>();
+        filterExprAfterOpLeftJoin = new ArrayList<>();
 
         // check left subtree
         if ((left = opLeftJoin.getLeft()) != null) {
             // calculate the set of filterexpressions that are also valid for
             // the
             // left subtree
-            this.filterExpr = calcValidFilterExpr(filterExprBeforeOpLeftJoin,
-                    left);
+            this.filterExpr = calcValidFilterExpr(filterExprBeforeOpLeftJoin, left);
             filterExprAfterOpLeftJoin.addAll(this.filterExpr);
             // step down
             opLeftJoin.getLeft().visit(this);
@@ -554,9 +584,8 @@ public class PushDownOpFilterVisitor implements OpVisitor {
             // the
             // right subtree
 
-            filterExprRightSide = calcValidFilterExpr(
-                    filterExprBeforeOpLeftJoin, right);
-            validFilterExprRightSide = new ArrayList<Expr>();
+            filterExprRightSide = calcValidFilterExpr(filterExprBeforeOpLeftJoin, right);
+            validFilterExprRightSide = new ArrayList<>();
 
             // now check for expr that are vaild for left-side and right-side
             // only when an expr is vaid for left-side, it can be vaild for
@@ -580,18 +609,16 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         // which could
         // be moved down
         // now calculate all filterexpressions which were not moveable
-        notMoveableFilterExpr = new ArrayList<Expr>(filterExprBeforeOpLeftJoin);
+        notMoveableFilterExpr = new ArrayList<>(filterExprBeforeOpLeftJoin);
         notMoveableFilterExpr.removeAll(filterExprAfterOpLeftJoin);
 
         // if there are some filterexpressions which could not be moved down,
         // an opFilter must be inserted that contains this filterexpressions
         if (!notMoveableFilterExpr.isEmpty()) {
             // create the filter for an opleftjoin
-            newOp = OpFilter.ensureFilter(OpLeftJoin.create(left, right,
-                    opLeftJoin.getExprs()));
+            newOp = OpFilter.ensureFilter(OpLeftJoin.create(left, right, opLeftJoin.getExprs()));
             // add the conditions
-            ((OpFilter) newOp).getExprs().getList()
-                    .addAll(notMoveableFilterExpr);
+            ((OpFilter) newOp).getExprs().getList().addAll(notMoveableFilterExpr);
         } else {
             // nothing must be done
             newOp = opLeftJoin;
@@ -608,20 +635,20 @@ public class PushDownOpFilterVisitor implements OpVisitor {
      * the operator
      */
     private void checkMoveDownFilterExprAndVisitOpDiff(Op2 opDiff) {
-        Op left = null;
-        Op right = null;
+        Op left;
+        Op right;
         Op newOp;
         List<Expr> filterExprBeforeOpUnionOpJoin, filterExprAfterOpUnionOpJoin, notMoveableFilterExpr;
 
         // contains the filterexpressions that are valid before this op2
-        filterExprBeforeOpUnionOpJoin = new ArrayList<Expr>(this.filterExpr);
+        filterExprBeforeOpUnionOpJoin = new ArrayList<>(this.filterExpr);
         // contains the filterexpressions that are valid after this op2
         // this is needed because during the bottom-up-stepping all
         // filterexpressions
         // which could not be transformed down, must be inserted by means of an
         // OpFilter
         // above this op2
-        filterExprAfterOpUnionOpJoin = new ArrayList<Expr>();
+        filterExprAfterOpUnionOpJoin = new ArrayList<>();
 
         // check left subtree
         if ((left = opDiff.getLeft()) != null) {
@@ -641,8 +668,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
             // calculate the set of filterexpressions that are also valid for
             // the
             // right subtree
-            this.filterExpr = calcValidFilterExpr(
-                    filterExprBeforeOpUnionOpJoin, right);
+            this.filterExpr = calcValidFilterExpr(filterExprBeforeOpUnionOpJoin, right);
             filterExprAfterOpUnionOpJoin.addAll(this.filterExpr);
             // step down
             opDiff.getRight().visit(this);
@@ -653,8 +679,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
         // could
         // be moved down
         // now calculate all filterexpressions which were not moveable
-        notMoveableFilterExpr = new ArrayList<Expr>(
-                filterExprBeforeOpUnionOpJoin);
+        notMoveableFilterExpr = new ArrayList<>(filterExprBeforeOpUnionOpJoin);
         notMoveableFilterExpr.removeAll(filterExprAfterOpUnionOpJoin);
 
         // if there are some filterexpressions which could not be moved down,
@@ -663,8 +688,7 @@ public class PushDownOpFilterVisitor implements OpVisitor {
             // create the filter
             newOp = OpFilter.ensureFilter(OpDiff.create(left, right));
             // add the conditions
-            ((OpFilter) newOp).getExprs().getList()
-                    .addAll(notMoveableFilterExpr);
+            ((OpFilter) newOp).getExprs().getList().addAll(notMoveableFilterExpr);
         } else {
             // nothing must be done
             newOp = opDiff;

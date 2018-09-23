@@ -1,13 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.nodes;
 
-import java.util.List;
-import java.util.Set;
-
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
-
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.algebra.OrderSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
@@ -16,7 +8,15 @@ import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
 import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
 
+import java.util.List;
+import java.util.Set;
+
+@SuppressWarnings("WeakerAccess")
 public class TypedNodeMaker implements NodeMaker {
     public final static NodeType URI = new URINodeType();
     public final static NodeType BLANK = new BlankNodeType();
@@ -57,14 +57,17 @@ public class TypedNodeMaker implements NodeMaker {
         this.isUnique = isUnique;
     }
 
+    @Override
     public Set<ProjectionSpec> projectionSpecs() {
         return this.valueMaker.projectionSpecs();
     }
 
+    @Override
     public boolean isUnique() {
         return this.isUnique;
     }
 
+    @Override
     public void describeSelf(NodeSetFilter c) {
         this.nodeType.matchConstraint(c);
         this.valueMaker.describeSelf(c);
@@ -74,6 +77,7 @@ public class TypedNodeMaker implements NodeMaker {
         return this.valueMaker;
     }
 
+    @Override
     public Node makeNode(ResultRow tuple) {
         String value = this.valueMaker.makeValue(tuple);
         if (value == null) {
@@ -82,6 +86,7 @@ public class TypedNodeMaker implements NodeMaker {
         return this.nodeType.makeNode(value);
     }
 
+    @Override
     public NodeMaker selectNode(Node node, RelationalOperators sideEffects) {
         if (node.equals(Node.ANY) || node.isVariable()) {
             return this;
@@ -102,17 +107,19 @@ public class TypedNodeMaker implements NodeMaker {
         return new FixedNodeMaker(node, isUnique());
     }
 
+    @Override
     public NodeMaker renameAttributes(ColumnRenamer renamer) {
-        return new TypedNodeMaker(this.nodeType,
-                this.valueMaker.renameAttributes(renamer), this.isUnique);
+        return new TypedNodeMaker(this.nodeType, this.valueMaker.renameAttributes(renamer), this.isUnique);
     }
 
+    @Override
     public List<OrderSpec> orderSpecs(boolean ascending) {
         // TODO: Consider the node type (e.g., RDF datatype) in ordering,
         //       rather than just deferring to the underlying value maker
         return valueMaker.orderSpecs(ascending);
     }
 
+    @Override
     public String toString() {
         return this.nodeType.toString() + "(" + this.valueMaker + ")";
     }
@@ -128,44 +135,54 @@ public class TypedNodeMaker implements NodeMaker {
     }
 
     private static class URINodeType implements NodeType {
+        @Override
         public String extractValue(Node node) {
             return node.getURI();
         }
 
+        @Override
         public Node makeNode(String value) {
             return NodeFactory.createURI(value);
         }
 
+        @Override
         public void matchConstraint(NodeSetFilter c) {
             c.limitToURIs();
         }
 
+        @Override
         public boolean matches(Node node) {
             return node.isURI();
         }
 
+        @Override
         public String toString() {
             return "URI";
         }
     }
 
     private static class BlankNodeType implements NodeType {
+        @Override
         public String extractValue(Node node) {
             return node.getBlankNodeLabel();
         }
 
+        @Override
         public Node makeNode(String value) {
             return NodeFactory.createBlankNode(value);
         }
 
+        @Override
         public void matchConstraint(NodeSetFilter c) {
             c.limitToBlankNodes();
         }
 
+        @Override
         public boolean matches(Node node) {
             return node.isBlank();
         }
 
+        @Override
         public String toString() {
             return "Blank";
         }
@@ -180,18 +197,22 @@ public class TypedNodeMaker implements NodeMaker {
             this.datatype = datatype; // null datatype means any literal.
         }
 
+        @Override
         public String extractValue(Node node) {
             return node.getLiteralLexicalForm();
         }
 
+        @Override
         public Node makeNode(String value) {
             return NodeFactory.createLiteral(value, this.language, this.datatype);
         }
 
+        @Override
         public void matchConstraint(NodeSetFilter c) {
             c.limitToLiterals(this.language, this.datatype);
         }
 
+        @Override
         public boolean matches(Node node) {
             return node.isLiteral()
                     && language.equals(node.getLiteralLanguage())
@@ -200,6 +221,7 @@ public class TypedNodeMaker implements NodeMaker {
             //|| (this.datatype != null && this.datatype.equals(node.getLiteralDatatype())));
         }
 
+        @Override
         public String toString() {
             StringBuilder result = new StringBuilder("Literal");
             if (!"".equals(this.language)) {
@@ -217,10 +239,12 @@ public class TypedNodeMaker implements NodeMaker {
             super("", XSDDatatype.XSDdate);
         }
 
+        @Override
         public boolean matches(Node node) {
             return super.matches(node) && XSDDatatype.XSDdate.isValid(node.getLiteralLexicalForm());
         }
 
+        @Override
         public Node makeNode(String value) {
             if (!XSDDatatype.XSDdate.isValid(value)) return null;
             return NodeFactory.createLiteral(value, null, XSDDatatype.XSDdate);
@@ -232,10 +256,12 @@ public class TypedNodeMaker implements NodeMaker {
             super("", XSDDatatype.XSDtime);
         }
 
+        @Override
         public boolean matches(Node node) {
             return super.matches(node) && XSDDatatype.XSDtime.isValid(node.getLiteralLexicalForm());
         }
 
+        @Override
         public Node makeNode(String value) {
             if (!XSDDatatype.XSDtime.isValid(value)) return null;
             return NodeFactory.createLiteral(value, null, XSDDatatype.XSDtime);
@@ -247,10 +273,12 @@ public class TypedNodeMaker implements NodeMaker {
             super("", XSDDatatype.XSDdateTime);
         }
 
+        @Override
         public boolean matches(Node node) {
             return super.matches(node) && XSDDatatype.XSDdateTime.isValid(node.getLiteralLexicalForm());
         }
 
+        @Override
         public Node makeNode(String value) {
             if (!XSDDatatype.XSDdateTime.isValid(value)) return null;
             return NodeFactory.createLiteral(value, null, XSDDatatype.XSDdateTime);
@@ -265,10 +293,12 @@ public class TypedNodeMaker implements NodeMaker {
             super("", XSDDatatype.XSDboolean);
         }
 
+        @Override
         public boolean matches(Node node) {
             return super.matches(node) && XSDDatatype.XSDboolean.isValid(node.getLiteralLexicalForm());
         }
 
+        @Override
         public Node makeNode(String value) {
             if ("0".equals(value) || "false".equals(value)) return FALSE;
             if ("1".equals(value) || "true".equals(value)) return TRUE;

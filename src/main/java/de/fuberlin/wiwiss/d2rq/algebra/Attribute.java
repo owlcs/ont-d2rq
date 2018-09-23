@@ -1,13 +1,13 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.Collections;
-import java.util.Set;
-
 import de.fuberlin.wiwiss.d2rq.expr.AttributeExpr;
 import de.fuberlin.wiwiss.d2rq.expr.Equality;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.expr.NotNull;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * A database column.
@@ -49,6 +49,7 @@ public class Attribute implements ProjectionSpec {
         return this.qualifiedName;
     }
 
+    @Override
     public String toSQL(ConnectedDB database, AliasMap aliases) {
         return database.vendor().quoteAttribute(this);
     }
@@ -91,6 +92,7 @@ public class Attribute implements ProjectionSpec {
         return this.relationName.schemaName();
     }
 
+    @Override
     public Set<Attribute> requiredAttributes() {
         return Collections.singleton(this);
     }
@@ -99,14 +101,17 @@ public class Attribute implements ProjectionSpec {
         return Equality.createAttributeValue(this, value);
     }
 
+    @Override
     public ProjectionSpec renameAttributes(ColumnRenamer renamer) {
         return renamer.applyTo(this);
     }
 
+    @Override
     public Expression toExpression() {
         return new AttributeExpr(this);
     }
 
+    @Override
     public Expression notNullExpression(ConnectedDB db, AliasMap aliases) {
         if (db.isNullable(aliases.originalOf(this))) {
             return NotNull.create(new AttributeExpr(this));
@@ -114,6 +119,7 @@ public class Attribute implements ProjectionSpec {
         return Expression.TRUE;
     }
 
+    @Override
     public String toString() {
         return "@@" + this.qualifiedName + "@@";
     }
@@ -124,7 +130,9 @@ public class Attribute implements ProjectionSpec {
      * we want to use Column instances as map keys.
      * TODO: should not be equal if from different databases
      */
+    @Override
     public boolean equals(Object other) {
+        if (this == other) return true;
         if (!(other instanceof Attribute)) {
             return false;
         }
@@ -136,6 +144,7 @@ public class Attribute implements ProjectionSpec {
      * we want to use Column instances as map keys.
      * TODO: should be different for same-name columns from different databases
      */
+    @Override
     public int hashCode() {
         return this.qualifiedName.hashCode();
     }
@@ -144,6 +153,7 @@ public class Attribute implements ProjectionSpec {
      * Compares columns alphanumerically by qualified name, case sensitive.
      * Attributes with schema are larger than attributes without schema.
      */
+    @Override
     public int compareTo(ProjectionSpec other) {
         if (!(other instanceof Attribute)) {
             return -1;

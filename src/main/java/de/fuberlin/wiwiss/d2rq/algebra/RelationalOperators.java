@@ -8,14 +8,17 @@ import java.util.Set;
 public interface RelationalOperators {
 
     RelationalOperators DUMMY = new RelationalOperators() {
+        @Override
         public Relation renameColumns(ColumnRenamer renamer) {
             return null;
         }
 
+        @Override
         public Relation select(Expression condition) {
             return null;
         }
 
+        @Override
         public Relation project(Set<? extends ProjectionSpec> projectionSpecs) {
             return null;
         }

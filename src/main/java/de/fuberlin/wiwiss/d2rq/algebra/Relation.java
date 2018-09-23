@@ -25,87 +25,109 @@ public abstract class Relation implements RelationalOperators {
     }
 
     public static Relation EMPTY = new Relation() {
+        @Override
         public ConnectedDB database() {
             return null;
         }
 
+        @Override
         public AliasMap aliases() {
             return AliasMap.NO_ALIASES;
         }
 
+        @Override
         public Set<Join> joinConditions() {
             return Collections.emptySet();
         }
 
+        @Override
         public Expression condition() {
             return Expression.FALSE;
         }
 
+        @Override
         public Expression softCondition() {
             return Expression.FALSE;
         }
 
+        @Override
         public Set<ProjectionSpec> projections() {
             return Collections.emptySet();
         }
 
+        @Override
         public Relation select(Expression condition) {
             return this;
         }
 
+        @Override
         public Relation renameColumns(ColumnRenamer renamer) {
             return this;
         }
 
+        @Override
         public Relation project(Set<? extends ProjectionSpec> projectionSpecs) {
             return this;
         }
 
+        @Override
         public boolean isUnique() {
             return true;
         }
 
+        @Override
         public String toString() {
             return "Relation.EMPTY";
         }
 
+        @Override
         public List<OrderSpec> orderSpecs() {
             return Collections.emptyList();
         }
 
+        @Override
         public int limit() {
             return Relation.NO_LIMIT;
         }
 
+        @Override
         public int limitInverse() {
             return Relation.NO_LIMIT;
         }
     };
+
     public static Relation TRUE = new Relation() {
+        @Override
         public ConnectedDB database() {
             return null;
         }
 
+        @Override
         public AliasMap aliases() {
             return AliasMap.NO_ALIASES;
         }
 
+        @Override
         public Set<Join> joinConditions() {
             return Collections.emptySet();
         }
 
+        @Override
         public Expression condition() {
             return Expression.TRUE;
         }
 
+        @Override
         public Expression softCondition() {
             return Expression.TRUE;
         }
 
+        @Override
         public Set<ProjectionSpec> projections() {
             return Collections.emptySet();
         }
 
+        @Override
         public Relation select(Expression condition) {
             if (condition.isFalse()) return Relation.EMPTY;
             if (condition.isTrue()) return Relation.TRUE;
@@ -114,30 +136,37 @@ public abstract class Relation implements RelationalOperators {
             return Relation.TRUE;
         }
 
+        @Override
         public Relation renameColumns(ColumnRenamer renamer) {
             return this;
         }
 
+        @Override
         public Relation project(Set<? extends ProjectionSpec> projectionSpecs) {
             return this;
         }
 
+        @Override
         public boolean isUnique() {
             return true;
         }
 
+        @Override
         public String toString() {
             return "Relation.TRUE";
         }
 
+        @Override
         public List<OrderSpec> orderSpecs() {
             return Collections.emptyList();
         }
 
+        @Override
         public int limit() {
             return Relation.NO_LIMIT;
         }
 
+        @Override
         public int limitInverse() {
             return Relation.NO_LIMIT;
         }

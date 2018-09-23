@@ -106,21 +106,23 @@ public class QueryEngineD2RQ extends QueryEngineMain {
     }
 
     private static class QueryEngineFactoryD2RQ implements QueryEngineFactory {
+        @Override
         public boolean accept(Query query, DatasetGraph dataset, Context context) {
             return dataset.getDefaultGraph() instanceof GraphD2RQ;
         }
 
-        public Plan create(Query query, DatasetGraph dataset,
-                           Binding inputBinding, Context context) {
+        @Override
+        public Plan create(Query query, DatasetGraph dataset, Binding inputBinding, Context context) {
             return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(), query, inputBinding, context).getPlan();
         }
 
+        @Override
         public boolean accept(Op op, DatasetGraph dataset, Context context) {
             return dataset.getDefaultGraph() instanceof GraphD2RQ;
         }
 
-        public Plan create(Op op, DatasetGraph dataset, Binding inputBinding,
-                           Context context) {
+        @Override
+        public Plan create(Op op, DatasetGraph dataset, Binding inputBinding, Context context) {
             return new QueryEngineD2RQ((GraphD2RQ) dataset.getDefaultGraph(), op, inputBinding, context).getPlan();
         }
     }

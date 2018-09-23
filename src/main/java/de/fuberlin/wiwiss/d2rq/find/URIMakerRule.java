@@ -36,6 +36,7 @@ import java.util.*;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class URIMakerRule implements Comparator<TripleRelation> {
     private Map<NodeMaker, URIMakerIdentifier> identifierCache = new HashMap<>();
 
@@ -49,6 +50,7 @@ public class URIMakerRule implements Comparator<TripleRelation> {
         return new URIMakerRuleChecker(node);
     }
 
+    @Override
     public int compare(TripleRelation o1, TripleRelation o2) {
         int priority1 = priority(o1);
         int priority2 = priority(o2);
@@ -95,39 +97,50 @@ public class URIMakerRule implements Comparator<TripleRelation> {
             return this.isURIMaker && this.isPattern;
         }
 
+        @Override
         public void limitTo(Node node) {
         }
 
+        @Override
         public void limitToBlankNodes() {
         }
 
+        @Override
         public void limitToEmptySet() {
         }
 
+        @Override
         public void limitToLiterals(String language, RDFDatatype datatype) {
         }
 
+        @Override
         public void limitToURIs() {
             this.isURIMaker = true;
         }
 
+        @Override
         public void limitValues(String constant) {
         }
 
+        @Override
         public void limitValuesToAttribute(Attribute attribute) {
             this.isColumn = true;
         }
 
+        @Override
         public void limitValuesToBlankNodeID(BlankNodeID id) {
         }
 
+        @Override
         public void limitValuesToPattern(Pattern pattern) {
             this.isPattern = true;
         }
 
+        @Override
         public void limitValuesToExpression(Expression expression) {
         }
 
+        @Override
         public void setUsesTranslator(Translator translator) {
         }
     }

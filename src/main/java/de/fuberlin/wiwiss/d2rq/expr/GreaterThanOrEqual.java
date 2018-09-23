@@ -9,6 +9,7 @@ public class GreaterThanOrEqual extends BinaryOperator {
         super(expr1, expr2, ">=");
     }
 
+    @Override
     public Expression renameAttributes(ColumnRenamer columnRenamer) {
         return new GreaterThanOrEqual(expr1.renameAttributes(columnRenamer), expr2.renameAttributes(columnRenamer));
     }

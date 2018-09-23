@@ -9,11 +9,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public interface ResultRow {
-    ResultRow NO_ATTRIBUTES = new ResultRow() {
-        public String get(ProjectionSpec attribute) {
-            return null;
-        }
-    };
+    ResultRow NO_ATTRIBUTES = attribute -> null;
 
     String get(ProjectionSpec column);
 }

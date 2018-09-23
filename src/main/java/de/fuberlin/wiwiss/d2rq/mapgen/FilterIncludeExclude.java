@@ -9,22 +9,27 @@ public class FilterIncludeExclude extends Filter {
         this.exclude = exclude;
     }
 
+    @Override
     public boolean matchesSchema(String schema) {
         return include.matchesSchema(schema) && !exclude.matchesSchema(schema);
     }
 
+    @Override
     public boolean matchesTable(String schema, String table) {
         return include.matchesTable(schema, table) && !exclude.matchesTable(schema, table);
     }
 
+    @Override
     public boolean matchesColumn(String schema, String table, String column) {
         return include.matchesColumn(schema, table, column) && !exclude.matchesColumn(schema, table, column);
     }
 
+    @Override
     public String getSingleSchema() {
         return include.getSingleSchema();
     }
 
+    @Override
     public String toString() {
         String in = (include == Filter.ALL) ? null : "include(" + include + ")";
         String ex = (exclude == Filter.NOTHING) ? null : "exclude(" + exclude + ")";

@@ -1,13 +1,12 @@
 package de.fuberlin.wiwiss.d2rq.expr;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
+
+import java.util.Set;
 
 
 /**
@@ -31,38 +30,46 @@ public class SQLExpression extends Expression {
     }
 
     private String expression;
-    private Set<Attribute> columns = new HashSet<Attribute>();
+    private Set<Attribute> columns;
 
     private SQLExpression(String expression) {
         this.expression = expression;
         this.columns = SQL.findColumnsInExpression(this.expression);
     }
 
+    @Override
     public boolean isTrue() {
         return false;
     }
 
+    @Override
     public boolean isFalse() {
         return false;
     }
 
+    @Override
     public Set<Attribute> attributes() {
         return this.columns;
     }
 
+    @Override
     public Expression renameAttributes(ColumnRenamer columnRenamer) {
         return new SQLExpression(SQL.replaceColumnsInExpression(this.expression, columnRenamer));
     }
 
+    @Override
     public String toSQL(ConnectedDB database, AliasMap aliases) {
         return "(" + SQL.quoteColumnsInExpression(this.expression, database) + ")";
     }
 
+    @Override
     public String toString() {
         return "SQL(" + this.expression + ")";
     }
 
+    @Override
     public boolean equals(Object other) {
+        if (this == other) return true;
         if (!(other instanceof SQLExpression)) {
             return false;
         }
@@ -70,6 +77,7 @@ public class SQLExpression extends Expression {
         return this.expression.equals(otherExpression.expression);
     }
 
+    @Override
     public int hashCode() {
         return this.expression.hashCode();
     }

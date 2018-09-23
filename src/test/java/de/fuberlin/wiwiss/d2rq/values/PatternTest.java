@@ -80,7 +80,7 @@ public class PatternTest {
     @Test
     public void testMatchesTrivialPattern() {
         Pattern p = new Pattern("foobar");
-        assertPatternValues(p, "foobar", new HashMap<String, String>());
+        assertPatternValues(p, "foobar", new HashMap<>());
         Assert.assertFalse(matches(p, "fooba"));
         Assert.assertFalse(matches(p, "foobarb"));
         Assert.assertFalse(matches(p, "oobar"));
@@ -91,7 +91,7 @@ public class PatternTest {
     @Test
     public void testMatchesMiniPattern() {
         Pattern p = new Pattern("@@table.col1@@");
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("table.col1", "");
         assertPatternValues(p, "", map);
         map.put("table.col1", "a");
@@ -108,7 +108,7 @@ public class PatternTest {
     @Test
     public void testMatchesPatternContainingNewlines() {
         Pattern p = new Pattern("foo@@table.col1@@bar");
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("table.col1", "1\n2");
         assertPatternValues(p, "foo1\n2bar", map);
     }
@@ -120,7 +120,7 @@ public class PatternTest {
     @Test
     public void testMagicRegexCharactersCauseNoProblems() {
         Pattern p = new Pattern("(foo|bar)@@table.col1@@");
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("table.col1", "1");
         assertPatternValues(p, "(foo|bar)1", map);
         Assert.assertFalse(matches(p, "foo1"));
@@ -129,7 +129,7 @@ public class PatternTest {
     @Test
     public void testMatchesOneColumnPattern() {
         Pattern p = new Pattern("foo@@table.col1@@bar");
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("table.col1", "1");
         assertPatternValues(p, "foo1bar", map);
         map.put("table.col1", "");
@@ -144,7 +144,7 @@ public class PatternTest {
     @Test
     public void testMatchesTwoColumnPattern() {
         Pattern p = new Pattern("foo@@table.col1@@-@@table.col2@@baz");
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("table.col1", "");
         map.put("table.col2", "");
         assertPatternValues(p, "foo-baz", map);
@@ -165,7 +165,7 @@ public class PatternTest {
     @Test
     public void testMatchesPatternStartingWithColumn() {
         Pattern p = new Pattern("@@table.col1@@bar@@table.col2@@baz");
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("table.col1", "");
         map.put("table.col2", "");
         assertPatternValues(p, "barbaz", map);
@@ -183,7 +183,7 @@ public class PatternTest {
     @Test
     public void testMatchesPatternEndingWithColumn() {
         Pattern p = new Pattern("foo@@table.col1@@bar@@table.col2@@");
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("table.col1", "");
         map.put("table.col2", "");
         assertPatternValues(p, "foobar", map);
@@ -277,18 +277,18 @@ public class PatternTest {
     public void testPatternsWithDifferentColumnsAreNotEqual() {
         Pattern p1 = new Pattern("foo@@table.col1@@");
         Pattern p2 = new Pattern("foo@@table.col2@@");
-        Assert.assertFalse(p1.equals(p2));
-        Assert.assertFalse(p2.equals(p1));
-        Assert.assertFalse(p1.hashCode() == p2.hashCode());
+        Assert.assertNotEquals(p1, p2);
+        Assert.assertNotEquals(p2, p1);
+        Assert.assertNotEquals(p1.hashCode(), p2.hashCode());
     }
 
     @Test
     public void testPatternsWithDifferentLiteralPartsAreNotEqual() {
         Pattern p1 = new Pattern("foo@@table.col1@@");
         Pattern p2 = new Pattern("bar@@table.col1@@");
-        Assert.assertFalse(p1.equals(p2));
-        Assert.assertFalse(p2.equals(p1));
-        Assert.assertFalse(p1.hashCode() == p2.hashCode());
+        Assert.assertNotEquals(p1, p2);
+        Assert.assertNotEquals(p2, p1);
+        Assert.assertNotEquals(p1.hashCode(), p2.hashCode());
     }
 
     @Test
@@ -419,7 +419,7 @@ public class PatternTest {
 
     private void assertPatternValues(Pattern pattern, String value, Map<String, String> expectedValues) {
         Assert.assertTrue(matches(pattern, value));
-        Collection<Expression> expressions = new HashSet<Expression>();
+        Collection<Expression> expressions = new HashSet<>();
         for (String attributeName : expectedValues.keySet()) {
             String attributeValue = expectedValues.get(attributeName);
             Attribute attribute = SQL.parseAttribute(attributeName);
@@ -438,7 +438,7 @@ public class PatternTest {
     private ResultRow row(String spec) {
         String[] parts = spec.split("\\|", -1);
         Attribute[] columns = {col1, col2, col3, col4, col5};
-        Map<ProjectionSpec, String> result = new HashMap<ProjectionSpec, String>();
+        Map<ProjectionSpec, String> result = new HashMap<>();
         for (int i = 0; i < parts.length && i < columns.length; i++) {
             result.put(columns[i], parts[i]);
         }

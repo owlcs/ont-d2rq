@@ -128,8 +128,7 @@ public class PropertyBridge extends ResourceMap {
     }
 
     public void setRefersToClassMap(ClassMap classMap) {
-        assertNotYetDefined(this.refersToClassMap, D2RQ.refersToClassMap,
-                D2RQException.PROPERTYBRIDGE_DUPLICATE_REFERSTOCLASSMAP);
+        assertNotYetDefined(this.refersToClassMap, D2RQ.refersToClassMap, D2RQException.PROPERTYBRIDGE_DUPLICATE_REFERSTOCLASSMAP);
         assertArgumentNotNull(classMap, D2RQ.refersToClassMap, D2RQException.PROPERTYBRIDGE_INVALID_REFERSTOCLASSMAP);
         this.refersToClassMap = classMap;
     }

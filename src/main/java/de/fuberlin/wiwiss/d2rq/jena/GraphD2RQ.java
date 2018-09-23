@@ -23,7 +23,8 @@ import org.slf4j.LoggerFactory;
 public class GraphD2RQ extends GraphBase implements Graph {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphD2RQ.class);
 
-    private static final Capabilities capabilities = new Capabilities() {
+    @SuppressWarnings("deprecated")
+    private static final Capabilities READ_ONLY_CAPABILITIES = new Capabilities() {
         @Override
         public boolean sizeAccurate() {
             return true;
@@ -94,7 +95,7 @@ public class GraphD2RQ extends GraphBase implements Graph {
 
     @Override
     public Capabilities getCapabilities() {
-        return capabilities;
+        return READ_ONLY_CAPABILITIES;
     }
 
     @Override

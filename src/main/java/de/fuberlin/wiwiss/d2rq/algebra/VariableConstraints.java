@@ -1,15 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.algebra;
 
-import java.util.*;
-
-import org.apache.jena.graph.Node;
-import org.apache.jena.sparql.core.Var;
-
 import de.fuberlin.wiwiss.d2rq.expr.Conjunction;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeSetConstraintBuilder;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeSetFilter;
+import org.apache.jena.graph.Node;
+import org.apache.jena.sparql.core.Var;
+
+import java.util.*;
 
 /**
  * A map from variables to {@link NodeMaker}s that helps to build up
@@ -23,10 +22,10 @@ import de.fuberlin.wiwiss.d2rq.nodes.NodeSetFilter;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class VariableConstraints {
-    private final Map<Var, NodeSetFilter> nodeSets = new HashMap<Var, NodeSetFilter>();
-    private final Map<Var, NodeMaker> nodeMakers = new HashMap<Var, NodeMaker>();
-    private final Map<Var, AliasMap> nodeRelationAliases = new HashMap<Var, AliasMap>();
-    private final Set<ProjectionSpec> projections = new HashSet<ProjectionSpec>();
+    private final Map<Var, NodeSetFilter> nodeSets = new HashMap<>();
+    private final Map<Var, NodeMaker> nodeMakers = new HashMap<>();
+    private final Map<Var, AliasMap> nodeRelationAliases = new HashMap<>();
+    private final Set<ProjectionSpec> projections = new HashSet<>();
 
     public void add(Var var, NodeMaker nodeMaker, AliasMap aliases) {
         if (!nodeMakers.containsKey(var)) {
@@ -66,7 +65,7 @@ public class VariableConstraints {
      * any two identically-named node makers produce the same node
      */
     public Expression constraint() {
-        Collection<Expression> expressions = new ArrayList<Expression>();
+        Collection<Expression> expressions = new ArrayList<>();
         for (Var var : nodeSets.keySet()) {
             NodeSetConstraintBuilder nodeSet = (NodeSetConstraintBuilder) nodeSets.get(var);
             if (nodeSet.isEmpty()) {

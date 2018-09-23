@@ -193,7 +193,8 @@ public class ExprTransformTest2 {
 
         NodeRelation intvalue = search("table2", "intvalue", rels);
 
-        Expr disjunction = new E_LogicalOr(new E_Equals(new ExprVar("o"), NodeValue.makeNode("1", XSDDatatype.XSDint)), new E_Equals(new ExprVar("o"), NodeValue.makeNode("2", XSDDatatype.XSDint)));
+        Expr disjunction = new E_LogicalOr(new E_Equals(new ExprVar("o"),
+                NodeValue.makeNode("1", XSDDatatype.XSDint)), new E_Equals(new ExprVar("o"), NodeValue.makeNode("2", XSDDatatype.XSDint)));
 
         Expression result = TransformExprToSQLApplyer.convert(disjunction, intvalue);
         TypedNodeMaker nm = (TypedNodeMaker) intvalue.nodeMaker(Var.alloc("o"));
@@ -230,7 +231,7 @@ public class ExprTransformTest2 {
     private NodeRelation[] translate(List<Triple> pattern, String mappingFile) {
         Collection<NodeRelation> rels = new GraphPatternTranslator(pattern,
                 MapFixture.loadPropertyBridges(mappingFile), true).translate();
-        return rels.toArray(new NodeRelation[rels.size()]);
+        return rels.toArray(new NodeRelation[0]);
     }
 
 }

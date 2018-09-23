@@ -1,10 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import java.util.*;
-
-import org.apache.jena.graph.Triple;
-import org.apache.jena.sparql.core.Var;
-
 import de.fuberlin.wiwiss.d2rq.algebra.*;
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
@@ -12,12 +7,18 @@ import de.fuberlin.wiwiss.d2rq.expr.Conjunction;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.core.Var;
+
+import java.util.*;
 
 class TripleRelationJoiner {
 
     public static TripleRelationJoiner create(boolean allOptimizations) {
-        return new TripleRelationJoiner(new VariableConstraints(),
-                Collections.emptyList(), Collections.emptyList(),
+        return new TripleRelationJoiner(
+                new VariableConstraints(),
+                Collections.emptyList(),
+                Collections.emptyList(),
                 allOptimizations);
     }
 
@@ -27,16 +28,17 @@ class TripleRelationJoiner {
     private final boolean useAllOptimizations;
 
     private TripleRelationJoiner(VariableConstraints nodeSets,
-                                 List<Triple> patterns, List<NodeRelation> relations, boolean useAllOptimizations) {
+                                 List<Triple> patterns,
+                                 List<NodeRelation> relations,
+                                 boolean useAllOptimizations) {
         this.nodeSets = nodeSets;
         this.joinedTriplePatterns = patterns;
         this.joinedTripleRelations = relations;
         this.useAllOptimizations = useAllOptimizations;
     }
 
-    public List<TripleRelationJoiner> joinAll(Triple pattern,
-                                              List<NodeRelation> candidates) {
-        List<TripleRelationJoiner> results = new ArrayList<TripleRelationJoiner>();
+    public List<TripleRelationJoiner> joinAll(Triple pattern, List<NodeRelation> candidates) {
+        List<TripleRelationJoiner> results = new ArrayList<>();
         for (NodeRelation tripleRelation : candidates) {
             TripleRelationJoiner nextJoiner = join(pattern, tripleRelation);
             if (nextJoiner != null) {
@@ -46,8 +48,7 @@ class TripleRelationJoiner {
         return results;
     }
 
-    private static boolean isUnique(ConnectedDB database, RelationName originalName,
-                                    Set<String> attributeNames) {
+    private static boolean isUnique(ConnectedDB database, RelationName originalName, Set<String> attributeNames) {
         Map<String, List<String>> uniqueKeys = database.getUniqueKeyColumns(originalName);
         if (uniqueKeys != null) {
             for (List<String> indexColumns : uniqueKeys.values()) {
@@ -71,7 +72,7 @@ class TripleRelationJoiner {
 
     private static class AttributeSet {
         RelationName relationName = null;
-        Set<String> attributeNames = new TreeSet<String>();
+        Set<String> attributeNames = new TreeSet<>();
 
         /*
          * Determine the attributes that make up a nodemakers projection spec
@@ -119,7 +120,7 @@ class TripleRelationJoiner {
     }
 
     private List<RelationName> getRelationNames(NodeMaker nodeMaker) {
-        List<RelationName> result = new ArrayList<RelationName>();
+        List<RelationName> result = new ArrayList<>();
         Set<ProjectionSpec> projectionSpecs = nodeMaker.projectionSpecs();
         for (ProjectionSpec spec : projectionSpecs) {
             for (Attribute a : spec.requiredAttributes()) {
@@ -130,9 +131,9 @@ class TripleRelationJoiner {
     }
 
     public TripleRelationJoiner join(Triple pattern, NodeRelation relation) {
-        List<Triple> newPatterns = new ArrayList<Triple>(joinedTriplePatterns);
+        List<Triple> newPatterns = new ArrayList<>(joinedTriplePatterns);
         newPatterns.add(pattern);
-        List<NodeRelation> newRelations = new ArrayList<NodeRelation>(joinedTripleRelations);
+        List<NodeRelation> newRelations = new ArrayList<>(joinedTripleRelations);
         newRelations.add(relation);
 
         VariableConstraints nodeSets = new VariableConstraints();
@@ -143,10 +144,10 @@ class TripleRelationJoiner {
             if (useAllOptimizations) {
                 /*
                  * Before adding a NodeMaker, try to adopt aliases from existing NodeMakers
-				 * in order to prevent unnecessary self-joins (#2798308) 
-				 */
+                 * in order to prevent unnecessary self-joins (#2798308)
+                 */
                 // This failed when originalName had more than 1 alias r.baseRelation (fixed, GM)
-                List<String> names = new ArrayList<String>();
+                List<String> names = new ArrayList<>();
 
                 if (t.getSubject().isVariable())
                     names.add(t.getSubject().getName());
@@ -158,62 +159,65 @@ class TripleRelationJoiner {
                 for (String name : names) {
                     Var nameVar = Var.alloc(name);
                     NodeMaker n = nodeSets.toMap().get(nameVar);
-                    if (n != null/* && n instanceof TypedNodeMaker*/) {
+                    if (n == null/* && n instanceof TypedNodeMaker*/) {
+                        continue;
+                    }
 
-                        AttributeSet attributes = AttributeSet.createFrom(n);
-                        /*
-						 * If we would set an alias to this table...
-						 */
-                        if (attributes != null) {
-                            AliasMap amap = nodeSets.relationAliases().get(nameVar);
-                            RelationName originalName = amap.originalOf(attributes.relationName);
-                            if (r.baseRelation().aliases().hasAlias(originalName)) {
+                    AttributeSet attributes = AttributeSet.createFrom(n);
+                    /*
+                     * If we would set an alias to this table...
+                     */
+                    if (attributes == null) {
+                        continue;
+                    }
+                    AliasMap amap = nodeSets.relationAliases().get(nameVar);
+                    RelationName originalName = amap.originalOf(attributes.relationName);
+                    if (!r.baseRelation().aliases().hasAlias(originalName)) {
+                        continue;
+                    }
 
-								/*
-								 * ... and indexes are in place to guarantee uniqueness of the attribute combination...
-								 */
-                                if (isUnique(r.baseRelation().database(), originalName, attributes.attributeNames)) {
+                    /*
+                     * ... and indexes are in place to guarantee uniqueness of the attribute combination...
+                     */
+                    if (!isUnique(r.baseRelation().database(), originalName, attributes.attributeNames)) {
+                        continue;
+                    }
 
-                                    if (t.getSubject().isVariable() && t.getSubject().getName().equals(name)) {
-                                        // ... then first find the right relation name...
-                                        AttributeSet existing = AttributeSet.createFrom(r.nodeMaker(TripleRelation.SUBJECT));
-                                        if (existing != null && existing.attributeNames.equals(attributes.attributeNames)) {
-                                            // ... then apply it
-                                            r = r.renameSingleRelation(existing.relationName, attributes.relationName);
-                                            newRelations.set(i, r);
-                                        }
-                                    }
+                    if (t.getSubject().isVariable() && t.getSubject().getName().equals(name)) {
+                        // ... then first find the right relation name...
+                        AttributeSet existing = AttributeSet.createFrom(r.nodeMaker(TripleRelation.SUBJECT));
+                        if (existing != null && existing.attributeNames.equals(attributes.attributeNames)) {
+                            // ... then apply it
+                            r = r.renameSingleRelation(existing.relationName, attributes.relationName);
+                            newRelations.set(i, r);
+                        }
+                    }
 
-                                    if (t.getPredicate().isVariable() && t.getPredicate().getName().equals(name)) {
-                                        // ... then first find the right relation name...
-                                        AttributeSet existing = AttributeSet.createFrom(r.nodeMaker(TripleRelation.PREDICATE));
-                                        if (existing != null && existing.attributeNames.equals(attributes.attributeNames)) {
-                                            // ... then apply it
-                                            r = r.renameSingleRelation(existing.relationName, attributes.relationName);
-                                            newRelations.set(i, r);
-                                        }
-                                    }
+                    if (t.getPredicate().isVariable() && t.getPredicate().getName().equals(name)) {
+                        // ... then first find the right relation name...
+                        AttributeSet existing = AttributeSet.createFrom(r.nodeMaker(TripleRelation.PREDICATE));
+                        if (existing != null && existing.attributeNames.equals(attributes.attributeNames)) {
+                            // ... then apply it
+                            r = r.renameSingleRelation(existing.relationName, attributes.relationName);
+                            newRelations.set(i, r);
+                        }
+                    }
 
-                                    if (t.getObject().isVariable() && t.getObject().getName().equals(name)) {
-                                        // ... then first find the right relation name...
-                                        AttributeSet existing = AttributeSet.createFrom(r.nodeMaker(TripleRelation.OBJECT));
-                                        if (existing != null && existing.attributeNames.equals(attributes.attributeNames)) {
-                                            // ... then apply it
-                                            r = r.renameSingleRelation(existing.relationName, attributes.relationName);
-                                            newRelations.set(i, r);
-                                        }
-                                    }
-                                }
-                            }
+                    if (t.getObject().isVariable() && t.getObject().getName().equals(name)) {
+                        // ... then first find the right relation name...
+                        AttributeSet existing = AttributeSet.createFrom(r.nodeMaker(TripleRelation.OBJECT));
+                        if (existing != null && existing.attributeNames.equals(attributes.attributeNames)) {
+                            // ... then apply it
+                            r = r.renameSingleRelation(existing.relationName, attributes.relationName);
+                            newRelations.set(i, r);
                         }
                     }
                 }
             }
 
             if (t.getObject().isVariable()) {
-                List<RelationName> relationNames = getRelationNames(
-                        r.nodeMaker(TripleRelation.OBJECT));
-                Set<Alias> aliases = new HashSet<Alias>();
+                List<RelationName> relationNames = getRelationNames(r.nodeMaker(TripleRelation.OBJECT));
+                Set<Alias> aliases = new HashSet<>();
 
                 for (RelationName rname : relationNames) {
                     if (r.baseRelation().aliases().isAlias(rname))
@@ -223,9 +227,8 @@ class TripleRelationJoiner {
             }
 
             if (t.getPredicate().isVariable()) {
-                List<RelationName> relationNames = getRelationNames(
-                        r.nodeMaker(TripleRelation.PREDICATE));
-                Set<Alias> aliases = new HashSet<Alias>();
+                List<RelationName> relationNames = getRelationNames(r.nodeMaker(TripleRelation.PREDICATE));
+                Set<Alias> aliases = new HashSet<>();
 
                 for (RelationName rname : relationNames) {
                     if (r.baseRelation().aliases().isAlias(rname))
@@ -235,9 +238,8 @@ class TripleRelationJoiner {
             }
 
             if (t.getSubject().isVariable()) {
-                List<RelationName> relationNames = getRelationNames(
-                        r.nodeMaker(TripleRelation.SUBJECT));
-                Set<Alias> aliases = new HashSet<Alias>();
+                List<RelationName> relationNames = getRelationNames(r.nodeMaker(TripleRelation.SUBJECT));
+                Set<Alias> aliases = new HashSet<>();
 
                 for (RelationName rname : relationNames) {
                     if (r.baseRelation().aliases().isAlias(rname))
@@ -254,14 +256,12 @@ class TripleRelationJoiner {
     }
 
     public NodeRelation toNodeRelation() {
-        return new NodeRelation(
-                joinedBaseRelation().select(
-                        nodeSets.constraint()).project(nodeSets.allProjections()),
+        return new NodeRelation(joinedBaseRelation().select(nodeSets.constraint()).project(nodeSets.allProjections()),
                 nodeSets.toMap());
     }
 
     private Relation joinedBaseRelation() {
-        List<Relation> relations = new ArrayList<Relation>();
+        List<Relation> relations = new ArrayList<>();
         for (NodeRelation tripleRelation : joinedTripleRelations) {
             relations.add(tripleRelation.baseRelation());
         }
@@ -282,11 +282,11 @@ class TripleRelationJoiner {
         }
         ConnectedDB connectedDB = relations.iterator().next().database();
         AliasMap joinedAliases = AliasMap.NO_ALIASES;
-        Collection<Expression> expressions = new HashSet<Expression>();
+        Collection<Expression> expressions = new HashSet<>();
         expressions.add(additionalCondition);
-        Collection<Expression> softConditions = new HashSet<Expression>();
-        Set<Join> joins = new HashSet<Join>();
-        Set<ProjectionSpec> projections = new HashSet<ProjectionSpec>();
+        Collection<Expression> softConditions = new HashSet<>();
+        Set<Join> joins = new HashSet<>();
+        Set<ProjectionSpec> projections = new HashSet<>();
         int limit = Relation.NO_LIMIT;
         int limitInverse = Relation.NO_LIMIT;
         List<OrderSpec> orderSpecs = null;
@@ -307,8 +307,14 @@ class TripleRelationJoiner {
 
         // In the meantime, copy the uniqueness from the relation if there's just one
         boolean isUnique = relations.size() == 1 && (relations.iterator().next()).isUnique();
-        return new RelationImpl(connectedDB, joinedAliases, Conjunction.create(expressions),
+        return new RelationImpl(connectedDB,
+                joinedAliases,
+                Conjunction.create(expressions),
                 Conjunction.create(softConditions),
-                joins, projections, isUnique, orderSpecs, limit, limitInverse);
+                joins, projections,
+                isUnique,
+                orderSpecs,
+                limit,
+                limitInverse);
     }
 }

@@ -20,9 +20,9 @@ import java.util.Map;
  */
 @SuppressWarnings("WeakerAccess")
 public class TranslationTable extends MapObject {
-    private Collection<Translation> translations = new ArrayList<Translation>();
-    private String javaClass = null;
-    private String href = null;
+    private Collection<Translation> translations = new ArrayList<>();
+    private String javaClass;
+    private String href;
 
     public TranslationTable(Resource resource) {
         super(resource);
@@ -30,6 +30,7 @@ public class TranslationTable extends MapObject {
 
     /**
      * Returns the number of defined mappings.
+     *
      * @return int
      */
     public int size() {
@@ -61,8 +62,7 @@ public class TranslationTable extends MapObject {
     }
 
     public void setHref(String href) {
-        assertNotYetDefined(this.href, D2RQ.href,
-                D2RQException.TRANSLATIONTABLE_DUPLICATE_HREF);
+        assertNotYetDefined(this.href, D2RQ.href, D2RQException.TRANSLATIONTABLE_DUPLICATE_HREF);
         this.href = href;
     }
 

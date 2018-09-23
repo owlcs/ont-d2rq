@@ -26,14 +26,15 @@ import java.util.Properties;
 
 /**
  * Created by @szuev on 29.03.2018.
+ * @see <a href='file:resources/db.properties'>db.properties</a>
  */
 public enum ConnectionData {
     /**
-     * to set up use <a href='file:doc/example/iswc-mysql.sql'>iswc-mysql.sql</a>
+     * to set up DB use <a href='file:doc/example/iswc-mysql.sql'>iswc-mysql.sql</a>
      */
     MYSQL,
     /**
-     * to set up use <a href='file:doc/example/iswc-postgres.sql'>iswc-postgres.sql</a>
+     * to set up DB use <a href='file:doc/example/iswc-postgres.sql'>iswc-postgres.sql</a>
      */
     POSTGRES {
         /**

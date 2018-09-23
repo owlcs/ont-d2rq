@@ -35,7 +35,7 @@ public class SQLBoolean extends DataType {
         if ("false".equals(value) || "0".equals(value)) {
             return "FALSE";
         }
-        LOGGER.warn("Unsupported BOOLEAN format: '" + value + "'; treating as NULL");
+        LOGGER.warn("Unsupported BOOLEAN format: '{}'; treating as NULL", value);
         return "NULL";
     }
 }

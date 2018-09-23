@@ -29,6 +29,7 @@ import java.util.*;
  * @author Herwig Leimer
  * @author Giovanni Mels
  */
+@SuppressWarnings("WeakerAccess")
 public final class TransformExprToSQLApplyer implements ExprVisitor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TransformExprToSQLApplyer.class);
@@ -51,10 +52,10 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     private static final Expression CONSTANT_TRUE = new ConstantEx("true", NodeValueBoolean.TRUE.asNode());
 
     private final NodeRelation nodeRelation;
-    private final Stack<Expression> expression = new Stack<Expression>();
+    private final Stack<Expression> expression = new Stack<>();
 
     private boolean convertable;     // flag if converting was possible
-    private String reason = null;   // reason why converting failed
+    private String reason;   // reason why converting failed
 
     /**
      * Creates an expression transformer.
@@ -87,10 +88,12 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
         return result;
     }
 
+    @Override
     public void visit(ExprFunction0 func) {
         visitExprFunction(func);
     }
 
+    @Override
     public void visit(ExprFunction1 function) {
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("visit ExprFunction {}", function);
@@ -102,6 +105,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
         convertFunction(function);
     }
 
+    @Override
     public void visit(ExprFunction2 function) {
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("visit ExprFunction {}", function);
@@ -113,18 +117,22 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
         convertFunction(function);
     }
 
+    @Override
     public void visit(ExprFunction3 func) {
         visitExprFunction(func);
     }
 
+    @Override
     public void visit(ExprFunctionN func) {
         visitExprFunction(func);
     }
 
+    @Override
     public void visit(ExprFunctionOp funcOp) {
         visitExprFunction(funcOp);
     }
 
+    @Override
     public void visit(ExprAggregator eAgg) {
         conversionFailed(eAgg);
     }
@@ -161,6 +169,7 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
         }
     }
 
+    @Override
     public void visit(NodeValue value) {
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("visit NodeValue {}", value);
@@ -214,41 +223,42 @@ public final class TransformExprToSQLApplyer implements ExprVisitor {
     private List<Expression> toExpression(ExprVar exprVar) {
         ArrayList<Expression> result = new ArrayList<>();
 
-        if (this.nodeRelation != null && exprVar != null) {
-            // get the nodemaker for the expr-var
-            NodeMaker nodeMaker = nodeRelation.nodeMaker(exprVar.asVar());
-            if (nodeMaker instanceof TypedNodeMaker) {
-                TypedNodeMaker typedNodeMaker = (TypedNodeMaker) nodeMaker;
-                Iterator<ProjectionSpec> it = typedNodeMaker.projectionSpecs().iterator();
-                if (!it.hasNext()) {
-                    if (LOGGER.isDebugEnabled())
-                        LOGGER.debug("no projection spec for {}, assuming constant", exprVar);
-                    Node node = typedNodeMaker.makeNode(null);
-                    result.add(new ConstantEx(NodeValue.makeNode(node).asString(), node));
-                }
-                while (it.hasNext()) {
-                    ProjectionSpec projectionSpec = it.next();
-
-                    if (projectionSpec == null)
-                        return Collections.emptyList();
-
-                    if (projectionSpec instanceof Attribute) {
-                        result.add(new AttributeExprEx((Attribute) projectionSpec, nodeMaker));
-                    } else {
-                        // projectionSpec is a ExpressionProjectionSpec
-                        ExpressionProjectionSpec expressionProjectionSpec = (ExpressionProjectionSpec) projectionSpec;
-                        Expression expression = expressionProjectionSpec.toExpression();
-                        if (expression instanceof SQLExpression)
-                            result.add(expression);
-                        else
-                            return Collections.emptyList();
-                    }
-                }
-            } else if (nodeMaker instanceof FixedNodeMaker) {
-                FixedNodeMaker fixedNodeMaker = (FixedNodeMaker) nodeMaker;
-                Node node = fixedNodeMaker.makeNode(null);
+        if (this.nodeRelation == null || exprVar == null) {
+            return result;
+        }
+        // get the nodemaker for the expr-var
+        NodeMaker nodeMaker = nodeRelation.nodeMaker(exprVar.asVar());
+        if (nodeMaker instanceof TypedNodeMaker) {
+            TypedNodeMaker typedNodeMaker = (TypedNodeMaker) nodeMaker;
+            Iterator<ProjectionSpec> it = typedNodeMaker.projectionSpecs().iterator();
+            if (!it.hasNext()) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("no projection spec for {}, assuming constant", exprVar);
+                Node node = typedNodeMaker.makeNode(null);
                 result.add(new ConstantEx(NodeValue.makeNode(node).asString(), node));
             }
+            while (it.hasNext()) {
+                ProjectionSpec projectionSpec = it.next();
+
+                if (projectionSpec == null)
+                    return Collections.emptyList();
+
+                if (projectionSpec instanceof Attribute) {
+                    result.add(new AttributeExprEx((Attribute) projectionSpec, nodeMaker));
+                } else {
+                    // projectionSpec is a ExpressionProjectionSpec
+                    ExpressionProjectionSpec expressionProjectionSpec = (ExpressionProjectionSpec) projectionSpec;
+                    Expression expression = expressionProjectionSpec.toExpression();
+                    if (expression instanceof SQLExpression)
+                        result.add(expression);
+                    else
+                        return Collections.emptyList();
+                }
+            }
+        } else if (nodeMaker instanceof FixedNodeMaker) {
+            FixedNodeMaker fixedNodeMaker = (FixedNodeMaker) nodeMaker;
+            Node node = fixedNodeMaker.makeNode(null);
+            result.add(new ConstantEx(NodeValue.makeNode(node).asString(), node));
         }
 
         return result;
