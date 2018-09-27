@@ -5,7 +5,7 @@ import de.fuberlin.wiwiss.d2rq.expr.AttributeExpr;
 import de.fuberlin.wiwiss.d2rq.expr.Equality;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.expr.SQLExpression;
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.values.BlankNodeID;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
@@ -479,7 +479,7 @@ public class NodeSetTest {
     @Test
     public void testTranslatorUnsupported() {
         nodes.setUsesTranslator(Translator.IDENTITY);
-        nodes.setUsesTranslator(new TranslationTable(ResourceFactory.createResource()).translator());
+        nodes.setUsesTranslator(MappingFactory.createEmpty().createTranslationTable(ResourceFactory.createResource()).translator());
         Assert.assertFalse(nodes.isEmpty());
         Assert.assertTrue(nodes.isUnsupported());
     }

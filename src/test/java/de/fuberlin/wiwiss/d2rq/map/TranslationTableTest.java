@@ -1,6 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable.Translation;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -17,20 +16,23 @@ public class TranslationTableTest {
 
     @Test
     public void testNewTranslationTableIsEmpty() {
-        TranslationTable table = new TranslationTable(table1);
+        Mapping m = MappingFactory.createEmpty();
+        TranslationTable table = m.createTranslationTable(table1);
         Assert.assertEquals(0, table.size());
     }
 
     @Test
     public void testTranslationTableIsSizeOneAfterAddingOneTranslation() {
-        TranslationTable table = new TranslationTable(table1);
+        Mapping m = MappingFactory.createEmpty();
+        TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
         Assert.assertEquals(1, table.size());
     }
 
     @Test
     public void testTranslationTableTranslator() {
-        TranslationTable table = new TranslationTable(table1);
+        Mapping m = MappingFactory.createEmpty();
+        TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
         table.addTranslation("key2", "value2");
         table.addTranslation("key3", "value3");
@@ -43,7 +45,8 @@ public class TranslationTableTest {
 
     @Test
     public void testUndefinedTranslation() {
-        TranslationTable table = new TranslationTable(table1);
+        Mapping m = MappingFactory.createEmpty();
+        TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
         Translator translator = table.translator();
         Assert.assertNull(translator.toRDFValue("unknownKey"));
@@ -52,7 +55,8 @@ public class TranslationTableTest {
 
     @Test
     public void testNullTranslation() {
-        TranslationTable table = new TranslationTable(table1);
+        Mapping m = MappingFactory.createEmpty();
+        TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
         Translator translator = table.translator();
         Assert.assertNull(translator.toRDFValue(null));
@@ -61,17 +65,17 @@ public class TranslationTableTest {
 
     @Test
     public void testTranslationsWithSameValuesAreEqual() {
-        Translation t1 = new Translation("foo", "bar");
-        Translation t2 = new Translation("foo", "bar");
+        TranslationTableImpl.P t1 = new TranslationTableImpl.P("foo", "bar");
+        TranslationTableImpl.P t2 = new TranslationTableImpl.P("foo", "bar");
         Assert.assertEquals(t1, t2);
         Assert.assertEquals(t1.hashCode(), t2.hashCode());
     }
 
     @Test
     public void testTranslationsWithDifferentValuesAreNotEqual() {
-        Translation t1 = new Translation("foo", "bar");
-        Translation t2 = new Translation("foo", "bar2");
-        Translation t3 = new Translation("foo2", "bar");
+        TranslationTableImpl.P t1 = new TranslationTableImpl.P("foo", "bar");
+        TranslationTableImpl.P t2 = new TranslationTableImpl.P("foo", "bar2");
+        TranslationTableImpl.P t3 = new TranslationTableImpl.P("foo2", "bar");
         Assert.assertNotEquals(t1, t2);
         Assert.assertNotEquals(t2, t1);
         Assert.assertNotEquals(t1.hashCode(), t2.hashCode());

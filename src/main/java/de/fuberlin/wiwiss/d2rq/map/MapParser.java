@@ -253,13 +253,13 @@ public class MapParser {
         it = translationTableResources.iterator();
         while (it.hasNext()) {
             Resource r = it.next();
-            TranslationTable table = new TranslationTable(r);
+            TranslationTableImpl table = this.mapping.createTranslationTable(r);
             parseTranslationTable(table, r);
             this.mapping.addTranslationTable(table);
         }
     }
 
-    private void parseTranslationTable(TranslationTable table, Resource r) {
+    private void parseTranslationTable(TranslationTableImpl table, Resource r) {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.href);
         while (stmts.hasNext()) {

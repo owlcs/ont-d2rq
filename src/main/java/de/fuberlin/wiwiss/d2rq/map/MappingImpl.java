@@ -158,6 +158,11 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
+    public TranslationTableImpl createTranslationTable(Resource r) {
+        return new TranslationTableImpl(r);
+    }
+
+    @Override
     public void addDatabase(Database database) {
         this.databases.put(database.resource(), database);
     }

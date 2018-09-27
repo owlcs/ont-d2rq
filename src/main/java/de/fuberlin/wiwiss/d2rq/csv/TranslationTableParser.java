@@ -1,7 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.csv;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable.Translation;
 import org.apache.jena.riot.system.IRIResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +11,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Parses the contents of a CSV file into a collection of
@@ -42,9 +42,9 @@ public class TranslationTableParser {
         }
     }
 
-    public Collection<Translation> parseTranslations() {
+    public Collection<Row> parseTranslations() {
         try {
-            List<Translation> result = new ArrayList<>();
+            List<Row> result = new ArrayList<>();
             while (true) {
                 String line = this.reader.readLine();
                 if (line == null) {
@@ -55,11 +55,47 @@ public class TranslationTableParser {
                     LOGGER.warn("Skipping line with {} instead of 2 columns in CSV file {}", fields.length, url);
                     continue;
                 }
-                result.add(new Translation(fields[0], fields[1]));
+                result.add(new Row(fields[0], fields[1]));
             }
             return result;
         } catch (IOException iex) {
             throw new D2RQException(iex);
+        }
+    }
+
+    public static class Row {
+        private final String first;
+        private final String second;
+
+        Row(String first, String second) {
+            this.first = Objects.requireNonNull(first);
+            this.second = Objects.requireNonNull(second);
+        }
+
+        public String first() {
+            return this.first;
+        }
+
+        public String second() {
+            return this.second;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("'%s'=>'%s'", this.first, this.second);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Row row = (Row) o;
+            return Objects.equals(first, row.first) && Objects.equals(second, row.second);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(first, second);
         }
     }
 }
