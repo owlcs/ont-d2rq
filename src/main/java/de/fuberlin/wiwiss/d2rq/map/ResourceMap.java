@@ -27,7 +27,7 @@ import java.util.*;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 @SuppressWarnings("WeakerAccess")
-public abstract class ResourceMap extends MapObject {
+public abstract class ResourceMap extends MapObjectImpl {
 
     // These can be set on PropertyBridges and ClassMaps
     protected String bNodeIdColumns = null;    // comma-separated list

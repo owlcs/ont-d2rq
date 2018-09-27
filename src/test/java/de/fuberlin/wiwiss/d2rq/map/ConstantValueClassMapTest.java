@@ -43,7 +43,7 @@ public class ConstantValueClassMapTest {
     public void setUp() {
         this.model = ModelFactory.createDefaultModel();
         this.mapping = MappingFactory.createEmpty();
-        this.database = new Database(this.model.createResource());
+        this.database = mapping.createDatabase(this.model.createResource());
         this.mapping.addDatabase(this.database);
 
         ClassMap concept = createClassMap("http://example.com/concept#@@c.ID@@");

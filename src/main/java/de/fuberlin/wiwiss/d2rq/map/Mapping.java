@@ -28,6 +28,8 @@ public interface Mapping extends AutoCloseable {
 
     Configuration configuration();
 
+    Database createDatabase(Resource r);
+
     Collection<Database> databases();
 
     void addDatabase(Database database);

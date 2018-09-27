@@ -19,7 +19,7 @@ import java.util.Map;
  * @author zazi (http://github.com/zazi)
  */
 @SuppressWarnings("WeakerAccess")
-public class TranslationTable extends MapObject {
+public class TranslationTable extends MapObjectImpl {
     private Collection<Translation> translations = new ArrayList<>();
     private String javaClass;
     private String href;

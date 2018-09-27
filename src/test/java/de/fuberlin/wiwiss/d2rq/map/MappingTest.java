@@ -25,9 +25,9 @@ public class MappingTest {
     @Test
     public void testReturnAddedDatabase() {
         Mapping m = MappingFactory.createEmpty();
-        Database db = new Database(database1);
+        Database db = m.createDatabase(database1);
         m.addDatabase(db);
-        Assert.assertEquals(Collections.singletonList(db), new ArrayList<Database>(m.databases()));
+        Assert.assertEquals(Collections.singletonList(db), new ArrayList<>(m.databases()));
         Assert.assertEquals(db, m.database(database1));
     }
 
@@ -55,7 +55,8 @@ public class MappingTest {
 
     @Test
     public void testClassMapReturnsAssignedDatabase() {
-        Database db = new Database(database1);
+        Mapping m = MappingFactory.createEmpty();
+        Database db = m.createDatabase(database1);
         ClassMap c = new ClassMap(classMap1);
         c.setDatabase(db);
         Assert.assertEquals(db, c.database());
@@ -66,9 +67,9 @@ public class MappingTest {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = new ClassMap(classMap1);
         try {
-            Database db1 = new Database(database1);
+            Database db1 = m.createDatabase(database1);
             c.setDatabase(db1);
-            Database db2 = new Database(database2);
+            Database db2 = m.createDatabase(database2);
             c.setDatabase(db2);
             m.addClassMap(c);
             m.validate();
@@ -82,7 +83,7 @@ public class MappingTest {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = new ClassMap(classMap1);
         try {
-            Database db1 = new Database(database1);
+            Database db1 = m.createDatabase(database1);
             db1.setJDBCDSN("jdbc:mysql:///db");
             db1.setJDBCDriver("org.example.Driver");
             m.addDatabase(db1);
@@ -106,7 +107,7 @@ public class MappingTest {
         ClassMap c = new ClassMap(classMap1);
         m.addClassMap(c);
         Assert.assertEquals(Collections.singleton(classMap1),
-                new HashSet<Resource>(m.classMapResources()));
+                new HashSet<>(m.classMapResources()));
         Assert.assertEquals(c, m.classMap(classMap1));
     }
 }

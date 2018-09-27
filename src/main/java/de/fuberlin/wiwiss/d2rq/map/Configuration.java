@@ -9,7 +9,7 @@ import org.apache.jena.rdf.model.Resource;
  *
  * @author Christian Becker &lt;http://beckr.org#chris&gt;
  */
-public class Configuration extends MapObject {
+public class Configuration extends MapObjectImpl {
     private boolean serveVocabulary = true;
     private boolean useAllOptimizations = false;
 

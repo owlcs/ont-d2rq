@@ -18,6 +18,7 @@ import java.util.*;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@Deprecated //TODO: sheduled to be removed
 public class MapParser {
     private final static Logger LOGGER = LoggerFactory.getLogger(MapParser.class);
 
@@ -114,7 +115,7 @@ public class MapParser {
         Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.Database);
         while (it.hasNext()) {
             Resource dbResource = it.next();
-            Database database = new Database(dbResource);
+            DatabaseImpl database = this.mapping.createDatabase(dbResource);
             parseDatabase(database, dbResource);
             this.mapping.addDatabase(database);
         }
@@ -140,7 +141,7 @@ public class MapParser {
         }
     }
 
-    private void parseDatabase(Database database, Resource r) {
+    private void parseDatabase(DatabaseImpl database, Resource r) {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.jdbcDSN);
         while (stmts.hasNext()) {

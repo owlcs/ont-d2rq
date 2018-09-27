@@ -29,7 +29,7 @@ public class CompileTest {
     public void setUp() {
         this.model = ModelFactory.createDefaultModel();
         this.mapping = MappingFactory.createEmpty();
-        this.database = new Database(this.model.createResource());
+        this.database = mapping.createDatabase(this.model.createResource());
         this.database.useConnectedDB(new DummyDB());
         this.mapping.addDatabase(this.database);
 

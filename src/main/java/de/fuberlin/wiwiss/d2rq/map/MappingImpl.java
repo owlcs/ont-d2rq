@@ -153,6 +153,11 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
+    public DatabaseImpl createDatabase(Resource r) {
+        return new DatabaseImpl(r);
+    }
+
+    @Override
     public void addDatabase(Database database) {
         this.databases.put(database.resource(), database);
     }

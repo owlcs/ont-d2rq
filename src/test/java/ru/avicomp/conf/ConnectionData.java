@@ -1,6 +1,8 @@
 package ru.avicomp.conf;
 
 import de.fuberlin.wiwiss.d2rq.map.Database;
+import de.fuberlin.wiwiss.d2rq.map.MapObjectImpl;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -210,14 +212,15 @@ public enum ConnectionData {
 
 
     /**
-     * Creates a fresh database {@link de.fuberlin.wiwiss.d2rq.map.MapObject}.
+     * Creates a fresh database {@link MapObjectImpl}.
      *
+     * @param mapping {@link Mapping}, not {@code null}
      * @param uri  String, not {@code null}
      * @param name String, not {@code null}
      * @return {@link Database}
      */
-    public Database createDatabaseMapObject(String uri, String name) {
-        Database res = new Database(ResourceFactory.createResource(Objects.requireNonNull(uri, "Null uri")));
+    public Database createDatabaseMapObject(Mapping mapping, String uri, String name) {
+        Database res = mapping.createDatabase(ResourceFactory.createResource(Objects.requireNonNull(uri, "Null uri")));
         res.setJDBCDSN(getJdbcIRI(Objects.requireNonNull(name, "Null name")).getIRIString());
         res.setJDBCDriver(getDeclaringClass().getName());
         res.setUsername(getUser());
