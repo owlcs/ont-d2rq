@@ -5,7 +5,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Join;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
-import de.fuberlin.wiwiss.d2rq.map.MappingImpl;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -190,9 +190,9 @@ public class MappingGenerator {
     protected Model createMappingModel() {
         try {
             Model res = ModelFactory.createDefaultModel();
-            res.setNsPrefixes(MappingImpl.Prefixes.MAPPING);
-            res.setNsPrefix(MappingImpl.Prefixes.MAP_PREFIX, mapNamespaceURI.toString());
-            res.setNsPrefix(MappingImpl.Prefixes.VOCAB_PREFIX, vocabNamespaceURI.toString());
+            res.setNsPrefixes(MappingFactory.Prefixes.MAPPING);
+            res.setNsPrefix(MappingFactory.Prefixes.MAP_PREFIX, mapNamespaceURI.toString());
+            res.setNsPrefix(MappingFactory.Prefixes.VOCAB_PREFIX, vocabNamespaceURI.toString());
             if (!serveVocabulary) {
                 addConfiguration(res);
             }

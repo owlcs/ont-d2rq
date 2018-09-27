@@ -2,7 +2,7 @@ package de.fuberlin.wiwiss.d2rq.algebra;
 
 import de.fuberlin.wiwiss.d2rq.engine.BindingMaker;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
-import de.fuberlin.wiwiss.d2rq.map.RelationBuilder;
+import de.fuberlin.wiwiss.d2rq.map.impl.RelationBuilder;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.TypedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;

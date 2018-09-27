@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.map.impl.RelationBuilder;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import org.apache.jena.rdf.model.RDFNode;

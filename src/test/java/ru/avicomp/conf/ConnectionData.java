@@ -1,8 +1,8 @@
 package ru.avicomp.conf;
 
 import de.fuberlin.wiwiss.d2rq.map.Database;
-import de.fuberlin.wiwiss.d2rq.map.MapObjectImpl;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.impl.MapObjectImpl;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 import org.apache.jena.rdf.model.ResourceFactory;

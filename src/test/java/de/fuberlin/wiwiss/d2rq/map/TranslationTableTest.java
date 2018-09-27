@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.map.impl.TranslationTableImpl;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;

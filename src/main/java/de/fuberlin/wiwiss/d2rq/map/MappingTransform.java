@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.map.impl.ResourceMap;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
@@ -15,6 +16,7 @@ import java.util.Objects;
  * <p>
  * Created by @szuev on 19.02.2017.
  */
+@Deprecated // TODO: will be replaced with another service
 @SuppressWarnings("WeakerAccess")
 public class MappingTransform {
     private static ModelBuilder defaultFactory = new OWLModelBuilder();

@@ -1,8 +1,8 @@
 package d2rq;
 
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
-import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.impl.MapParser;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;

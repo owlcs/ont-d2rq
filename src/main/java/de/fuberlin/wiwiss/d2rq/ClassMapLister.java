@@ -5,7 +5,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.RelationalOperators;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.find.FindQuery;
 import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
-import de.fuberlin.wiwiss.d2rq.map.MappingImpl;
+import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
