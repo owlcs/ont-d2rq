@@ -198,6 +198,11 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
+    public PropertyBridgeImpl createPropertyBridge(Resource r) {
+        return new PropertyBridgeImpl(r);
+    }
+
+    @Override
     public void addClassMap(ClassMap classMap) { // todo: wtf
         this.classMaps.put(classMap.resource(), (ClassMapImpl) classMap);
     }

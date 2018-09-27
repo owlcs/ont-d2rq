@@ -17,10 +17,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class CompileTest {
-    private PropertyBridge managerBridge;
-    private PropertyBridge citiesTypeBridge;
-    private PropertyBridge citiesNameBridge;
-    private PropertyBridge countriesTypeBridge;
+    private PropertyBridgeImpl managerBridge;
+    private PropertyBridgeImpl citiesTypeBridge;
+    private PropertyBridgeImpl citiesNameBridge;
+    private PropertyBridgeImpl countriesTypeBridge;
 
     @Before
     public void setUp() {
@@ -34,19 +34,19 @@ public class CompileTest {
         employees.addAlias("employees AS e");
         employees.addJoin("e.ID = foo.bar");
         employees.addCondition("e.status = 'active'");
-        managerBridge = createPropertyBridge(employees, "http://terms.example.org/manager");
+        managerBridge = createPropertyBridge(mapping, employees, "http://terms.example.org/manager");
         managerBridge.addAlias("e AS m");
         managerBridge.setRefersToClassMap(employees);
         managerBridge.addJoin("e.manager = m.ID");
 
         ClassMap cities = createClassMap(mapping, database, "http://test/city@@c.ID@@");
-        citiesTypeBridge = createPropertyBridge(cities, RDF.type.getURI());
+        citiesTypeBridge = createPropertyBridge(mapping, cities, RDF.type.getURI());
         citiesTypeBridge.setConstantValue(model.createResource("http://terms.example.org/City"));
-        citiesNameBridge = createPropertyBridge(cities, "http://terms.example.org/name");
+        citiesNameBridge = createPropertyBridge(mapping, cities, "http://terms.example.org/name");
         citiesNameBridge.setColumn("c.name");
         ClassMap countries = createClassMap(mapping, database, "http://test/countries/@@c.country@@");
         countries.setContainsDuplicates(true);
-        countriesTypeBridge = createPropertyBridge(countries, RDF.type.getURI());
+        countriesTypeBridge = createPropertyBridge(mapping, countries, RDF.type.getURI());
         countriesTypeBridge.setConstantValue(model.createResource("http://terms.example.org/Country"));
     }
 
@@ -58,13 +58,13 @@ public class CompileTest {
         return result;
     }
 
-    private static PropertyBridge createPropertyBridge(ClassMap classMap, String propertyURI) {
+    private static PropertyBridgeImpl createPropertyBridge(Mapping mapping, ClassMap classMap, String propertyURI) {
         Model model = classMap.resource().getModel();
-        PropertyBridge result = new PropertyBridge(model.createResource());
-        result.setBelongsToClassMap(classMap);
-        result.addProperty(model.createProperty(propertyURI));
-        classMap.addPropertyBridge(result);
-        return result;
+        PropertyBridge res = mapping.createPropertyBridge(model.createResource());
+        res.setBelongsToClassMap(classMap);
+        res.addProperty(model.createProperty(propertyURI));
+        classMap.addPropertyBridge(res);
+        return (PropertyBridgeImpl) res;
     }
 
     @Test
@@ -78,7 +78,7 @@ public class CompileTest {
     @Test
     public void testJoinConditionsInRefersToClassMapAreRenamed() {
         TripleRelation relation = this.managerBridge.toTripleRelations().iterator().next();
-        Set<String> joinsToString = new HashSet<String>();
+        Set<String> joinsToString = new HashSet<>();
         for (Join join : relation.baseRelation().joinConditions()) {
             joinsToString.add(join.toString());
         }

@@ -379,7 +379,7 @@ public class MapParser {
         stmts = r.listProperties(D2RQ.additionalProperty);
         while (stmts.hasNext()) {
             Resource additionalProperty = stmts.nextStatement().getResource();
-            PropertyBridge bridge = new PropertyBridge(r);
+            PropertyBridgeImpl bridge = mapping.createPropertyBridge(r);
             bridge.setBelongsToClassMap(classMap);
             bridge.addProperty(additionalProperty.getProperty(D2RQ.propertyName).getResource());
             bridge.setConstantValue(additionalProperty.getProperty(D2RQ.propertyValue).getObject());
@@ -406,7 +406,7 @@ public class MapParser {
             Statement stmt = stmts.nextStatement();
             ClassMapImpl classMap = this.mapping.classMap(stmt.getResource());
             Resource r = stmt.getSubject();
-            PropertyBridge bridge = new PropertyBridge(r);
+            PropertyBridgeImpl bridge = mapping.createPropertyBridge(r);
             bridge.setBelongsToClassMap(classMap);
             parseResourceMap(bridge, r);
             parsePropertyBridge(bridge, r);
@@ -414,7 +414,7 @@ public class MapParser {
         }
     }
 
-    private void parsePropertyBridge(PropertyBridge bridge, Resource r) {
+    private void parsePropertyBridge(PropertyBridgeImpl bridge, Resource r) {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.column);
         while (stmts.hasNext()) {

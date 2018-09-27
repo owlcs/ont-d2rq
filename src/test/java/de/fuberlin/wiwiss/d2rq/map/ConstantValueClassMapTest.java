@@ -27,9 +27,9 @@ public class ConstantValueClassMapTest {
         return result;
     }
 
-    private PropertyBridge createPropertyBridge(ClassMap classMap, String propertyURI) {
+    private PropertyBridge createPropertyBridge(Mapping mapping, ClassMap classMap, String propertyURI) {
         Model m = classMap.resource().getModel();
-        PropertyBridge result = new PropertyBridge(m.createResource());
+        PropertyBridge result = mapping.createPropertyBridge(m.createResource());
         result.setBelongsToClassMap(classMap);
         result.addProperty(m.createProperty(propertyURI));
         classMap.addPropertyBridge(result);
@@ -44,14 +44,14 @@ public class ConstantValueClassMapTest {
         mapping.addDatabase(database);
 
         ClassMap concept = createClassMap(mapping, database, "http://example.com/concept#@@c.ID@@");
-        PropertyBridge conceptTypeBridge = createPropertyBridge(concept, RDF.type.getURI());
+        PropertyBridge conceptTypeBridge = createPropertyBridge(mapping, concept, RDF.type.getURI());
         conceptTypeBridge.setConstantValue(model.createResource("http://www.w3.org/2004/02/skos/core#Concept"));
 
         collection = createConstantClassMap(mapping, database, "http://example.com/collection#MyConceptCollection");
-        PropertyBridge collectionTypeBridge = createPropertyBridge(collection, RDF.type.getURI());
+        PropertyBridge collectionTypeBridge = createPropertyBridge(mapping, collection, RDF.type.getURI());
         collectionTypeBridge.setConstantValue(model.createResource("http://www.w3.org/2004/02/skos/core#Collection"));
 
-        PropertyBridge memberBridge = createPropertyBridge(collection, "http://www.w3.org/2004/02/skos/core#member");
+        PropertyBridge memberBridge = createPropertyBridge(mapping, collection, "http://www.w3.org/2004/02/skos/core#member");
         memberBridge.setRefersToClassMap(concept);
         memberBridge.addCondition("c.foo = 1");
     }

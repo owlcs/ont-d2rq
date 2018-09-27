@@ -136,7 +136,7 @@ public abstract class DatatypeTestBase {
         classMap.setDatabase(database);
         classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");
         mapping.addClassMap(classMap);
-        PropertyBridge propertyBridge = new PropertyBridge(propertyBridgeURI);
+        PropertyBridge propertyBridge = mapping.createPropertyBridge(propertyBridgeURI);
         propertyBridge.setBelongsToClassMap(classMap);
         propertyBridge.addProperty(valueProperty);
         propertyBridge.setColumn("T_" + datatype + ".VALUE");

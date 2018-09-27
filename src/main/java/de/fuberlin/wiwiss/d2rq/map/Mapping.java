@@ -46,6 +46,8 @@ public interface Mapping extends AutoCloseable {
 
     ClassMap classMap(Resource name);
 
+    PropertyBridge createPropertyBridge(Resource r);
+
     TranslationTable createTranslationTable(Resource r);
 
     TranslationTable translationTable(Resource name);

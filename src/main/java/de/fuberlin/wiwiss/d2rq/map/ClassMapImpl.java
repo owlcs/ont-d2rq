@@ -104,10 +104,10 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     private void compile() {
         this.compiledPropertyBridges = new ArrayList<>();
         for (PropertyBridge bridge : propertyBridges) {
-            this.compiledPropertyBridges.addAll(bridge.toTripleRelations());
+            this.compiledPropertyBridges.addAll(((PropertyBridgeImpl) bridge).toTripleRelations());
         }
         for (Resource clazz : classes) {
-            PropertyBridge bridge = new PropertyBridge(this.resource);
+            PropertyBridgeImpl bridge = new PropertyBridgeImpl(this.resource);
             bridge.setBelongsToClassMap(this);
             bridge.addProperty(RDF.type);
             bridge.setConstantValue(clazz);

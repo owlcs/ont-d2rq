@@ -61,7 +61,7 @@ public class MappingTransform {
                 }
                 for (PropertyBridge bridge : classMap.propertyBridges()) {
                     for (Resource property : bridge.properties()) {
-                        addDefinitions(model, bridge, property);
+                        addDefinitions(model, (ResourceMap) bridge, property);
                     }
                     // TODO: What to do about dynamic properties?
                 }

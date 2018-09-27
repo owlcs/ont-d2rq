@@ -116,7 +116,7 @@ public class MySQLDatatypeTest {
         classMap.setDatabase(database);
         classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");
         mapping.addClassMap(classMap);
-        PropertyBridge propertyBridge = new PropertyBridge(ResourceFactory.createResource(PROPERTY_BRIDGE_URI));
+        PropertyBridge propertyBridge = mapping.createPropertyBridge(ResourceFactory.createResource(PROPERTY_BRIDGE_URI));
         propertyBridge.setBelongsToClassMap(classMap);
         propertyBridge.addProperty(ResourceFactory.createProperty(VALUE_PROPERTY));
         propertyBridge.setColumn("T_" + datatype + ".VALUE");
