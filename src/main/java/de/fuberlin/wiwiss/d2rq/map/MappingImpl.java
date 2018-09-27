@@ -163,6 +163,11 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
+    public DownloadMapImpl createDownloadMap(Resource r) {
+        return new DownloadMapImpl(r);
+    }
+
+    @Override
     public void addDatabase(Database database) {
         this.databases.put(database.resource(), database);
     }

@@ -18,7 +18,7 @@ import java.util.*;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-@Deprecated //TODO: sheduled to be removed
+@Deprecated //TODO: scheduled to remove
 public class MapParser {
     private final static Logger LOGGER = LoggerFactory.getLogger(MapParser.class);
 
@@ -500,14 +500,14 @@ public class MapParser {
         Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.DownloadMap);
         while (it.hasNext()) {
             Resource downloadMapResource = it.next();
-            DownloadMap downloadMap = new DownloadMap(downloadMapResource);
+            DownloadMapImpl downloadMap = mapping.createDownloadMap(downloadMapResource);
             parseResourceMap(downloadMap, downloadMapResource);
             parseDownloadMap(downloadMap, downloadMapResource);
             mapping.addDownloadMap(downloadMap);
         }
     }
 
-    private void parseDownloadMap(DownloadMap dm, Resource r) {
+    private void parseDownloadMap(DownloadMapImpl dm, Resource r) {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.dataStorage);
         while (stmts.hasNext()) {

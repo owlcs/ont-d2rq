@@ -26,8 +26,6 @@ public interface Mapping extends AutoCloseable {
 
     GraphD2RQ getDataGraph();
 
-    TranslationTable createTranslationTable(Resource resource);
-
     Configuration configuration();
 
     Database createDatabase(Resource r);
@@ -46,7 +44,11 @@ public interface Mapping extends AutoCloseable {
 
     ClassMap classMap(Resource name);
 
+    TranslationTable createTranslationTable(Resource r);
+
     TranslationTable translationTable(Resource name);
+
+    DownloadMap createDownloadMap(Resource r);
 
     Collection<Resource> downloadMapResources();
 
