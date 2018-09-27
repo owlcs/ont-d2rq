@@ -43,13 +43,15 @@ public class MappingTest {
 
     @Test
     public void testReturnResourceFromNewClassMap() {
-        ClassMap c = new ClassMap(classMap1);
+        Mapping m = MappingFactory.createEmpty();
+        ClassMap c = m.createClassMap(classMap1);
         Assert.assertEquals(classMap1, c.resource());
     }
 
     @Test
     public void testNewClassMapHasNoDatabase() {
-        ClassMap c = new ClassMap(classMap1);
+        Mapping m = MappingFactory.createEmpty();
+        ClassMap c = m.createClassMap(classMap1);
         Assert.assertNull(c.database());
     }
 
@@ -57,7 +59,7 @@ public class MappingTest {
     public void testClassMapReturnsAssignedDatabase() {
         Mapping m = MappingFactory.createEmpty();
         Database db = m.createDatabase(database1);
-        ClassMap c = new ClassMap(classMap1);
+        ClassMap c = m.createClassMap(classMap1);
         c.setDatabase(db);
         Assert.assertEquals(db, c.database());
     }
@@ -65,7 +67,7 @@ public class MappingTest {
     @Test
     public void testMultipleDatabasesForClassMapCauseValidationError() {
         Mapping m = MappingFactory.createEmpty();
-        ClassMap c = new ClassMap(classMap1);
+        ClassMap c = m.createClassMap(classMap1);
         try {
             Database db1 = m.createDatabase(database1);
             c.setDatabase(db1);
@@ -81,7 +83,7 @@ public class MappingTest {
     @Test
     public void testClassMapWithoutDatabaseCausesValidationError() {
         Mapping m = MappingFactory.createEmpty();
-        ClassMap c = new ClassMap(classMap1);
+        ClassMap c = m.createClassMap(classMap1);
         try {
             Database db1 = m.createDatabase(database1);
             db1.setJDBCDSN("jdbc:mysql:///db");
@@ -104,7 +106,7 @@ public class MappingTest {
     @Test
     public void testReturnAddedClassMaps() {
         Mapping m = MappingFactory.createEmpty();
-        ClassMap c = new ClassMap(classMap1);
+        ClassMap c = m.createClassMap(classMap1);
         m.addClassMap(c);
         Assert.assertEquals(Collections.singleton(classMap1),
                 new HashSet<>(m.classMapResources()));

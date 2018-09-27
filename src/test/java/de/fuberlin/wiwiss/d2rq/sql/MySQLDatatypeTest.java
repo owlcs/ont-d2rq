@@ -112,7 +112,7 @@ public class MySQLDatatypeTest {
         //database.setStartupSQLScript(ResourceFactory.createResource(scriptFile.toString()));
 
         mapping.addDatabase(database);
-        ClassMap classMap = new ClassMap(ResourceFactory.createResource(CLASS_MAP_URI));
+        ClassMap classMap = mapping.createClassMap(ResourceFactory.createResource(CLASS_MAP_URI));
         classMap.setDatabase(database);
         classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");
         mapping.addClassMap(classMap);

@@ -283,7 +283,7 @@ public class MapParser {
         Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.ClassMap);
         while (it.hasNext()) {
             Resource r = it.next();
-            ClassMap classMap = new ClassMap(r);
+            ClassMapImpl classMap = this.mapping.createClassMap(r);
             parseClassMap(classMap, r);
             parseResourceMap(classMap, r);
             this.mapping.addClassMap(classMap);
@@ -361,7 +361,7 @@ public class MapParser {
         }
     }
 
-    private void parseClassMap(ClassMap classMap, Resource r) {
+    private void parseClassMap(ClassMapImpl classMap, Resource r) {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.dataStorage);
         while (stmts.hasNext()) {
@@ -404,7 +404,7 @@ public class MapParser {
         StmtIterator stmts = this.model.listStatements(null, D2RQ.belongsToClassMap, (RDFNode) null);
         while (stmts.hasNext()) {
             Statement stmt = stmts.nextStatement();
-            ClassMap classMap = this.mapping.classMap(stmt.getResource());
+            ClassMapImpl classMap = this.mapping.classMap(stmt.getResource());
             Resource r = stmt.getSubject();
             PropertyBridge bridge = new PropertyBridge(r);
             bridge.setBelongsToClassMap(classMap);

@@ -36,6 +36,8 @@ public interface Mapping extends AutoCloseable {
 
     Database database(Resource name);
 
+    ClassMap createClassMap(Resource r);
+
     Stream<ClassMap> classMaps();
 
     void addClassMap(ClassMap classMap);

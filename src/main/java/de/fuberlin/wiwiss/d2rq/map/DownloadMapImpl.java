@@ -91,7 +91,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
             builder.addProjection(projection);
         }
         if (belongsToClassMap != null) {
-            builder.addOther(belongsToClassMap.relationBuilder(db.connectedDB()));
+            builder.addOther(((ClassMapImpl) belongsToClassMap).relationBuilder(db.connectedDB()));
         }
         return builder.buildRelation();
     }

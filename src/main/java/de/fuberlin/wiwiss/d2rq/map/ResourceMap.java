@@ -187,7 +187,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         if (this.refersToClassMap == null) {
             return buildNodeMaker(wrapValueSource(buildValueSourceBase()), !this.containsDuplicates);
         }
-        return this.refersToClassMap.buildAliasedNodeMaker(new AliasMap(aliases()), !this.containsDuplicates);
+        return ((ClassMapImpl) this.refersToClassMap).buildAliasedNodeMaker(new AliasMap(aliases()), !this.containsDuplicates);
     }
 
     public NodeMaker buildAliasedNodeMaker(AliasMap aliases, boolean unique) {

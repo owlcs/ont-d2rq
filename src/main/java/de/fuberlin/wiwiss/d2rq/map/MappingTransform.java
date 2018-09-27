@@ -57,7 +57,7 @@ public class MappingTransform {
 
             mapping.classMaps().forEach(classMap -> {
                 for (Resource clazz : classMap.getClasses()) {
-                    addDefinitions(model, classMap, clazz);
+                    addDefinitions(model, (ResourceMap) classMap, clazz);
                 }
                 for (PropertyBridge bridge : classMap.propertyBridges()) {
                     for (Resource property : bridge.properties()) {

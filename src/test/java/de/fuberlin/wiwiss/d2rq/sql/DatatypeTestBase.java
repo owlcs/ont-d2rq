@@ -132,7 +132,7 @@ public abstract class DatatypeTestBase {
         database.setPassword(password);
         database.setStartupSQLScript(ResourceFactory.createResource(script.toString()));
         mapping.addDatabase(database);
-        ClassMap classMap = new ClassMap(classMapURI);
+        ClassMap classMap = mapping.createClassMap(classMapURI);
         classMap.setDatabase(database);
         classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");
         mapping.addClassMap(classMap);

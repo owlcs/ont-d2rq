@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -37,7 +38,7 @@ public class MappingImpl implements Mapping {
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingImpl.class);
 
     private final Map<Resource, Database> databases = new HashMap<>();
-    private final Map<Resource, ClassMap> classMaps = new HashMap<>();
+    private final Map<Resource, ClassMapImpl> classMaps = new HashMap<>();
     private final Map<Resource, TranslationTable> translationTables = new HashMap<>();
     private final Map<Resource, DownloadMap> downloadMaps = new HashMap<>();
     private final Model model;
@@ -192,8 +193,13 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
-    public void addClassMap(ClassMap classMap) {
-        this.classMaps.put(classMap.resource(), classMap);
+    public ClassMapImpl createClassMap(Resource r) {
+        return new ClassMapImpl(r);
+    }
+
+    @Override
+    public void addClassMap(ClassMap classMap) { // todo: wtf
+        this.classMaps.put(classMap.resource(), (ClassMapImpl) classMap);
     }
 
     @Override
@@ -203,11 +209,11 @@ public class MappingImpl implements Mapping {
 
     @Override
     public Stream<ClassMap> classMaps() {
-        return classMaps.values().stream();
+        return classMaps.values().stream().map(Function.identity());
     }
 
     @Override
-    public ClassMap classMap(Resource name) {
+    public ClassMapImpl classMap(Resource name) {
         return this.classMaps.get(name);
     }
 
@@ -258,7 +264,7 @@ public class MappingImpl implements Mapping {
 
          */
         compiledPropertyBridges = new ArrayList<>();
-        for (ClassMap classMap : classMaps.values()) {
+        for (ClassMapImpl classMap : classMaps.values()) {
             this.compiledPropertyBridges.addAll(classMap.compiledPropertyBridges());
         }
         LOGGER.info("Compiled {} property bridges", compiledPropertyBridges.size());

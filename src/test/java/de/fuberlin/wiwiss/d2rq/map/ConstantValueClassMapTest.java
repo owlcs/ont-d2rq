@@ -9,48 +9,45 @@ import org.junit.Test;
 
 public class ConstantValueClassMapTest {
 
-    private Model model;
-    private Mapping mapping;
-    private Database database;
-
     private ClassMap collection;
 
-    private ClassMap createClassMap(String uriPattern) {
-        ClassMap result = new ClassMap(this.model.createResource());
-        result.setDatabase(this.database);
+    private static ClassMap createClassMap(Mapping m, Database d, String uriPattern) {
+        ClassMap result = m.createClassMap(m.getMappingModel().createResource());
+        result.setDatabase(d);
         result.setURIPattern(uriPattern);
-        this.mapping.addClassMap(result);
+        m.addClassMap(result);
         return result;
     }
 
-    private ClassMap createConstantClassMap(String uri) {
-        ClassMap result = new ClassMap(this.model.createResource());
-        result.setDatabase(this.database);
-        result.setConstantValue(this.model.createResource(uri));
-        this.mapping.addClassMap(result);
+    private static ClassMap createConstantClassMap(Mapping m, Database d, String uri) {
+        ClassMap result = m.createClassMap(m.getMappingModel().createResource());
+        result.setDatabase(d);
+        result.setConstantValue(m.getMappingModel().createResource(uri));
+        m.addClassMap(result);
         return result;
     }
 
     private PropertyBridge createPropertyBridge(ClassMap classMap, String propertyURI) {
-        PropertyBridge result = new PropertyBridge(this.model.createResource());
+        Model m = classMap.resource().getModel();
+        PropertyBridge result = new PropertyBridge(m.createResource());
         result.setBelongsToClassMap(classMap);
-        result.addProperty(this.model.createProperty(propertyURI));
+        result.addProperty(m.createProperty(propertyURI));
         classMap.addPropertyBridge(result);
         return result;
     }
 
     @Before
     public void setUp() {
-        this.model = ModelFactory.createDefaultModel();
-        this.mapping = MappingFactory.createEmpty();
-        this.database = mapping.createDatabase(this.model.createResource());
-        this.mapping.addDatabase(this.database);
+        Model model = ModelFactory.createDefaultModel();
+        Mapping mapping = MappingFactory.createEmpty();
+        Database database = mapping.createDatabase(model.createResource());
+        mapping.addDatabase(database);
 
-        ClassMap concept = createClassMap("http://example.com/concept#@@c.ID@@");
+        ClassMap concept = createClassMap(mapping, database, "http://example.com/concept#@@c.ID@@");
         PropertyBridge conceptTypeBridge = createPropertyBridge(concept, RDF.type.getURI());
         conceptTypeBridge.setConstantValue(model.createResource("http://www.w3.org/2004/02/skos/core#Concept"));
 
-        collection = createConstantClassMap("http://example.com/collection#MyConceptCollection");
+        collection = createConstantClassMap(mapping, database, "http://example.com/collection#MyConceptCollection");
         PropertyBridge collectionTypeBridge = createPropertyBridge(collection, RDF.type.getURI());
         collectionTypeBridge.setConstantValue(model.createResource("http://www.w3.org/2004/02/skos/core#Collection"));
 
