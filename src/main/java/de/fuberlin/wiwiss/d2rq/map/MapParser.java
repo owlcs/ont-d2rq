@@ -125,7 +125,7 @@ public class MapParser {
         Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.Configuration);
         if (it.hasNext()) {
             Resource configResource = it.next();
-            Configuration configuration = new Configuration(configResource);
+            Configuration configuration = new ConfigurationImpl(configResource);
             StmtIterator stmts = configResource.listProperties(D2RQ.serveVocabulary);
             while (stmts.hasNext()) {
                 configuration.setServeVocabulary(stmts.nextStatement().getBoolean());

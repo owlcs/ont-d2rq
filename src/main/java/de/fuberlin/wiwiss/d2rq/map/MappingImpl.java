@@ -43,7 +43,7 @@ public class MappingImpl implements Mapping {
     private final Map<Resource, DownloadMap> downloadMaps = new HashMap<>();
     private final Model model;
 
-    private Configuration configuration = new Configuration();
+    private Configuration configuration = new ConfigurationImpl();
     private Collection<TripleRelation> compiledPropertyBridges;
     private PrefixMapping prefixes;
     private Model vocabularyModel;

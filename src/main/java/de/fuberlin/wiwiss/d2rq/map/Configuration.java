@@ -1,49 +1,15 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import org.apache.jena.rdf.model.Resource;
-
-
 /**
- * Representation of a d2rq:Configuration from the mapping file.
- *
- * @author Christian Becker &lt;http://beckr.org#chris&gt;
+ * Created by @ssz on 26.09.2018.
  */
-public class Configuration extends MapObjectImpl {
-    private boolean serveVocabulary = true;
-    private boolean useAllOptimizations = false;
+public interface Configuration extends MapObject {
 
-    public Configuration() {
-        this(null);
-    }
+    void setServeVocabulary(boolean b);
 
-    public Configuration(Resource resource) {
-        super(resource);
-    }
+    boolean getServeVocabulary();
 
-    public boolean getServeVocabulary() {
-        return this.serveVocabulary;
-    }
+    boolean getUseAllOptimizations();
 
-    public void setServeVocabulary(boolean serveVocabulary) {
-        this.serveVocabulary = serveVocabulary;
-    }
-
-    public boolean getUseAllOptimizations() {
-        return this.useAllOptimizations;
-    }
-
-    public void setUseAllOptimizations(boolean useAllOptimizations) {
-        this.useAllOptimizations = useAllOptimizations;
-    }
-
-    @Override
-    public String toString() {
-        return "d2rq:Configuration " + super.toString();
-    }
-
-    @Override
-    public void validate() throws D2RQException {
-        /* All settings are optional */
-    }
+    void setUseAllOptimizations(boolean b);
 }
