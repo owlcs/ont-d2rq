@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * @author jgarbers
@@ -36,7 +37,7 @@ public class DBConnectionTest {
     public void setUp() {
         mapModel = ModelFactory.createDefaultModel();
         mapModel.read(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "http://test/", "TURTLE");
-        databases = MappingFactory.create(mapModel, null).databases();
+        databases = MappingFactory.create(mapModel, null).listDatabases().collect(Collectors.toList());
         firstDatabase = databases.iterator().next();
         simplestQuery = "SELECT 1;";
         // mediumQuery = "SELECT PaperID from papers";

@@ -2,11 +2,12 @@ package de.fuberlin.wiwiss.d2rq.helpers;
 
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A set of simple tests that apply various parts of D2RQ to
@@ -74,7 +76,7 @@ public class HSQLSimpleTest {
     @Test
     public void testGenerateSomeClassMapsInDefaultMapping() { // ??
         Mapping mapping = generateDefaultMapping();
-        Collection<Resource> res = mapping.classMapResources();
+        Collection<Resource> res = mapping.listClassMaps().map(MapObject::asResource).collect(Collectors.toSet());
         LOGGER.debug("Class-maps: {}", res);
         Assert.assertEquals("Unexpected class-maps" + res, 1, res.size());
     }
@@ -82,24 +84,24 @@ public class HSQLSimpleTest {
     @Test
     public void testDefaultMappingWithHelloWorld() {
         db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
-        GraphD2RQ g = generateDefaultGraphD2RQ();
+        Graph g = generateDefaultGraphD2RQ();
         Assert.assertTrue(g.contains(Node.ANY, Node.ANY, NodeFactory.createLiteral("Hello World!")));
     }
 
     @Test
     public void testGenerateEmptyGraphFromSimpleD2RQMapping() {
         Mapping m = MappingHelper.readFromTestFile("/helpers/simple.ttl");
-        m.configuration().setServeVocabulary(false);
-        GraphD2RQ g = m.getDataGraph();
+        m.getConfiguration().setServeVocabulary(false);
+        Graph g = m.getData();
         Assert.assertTrue(g.isEmpty());
     }
 
     @Test
     public void testGenerateTripleFromSimpleD2RQMapping() {
         Mapping m = MappingHelper.readFromTestFile("/helpers/simple.ttl");
-        m.configuration().setServeVocabulary(false);
+        m.getConfiguration().setServeVocabulary(false);
         db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
-        GraphD2RQ g = m.getDataGraph();
+        Graph g = m.getData();
         Assert.assertTrue(g.contains(
                 NodeFactory.createURI(EX + "test/1"), RDF.Nodes.type, NodeFactory.createURI(EX + "Test")));
         Assert.assertEquals(1, g.size());
@@ -115,7 +117,7 @@ public class HSQLSimpleTest {
         return MappingFactory.create(generateDefaultMappingModel(), EX);
     }
 
-    private GraphD2RQ generateDefaultGraphD2RQ() {
-        return generateDefaultMapping().getDataGraph();
+    private Graph generateDefaultGraphD2RQ() {
+        return generateDefaultMapping().getData();
     }
 }

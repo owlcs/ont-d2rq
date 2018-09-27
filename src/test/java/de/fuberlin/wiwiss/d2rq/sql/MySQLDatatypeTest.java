@@ -1,8 +1,8 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.*;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
@@ -64,13 +64,13 @@ public class MySQLDatatypeTest {
     @Test
     public void testDatatype() {
         Mapping mapping = createMapping(data.name());
-        GraphD2RQ graph = mapping.getDataGraph();
+        Graph graph = mapping.getData();
         Assert.assertNotNull(graph);
 
         //debug:
         //ru.avicomp.ontapi.utils.ReadWriteUtils.print(org.apache.jena.rdf.model.ModelFactory.createModelForGraph(graph));
 
-        DatabaseSchemaInspector inspector = mapping.databases().iterator().next().connectedDB().schemaInspector();
+        DatabaseSchemaInspector inspector = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new).connectedDB().schemaInspector();
         Assert.assertNotNull(inspector);
 
         assertMappedType(inspector, data.name(), data.getDataType());
@@ -83,7 +83,7 @@ public class MySQLDatatypeTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static void assertValues(GraphD2RQ graph, String[] expectedValues, boolean searchValues) {
+    private static void assertValues(Graph graph, String[] expectedValues, boolean searchValues) {
         ExtendedIterator<Triple> it = graph.find(Node.ANY, Node.ANY, Node.ANY);
         List<String> listedValues = new ArrayList<>();
         while (it.hasNext()) {
@@ -99,8 +99,8 @@ public class MySQLDatatypeTest {
 
     private static Mapping createMapping(String datatype) {
         Mapping mapping = generateMapping(datatype);
-        mapping.configuration().setServeVocabulary(false);
-        mapping.configuration().setUseAllOptimizations(true);
+        mapping.getConfiguration().setServeVocabulary(false);
+        mapping.getConfiguration().setUseAllOptimizations(true);
         mapping.connect();
         return mapping;
     }

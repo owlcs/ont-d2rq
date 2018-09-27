@@ -21,7 +21,7 @@ public abstract class MapObjectImpl implements MapObject {
     }
 
     @Override
-    public Resource resource() {
+    public Resource asResource() {
         return this.resource;
     }
 

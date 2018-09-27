@@ -8,8 +8,8 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ public class MappingImpl implements Mapping {
     private Collection<TripleRelation> compiledPropertyBridges;
     private PrefixMapping prefixes;
     private Model vocabularyModel;
-    // cache for dataGraph
+    // cache for dataGraph (todo: remove)
     private GraphD2RQ dataGraph;
     private volatile boolean connected = false;
 
@@ -56,22 +56,21 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
-    public Model getMappingModel() {
+    public Model asModel() {
         return model;
     }
 
-    @Override
     public Model getVocabularyModel() {
         return vocabularyModel == null ? vocabularyModel = MappingTransform.getModelBuilder().build(this) : vocabularyModel;
     }
 
     @Override
-    public Model getDataModel() {
-        return ModelFactory.createModelForGraph(getDataGraph());
+    public Graph getSchema() {
+        return getVocabularyModel().getGraph();
     }
 
     @Override
-    public GraphD2RQ getDataGraph() {
+    public GraphD2RQ getData() {
         return dataGraph == null ? dataGraph = new GraphD2RQ(this) : dataGraph;
     }
 
@@ -135,7 +134,7 @@ public class MappingImpl implements Mapping {
     public void connect() {
         if (connected) return;
         connected = true;
-        for (Database db : databases()) {
+        for (Database db : databases.values()) {
             db.connectedDB().connection();
         }
         validate();
@@ -143,7 +142,7 @@ public class MappingImpl implements Mapping {
 
     @Override
     public void close() {
-        for (Database db : databases()) {
+        for (Database db : databases.values()) {
             db.connectedDB().close();
         }
     }
@@ -165,21 +164,25 @@ public class MappingImpl implements Mapping {
 
     @Override
     public void addDatabase(Database database) {
-        this.databases.put(database.resource(), database);
+        this.databases.put(database.asResource(), database);
     }
 
-    @Override
     public Collection<Database> databases() {
         return this.databases.values();
     }
 
     @Override
-    public Database database(Resource name) {
+    public Stream<Database> listDatabases() {
+        return databases.values().stream();
+    }
+
+    @Override
+    public Database findDatabase(Resource name) {
         return databases.get(name);
     }
 
     @Override
-    public Configuration configuration() {
+    public Configuration getConfiguration() {
         return this.configuration;
     }
 
@@ -199,44 +202,44 @@ public class MappingImpl implements Mapping {
 
     @Override
     public void addClassMap(ClassMap classMap) { // todo: wtf
-        this.classMaps.put(classMap.resource(), (ClassMapImpl) classMap);
+        this.classMaps.put(classMap.asResource(), (ClassMapImpl) classMap);
     }
 
     @Override
-    public Collection<Resource> classMapResources() {
-        return this.classMaps.keySet();
-    }
-
-    @Override
-    public Stream<ClassMap> classMaps() {
+    public Stream<ClassMap> listClassMaps() {
         return classMaps.values().stream().map(Function.identity());
     }
 
     @Override
-    public ClassMapImpl classMap(Resource name) {
+    public ClassMapImpl findClassMap(Resource name) {
         return this.classMaps.get(name);
     }
 
     public void addTranslationTable(TranslationTable table) {
-        this.translationTables.put(table.resource(), table);
+        this.translationTables.put(table.asResource(), table);
     }
 
     @Override
-    public TranslationTable translationTable(Resource name) {
+    public Stream<TranslationTable> listTranslationTables() {
+        return translationTables.values().stream();
+    }
+
+    @Override
+    public TranslationTable findTranslationTable(Resource name) {
         return this.translationTables.get(name);
     }
 
     public void addDownloadMap(DownloadMap downloadMap) {
-        downloadMaps.put(downloadMap.resource(), downloadMap);
+        downloadMaps.put(downloadMap.asResource(), downloadMap);
     }
 
     @Override
-    public Collection<Resource> downloadMapResources() {
-        return downloadMaps.keySet();
+    public Stream<DownloadMap> listDownloadMaps() {
+        return downloadMaps.values().stream();
     }
 
     @Override
-    public DownloadMap downloadMap(Resource name) {
+    public DownloadMap findDownloadMap(Resource name) {
         return downloadMaps.get(name);
     }
 

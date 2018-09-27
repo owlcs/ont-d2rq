@@ -1,9 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.examples;
 
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
@@ -23,7 +23,7 @@ public class JenaGraphExample {
         Mapping mapping = MappingFactory.create(mapModel, "http://localhost:2020/");
 
         // Set up the GraphD2RQ
-        GraphD2RQ g = mapping.getDataGraph();
+        Graph g = mapping.getData();
 
         // Create a find(spo) pattern
         Node subject = Node.ANY;

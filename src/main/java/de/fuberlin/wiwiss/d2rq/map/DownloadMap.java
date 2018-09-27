@@ -11,11 +11,15 @@ import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
  */
 public interface DownloadMap extends MapObject {
 
+    // todo: remove from interface
     Attribute getContentDownloadColumn();
 
+    // todo: remove from interface
     ValueMaker getMediaTypeValueMaker();
 
+    // todo: remove from interface
     NodeMaker nodeMaker();
 
+    // todo: remove from interface
     Relation getRelation();
 }

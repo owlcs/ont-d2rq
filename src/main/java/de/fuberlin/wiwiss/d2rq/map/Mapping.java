@@ -1,12 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -16,53 +18,77 @@ import java.util.stream.Stream;
  */
 public interface Mapping extends AutoCloseable {
 
+    // todo: hide from the interface
     PrefixMapping getPrefixMapping();
 
-    Model getMappingModel();
+    Model asModel();
 
-    Model getVocabularyModel();
+    Graph getSchema();
 
-    Model getDataModel();
+    Graph getData();
 
-    GraphD2RQ getDataGraph();
+    Configuration getConfiguration();
 
-    Configuration configuration();
-
+    // todo: should accept String, not Resource
     Database createDatabase(Resource r);
 
-    Collection<Database> databases();
+    Stream<Database> listDatabases();
 
+    // todo: change or remove
     void addDatabase(Database database);
 
-    Database database(Resource name);
-
+    // todo: should accept String, not Resource
     ClassMap createClassMap(Resource r);
 
-    Stream<ClassMap> classMaps();
+    Stream<ClassMap> listClassMaps();
 
+    // todo: change or remove
     void addClassMap(ClassMap classMap);
 
-    Collection<Resource> classMapResources();
-
-    ClassMap classMap(Resource name);
-
+    // todo: should accept String, not Resource
     PropertyBridge createPropertyBridge(Resource r);
 
+    // todo: should accept String, not Resource
     TranslationTable createTranslationTable(Resource r);
 
-    TranslationTable translationTable(Resource name);
+    Stream<TranslationTable> listTranslationTables();
 
+    // todo: should accept String, not Resource
     DownloadMap createDownloadMap(Resource r);
 
-    Collection<Resource> downloadMapResources();
+    Stream<DownloadMap> listDownloadMaps();
 
-    DownloadMap downloadMap(Resource name);
-
+    // todo: hide from the interface
     Collection<TripleRelation> compiledPropertyBridges();
 
     void validate();
 
+    // todo: hide from the interface
     void connect();
 
     void close();
+
+    default Database findDatabase(Resource name) {
+        return listDatabases().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElse(null);
+    }
+
+    default ClassMap findClassMap(Resource name) {
+        return listClassMaps().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElse(null);
+    }
+
+    default DownloadMap findDownloadMap(Resource name) {
+        return listDownloadMaps().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElse(null);
+    }
+
+    default TranslationTable findTranslationTable(Resource name) {
+        return listTranslationTables().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElse(null);
+    }
+
+    default Model getDataModel() {
+        return ModelFactory.createModelForGraph(getData());
+    }
+
+    default Model getVocabularyModel() {
+        return ModelFactory.createModelForGraph(getSchema());
+    }
 }

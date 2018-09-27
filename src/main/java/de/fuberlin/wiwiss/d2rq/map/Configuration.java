@@ -5,11 +5,12 @@ package de.fuberlin.wiwiss.d2rq.map;
  */
 public interface Configuration extends MapObject {
 
-    void setServeVocabulary(boolean b);
-
     boolean getServeVocabulary();
 
     boolean getUseAllOptimizations();
 
+    void setServeVocabulary(boolean b);
+
     void setUseAllOptimizations(boolean b);
+
 }

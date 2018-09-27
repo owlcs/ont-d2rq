@@ -68,7 +68,7 @@ public class MappingTool extends CommandLineTool {
 
         Mapping generator = loader.getMapping();
         try {
-            Model model = cmd.contains(vocabAsOutput) ? generator.getVocabularyModel() : generator.getMappingModel();
+            Model model = cmd.contains(vocabAsOutput) ? generator.getVocabularyModel() : generator.asModel();
             RDFDataMgr.write(out, model, RDFLanguages.TURTLE);
         } finally {
             loader.closeMappingGenerator();

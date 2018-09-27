@@ -5,11 +5,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
-import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
-import de.fuberlin.wiwiss.d2rq.map.impl.MapParser;
+import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -25,7 +21,7 @@ import java.util.Collections;
 import java.util.HashSet;
 
 /**
- * Unit tests for {@link MapParser}
+ * Unit tests for mapping parsing.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -43,7 +39,7 @@ public class ParserTest {
     public void testEmptyTranslationTable() {
         Resource r = addTranslationTableResource();
         Mapping mapping = MappingFactory.create(this.model, null);
-        TranslationTable table = mapping.translationTable(r);
+        TranslationTable table = mapping.findTranslationTable(r);
         Assert.assertNotNull(table);
         Assert.assertEquals(0, table.size());
     }
@@ -53,8 +49,8 @@ public class ParserTest {
         Resource r = addTranslationTableResource();
         addTranslationResource(r, "foo", "bar");
         Mapping mapping = MappingFactory.create(this.model, null);
-        TranslationTable table1 = mapping.translationTable(r);
-        TranslationTable table2 = mapping.translationTable(r);
+        TranslationTable table1 = mapping.findTranslationTable(r);
+        TranslationTable table2 = mapping.findTranslationTable(r);
         Assert.assertSame(table1, table2);
     }
 
@@ -63,7 +59,7 @@ public class ParserTest {
         Resource r = addTranslationTableResource();
         addTranslationResource(r, "foo", "bar");
         Mapping mapping = MappingFactory.create(this.model, null);
-        TranslationTable table = mapping.translationTable(r);
+        TranslationTable table = mapping.findTranslationTable(r);
         Assert.assertEquals(1, table.size());
         Translator translator = table.translator();
         Assert.assertEquals("bar", translator.toRDFValue("foo"));
@@ -102,14 +98,14 @@ public class ParserTest {
     @Test
     public void testTranslationTableRDFValueCanBeLiteral() {
         Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
-        TranslationTable tt = m.translationTable(ResourceFactory.createResource("http://example.org/tt"));
+        TranslationTable tt = m.findTranslationTable(ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.translator().toRDFValue("literal"));
     }
 
     @Test
     public void testTranslationTableRDFValueCanBeURI() {
         Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
-        TranslationTable tt = m.translationTable(ResourceFactory.createResource("http://example.org/tt"));
+        TranslationTable tt = m.findTranslationTable(ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.translator().toRDFValue("uri"));
     }
 
@@ -127,15 +123,12 @@ public class ParserTest {
         Mapping m = MappingHelper.readFromTestFile("/parser/download-map.ttl");
         MappingHelper.connectToDummyDBs(m);
         Resource name = ResourceFactory.createResource("http://example.org/dm");
-        Assert.assertTrue(m.downloadMapResources().contains(name));
-        DownloadMap d = m.downloadMap(name);
+        Assert.assertTrue(m.listDownloadMaps().map(MapObject::asResource).anyMatch(name::equals));
+        DownloadMap d = m.findDownloadMap(name);
         Assert.assertNotNull(d);
-        Assert.assertEquals("image/png",
-                d.getMediaTypeValueMaker().makeValue(
-                        column -> null));
+        Assert.assertEquals("image/png", d.getMediaTypeValueMaker().makeValue(column -> null));
         Assert.assertEquals("People.pic", d.getContentDownloadColumn().qualifiedName());
-        Assert.assertEquals("URI(Pattern(http://example.org/downloads/@@People.ID@@))",
-                d.nodeMaker().toString());
+        Assert.assertEquals("URI(Pattern(http://example.org/downloads/@@People.ID@@))", d.nodeMaker().toString());
         Assert.assertEquals(new HashSet<ProjectionSpec>() {{
                                 add(SQL.parseAttribute("People.ID"));
                                 add(SQL.parseAttribute("People.pic"));

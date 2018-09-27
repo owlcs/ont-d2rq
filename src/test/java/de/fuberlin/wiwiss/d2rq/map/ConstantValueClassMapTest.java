@@ -12,7 +12,7 @@ public class ConstantValueClassMapTest {
     private ClassMap collection;
 
     private static ClassMap createClassMap(Mapping m, Database d, String uriPattern) {
-        ClassMap result = m.createClassMap(m.getMappingModel().createResource());
+        ClassMap result = m.createClassMap(m.asModel().createResource());
         result.setDatabase(d);
         result.setURIPattern(uriPattern);
         m.addClassMap(result);
@@ -20,15 +20,15 @@ public class ConstantValueClassMapTest {
     }
 
     private static ClassMap createConstantClassMap(Mapping m, Database d, String uri) {
-        ClassMap result = m.createClassMap(m.getMappingModel().createResource());
+        ClassMap result = m.createClassMap(m.asModel().createResource());
         result.setDatabase(d);
-        result.setConstantValue(m.getMappingModel().createResource(uri));
+        result.setConstantValue(m.asModel().createResource(uri));
         m.addClassMap(result);
         return result;
     }
 
     private PropertyBridge createPropertyBridge(Mapping mapping, ClassMap classMap, String propertyURI) {
-        Model m = classMap.resource().getModel();
+        Model m = classMap.asResource().getModel();
         PropertyBridge result = mapping.createPropertyBridge(m.createResource());
         result.setBelongsToClassMap(classMap);
         result.addProperty(m.createProperty(propertyURI));

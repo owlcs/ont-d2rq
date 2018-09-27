@@ -35,7 +35,7 @@ public class TransformOpBGP extends TransformCopy {
     public TransformOpBGP(Mapping mapping, boolean transformFilters) {
         this.mapping = mapping;
         this.transformFilters = transformFilters;
-        this.useAllOptimizations = mapping.configuration().getUseAllOptimizations();
+        this.useAllOptimizations = mapping.getConfiguration().getUseAllOptimizations();
     }
 
     @Override

@@ -2,8 +2,8 @@ package de.fuberlin.wiwiss.d2rq.sql;
 
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.*;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
@@ -33,7 +33,7 @@ public abstract class DatatypeTestBase {
     private String script;
 
     private String datatype;
-    private GraphD2RQ graph;
+    private Graph graph;
     private DatabaseSchemaInspector inspector;
 
     @After
@@ -74,11 +74,11 @@ public abstract class DatatypeTestBase {
     protected void createMapping(String datatype) {
         this.datatype = datatype;
         Mapping mapping = generateMapping();
-        mapping.configuration().setServeVocabulary(false);
-        mapping.configuration().setUseAllOptimizations(true);
+        mapping.getConfiguration().setServeVocabulary(false);
+        mapping.getConfiguration().setUseAllOptimizations(true);
         mapping.connect();
-        graph = mapping.getDataGraph();
-        inspector = mapping.databases().iterator().next().connectedDB().schemaInspector();
+        graph = mapping.getData();
+        inspector = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new).connectedDB().schemaInspector();
     }
 
     protected void assertMappedType(String rdfType) {

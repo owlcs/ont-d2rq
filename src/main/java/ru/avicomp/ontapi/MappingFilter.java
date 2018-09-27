@@ -49,7 +49,7 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
 
     @Override
     public Model build(Mapping mapping) {
-        Model m = mapping.getMappingModel();
+        Model m = mapping.asModel();
         return isEmpty() ? m : filter(m);
     }
 

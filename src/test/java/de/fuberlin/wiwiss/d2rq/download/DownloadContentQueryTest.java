@@ -30,8 +30,8 @@ public class DownloadContentQueryTest {
         db.executeSQL("INSERT INTO People VALUES (1, 'Hello World!', NULL)");
         db.executeSQL("INSERT INTO People VALUES (2, NULL, HEXTORAW('404040'))");
         Mapping m = MappingHelper.readFromTestFile("/download/download-map.ttl");
-        downloadCLOB = m.downloadMap(ResourceFactory.createResource("http://example.org/downloadCLOB"));
-        downloadBLOB = m.downloadMap(ResourceFactory.createResource("http://example.org/downloadBLOB"));
+        downloadCLOB = m.findDownloadMap(ResourceFactory.createResource("http://example.org/downloadCLOB"));
+        downloadBLOB = m.findDownloadMap(ResourceFactory.createResource("http://example.org/downloadBLOB"));
     }
 
     @After

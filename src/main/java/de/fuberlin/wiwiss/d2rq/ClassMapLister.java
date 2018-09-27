@@ -5,6 +5,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.RelationalOperators;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.find.FindQuery;
 import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
+import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
@@ -14,7 +15,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DC;
 import org.apache.jena.vocabulary.DCTerms;
@@ -51,12 +51,12 @@ public class ClassMapLister {
 
     private void groupTripleRelationsByClassMap() {
         if (!classMapInventoryBridges.isEmpty() || !classMapNodeMakers.isEmpty()) return;
-        for (Resource classMapResource : mapping.classMapResources()) {
-            NodeMaker resourceMaker = this.mapping.classMap(classMapResource).nodeMaker();
+        mapping.listClassMaps().map(MapObject::asResource).forEach(classMapResource -> {
+            NodeMaker resourceMaker = ClassMapLister.this.mapping.findClassMap(classMapResource).nodeMaker();
             Node classMap = classMapResource.asNode();
-            this.classMapNodeMakers.put(toClassMapName(classMap), resourceMaker);
+            ClassMapLister.this.classMapNodeMakers.put(toClassMapName(classMap), resourceMaker);
             List<TripleRelation> inventoryBridges = new ArrayList<>();
-            for (TripleRelation bridge : mapping.classMap(classMapResource).compiledPropertyBridges()) {
+            for (TripleRelation bridge : mapping.findClassMap(classMapResource).compiledPropertyBridges()) {
                 bridge = bridge.orderBy(TripleRelation.SUBJECT, true);
                 if (bridge.selectTriple(new Triple(Node.ANY, RDF.Nodes.type, Node.ANY)) != null) {
                     inventoryBridges.add(bridge);
@@ -75,15 +75,15 @@ public class ClassMapLister {
                 }
             }
             if (inventoryBridges.isEmpty()) {
-                Relation relation = this.mapping.classMap(classMapResource).relation();
+                Relation relation = ClassMapLister.this.mapping.findClassMap(classMapResource).relation();
                 NodeMaker typeNodeMaker = new FixedNodeMaker(
                         RDF.type.asNode(), false);
                 NodeMaker resourceNodeMaker = new FixedNodeMaker(RDFS.Resource.asNode(), false);
                 inventoryBridges.add(new TripleRelation(relation,
                         resourceMaker, typeNodeMaker, resourceNodeMaker));
             }
-            this.classMapInventoryBridges.put(toClassMapName(classMap), inventoryBridges);
-        }
+            ClassMapLister.this.classMapInventoryBridges.put(toClassMapName(classMap), inventoryBridges);
+        });
     }
 
     private String toClassMapName(Node classMap) {

@@ -6,9 +6,8 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.stream.Collectors;
 
 public class MappingTest {
     private final static Resource database1 = ResourceFactory.createResource("http://test/db");
@@ -18,8 +17,8 @@ public class MappingTest {
     @Test
     public void testNoDatabasesInitially() {
         Mapping m = MappingFactory.createEmpty();
-        Assert.assertTrue(m.databases().isEmpty());
-        Assert.assertNull(m.database(database1));
+        Assert.assertEquals(0, m.listDatabases().count());
+        Assert.assertNull(m.findDatabase(database1));
     }
 
     @Test
@@ -27,8 +26,8 @@ public class MappingTest {
         Mapping m = MappingFactory.createEmpty();
         Database db = m.createDatabase(database1);
         m.addDatabase(db);
-        Assert.assertEquals(Collections.singletonList(db), new ArrayList<>(m.databases()));
-        Assert.assertEquals(db, m.database(database1));
+        Assert.assertEquals(Collections.singletonList(db), m.listDatabases().collect(Collectors.toList()));
+        Assert.assertEquals(db, m.findDatabase(database1));
     }
 
     @Test
@@ -45,14 +44,14 @@ public class MappingTest {
     public void testReturnResourceFromNewClassMap() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = m.createClassMap(classMap1);
-        Assert.assertEquals(classMap1, c.resource());
+        Assert.assertEquals(classMap1, c.asResource());
     }
 
     @Test
     public void testNewClassMapHasNoDatabase() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = m.createClassMap(classMap1);
-        Assert.assertNull(c.database());
+        Assert.assertNull(c.getDatabase());
     }
 
     @Test
@@ -61,7 +60,7 @@ public class MappingTest {
         Database db = m.createDatabase(database1);
         ClassMap c = m.createClassMap(classMap1);
         c.setDatabase(db);
-        Assert.assertEquals(db, c.database());
+        Assert.assertEquals(db, c.getDatabase());
     }
 
     @Test
@@ -99,8 +98,8 @@ public class MappingTest {
     @Test
     public void testNewMappingHasNoClassMaps() {
         Mapping m = MappingFactory.createEmpty();
-        Assert.assertTrue(m.classMapResources().isEmpty());
-        Assert.assertNull(m.classMap(classMap1));
+        Assert.assertEquals(0, m.listClassMaps().count());
+        Assert.assertNull(m.findClassMap(classMap1));
     }
 
     @Test
@@ -109,7 +108,7 @@ public class MappingTest {
         ClassMap c = m.createClassMap(classMap1);
         m.addClassMap(c);
         Assert.assertEquals(Collections.singleton(classMap1),
-                new HashSet<>(m.classMapResources()));
-        Assert.assertEquals(c, m.classMap(classMap1));
+                m.listClassMaps().map(MapObject::asResource).collect(Collectors.toSet()));
+        Assert.assertEquals(c, m.findClassMap(classMap1));
     }
 }

@@ -34,7 +34,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     @Override
-    public Resource resource() {
+    public Resource asResource() {
         return this.resource;
     }
 
@@ -51,7 +51,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     @Override
-    public Database database() {
+    public Database getDatabase() {
         return this.database;
     }
 

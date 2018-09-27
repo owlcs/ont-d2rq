@@ -246,21 +246,21 @@ public class SystemLoader {
 
     private Mapping createMapping() {
         Mapping res = MappingFactory.create(fetchMappingModel(), getResourceBaseURI());
-        res.configuration().setUseAllOptimizations(fastMode);
+        res.getConfiguration().setUseAllOptimizations(fastMode);
         if (connectedDB != null) {
             // Hack! We don't want the Database to open another ConnectedDB,
             // so we check if it's connected to the same DB, and in that case
             // make it use the existing ConnectedDB that we already have opened.
             // Otherwise we get problems where D2RQ is trying to import a SQL
             // script twice on startup.
-            for (Database db : res.databases()) {
+            res.listDatabases().forEach(db -> {
                 if (db.getJDBCDSN().equals(connectedDB.getJdbcURL())) {
                     if (resultSizeLimit != Database.NO_LIMIT) {
                         db.setResultSizeLimit(resultSizeLimit);
                     }
                     db.useConnectedDB(connectedDB);
                 }
-            }
+            });
         }
         return res;
     }

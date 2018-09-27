@@ -199,7 +199,7 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     private ValueMaker buildValueSourceBase() {
         if (this.bNodeIdColumns != null) {
-            return new BlankNodeID(PrettyPrinter.toString(this.resource()),
+            return new BlankNodeID(PrettyPrinter.toString(this.asResource()),
                     parseColumnList(this.bNodeIdColumns));
         }
         if (this.uriColumn != null) {

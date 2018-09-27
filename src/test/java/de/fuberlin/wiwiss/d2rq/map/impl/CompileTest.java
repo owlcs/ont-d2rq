@@ -52,7 +52,7 @@ public class CompileTest {
     }
 
     private static ClassMap createClassMap(Mapping mapping, Database database, String uriPattern) {
-        ClassMap result = mapping.createClassMap(mapping.getMappingModel().createResource());
+        ClassMap result = mapping.createClassMap(mapping.asModel().createResource());
         result.setDatabase(database);
         result.setURIPattern(uriPattern);
         mapping.addClassMap(result);
@@ -60,7 +60,7 @@ public class CompileTest {
     }
 
     private static PropertyBridgeImpl createPropertyBridge(Mapping mapping, ClassMap classMap, String propertyURI) {
-        Model model = classMap.resource().getModel();
+        Model model = classMap.asResource().getModel();
         PropertyBridge res = mapping.createPropertyBridge(model.createResource());
         res.setBelongsToClassMap(classMap);
         res.addProperty(model.createProperty(propertyURI));

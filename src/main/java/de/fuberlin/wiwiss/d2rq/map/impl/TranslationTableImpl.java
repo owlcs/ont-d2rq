@@ -108,7 +108,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
                 throw new D2RQException("d2rq:javaClass " + this.javaClass + " must implement " + Translator.class.getName());
             }
             if (hasConstructorWithArg(translatorClass)) {
-                return invokeConstructorWithArg(translatorClass, resource());
+                return invokeConstructorWithArg(translatorClass, asResource());
             }
             if (hasConstructorWithoutArg(translatorClass)) {
                 return invokeConstructorWithoutArg(translatorClass);

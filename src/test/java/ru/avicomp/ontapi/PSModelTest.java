@@ -71,7 +71,7 @@ public class PSModelTest {
         LOGGER.debug("Mapping:");
         psMapping = src.getMapping();
         Assert.assertNotNull(psMapping);
-        ReadWriteUtils.print(psMapping.getMappingModel());
+        ReadWriteUtils.print(psMapping.asModel());
 
         // simple validation of all data in graphs
         validatePSDatabase(data);

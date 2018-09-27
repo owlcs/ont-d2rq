@@ -34,7 +34,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     }
 
     @Override
-    public Resource resource() {
+    public Resource asResource() {
         return this.resource;
     }
 
@@ -160,7 +160,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     @Override
     public void validate() throws D2RQException {
         if (this.refersToClassMap != null) {
-            if (!this.refersToClassMap.database().equals(this.belongsToClassMap.database())) {
+            if (!this.refersToClassMap.getDatabase().equals(this.belongsToClassMap.getDatabase())) {
                 throw new D2RQException(toString() +
                         " links two d2rq:ClassMaps with different d2rq:dataStorages",
                         D2RQException.PROPERTYBRIDGE_CONFLICTING_DATABASES);
@@ -196,14 +196,14 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     protected Relation buildRelation() {
-        ConnectedDB database = belongsToClassMap.database().connectedDB();
+        ConnectedDB database = belongsToClassMap.getDatabase().connectedDB();
         RelationBuilder builder = belongsToClassMap.relationBuilder(database);
         builder.addOther(relationBuilder(database));
         if (this.refersToClassMap != null) {
             builder.addAliased(this.refersToClassMap.relationBuilder(database));
         }
         for (String pattern : dynamicPropertyPatterns) {
-            builder.addOther(new PropertyMap(pattern, belongsToClassMap.database()).relationBuilder(database));
+            builder.addOther(new PropertyMap(pattern, belongsToClassMap.getDatabase()).relationBuilder(database));
         }
         if (this.limit != null) {
             builder.setLimit(this.limit);
@@ -229,7 +229,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         }
         for (String pattern : dynamicPropertyPatterns) {
             NodeMaker s = this.belongsToClassMap.nodeMaker();
-            NodeMaker p = new PropertyMap(pattern, belongsToClassMap.database()).nodeMaker();
+            NodeMaker p = new PropertyMap(pattern, belongsToClassMap.getDatabase()).nodeMaker();
             NodeMaker o = nodeMaker();
             results.add(new TripleRelation(buildRelation(), s, p, o));
         }

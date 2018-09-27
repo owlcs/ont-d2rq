@@ -106,8 +106,8 @@ public class GraphD2RQ extends GraphBase implements Graph {
         }
         FindQuery query = new FindQuery(triplePattern, mapping.compiledPropertyBridges(), null);
         ExtendedIterator<Triple> result = TripleQueryIter.create(query.iterator());
-        if (mapping.configuration().getServeVocabulary()) {
-            result = result.andThen(mapping.getVocabularyModel().getGraph().find(triplePattern));
+        if (mapping.getConfiguration().getServeVocabulary()) {
+            result = result.andThen(mapping.getSchema().find(triplePattern));
         }
         return result;
     }

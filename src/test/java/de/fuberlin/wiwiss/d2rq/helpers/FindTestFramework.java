@@ -1,9 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.helpers;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
@@ -25,13 +25,13 @@ public abstract class FindTestFramework {
     protected static final Logger LOGGER = Logger.getLogger(FindTestFramework.class);
     protected static final Model m = ModelFactory.createDefaultModel();
 
-    protected GraphD2RQ graph;
+    protected Graph graph;
     private Set<Triple> resultTriples;
 
     @Before
     public void setUp() {
         LOGGER.debug("SET UP");
-        this.graph = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "TURTLE", "http://test/").getDataGraph();
+        this.graph = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "TURTLE", "http://test/").getData();
     }
 
     @After

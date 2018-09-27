@@ -16,7 +16,7 @@ import java.util.Objects;
  * <p>
  * Created by @szuev on 19.02.2017.
  */
-@Deprecated // TODO: will be replaced with another service
+@Deprecated // TODO: will be replaced with another solution service
 @SuppressWarnings("WeakerAccess")
 public class MappingTransform {
     private static ModelBuilder defaultFactory = new OWLModelBuilder();
@@ -55,9 +55,9 @@ public class MappingTransform {
 
             Resource anon = model.createResource();
             anon.addProperty(RDF.type, OWL.Ontology);
-            mapping.databases().forEach(d -> anon.addLiteral(RDFS.comment, "Database: <" + d.getJDBCDSN() + ">"));
+            mapping.listDatabases().forEach(d -> anon.addLiteral(RDFS.comment, "Database: <" + d.getJDBCDSN() + ">"));
 
-            mapping.classMaps().forEach(classMap -> {
+            mapping.listClassMaps().forEach(classMap -> {
                 for (Resource clazz : classMap.getClasses()) {
                     addDefinitions(model, (ResourceMap) classMap, clazz);
                 }

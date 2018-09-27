@@ -87,7 +87,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
 
     @Override
     protected Relation buildRelation() {
-        Database db = belongsToClassMap == null ? database : belongsToClassMap.database();
+        Database db = belongsToClassMap == null ? database : belongsToClassMap.getDatabase();
         RelationBuilder builder = relationBuilder(db.connectedDB());
         builder.addProjection(contentDownloadColumn);
         for (ProjectionSpec projection : getMediaTypeValueMaker().projectionSpecs()) {

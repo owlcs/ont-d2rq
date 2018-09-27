@@ -27,9 +27,7 @@ public class MappingHelper {
     }
 
     public static void connectToDummyDBs(Mapping m) {
-        for (Database db : m.databases()) {
-            connectToDummyDB(db);
-        }
+        m.listDatabases().forEach(MappingHelper::connectToDummyDB);
     }
 
     public static void connectToDummyDB(Database db) {

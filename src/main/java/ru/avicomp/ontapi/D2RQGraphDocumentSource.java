@@ -55,8 +55,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * @throws OntApiException if something is wrong with mapping
      */
     protected static URI calculateURI(Mapping mapping, Supplier<URI> orDefault) throws OntApiException {
-        List<String> dbs = OntApiException.notNull(mapping, "Null mapping").databases()
-                .stream()
+        List<String> dbs = OntApiException.notNull(mapping, "Null mapping").listDatabases()
                 .map(Database::getJDBCDSN)
                 .distinct()
                 .sorted()
@@ -151,7 +150,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      */
     @Override
     public Graph getGraph() {
-        return new HybridImpl(mapping.getVocabularyModel().getGraph(), mapping.getDataGraph());
+        return new HybridImpl(mapping.getSchema(), mapping.getData());
     }
 
     /**

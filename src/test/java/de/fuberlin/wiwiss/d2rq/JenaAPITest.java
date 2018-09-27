@@ -1,7 +1,7 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.util.FileManager;
 import org.junit.Assert;
@@ -18,7 +18,7 @@ public class JenaAPITest {
     @Test
     public void testCopyPrefixesFromMapModelToD2RQGraph() {
         Model model = FileManager.get().loadModel(JenaAPITest.class.getResource("/prefixes.ttl").toString());
-        GraphD2RQ g = MappingFactory.create(model, "http://localhost/resource/").getDataGraph();
+        Graph g = MappingFactory.create(model, "http://localhost/resource/").getData();
         Assert.assertEquals("http://example.org/", g.getPrefixMapping().getNsPrefixURI("ex"));
     }
 

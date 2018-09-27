@@ -81,7 +81,8 @@ public class MapParser {
             parseClassMaps();
             parsePropertyBridges();
             parseDownloadMaps();
-            LOGGER.info("Done reading D2RQ map with {} databases and {} class maps", mapping.databases().size(), mapping.classMapResources().size());
+            LOGGER.info("Done reading D2RQ map with {} databases and {} class maps",
+                    mapping.listDatabases().count(), mapping.listClassMaps().count());
             return this.mapping;
         } catch (LiteralRequiredException ex) {
             throw new D2RQException("Expected literal, found URI resource instead: " + ex.getMessage(),
@@ -358,7 +359,7 @@ public class MapParser {
         }
         stmts = r.listProperties(D2RQ.translateWith);
         while (stmts.hasNext()) {
-            resourceMap.setTranslateWith(this.mapping.translationTable(stmts.nextStatement().getResource()));
+            resourceMap.setTranslateWith(this.mapping.findTranslationTable(stmts.nextStatement().getResource()));
         }
     }
 
@@ -366,7 +367,7 @@ public class MapParser {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.dataStorage);
         while (stmts.hasNext()) {
-            classMap.setDatabase(this.mapping.database(
+            classMap.setDatabase(this.mapping.findDatabase(
                     stmts.nextStatement().getResource()));
         }
         stmts = r.listProperties(D2RQ.clazz);
@@ -405,7 +406,7 @@ public class MapParser {
         StmtIterator stmts = this.model.listStatements(null, D2RQ.belongsToClassMap, (RDFNode) null);
         while (stmts.hasNext()) {
             Statement stmt = stmts.nextStatement();
-            ClassMapImpl classMap = this.mapping.classMap(stmt.getResource());
+            ClassMapImpl classMap = this.mapping.findClassMap(stmt.getResource());
             Resource r = stmt.getSubject();
             PropertyBridgeImpl bridge = mapping.createPropertyBridge(r);
             bridge.setBelongsToClassMap(classMap);
@@ -452,7 +453,7 @@ public class MapParser {
         stmts = r.listProperties(D2RQ.refersToClassMap);
         while (stmts.hasNext()) {
             Resource classMapResource = stmts.nextStatement().getResource();
-            bridge.setRefersToClassMap(this.mapping.classMap(classMapResource));
+            bridge.setRefersToClassMap(this.mapping.findClassMap(classMapResource));
         }
         stmts = r.listProperties(D2RQ.dynamicProperty);
         while (stmts.hasNext()) {
@@ -512,13 +513,12 @@ public class MapParser {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.dataStorage);
         while (stmts.hasNext()) {
-            dm.setDatabase(mapping.database(
+            dm.setDatabase(mapping.findDatabase(
                     stmts.nextStatement().getResource()));
         }
         stmts = r.listProperties(D2RQ.belongsToClassMap);
         while (stmts.hasNext()) {
-            dm.setBelongsToClassMap(mapping.classMap(
-                    stmts.nextStatement().getResource()));
+            dm.setBelongsToClassMap(mapping.findClassMap(stmts.nextStatement().getResource()));
         }
         stmts = r.listProperties(D2RQ.contentDownloadColumn);
         while (stmts.hasNext()) {

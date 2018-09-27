@@ -13,11 +13,13 @@ import java.util.Collection;
  */
 public interface ClassMap extends MapObject {
 
+    // todo: remove from interface
     NodeMaker nodeMaker();
 
+    // todo: remove from interface
     RelationBuilder relationBuilder(ConnectedDB database);
 
-    Database database();
+    Database getDatabase();
 
     void setDatabase(Database d);
 

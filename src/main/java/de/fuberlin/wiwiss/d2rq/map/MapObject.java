@@ -7,7 +7,7 @@ import org.apache.jena.rdf.model.Resource;
  */
 public interface MapObject {
 
-    Resource resource();
+    Resource asResource();
 
     void validate();
 }
