@@ -1,7 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.pp;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingImpl;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RConfig;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.JenaRuntime;
@@ -24,7 +24,7 @@ public class PrettyPrinter {
         // todo: wrong logic: vocabulary constants must not contain nonnull model
         // Make sure that the model behind all the
         // D2RQ vocabulary terms has the d2rq prefix
-        D2RQ.ClassMap.getModel().setNsPrefix(Mapping.Prefixes.D2RQ_PREFIX, D2RQ.NS);
+        D2RQ.ClassMap.getModel().setNsPrefix(MappingImpl.Prefixes.D2RQ_PREFIX, D2RQ.NS);
         // Same for D2RConfig
         D2RConfig.Server.getModel().setNsPrefix("d2r", D2RConfig.NS);
     }

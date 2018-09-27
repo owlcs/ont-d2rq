@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * Creates a {@link Mapping} from a Jena model representation of a D2RQ mapping file.
+ * Creates a {@link MappingImpl} from a Jena model representation of a D2RQ mapping file.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -43,7 +43,7 @@ public class MapParser {
 
     private Model model;
     private String baseURI;
-    private Mapping mapping;
+    private MappingImpl mapping;
 
     /**
      * Constructs a new MapParser from a Jena model containing the RDF statements from a D2RQ mapping file.
@@ -60,9 +60,9 @@ public class MapParser {
      * TODO: better to rewrite this initialization.
      * Starts the parsing process. Must be called before results can be retrieved
      * from the getter methods.
-     * @return {@link Mapping}
+     * @return {@link MappingImpl}
      */
-    public Mapping parse() {
+    public MappingImpl parse() {
         if (this.mapping != null) {
             return mapping;
         }
@@ -71,7 +71,7 @@ public class MapParser {
                 D2RQException.MAPPING_UNKNOWN_D2RQ_CLASS);
         ensureAllDistinct(new Resource[]{D2RQ.Database, D2RQ.ClassMap, D2RQ.PropertyBridge,
                 D2RQ.TranslationTable, D2RQ.Translation}, D2RQException.MAPPING_TYPECONFLICT);
-        this.mapping = new Mapping(this.model);
+        this.mapping = new MappingImpl(this.model);
         try {
             parseDatabases();
             parseConfiguration();

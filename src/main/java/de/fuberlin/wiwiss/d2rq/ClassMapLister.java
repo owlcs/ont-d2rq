@@ -5,7 +5,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.RelationalOperators;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.find.FindQuery;
 import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingImpl;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
@@ -32,15 +32,19 @@ import java.util.Map.Entry;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@Deprecated
+// TODO: the pure Jena offers much more possibilities to traverse around the graph.
+// TODO: Since I'am going to change Mapping to be backed by the graph
+// TODO: this class is scheduled to be deleted
 public class ClassMapLister {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassMapLister.class);
 
-    private final Mapping mapping;
+    private final MappingImpl mapping;
 
     private Map<String, List<TripleRelation>> classMapInventoryBridges = new HashMap<>();
     private Map<String, NodeMaker> classMapNodeMakers = new HashMap<>();
 
-    public ClassMapLister(Mapping mapping) {
+    public ClassMapLister(MappingImpl mapping) {
         this.mapping = mapping;
         groupTripleRelationsByClassMap();
     }
