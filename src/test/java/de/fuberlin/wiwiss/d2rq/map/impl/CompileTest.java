@@ -31,27 +31,28 @@ public class CompileTest {
         database.useConnectedDB(new DummyDB());
         mapping.addDatabase(database);
 
-        ClassMap employees = createClassMap(mapping, database, "http://test/employee@@e.ID@@");
+        ClassMap employees = createClassMap(database, "http://test/employee@@e.ID@@");
         employees.addAlias("employees AS e");
         employees.addJoin("e.ID = foo.bar");
         employees.addCondition("e.status = 'active'");
-        managerBridge = createPropertyBridge(mapping, employees, "http://terms.example.org/manager");
+        managerBridge = createPropertyBridge(employees, "http://terms.example.org/manager");
         managerBridge.addAlias("e AS m");
         managerBridge.setRefersToClassMap(employees);
         managerBridge.addJoin("e.manager = m.ID");
 
-        ClassMap cities = createClassMap(mapping, database, "http://test/city@@c.ID@@");
-        citiesTypeBridge = createPropertyBridge(mapping, cities, RDF.type.getURI());
+        ClassMap cities = createClassMap(database, "http://test/city@@c.ID@@");
+        citiesTypeBridge = createPropertyBridge(cities, RDF.type.getURI());
         citiesTypeBridge.setConstantValue(model.createResource("http://terms.example.org/City"));
-        citiesNameBridge = createPropertyBridge(mapping, cities, "http://terms.example.org/name");
+        citiesNameBridge = createPropertyBridge(cities, "http://terms.example.org/name");
         citiesNameBridge.setColumn("c.name");
-        ClassMap countries = createClassMap(mapping, database, "http://test/countries/@@c.country@@");
+        ClassMap countries = createClassMap(database, "http://test/countries/@@c.country@@");
         countries.setContainsDuplicates(true);
-        countriesTypeBridge = createPropertyBridge(mapping, countries, RDF.type.getURI());
+        countriesTypeBridge = createPropertyBridge(countries, RDF.type.getURI());
         countriesTypeBridge.setConstantValue(model.createResource("http://terms.example.org/Country"));
     }
 
-    private static ClassMap createClassMap(Mapping mapping, Database database, String uriPattern) {
+    private static ClassMap createClassMap(Database database, String uriPattern) {
+        Mapping mapping = database.getMapping();
         ClassMap result = mapping.createClassMap(mapping.asModel().createResource());
         result.setDatabase(database);
         result.setURIPattern(uriPattern);
@@ -59,7 +60,8 @@ public class CompileTest {
         return result;
     }
 
-    private static PropertyBridgeImpl createPropertyBridge(Mapping mapping, ClassMap classMap, String propertyURI) {
+    private static PropertyBridgeImpl createPropertyBridge(ClassMap classMap, String propertyURI) {
+        Mapping mapping = classMap.getMapping();
         Model model = classMap.asResource().getModel();
         PropertyBridge res = mapping.createPropertyBridge(model.createResource());
         res.setBelongsToClassMap(classMap);

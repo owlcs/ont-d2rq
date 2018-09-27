@@ -13,7 +13,7 @@ public class PropertyMap extends ResourceMap {
     private Database database;
 
     public PropertyMap(String uriPattern, Database database) {
-        super(null, true);
+        super(null, null, true);
         setURIPattern(uriPattern);
         this.database = database;
     }

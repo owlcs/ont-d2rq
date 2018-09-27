@@ -14,12 +14,8 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
     private boolean serveVocabulary = true;
     private boolean useAllOptimizations = false;
 
-    public ConfigurationImpl() {
-        this(null);
-    }
-
-    public ConfigurationImpl(Resource resource) {
-        super(resource);
+    public ConfigurationImpl(Resource resource, MappingImpl mapping) {
+        super(resource, mapping);
     }
 
     @Override

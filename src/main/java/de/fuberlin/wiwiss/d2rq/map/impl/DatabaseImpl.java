@@ -36,8 +36,8 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
     private ConnectedDB connection = null;
     private Properties connectionProperties = new Properties();
 
-    public DatabaseImpl(Resource resource) {
-        super(resource);
+    public DatabaseImpl(Resource resource, MappingImpl mapping) {
+        super(resource, mapping);
     }
 
     @Override

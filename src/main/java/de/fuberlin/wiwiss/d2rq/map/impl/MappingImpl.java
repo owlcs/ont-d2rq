@@ -8,12 +8,15 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.*;
 import java.util.function.Function;
@@ -38,9 +41,11 @@ public class MappingImpl implements Mapping {
     private final Map<Resource, DownloadMap> downloadMaps = new HashMap<>();
     private final Model model;
 
-    private Configuration configuration = new ConfigurationImpl();
+    private Configuration configuration;
     private Collection<TripleRelation> compiledPropertyBridges;
+    // cache for prefixes (todo: remove - obtain from schema)
     private PrefixMapping prefixes;
+    // cache for schema (todo: remove)
     private Model vocabularyModel;
     // cache for dataGraph (todo: remove)
     private GraphD2RQ dataGraph;
@@ -149,17 +154,17 @@ public class MappingImpl implements Mapping {
 
     @Override
     public DatabaseImpl createDatabase(Resource r) {
-        return new DatabaseImpl(r);
+        return new DatabaseImpl(r, this);
     }
 
     @Override
     public TranslationTableImpl createTranslationTable(Resource r) {
-        return new TranslationTableImpl(r);
+        return new TranslationTableImpl(r, this);
     }
 
     @Override
     public DownloadMapImpl createDownloadMap(Resource r) {
-        return new DownloadMapImpl(r);
+        return new DownloadMapImpl(r, this);
     }
 
     @Override
@@ -183,7 +188,14 @@ public class MappingImpl implements Mapping {
 
     @Override
     public Configuration getConfiguration() {
-        return this.configuration;
+        if (configuration != null) return configuration;
+        Resource r = Iter.asStream(model.listResourcesWithProperty(RDF.type, D2RQ.Configuration))
+                .findFirst().orElseGet(() -> model.createResource(D2RQ.Configuration));
+        return configuration = createConfiguration(r);
+    }
+
+    public ConfigurationImpl createConfiguration(Resource r) {
+        return new ConfigurationImpl(r, this);
     }
 
     public void setConfiguration(Configuration configuration) {
@@ -192,12 +204,12 @@ public class MappingImpl implements Mapping {
 
     @Override
     public ClassMapImpl createClassMap(Resource r) {
-        return new ClassMapImpl(r);
+        return new ClassMapImpl(r, this);
     }
 
     @Override
     public PropertyBridgeImpl createPropertyBridge(Resource r) {
-        return new PropertyBridgeImpl(r);
+        return new PropertyBridgeImpl(r, this);
     }
 
     @Override

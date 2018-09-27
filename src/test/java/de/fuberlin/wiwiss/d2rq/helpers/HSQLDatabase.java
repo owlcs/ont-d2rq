@@ -15,11 +15,12 @@ import java.util.stream.IntStream;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class HSQLDatabase {
     public final static String HSQL_DRIVER_CLASS = org.hsqldb.jdbcDriver.class.getName();
 
-    private final static String HSQL_USER = "d2rq";
-    private final static String HSQL_PASS = "";
+    public final static String HSQL_USER = "d2rq";
+    public final static String HSQL_PASS = "";
 
     private final String jdbcURL;
     private final Connection conn;

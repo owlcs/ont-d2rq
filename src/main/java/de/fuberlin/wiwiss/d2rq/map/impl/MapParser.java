@@ -1,7 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.Configuration;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
@@ -127,7 +126,7 @@ public class MapParser {
         Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.Configuration);
         if (it.hasNext()) {
             Resource configResource = it.next();
-            Configuration configuration = new ConfigurationImpl(configResource);
+            ConfigurationImpl configuration = this.mapping.createConfiguration(configResource);
             StmtIterator stmts = configResource.listProperties(D2RQ.serveVocabulary);
             while (stmts.hasNext()) {
                 configuration.setServeVocabulary(stmts.nextStatement().getBoolean());

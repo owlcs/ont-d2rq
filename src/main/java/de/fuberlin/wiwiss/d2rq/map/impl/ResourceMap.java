@@ -69,8 +69,8 @@ public abstract class ResourceMap extends MapObjectImpl {
      */
     Collection<Resource> additionalDefinitionProperties = new ArrayList<>();
 
-    public ResourceMap(Resource resource, boolean defaultContainsDuplicate) {
-        super(resource);
+    public ResourceMap(Resource resource, MappingImpl mapping, boolean defaultContainsDuplicate) {
+        super(resource, mapping);
         this.containsDuplicates = defaultContainsDuplicate;
     }
 

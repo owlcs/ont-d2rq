@@ -23,8 +23,8 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
     private String javaClass;
     private String href;
 
-    public TranslationTableImpl(Resource resource) {
-        super(resource);
+    public TranslationTableImpl(Resource resource, MappingImpl mapping) {
+        super(resource, mapping);
     }
 
     /**

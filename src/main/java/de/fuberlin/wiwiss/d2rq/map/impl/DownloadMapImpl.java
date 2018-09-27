@@ -38,8 +38,8 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
     private String mediaType = null;
     private Attribute contentDownloadColumn = null;
 
-    public DownloadMapImpl(Resource downloadMapResource) {
-        super(downloadMapResource, false);
+    public DownloadMapImpl(Resource resource, MappingImpl mapping) {
+        super(resource, mapping, false);
     }
 
     public void setBelongsToClassMap(ClassMap classMap) {

@@ -22,21 +22,15 @@ import java.util.Collection;
 public class ClassMapImpl extends ResourceMap implements ClassMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassMapImpl.class);
 
-    private Resource resource;
     private Database database = null;
     private Collection<Resource> classes = new ArrayList<>();
     private Collection<PropertyBridge> propertyBridges = new ArrayList<>();
     private Collection<TripleRelation> compiledPropertyBridges = null;
 
-    public ClassMapImpl(Resource classMapResource) {
-        super(classMapResource, false);
-        this.resource = classMapResource;
+    public ClassMapImpl(Resource resource, MappingImpl mapping) {
+        super(resource, mapping, false);
     }
 
-    @Override
-    public Resource asResource() {
-        return this.resource;
-    }
 
     @Override
     public Collection<Resource> getClasses() {
@@ -110,7 +104,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
             this.compiledPropertyBridges.addAll(((PropertyBridgeImpl) bridge).toTripleRelations());
         }
         for (Resource clazz : classes) {
-            PropertyBridgeImpl bridge = new PropertyBridgeImpl(this.resource);
+            PropertyBridgeImpl bridge = new PropertyBridgeImpl(this.resource, this.mapping);
             bridge.setBelongsToClassMap(this);
             bridge.addProperty(RDF.type);
             bridge.setConstantValue(clazz);

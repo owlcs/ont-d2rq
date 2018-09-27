@@ -23,19 +23,12 @@ import java.util.HashSet;
 
 @SuppressWarnings("WeakerAccess")
 public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
-    private Resource resource;
     private ClassMap belongsToClassMap = null;
     private Collection<Resource> properties = new HashSet<>();
     private Collection<String> dynamicPropertyPatterns = new HashSet<>();
 
-    public PropertyBridgeImpl(Resource resource) {
-        super(resource, true);
-        this.resource = resource;
-    }
-
-    @Override
-    public Resource asResource() {
-        return this.resource;
+    public PropertyBridgeImpl(Resource resource, MappingImpl mapping) {
+        super(resource, mapping, true);
     }
 
     @Override

@@ -9,5 +9,7 @@ public interface MapObject {
 
     Resource asResource();
 
+    Mapping getMapping();
+
     void validate();
 }

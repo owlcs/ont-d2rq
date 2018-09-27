@@ -14,15 +14,22 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("WeakerAccess")
 public abstract class MapObjectImpl implements MapObject {
-    private Resource resource;
+    protected final Resource resource;
+    protected final MappingImpl mapping;
 
-    public MapObjectImpl(Resource resource) {
+    public MapObjectImpl(Resource resource, MappingImpl mapping) {
         this.resource = resource;
+        this.mapping = mapping;
     }
 
     @Override
     public Resource asResource() {
         return this.resource;
+    }
+
+    @Override
+    public MappingImpl getMapping() {
+        return mapping;
     }
 
     @Override
