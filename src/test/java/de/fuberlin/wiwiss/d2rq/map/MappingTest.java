@@ -1,6 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.junit.Assert;
@@ -10,29 +11,22 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 public class MappingTest {
-    private final static Resource database1 = ResourceFactory.createResource("http://test/db");
-    private final static Resource database2 = ResourceFactory.createResource("http://test/db2");
+    private final static String database1 = "http://test/db";
+    private final static String database2 = "http://test/db2";
     private final static Resource classMap1 = ResourceFactory.createResource("http://test/classMap1");
-
-    @Test
-    public void testNoDatabasesInitially() {
-        Mapping m = MappingFactory.createEmpty();
-        Assert.assertEquals(0, m.listDatabases().count());
-        Assert.assertNull(m.findDatabase(database1));
-    }
 
     @Test
     public void testReturnAddedDatabase() {
         Mapping m = MappingFactory.createEmpty();
-        Database db = m.createDatabase(database1);
-        m.addDatabase(db);
+        Database db = m.createDatabase(database1).setJDBCDSN("x");
         Assert.assertEquals(Collections.singletonList(db), m.listDatabases().collect(Collectors.toList()));
-        Assert.assertEquals(db, m.findDatabase(database1));
+        Assert.assertTrue(m.findDatabase("x").isPresent());
     }
 
     @Test
     public void testNoDatabaseCausesValidationError() {
         Mapping m = MappingFactory.createEmpty();
+        Assert.assertEquals(0, m.listDatabases().count());
         try {
             m.validate();
         } catch (D2RQException ex) {
@@ -67,15 +61,15 @@ public class MappingTest {
     public void testMultipleDatabasesForClassMapCauseValidationError() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = m.createClassMap(classMap1);
+        Database db1 = m.createDatabase(database1).setJDBCDSN("jdbc://x");
+        c.setDatabase(db1);
+        m.validate();
+        Database db2 = m.createDatabase(database2);
+        c.asResource().addProperty(D2RQ.dataStorage, db2.asResource());
         try {
-            Database db1 = m.createDatabase(database1);
-            c.setDatabase(db1);
-            Database db2 = m.createDatabase(database2);
-            c.setDatabase(db2);
-            m.addClassMap(c);
-            m.validate();
+            c.validate();
         } catch (D2RQException ex) {
-            Assert.assertEquals(D2RQException.CLASSMAP_DUPLICATE_DATABASE, ex.errorCode());
+            Assert.assertEquals("Message: " + ex.getMessage(), D2RQException.CLASSMAP_DUPLICATE_DATABASE, ex.errorCode());
         }
     }
 
@@ -83,15 +77,28 @@ public class MappingTest {
     public void testClassMapWithoutDatabaseCausesValidationError() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = m.createClassMap(classMap1);
+        m.createDatabase(database1).setJDBCDSN("jdbc:mysql:///db");
         try {
-            Database db1 = m.createDatabase(database1);
-            db1.setJDBCDSN("jdbc:mysql:///db");
-            db1.setJDBCDriver("org.example.Driver");
-            m.addDatabase(db1);
-            m.addClassMap(c);
+            c.validate();
+        } catch (D2RQException ex) {
+            Assert.assertEquals("Message: " + ex.getMessage(), D2RQException.CLASSMAP_NO_DATABASE, ex.errorCode());
+        }
+        try {
             m.validate();
         } catch (D2RQException ex) {
-            Assert.assertEquals(D2RQException.CLASSMAP_NO_DATABASE, ex.errorCode());
+            Assert.assertEquals("Message: " + ex.getMessage(), D2RQException.CLASSMAP_NO_DATABASE, ex.errorCode());
+        }
+    }
+
+    @Test
+    public void testDatabaseWithWrongDriverCausesValidationError() {
+        Database d = MappingFactory.createEmpty().createDatabase("x")
+                .setJDBCDSN("jdbc:mysql:///db").setJDBCDriver("nonexistent");
+        try {
+            d.validate();
+        } catch (D2RQException ex) {
+            Assert.assertEquals("Message: " + ex.getMessage(),
+                    D2RQException.DATABASE_JDBCDRIVER_CLASS_NOT_FOUND, ex.errorCode());
         }
     }
 

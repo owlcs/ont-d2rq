@@ -11,17 +11,13 @@ import java.util.Collection;
 /**
  * Created by @ssz on 26.09.2018.
  */
-public interface ClassMap extends MapObject {
+public interface ClassMap extends MapObject, HasDatabase<ClassMap> {
 
     // todo: remove from interface
     NodeMaker nodeMaker();
 
     // todo: remove from interface
     RelationBuilder relationBuilder(ConnectedDB database);
-
-    Database getDatabase();
-
-    void setDatabase(Database d);
 
     boolean hasProperties();
 

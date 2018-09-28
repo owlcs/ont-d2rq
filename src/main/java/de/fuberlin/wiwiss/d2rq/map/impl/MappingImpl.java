@@ -7,19 +7,26 @@ import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
+import java.io.IOException;
+import java.net.URI;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -35,7 +42,9 @@ public class MappingImpl implements Mapping {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingImpl.class);
 
-    private final Map<Resource, Database> databases = new HashMap<>();
+    // todo: control it using listeners
+    private final Map<Resource, ConnectedDB> connections = new HashMap<>();
+
     private final Map<Resource, ClassMapImpl> classMaps = new HashMap<>();
     private final Map<Resource, TranslationTable> translationTables = new HashMap<>();
     private final Map<Resource, DownloadMap> downloadMaps = new HashMap<>();
@@ -43,7 +52,7 @@ public class MappingImpl implements Mapping {
 
     private Configuration configuration;
     private Collection<TripleRelation> compiledPropertyBridges;
-    // cache for prefixes (todo: remove - obtain from schema)
+    // cache for prefixes (todo: remove - should be obtained from schema)
     private PrefixMapping prefixes;
     // cache for schema (todo: remove)
     private Model vocabularyModel;
@@ -96,10 +105,11 @@ public class MappingImpl implements Mapping {
 
     @Override
     public void validate() throws D2RQException {
-        if (this.databases.isEmpty()) {
+        Set<Database> databases = listDatabases().collect(Collectors.toSet());
+        if (databases.isEmpty()) {
             throw new D2RQException("No d2rq:Database defined in the mapping", D2RQException.MAPPING_NO_DATABASE);
         }
-        for (Database db : databases.values()) {
+        for (Database db : databases) {
             db.validate();
         }
         for (TranslationTable table : translationTables.values()) {
@@ -132,6 +142,7 @@ public class MappingImpl implements Mapping {
     /**
      * Connects all databases. This is done automatically if needed.
      * The method can be used to test the connections earlier.
+     * TODO: do not see any sense in this method. Scheduled to remove
      *
      * @throws D2RQException on connection failure
      */
@@ -139,22 +150,66 @@ public class MappingImpl implements Mapping {
     public void connect() {
         if (connected) return;
         connected = true;
-        for (Database db : databases.values()) {
-            db.connectedDB().connection();
+        for (ConnectedDB db : connections.values()) {
+            db.connection();
         }
         validate();
     }
 
     @Override
     public void close() {
-        for (Database db : databases.values()) {
-            db.connectedDB().close();
-        }
+        connections.values().forEach(ConnectedDB::close);
     }
 
     @Override
-    public DatabaseImpl createDatabase(Resource r) {
+    public DatabaseImpl createDatabase(String uri) {
+        return asDatabase(model.createResource(uri, D2RQ.Database));
+    }
+
+    public DatabaseImpl asDatabase(Resource r) {
         return new DatabaseImpl(r, this);
+    }
+
+    @Override
+    public MappingImpl addDatabase(Database database) {
+        DatabaseImpl.copy(this, database);
+        return this;
+    }
+
+    @Override
+    public Stream<Database> listDatabases() {
+        return Iter.asStream(databases()).map(Function.identity());
+    }
+
+    public ExtendedIterator<DatabaseImpl> databases() {
+        return model.listResourcesWithProperty(RDF.type, D2RQ.Database).mapWith(r -> new DatabaseImpl(r, this));
+    }
+
+    public ConnectedDB getConnectedDB(DatabaseImpl db) {
+        return connections.computeIfAbsent(db.asResource(), d -> createConnectionDB(db));
+    }
+
+    public boolean hasConnection(DatabaseImpl db) {
+        return connections.containsKey(db.asResource()) && connections.get(db.asResource()).isConnected();
+    }
+
+    void registerConnectedDB(DatabaseImpl db, ConnectedDB c) {
+        connections.put(db.asResource(), c);
+    }
+
+    public ConnectedDB createConnectionDB(DatabaseImpl db) {
+        ConnectedDB res = db.toConnectionDB();
+        String script = db.getStartupSQLScript();
+        if (script == null) {
+            return res;
+        }
+        try {
+            SQLScriptLoader.loadURI(URI.create(script), res.connection());
+        } catch (IllegalArgumentException | IOException | SQLException ex) {
+            res.close();
+            throw new D2RQException("Can't process " + script, ex);
+        }
+        return res;
     }
 
     @Override
@@ -165,25 +220,6 @@ public class MappingImpl implements Mapping {
     @Override
     public DownloadMapImpl createDownloadMap(Resource r) {
         return new DownloadMapImpl(r, this);
-    }
-
-    @Override
-    public void addDatabase(Database database) {
-        this.databases.put(database.asResource(), database);
-    }
-
-    public Collection<Database> databases() {
-        return this.databases.values();
-    }
-
-    @Override
-    public Stream<Database> listDatabases() {
-        return databases.values().stream();
-    }
-
-    @Override
-    public Database findDatabase(Resource name) {
-        return databases.get(name);
     }
 
     @Override
@@ -204,7 +240,7 @@ public class MappingImpl implements Mapping {
 
     @Override
     public ClassMapImpl createClassMap(Resource r) {
-        return new ClassMapImpl(r, this);
+        return new ClassMapImpl(r.inModel(model), this);
     }
 
     @Override
@@ -256,8 +292,7 @@ public class MappingImpl implements Mapping {
     }
 
     /**
-     * @return A collection of {@link TripleRelation}s corresponding to each
-     * of the property bridges
+     * @return A collection of {@link TripleRelation}s corresponding to each of the property bridges.
      */
     @Override
     public synchronized Collection<TripleRelation> compiledPropertyBridges() {

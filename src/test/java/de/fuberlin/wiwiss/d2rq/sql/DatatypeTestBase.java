@@ -20,7 +20,7 @@ import java.util.*;
 
 public abstract class DatatypeTestBase {
     private final static String EX = "http://example.com/";
-    private final static Resource dbURI = ResourceFactory.createResource(EX + "db");
+    private final static String dbURI = EX + "db";
     private final static Resource classMapURI = ResourceFactory.createResource(EX + "classmap");
     private final static Resource propertyBridgeURI = ResourceFactory.createResource(EX + "propertybridge");
     private final static Resource valueProperty = ResourceFactory.createProperty(EX + "value");
@@ -130,9 +130,8 @@ public abstract class DatatypeTestBase {
         database.setJDBCDriver(driver);
         database.setUsername(user);
         database.setPassword(password);
-        database.setStartupSQLScript(ResourceFactory.createResource(script.toString()));
-        mapping.addDatabase(database);
-        ClassMap classMap = mapping.createClassMap(classMapURI);
+        database.setStartupSQLScript(script.toString());
+        ClassMap classMap = mapping.addDatabase(database).createClassMap(classMapURI);
         classMap.setDatabase(database);
         classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");
         mapping.addClassMap(classMap);

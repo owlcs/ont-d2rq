@@ -2,6 +2,7 @@ package de.fuberlin.wiwiss.d2rq.vocab;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
 /**
@@ -38,4 +39,8 @@ public class JDBC {
      * The namespace of the vocabulary as a resource.
      */
     public static final Resource NAMESPACE = model.createResource(NS);
+
+    public static Property property(String k) {
+        return model.getProperty(NS + k);
+    }
 }

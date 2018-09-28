@@ -11,18 +11,19 @@ import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public class ClassMapImpl extends ResourceMap implements ClassMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassMapImpl.class);
 
-    private Database database = null;
     private Collection<Resource> classes = new ArrayList<>();
     private Collection<PropertyBridge> propertyBridges = new ArrayList<>();
     private Collection<TripleRelation> compiledPropertyBridges = null;
@@ -38,15 +39,16 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     @Override
-    public void setDatabase(Database database) {
-        assertNotYetDefined(this.database, D2RQ.dataStorage, D2RQException.CLASSMAP_DUPLICATE_DATABASE);
-        assertArgumentNotNull(database, D2RQ.dataStorage, D2RQException.CLASSMAP_INVALID_DATABASE);
-        this.database = database;
+    public ClassMapImpl setDatabase(Database database) {
+        DatabaseImpl res = DatabaseImpl.copy(mapping, database);
+        setRDFNode(D2RQ.dataStorage, res.asResource());
+        return this;
     }
 
     @Override
-    public Database getDatabase() {
-        return this.database;
+    public DatabaseImpl getDatabase() {
+        List<Resource> r = resource.listProperties(D2RQ.dataStorage).mapWith(Statement::getResource).toList();
+        return r.size() == 1 ? mapping.asDatabase(r.get(0)) : null;
     }
 
     public void addClass(Resource clazz) {
@@ -65,7 +67,12 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
 
     @Override
     public void validate() throws D2RQException {
-        assertHasBeenDefined(this.database, D2RQ.dataStorage, D2RQException.CLASSMAP_NO_DATABASE);
+        Validator v = new Validator(this);
+        v.forProperty(D2RQ.dataStorage)
+                .requireExists(D2RQException.CLASSMAP_NO_DATABASE)
+                .requireHasNoDuplicates(D2RQException.CLASSMAP_DUPLICATE_DATABASE)
+                .requireIsResource(D2RQException.CLASSMAP_INVALID_DATABASE);
+
         assertHasPrimarySpec(new Property[]{
                 D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue
         });
@@ -114,7 +121,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
 
     @Override
     protected Relation buildRelation() {
-        return this.relationBuilder(database.connectedDB()).buildRelation();
+        return this.relationBuilder(mapping.getConnectedDB(getDatabase())).buildRelation();
     }
 
     @Override

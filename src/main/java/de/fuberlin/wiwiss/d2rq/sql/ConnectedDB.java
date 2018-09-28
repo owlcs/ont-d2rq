@@ -126,15 +126,16 @@ public class ConnectedDB implements AutoCloseable {
     }
 
     private void resetConnection() {
-        if (this.connection != null) {
-            try {
-                this.connection.close();
-            } catch (SQLException sqlExc) {
-                // ignore...
-                LOGGER.error("Error while closing current connection: {}", sqlExc.getMessage(), sqlExc);
-            } finally {
-                this.connection = null;
-            }
+        if (this.connection == null) {
+            return;
+        }
+        try {
+            this.connection.close();
+        } catch (SQLException sqlExc) {
+            // ignore...
+            LOGGER.error("Error while closing current connection: {}", sqlExc.getMessage(), sqlExc);
+        } finally {
+            this.connection = null;
         }
     }
 
@@ -201,6 +202,10 @@ public class ConnectedDB implements AutoCloseable {
             connect();
         }
         return this.connection;
+    }
+
+    public boolean isConnected() {
+        return connection != null;
     }
 
     public int limit() {

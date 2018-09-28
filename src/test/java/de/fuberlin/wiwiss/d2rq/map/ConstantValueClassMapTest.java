@@ -40,8 +40,7 @@ public class ConstantValueClassMapTest {
     public void setUp() {
         Model model = ModelFactory.createDefaultModel();
         Mapping mapping = MappingFactory.createEmpty();
-        Database database = mapping.createDatabase(model.createResource());
-        mapping.addDatabase(database);
+        Database database = mapping.createDatabase(null);
 
         ClassMap concept = createClassMap(mapping, database, "http://example.com/concept#@@c.ID@@");
         PropertyBridge conceptTypeBridge = createPropertyBridge(mapping, concept, RDF.type.getURI());

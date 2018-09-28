@@ -3,7 +3,6 @@ package de.fuberlin.wiwiss.d2rq.map.impl;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
 import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.system.IRIResolver;
@@ -61,6 +60,7 @@ public class MapParser {
      * TODO: better to rewrite this initialization.
      * Starts the parsing process. Must be called before results can be retrieved
      * from the getter methods.
+     *
      * @return {@link MappingImpl}
      */
     public MappingImpl parse() {
@@ -74,7 +74,6 @@ public class MapParser {
                 D2RQ.TranslationTable, D2RQ.Translation}, D2RQException.MAPPING_TYPECONFLICT);
         this.mapping = new MappingImpl(this.model);
         try {
-            parseDatabases();
             parseConfiguration();
             parseTranslationTables();
             parseClassMaps();
@@ -112,16 +111,6 @@ public class MapParser {
         }
     }
 
-    private void parseDatabases() {
-        Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.Database);
-        while (it.hasNext()) {
-            Resource dbResource = it.next();
-            DatabaseImpl database = this.mapping.createDatabase(dbResource);
-            parseDatabase(database, dbResource);
-            this.mapping.addDatabase(database);
-        }
-    }
-
     private void parseConfiguration() {
         Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.Configuration);
         if (it.hasNext()) {
@@ -139,92 +128,6 @@ public class MapParser {
 
             if (it.hasNext())
                 throw new D2RQException("Only one configuration block is allowed");
-        }
-    }
-
-    private void parseDatabase(DatabaseImpl database, Resource r) {
-        StmtIterator stmts;
-        stmts = r.listProperties(D2RQ.jdbcDSN);
-        while (stmts.hasNext()) {
-            database.setJDBCDSN(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.jdbcDriver);
-        while (stmts.hasNext()) {
-            database.setJDBCDriver(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.username);
-        while (stmts.hasNext()) {
-            database.setUsername(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.password);
-        while (stmts.hasNext()) {
-            database.setPassword(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.resultSizeLimit);
-        while (stmts.hasNext()) {
-            try {
-                int limit = Integer.parseInt(stmts.nextStatement().getString());
-                database.setResultSizeLimit(limit);
-            } catch (NumberFormatException ex) {
-                throw new D2RQException("Value of d2rq:resultSizeLimit must be numeric", D2RQException.MUST_BE_NUMERIC);
-            }
-        }
-        stmts = r.listProperties(D2RQ.textColumn);
-        while (stmts.hasNext()) {
-            database.addTextColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.numericColumn);
-        while (stmts.hasNext()) {
-            database.addNumericColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.booleanColumn);
-        while (stmts.hasNext()) {
-            database.addBooleanColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.dateColumn);
-        while (stmts.hasNext()) {
-            database.addDateColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.timestampColumn);
-        while (stmts.hasNext()) {
-            database.addTimestampColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.timeColumn);
-        while (stmts.hasNext()) {
-            database.addTimeColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.binaryColumn);
-        while (stmts.hasNext()) {
-            database.addBinaryColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.bitColumn);
-        while (stmts.hasNext()) {
-            database.addBitColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.intervalColumn);
-        while (stmts.hasNext()) {
-            database.addIntervalColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.fetchSize);
-        while (stmts.hasNext()) {
-            try {
-                int fetchSize = Integer.parseInt(stmts.nextStatement().getString());
-                database.setFetchSize(fetchSize);
-            } catch (NumberFormatException ex) {
-                throw new D2RQException("Value of d2rq:fetchSize must be numeric", D2RQException.MUST_BE_NUMERIC);
-            }
-        }
-        stmts = r.listProperties(D2RQ.startupSQLScript);
-        while (stmts.hasNext()) {
-            database.setStartupSQLScript(stmts.next().getResource());
-        }
-        stmts = r.listProperties();
-        while (stmts.hasNext()) {
-            Statement stmt = stmts.nextStatement();
-            String prop = stmt.getPredicate().getURI();
-            if (!prop.startsWith(JDBC.NS)) continue;
-            database.setConnectionProperty(
-                    prop.substring(JDBC.NS.length()), stmt.getString());
         }
     }
 
@@ -364,11 +267,6 @@ public class MapParser {
 
     private void parseClassMap(ClassMapImpl classMap, Resource r) {
         StmtIterator stmts;
-        stmts = r.listProperties(D2RQ.dataStorage);
-        while (stmts.hasNext()) {
-            classMap.setDatabase(this.mapping.findDatabase(
-                    stmts.nextStatement().getResource()));
-        }
         stmts = r.listProperties(D2RQ.clazz);
         while (stmts.hasNext()) {
             classMap.addClass(stmts.nextStatement().getResource());
@@ -510,11 +408,6 @@ public class MapParser {
 
     private void parseDownloadMap(DownloadMapImpl dm, Resource r) {
         StmtIterator stmts;
-        stmts = r.listProperties(D2RQ.dataStorage);
-        while (stmts.hasNext()) {
-            dm.setDatabase(mapping.findDatabase(
-                    stmts.nextStatement().getResource()));
-        }
         stmts = r.listProperties(D2RQ.belongsToClassMap);
         while (stmts.hasNext()) {
             dm.setBelongsToClassMap(mapping.findClassMap(stmts.nextStatement().getResource()));

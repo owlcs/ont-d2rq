@@ -27,9 +27,8 @@ public class CompileTest {
     public void setUp() {
         Model model = ModelFactory.createDefaultModel();
         Mapping mapping = MappingFactory.createEmpty();
-        Database database = mapping.createDatabase(model.createResource());
+        Database database = mapping.createDatabase(null);
         database.useConnectedDB(new DummyDB());
-        mapping.addDatabase(database);
 
         ClassMap employees = createClassMap(database, "http://test/employee@@e.ID@@");
         employees.addAlias("employees AS e");
@@ -54,8 +53,7 @@ public class CompileTest {
     private static ClassMap createClassMap(Database database, String uriPattern) {
         Mapping mapping = database.getMapping();
         ClassMap result = mapping.createClassMap(mapping.asModel().createResource());
-        result.setDatabase(database);
-        result.setURIPattern(uriPattern);
+        result.setDatabase(database).setURIPattern(uriPattern);
         mapping.addClassMap(result);
         return result;
     }

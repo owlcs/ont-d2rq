@@ -1,17 +1,17 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
 import de.fuberlin.wiwiss.d2rq.sql.vendor.Vendor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DummyDB extends ConnectedDB {
     private final Vendor vendor;
     private int limit = Database.NO_LIMIT;
-    private Map<Attribute, Boolean> nullability = new HashMap<Attribute, Boolean>();
+    private Map<Attribute, Boolean> nullability = new HashMap<>();
 
     public DummyDB() {
         this(Vendor.SQL92);

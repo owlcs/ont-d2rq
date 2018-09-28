@@ -24,20 +24,24 @@ public abstract class DataType {
     public enum GenericType {
         CHARACTER(Types.VARCHAR, "VARCHAR"),
         BINARY(Types.VARBINARY, "VARBINARY"),
-        NUMERIC(Types.NUMERIC, "NUMERIC"),
-        BOOLEAN(Types.BOOLEAN, "BOOLEAN"),
-        DATE(Types.DATE, "DATE"),
-        TIME(Types.TIME, "TIME"),
-        TIMESTAMP(Types.TIMESTAMP, "TIMESTAMP"),
-        INTERVAL(Types.VARCHAR, "INTERVAL"),
-        BIT(Types.BIT, "BIT");
+        NUMERIC(Types.NUMERIC),
+        BOOLEAN(Types.BOOLEAN),
+        DATE(Types.DATE),
+        TIME(Types.TIME),
+        TIMESTAMP(Types.TIMESTAMP),
+        INTERVAL(Types.VARCHAR),
+        BIT(Types.BIT);
 
         private final int jdbcType;
         private final String name;
 
+        GenericType(int jdbcType) {
+            this(jdbcType, null);
+        }
+
         GenericType(int jdbcType, String name) {
             this.jdbcType = jdbcType;
-            this.name = name.toUpperCase();
+            this.name = name == null ? name() : name.toLowerCase();
         }
 
         public DataType dataTypeFor(Vendor vendor) {

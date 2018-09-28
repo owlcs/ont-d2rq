@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.MalformedInputException;
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * Factory for MappingGenerators, ModelD2RQs and the like.
@@ -253,14 +254,14 @@ public class SystemLoader {
             // make it use the existing ConnectedDB that we already have opened.
             // Otherwise we get problems where D2RQ is trying to import a SQL
             // script twice on startup.
-            res.listDatabases().forEach(db -> {
-                if (db.getJDBCDSN().equals(connectedDB.getJdbcURL())) {
-                    if (resultSizeLimit != Database.NO_LIMIT) {
-                        db.setResultSizeLimit(resultSizeLimit);
-                    }
-                    db.useConnectedDB(connectedDB);
-                }
-            });
+            res.listDatabases()
+                    .filter(d -> Objects.equals(d.getJDBCDSN(), connectedDB.getJdbcURL()))
+                    .forEach(db -> {
+                        if (resultSizeLimit != Database.NO_LIMIT) {
+                            db.setResultSizeLimit(resultSizeLimit);
+                        }
+                        db.useConnectedDB(connectedDB);
+                    });
         }
         return res;
     }

@@ -70,7 +70,8 @@ public class MySQLDatatypeTest {
         //debug:
         //ru.avicomp.ontapi.utils.ReadWriteUtils.print(org.apache.jena.rdf.model.ModelFactory.createModelForGraph(graph));
 
-        DatabaseSchemaInspector inspector = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new).connectedDB().schemaInspector();
+        DatabaseSchemaInspector inspector = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new)
+                .connectedDB().schemaInspector();
         Assert.assertNotNull(inspector);
 
         assertMappedType(inspector, data.name(), data.getDataType());
@@ -110,8 +111,6 @@ public class MySQLDatatypeTest {
         Database database = connection.createDatabaseMapObject(mapping, DB_URI, MySQLDatatypeTest.database);
         //do not inject script to prevent database rebuilt:
         //database.setStartupSQLScript(ResourceFactory.createResource(scriptFile.toString()));
-
-        mapping.addDatabase(database);
         ClassMap classMap = mapping.createClassMap(ResourceFactory.createResource(CLASS_MAP_URI));
         classMap.setDatabase(database);
         classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");

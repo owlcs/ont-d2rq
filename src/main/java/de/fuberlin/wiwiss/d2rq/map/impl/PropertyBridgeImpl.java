@@ -189,7 +189,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     protected Relation buildRelation() {
-        ConnectedDB database = belongsToClassMap.getDatabase().connectedDB();
+        ConnectedDB database = mapping.getConnectedDB((DatabaseImpl) belongsToClassMap.getDatabase());
         RelationBuilder builder = belongsToClassMap.relationBuilder(database);
         builder.addOther(relationBuilder(database));
         if (this.refersToClassMap != null) {
