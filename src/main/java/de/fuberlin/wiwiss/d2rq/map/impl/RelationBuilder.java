@@ -29,7 +29,7 @@ public class RelationBuilder {
     private int limitInverse = Relation.NO_LIMIT;
 
     public RelationBuilder(ConnectedDB database) {
-        this.database = database;
+        this.database = Objects.requireNonNull(database);
     }
 
     public void setIsUnique(boolean isUnique) {

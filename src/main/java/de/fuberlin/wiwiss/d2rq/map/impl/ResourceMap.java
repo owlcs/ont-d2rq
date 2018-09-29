@@ -147,8 +147,8 @@ public abstract class ResourceMap extends MapObjectImpl {
         return parsedAliases;
     }
 
-    public RelationBuilder relationBuilder(ConnectedDB database) {
-        RelationBuilder result = new RelationBuilder(database);
+    public RelationBuilder relationBuilder(ConnectedDB cd) {
+        RelationBuilder result = new RelationBuilder(cd);
         for (Join join : SQL.parseJoins(joins)) {
             result.addJoinCondition(join);
         }

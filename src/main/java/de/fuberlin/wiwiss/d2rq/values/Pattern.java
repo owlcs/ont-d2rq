@@ -44,7 +44,7 @@ public class Pattern implements ValueMaker {
      * @throws D2RQException on malformed pattern
      */
     public Pattern(String pattern) {
-        this.pattern = pattern;
+        this.pattern = Objects.requireNonNull(pattern);
         parsePattern();
         this.columnsAsSet = new HashSet<>(this.columns);
     }

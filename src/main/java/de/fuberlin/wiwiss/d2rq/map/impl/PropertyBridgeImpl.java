@@ -196,7 +196,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
             builder.addAliased(this.refersToClassMap.relationBuilder(database));
         }
         for (String pattern : dynamicPropertyPatterns) {
-            builder.addOther(new PropertyMap(pattern, belongsToClassMap.getDatabase()).relationBuilder(database));
+            builder.addOther(new PropertyMap(pattern).relationBuilder(database));
         }
         if (this.limit != null) {
             builder.setLimit(this.limit);
@@ -222,7 +222,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         }
         for (String pattern : dynamicPropertyPatterns) {
             NodeMaker s = this.belongsToClassMap.nodeMaker();
-            NodeMaker p = new PropertyMap(pattern, belongsToClassMap.getDatabase()).nodeMaker();
+            NodeMaker p = new PropertyMap(pattern).nodeMaker();
             NodeMaker o = nodeMaker();
             results.add(new TripleRelation(buildRelation(), s, p, o));
         }
