@@ -246,19 +246,6 @@ public class MapParser {
         while (stmts.hasNext()) {
             resourceMap.addAlias(stmts.nextStatement().getString());
         }
-        stmts = r.listProperties(D2RQ.containsDuplicates);
-        while (stmts.hasNext()) {
-            String containsDuplicates = stmts.nextStatement().getString();
-            if ("true".equals(containsDuplicates)) {
-                resourceMap.setContainsDuplicates(true);
-            } else if ("false".equals(containsDuplicates)) {
-                resourceMap.setContainsDuplicates(false);
-            } else if (containsDuplicates != null) {
-                throw new D2RQException("Illegal value '" + containsDuplicates +
-                        "' for d2rq:containsDuplicates on " + PrettyPrinter.toString(r),
-                        D2RQException.RESOURCEMAP_ILLEGAL_CONTAINSDUPLICATE);
-            }
-        }
         stmts = r.listProperties(D2RQ.translateWith);
         while (stmts.hasNext()) {
             resourceMap.setTranslateWith(this.mapping.findTranslationTable(stmts.nextStatement().getResource()));

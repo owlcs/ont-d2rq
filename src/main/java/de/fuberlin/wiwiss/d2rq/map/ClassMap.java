@@ -27,7 +27,27 @@ public interface ClassMap extends MapObject, HasDatabase<ClassMap> {
 
     void setConstantValue(RDFNode constantValue);
 
-    void setContainsDuplicates(boolean b);
+    /**
+     * Sets {@code d2rq:containsDuplicates} boolean literal.
+     * Must be specified if a class map uses information from tables that are not fully normalized.
+     * If the {@code d2rq:containsDuplicates} property value is set to {@code true},
+     * then D2RQ adds a {@code DISTINCT} clause to all queries using this classMap.
+     * {@code false} is the default value, which doesn't have to be explicitly declared.
+     * Adding this property to class maps based on normalized database tables degrades query performance,
+     * but doesn't affect query results.
+     *
+     * @param b boolean
+     * @return this instance to allow cascading calls
+     */
+    ClassMap setContainsDuplicates(boolean b);
+
+    /**
+     * Answers if the {@code d2rq:containsDuplicates} is set to {@code true}.
+     *
+     * @return boolean
+     * @see #setContainsDuplicates(boolean)
+     */
+    boolean getContainsDuplicates();
 
     void addAlias(String alias);
 

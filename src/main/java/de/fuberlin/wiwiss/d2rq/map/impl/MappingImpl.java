@@ -214,12 +214,12 @@ public class MappingImpl implements Mapping {
 
     @Override
     public TranslationTableImpl createTranslationTable(Resource r) {
-        return new TranslationTableImpl(r, this);
+        return new TranslationTableImpl(r.inModel(model), this);
     }
 
     @Override
     public DownloadMapImpl createDownloadMap(Resource r) {
-        return new DownloadMapImpl(r, this);
+        return new DownloadMapImpl(r.inModel(model), this);
     }
 
     @Override
@@ -245,7 +245,7 @@ public class MappingImpl implements Mapping {
 
     @Override
     public PropertyBridgeImpl createPropertyBridge(Resource r) {
-        return new PropertyBridgeImpl(r, this);
+        return new PropertyBridgeImpl(r.inModel(model), this);
     }
 
     @Override

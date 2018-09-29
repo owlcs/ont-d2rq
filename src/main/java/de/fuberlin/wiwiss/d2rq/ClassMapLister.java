@@ -75,7 +75,7 @@ public class ClassMapLister {
                 }
             }
             if (inventoryBridges.isEmpty()) {
-                Relation relation = ClassMapLister.this.mapping.findClassMap(classMapResource).relation();
+                Relation relation = ClassMapLister.this.mapping.findClassMap(classMapResource).getRelation();
                 NodeMaker typeNodeMaker = new FixedNodeMaker(
                         RDF.type.asNode(), false);
                 NodeMaker resourceNodeMaker = new FixedNodeMaker(RDFS.Resource.asNode(), false);

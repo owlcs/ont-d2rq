@@ -29,9 +29,8 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     private Collection<TripleRelation> compiledPropertyBridges = null;
 
     public ClassMapImpl(Resource resource, MappingImpl mapping) {
-        super(resource, mapping, false);
+        super(resource, mapping);
     }
-
 
     @Override
     public Collection<Resource> getClasses() {
@@ -63,6 +62,11 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     @Override
     public Collection<PropertyBridge> propertyBridges() {
         return this.propertyBridges;
+    }
+
+    @Override
+    public ClassMapImpl setContainsDuplicates(boolean b) {
+        return setBoolean(D2RQ.containsDuplicates, b);
     }
 
     @Override

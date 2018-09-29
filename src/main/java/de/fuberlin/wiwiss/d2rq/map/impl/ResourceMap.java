@@ -42,7 +42,6 @@ public abstract class ResourceMap extends MapObjectImpl {
     protected Collection<String> joins = new ArrayList<>();
     protected Collection<String> conditions = new ArrayList<>();
     protected Collection<String> aliases = new ArrayList<>();
-    protected boolean containsDuplicates;
     protected TranslationTable translateWith = null;
 
     // These can be set only on a PropertyBridge
@@ -58,9 +57,6 @@ public abstract class ResourceMap extends MapObjectImpl {
     protected String order = null;
     protected Boolean orderDesc = null;
 
-    private NodeMaker cachedNodeMaker;
-    private Relation cachedRelation;
-
     Collection<Literal> definitionLabels = new ArrayList<>();
     Collection<Literal> definitionComments = new ArrayList<>();
 
@@ -69,9 +65,8 @@ public abstract class ResourceMap extends MapObjectImpl {
      */
     Collection<Resource> additionalDefinitionProperties = new ArrayList<>();
 
-    public ResourceMap(Resource resource, MappingImpl mapping, boolean defaultContainsDuplicate) {
+    public ResourceMap(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
-        this.containsDuplicates = defaultContainsDuplicate;
     }
 
     public void setBNodeIdColumns(String columns) {
@@ -135,11 +130,11 @@ public abstract class ResourceMap extends MapObjectImpl {
         this.aliases.add(alias);
     }
 
-    public void setContainsDuplicates(boolean b) {
-        this.containsDuplicates = b;
+    public boolean getContainsDuplicates() {
+        return getBoolean(D2RQ.containsDuplicates, false);
     }
 
-    private Collection<Alias> aliases() {
+    protected Collection<Alias> aliases() {
         Set<Alias> parsedAliases = new HashSet<>();
         for (String alias : aliases) {
             parsedAliases.add(SQL.parseAlias(alias));
@@ -148,48 +143,42 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public RelationBuilder relationBuilder(ConnectedDB cd) {
-        RelationBuilder result = new RelationBuilder(cd);
-        for (Join join : SQL.parseJoins(joins)) {
-            result.addJoinCondition(join);
-        }
-        for (String condition : conditions) {
-            result.addCondition(condition);
-        }
-        result.addAliases(aliases());
-        for (ProjectionSpec projection : nodeMaker().projectionSpecs()) {
-            result.addProjection(projection);
-        }
-        if (!containsDuplicates) {
-            result.setIsUnique(true);
-        }
-        return result;
+        return relationBuilder(cd, getContainsDuplicates());
     }
 
-    public Relation relation() {
-        if (this.cachedRelation == null) {
-            this.cachedRelation = buildRelation();
+    public RelationBuilder relationBuilder(ConnectedDB cd, boolean containsDuplicates) {
+        RelationBuilder res = new RelationBuilder(cd);
+        for (Join join : SQL.parseJoins(joins)) {
+            res.addJoinCondition(join);
         }
-        return this.cachedRelation;
+        for (String condition : conditions) {
+            res.addCondition(condition);
+        }
+        res.addAliases(aliases());
+        for (ProjectionSpec projection : nodeMaker().projectionSpecs()) {
+            res.addProjection(projection);
+        }
+        if (!containsDuplicates) {
+            res.setIsUnique(true);
+        }
+        return res;
+    }
+
+    public Relation getRelation() {
+        return buildRelation();
     }
 
     protected abstract Relation buildRelation();
 
     public NodeMaker nodeMaker() {
-        if (this.cachedNodeMaker == null) {
-            this.cachedNodeMaker = buildNodeMaker();
-        }
-        return this.cachedNodeMaker;
-    }
-
-    private NodeMaker buildNodeMaker() {
+        boolean isUnique = !getContainsDuplicates();
         if (this.constantValue != null) {
-            return new FixedNodeMaker(this.constantValue.asNode(),
-                    !this.containsDuplicates);
+            return new FixedNodeMaker(this.constantValue.asNode(), isUnique);
         }
         if (this.refersToClassMap == null) {
-            return buildNodeMaker(wrapValueSource(buildValueSourceBase()), !this.containsDuplicates);
+            return buildNodeMaker(wrapValueSource(buildValueSourceBase()), isUnique);
         }
-        return ((ClassMapImpl) this.refersToClassMap).buildAliasedNodeMaker(new AliasMap(aliases()), !this.containsDuplicates);
+        return ((ClassMapImpl) this.refersToClassMap).buildAliasedNodeMaker(new AliasMap(aliases()), isUnique);
     }
 
     public NodeMaker buildAliasedNodeMaker(AliasMap aliases, boolean unique) {
@@ -197,7 +186,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         return buildNodeMaker(values, unique);
     }
 
-    private ValueMaker buildValueSourceBase() {
+    protected ValueMaker buildValueSourceBase() {
         if (this.bNodeIdColumns != null) {
             return new BlankNodeID(PrettyPrinter.toString(this.asResource()),
                     parseColumnList(this.bNodeIdColumns));
@@ -249,7 +238,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         return new ValueDecorator(values, constraints, this.translateWith.translator());
     }
 
-    private NodeMaker buildNodeMaker(ValueMaker values, boolean isUnique) {
+    protected NodeMaker buildNodeMaker(ValueMaker values, boolean isUnique) {
         return new TypedNodeMaker(nodeType(), values, isUnique);
     }
 

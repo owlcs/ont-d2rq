@@ -28,7 +28,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     private Collection<String> dynamicPropertyPatterns = new HashSet<>();
 
     public PropertyBridgeImpl(Resource resource, MappingImpl mapping) {
-        super(resource, mapping, true);
+        super(resource, mapping);
     }
 
     @Override
@@ -141,6 +141,18 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         return refersToClassMap;
     }
 
+    /**
+     * Note: the return value is always {@code false} unless it is specified in the graph for this property bridge.
+     * I am not sure any property bridge may contain this parameter,
+     * but this is an original logic, that i dare not touch yet.
+     *
+     * @return boolean, usually {@code false}
+     */
+    @Override
+    public boolean getContainsDuplicates() {
+        return getBoolean(D2RQ.containsDuplicates, true);
+    }
+
     @Override
     public void addProperty(Resource property) {
         this.properties.add(property);
@@ -214,17 +226,13 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     public Collection<TripleRelation> toTripleRelations() {
         this.validate();
         Collection<TripleRelation> results = new ArrayList<>();
+        NodeMaker s = this.belongsToClassMap.nodeMaker();
+        NodeMaker o = this.nodeMaker();
         for (Resource property : properties) {
-            NodeMaker s = this.belongsToClassMap.nodeMaker();
-            NodeMaker p = new FixedNodeMaker(property.asNode(), false);
-            NodeMaker o = nodeMaker();
-            results.add(new TripleRelation(buildRelation(), s, p, o));
+            results.add(new TripleRelation(buildRelation(), s, new FixedNodeMaker(property.asNode(), false), o));
         }
         for (String pattern : dynamicPropertyPatterns) {
-            NodeMaker s = this.belongsToClassMap.nodeMaker();
-            NodeMaker p = new PropertyMap(pattern).nodeMaker();
-            NodeMaker o = nodeMaker();
-            results.add(new TripleRelation(buildRelation(), s, p, o));
+            results.add(new TripleRelation(buildRelation(), s, new PropertyMap(pattern).nodeMaker(), o));
         }
         return results;
     }
