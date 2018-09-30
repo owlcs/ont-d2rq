@@ -10,8 +10,6 @@ import java.util.Collection;
  */
 public interface PropertyBridge extends MapObject {
 
-    ClassMap refersToClassMap();
-
     void addProperty(Resource r);
 
     Collection<Resource> properties();

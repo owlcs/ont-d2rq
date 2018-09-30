@@ -14,6 +14,7 @@ import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.slf4j.Logger;
@@ -53,7 +54,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
 
     @Override
     public DownloadMap setDatabase(Database database) {
-        DatabaseImpl res = DatabaseImpl.copy(mapping, database);
+        DatabaseImpl res = mapping.asDatabase(database.asResource()).copy(database);
         setRDFNode(D2RQ.dataStorage, res.asResource());
         return this;
     }
@@ -90,17 +91,12 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
 
         assertHasPrimarySpec(new Property[]{D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue});
         assertHasBeenDefined(contentDownloadColumn, D2RQ.contentDownloadColumn, D2RQException.DOWNLOADMAP_NO_CONTENTCOLUMN);
-        if (this.constantValue != null && !this.constantValue.isURIResource()) {
+        RDFNode constantValue = getConstantValue();
+        if (constantValue != null && !constantValue.isURIResource()) {
             throw new D2RQException("d2rq:constantValue for download map " + toString() + " must be a URI",
                     D2RQException.DOWNLOADMAP_INVALID_CONSTANTVALUE);
         }
-        if (this.uriPattern != null && new Pattern(uriPattern).attributes().size() == 0) {
-            LOGGER.warn(String.format("%s has an uriPattern without any column specifications. " +
-                    "This usually happens when no primary keys are defined for a table. " +
-                    "If the configuration is left as is, all table rows will be mapped to a single instance. " +
-                    "If this is not what you want, please define the keys in the database and re-run the mapping generator, " +
-                    "or edit the mapping to provide the relevant keys.", toString()));
-        }
+        PropertyMap.validate(this);
     }
 
     @Override

@@ -121,9 +121,10 @@ public class MappingImpl implements Mapping {
             if (classMap.hasProperties()) {
                 classMapsWithoutProperties.remove(classMap);
             }
-            for (PropertyBridge bridge : classMap.propertyBridges()) {
-                if (bridge.refersToClassMap() != null) {
-                    classMapsWithoutProperties.remove(bridge.refersToClassMap());
+            for (PropertyBridge bridge : classMap.getPropertyBridges()) {
+                ClassMap refersToClassMap = bridge.getRefersToClassMap();
+                if (refersToClassMap != null) {
+                    classMapsWithoutProperties.remove(refersToClassMap);
                 }
             }
         }
@@ -166,13 +167,13 @@ public class MappingImpl implements Mapping {
         return asDatabase(model.createResource(uri, D2RQ.Database));
     }
 
-    public DatabaseImpl asDatabase(Resource r) {
-        return new DatabaseImpl(r, this);
+    protected DatabaseImpl asDatabase(Resource r) {
+        return new DatabaseImpl(r.inModel(model), this);
     }
 
     @Override
     public MappingImpl addDatabase(Database database) {
-        DatabaseImpl.copy(this, database);
+        asDatabase(database.asResource()).copy(database);
         return this;
     }
 

@@ -7,14 +7,12 @@ import de.fuberlin.wiwiss.d2rq.map.ClassMap;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
-import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,10 +20,9 @@ import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public class ClassMapImpl extends ResourceMap implements ClassMap {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClassMapImpl.class);
 
-    private Collection<Resource> classes = new ArrayList<>();
-    private Collection<PropertyBridge> propertyBridges = new ArrayList<>();
+    private List<Resource> classes = new ArrayList<>();
+    private List<PropertyBridge> propertyBridges = new ArrayList<>();
     private Collection<TripleRelation> compiledPropertyBridges = null;
 
     public ClassMapImpl(Resource resource, MappingImpl mapping) {
@@ -39,7 +36,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
 
     @Override
     public ClassMapImpl setDatabase(Database database) {
-        DatabaseImpl res = DatabaseImpl.copy(mapping, database);
+        DatabaseImpl res = mapping.asDatabase(database.asResource()).copy(database);
         setRDFNode(D2RQ.dataStorage, res.asResource());
         return this;
     }
@@ -60,7 +57,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     @Override
-    public Collection<PropertyBridge> propertyBridges() {
+    public List<PropertyBridge> getPropertyBridges() {
         return this.propertyBridges;
     }
 
@@ -80,18 +77,13 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
         assertHasPrimarySpec(new Property[]{
                 D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue
         });
-        if (this.constantValue != null && this.constantValue.isLiteral()) {
+        RDFNode constantValue = getConstantValue();
+        if (constantValue != null && constantValue.isLiteral()) {
             throw new D2RQException("d2rq:constantValue for class map " + toString() + " must be a URI or blank node",
                     D2RQException.CLASSMAP_INVALID_CONSTANTVALUE);
         }
-        if (this.uriPattern != null && new Pattern(uriPattern).attributes().size() == 0) {
-            LOGGER.warn(String.format("%s has an uriPattern without any column specifications. " +
-                    "This usually happens when no primary keys are defined for a table. " +
-                    "If the configuration is left as is, all table rows will be mapped to a single instance. " +
-                    "If this is not what you want, please define the keys in the database and re-run the mapping generator, " +
-                    "or edit the mapping to provide the relevant keys.", toString()));
-        }
-        for (PropertyBridge bridge : propertyBridges) {
+        PropertyMap.validate(this);
+        for (PropertyBridge bridge : getPropertyBridges()) {
             bridge.validate();
         }
         // TODO
@@ -99,7 +91,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
 
     @Override
     public boolean hasProperties() {
-        return (!this.classes.isEmpty() || !this.propertyBridges.isEmpty());
+        return !getClasses().isEmpty() || !getPropertyBridges().isEmpty();
     }
 
     public Collection<TripleRelation> compiledPropertyBridges() {
@@ -111,10 +103,10 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
 
     private void compile() {
         this.compiledPropertyBridges = new ArrayList<>();
-        for (PropertyBridge bridge : propertyBridges) {
+        for (PropertyBridge bridge : getPropertyBridges()) {
             this.compiledPropertyBridges.addAll(((PropertyBridgeImpl) bridge).toTripleRelations());
         }
-        for (Resource clazz : classes) {
+        for (Resource clazz : getClasses()) {
             PropertyBridgeImpl bridge = new PropertyBridgeImpl(this.resource, this.mapping);
             bridge.setBelongsToClassMap(this);
             bridge.addProperty(RDF.type);

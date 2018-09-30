@@ -13,8 +13,10 @@ import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 
@@ -279,25 +281,4 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
                 D2RQException.DATABASE_ALREADY_CONNECTED);
     }
 
-    public static DatabaseImpl copy(MappingImpl mapping, Database other) {
-        if (Objects.requireNonNull(other, "Null database").getMapping() == mapping) {
-            return (DatabaseImpl) other;
-        }
-        DatabaseImpl res = mapping.createDatabase(other.asResource().getURI());
-        res.setJDBCDSN(other.getJDBCDSN());
-        set(res, DatabaseImpl::setJDBCDriver, other.getJDBCDriver());
-        set(res, DatabaseImpl::setUsername, other.getUsername());
-        set(res, DatabaseImpl::setPassword, other.getPassword());
-        set(res, DatabaseImpl::setStartupSQLScript, other.getStartupSQLScript());
-        set(res, DatabaseImpl::setResultSizeLimit, other.getResultSizeLimit());
-        set(res, DatabaseImpl::setFetchSize, other.getFetchSize());
-        other.getConnectionProperties().forEach((k, v) -> res.setConnectionProperty(String.valueOf(k), String.valueOf(v)));
-        Arrays.stream(Column.values()).forEach(type -> other.columns(type).forEach(s -> res.addColumn(type, s)));
-        return res;
-    }
-
-    private static <T> void set(DatabaseImpl d, BiConsumer<DatabaseImpl, T> setter, T value) {
-        if (value == null) return;
-        setter.accept(d, value);
-    }
 }

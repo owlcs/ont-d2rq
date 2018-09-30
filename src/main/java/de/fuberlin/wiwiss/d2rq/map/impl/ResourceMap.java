@@ -32,30 +32,26 @@ import java.util.*;
 public abstract class ResourceMap extends MapObjectImpl {
 
     // These can be set on PropertyBridges and ClassMaps
-    protected String bNodeIdColumns = null;    // comma-separated list
-    protected String uriColumn = null;
-    protected String uriPattern = null;
-    protected RDFNode constantValue = null;
-    protected Collection<String> valueRegexes = new ArrayList<>();
-    protected Collection<String> valueContainses = new ArrayList<>();
-    protected int valueMaxLength = Integer.MAX_VALUE;
-    protected Collection<String> joins = new ArrayList<>();
-    protected Collection<String> conditions = new ArrayList<>();
-    protected Collection<String> aliases = new ArrayList<>();
-    protected TranslationTable translateWith = null;
+    private String bNodeIdColumns = null;    // comma-separated list
+    private String uriColumn = null; // for ClassMap, PropertyBridge and DownloadMap
+    private String uriPattern = null; // for ClassMap, PropertyBridge and DownloadMap
+    private RDFNode constantValue = null; /// for ClassMap, PropertyBridge and DownloadMap
+    private List<String> valueRegexes = new ArrayList<>();
+    private List<String> valueContainses = new ArrayList<>();
+    private int valueMaxLength = Integer.MAX_VALUE;
+    private List<String> joins = new ArrayList<>(); // for ClassMap, PropertyBridge and DownloadMap
+    private List<String> conditions = new ArrayList<>(); // for ClassMap, PropertyBridge and DownloadMap
+    private List<String> aliases = new ArrayList<>(); // for ClassMap, PropertyBridge and DownloadMap
+    private TranslationTable translateWith = null;
 
     // These can be set only on a PropertyBridge
     protected String column = null;
     protected String pattern = null;
     protected String sqlExpression = null;
-    protected String uriSqlExpression = null;
+    private String uriSqlExpression = null; // also for all 2 other ... hate this monkey code.
     protected String datatype = null;
     protected String lang = null;
     protected ClassMap refersToClassMap = null;
-    protected Integer limit = null;
-    protected Integer limitInverse = null;
-    protected String order = null;
-    protected Boolean orderDesc = null;
 
     Collection<Literal> definitionLabels = new ArrayList<>();
     Collection<Literal> definitionComments = new ArrayList<>();
@@ -70,40 +66,68 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public void setBNodeIdColumns(String columns) {
-        assertNotYetDefined(this.bNodeIdColumns, D2RQ.bNodeIdColumns, D2RQException.RESOURCEMAP_DUPLICATE_BNODEIDCOLUMNS);
+        assertNotYetDefined(getBNodeIdColumns(), D2RQ.bNodeIdColumns, D2RQException.RESOURCEMAP_DUPLICATE_BNODEIDCOLUMNS);
         this.bNodeIdColumns = columns;
     }
 
+    public String getBNodeIdColumns() {
+        return bNodeIdColumns;
+    }
+
     public void setURIColumn(String column) {
-        assertNotYetDefined(this.uriColumn, D2RQ.uriColumn, D2RQException.RESOURCEMAP_DUPLICATE_URICOLUMN);
+        assertNotYetDefined(getURIColumn(), D2RQ.uriColumn, D2RQException.RESOURCEMAP_DUPLICATE_URICOLUMN);
         this.uriColumn = column;
     }
 
+    public String getURIColumn() {
+        return uriColumn;
+    }
+
     public void setURIPattern(String pattern) {
-        assertNotYetDefined(this.uriColumn, D2RQ.uriPattern, D2RQException.RESOURCEMAP_DUPLICATE_URIPATTERN);
+        assertNotYetDefined(getURIPattern(), D2RQ.uriPattern, D2RQException.RESOURCEMAP_DUPLICATE_URIPATTERN);
         this.uriPattern = pattern;
     }
 
+    public String getURIPattern() {
+        return uriPattern;
+    }
+
     public void setUriSQLExpression(String uriSqlExpression) {
-        assertNotYetDefined(this.column, D2RQ.uriSqlExpression, D2RQException.PROPERTYBRIDGE_DUPLICATE_URI_SQL_EXPRESSION);
+        assertNotYetDefined(getURISQLExpression(), D2RQ.uriSqlExpression, D2RQException.PROPERTYBRIDGE_DUPLICATE_URI_SQL_EXPRESSION);
         this.uriSqlExpression = uriSqlExpression;
     }
 
+    public String getURISQLExpression() {
+        return uriSqlExpression;
+    }
+
     public void setConstantValue(RDFNode constantValue) {
-        assertNotYetDefined(this.constantValue, D2RQ.constantValue, D2RQException.RESOURCEMAP_DUPLICATE_CONSTANTVALUE);
+        assertNotYetDefined(getConstantValue(), D2RQ.constantValue, D2RQException.RESOURCEMAP_DUPLICATE_CONSTANTVALUE);
         this.constantValue = constantValue;
+    }
+
+    public RDFNode getConstantValue() {
+        return this.constantValue;
     }
 
     public void addValueRegex(String regex) {
         this.valueRegexes.add(regex);
     }
 
+    public List<String> getValueRegexList() {
+        return this.valueRegexes;
+    }
+
     public void addValueContains(String contains) {
         this.valueContainses.add(contains);
     }
 
+    public List<String> getValueContainsList() {
+        return valueContainses;
+    }
+
     public void setValueMaxLength(int maxLength) {
-        if (this.valueMaxLength != Integer.MAX_VALUE) {
+        if (getValueMaxLength() != Integer.MAX_VALUE) {
             // always fails
             assertNotYetDefined(this, D2RQ.valueMaxLength,
                     D2RQException.PROPERTYBRIDGE_DUPLICATE_VALUEMAXLENGTH);
@@ -111,23 +135,63 @@ public abstract class ResourceMap extends MapObjectImpl {
         this.valueMaxLength = maxLength;
     }
 
+    public int getValueMaxLength() {
+        return valueMaxLength;
+    }
+
     public void setTranslateWith(TranslationTable table) {
-        assertNotYetDefined(this.translateWith, D2RQ.translateWith,
+        assertNotYetDefined(getTranslateWith(), D2RQ.translateWith,
                 D2RQException.RESOURCEMAP_DUPLICATE_TRANSLATEWITH);
         assertArgumentNotNull(table, D2RQ.translateWith, D2RQException.RESOURCEMAP_INVALID_TRANSLATEWITH);
         this.translateWith = table;
+    }
+
+    public TranslationTable getTranslateWith() {
+        return translateWith;
     }
 
     public void addJoin(String join) {
         this.joins.add(join);
     }
 
+    public List<String> getJoinList() {
+        return joins;
+    }
+
     public void addCondition(String condition) {
         this.conditions.add(condition);
     }
 
+    public List<String> getConditionList() {
+        return conditions;
+    }
+
     public void addAlias(String alias) {
         this.aliases.add(alias);
+    }
+
+    public List<String> getAliasList() {
+        return aliases;
+    }
+
+    public String getColumn() {
+        return column;
+    }
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    public String getSQLExpression() {
+        return sqlExpression;
+    }
+
+    public String getDatatype() {
+        return datatype;
+    }
+
+    public String getLang() {
+        return lang;
     }
 
     public boolean getContainsDuplicates() {
@@ -136,10 +200,14 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     protected Collection<Alias> aliases() {
         Set<Alias> parsedAliases = new HashSet<>();
-        for (String alias : aliases) {
+        for (String alias : getAliasList()) {
             parsedAliases.add(SQL.parseAlias(alias));
         }
         return parsedAliases;
+    }
+
+    public ClassMap getRefersToClassMap() {
+        return refersToClassMap;
     }
 
     public RelationBuilder relationBuilder(ConnectedDB cd) {
@@ -148,10 +216,10 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     public RelationBuilder relationBuilder(ConnectedDB cd, boolean containsDuplicates) {
         RelationBuilder res = new RelationBuilder(cd);
-        for (Join join : SQL.parseJoins(joins)) {
+        for (Join join : SQL.parseJoins(getJoinList())) {
             res.addJoinCondition(join);
         }
-        for (String condition : conditions) {
+        for (String condition : getConditionList()) {
             res.addCondition(condition);
         }
         res.addAliases(aliases());
@@ -172,13 +240,15 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     public NodeMaker nodeMaker() {
         boolean isUnique = !getContainsDuplicates();
-        if (this.constantValue != null) {
-            return new FixedNodeMaker(this.constantValue.asNode(), isUnique);
+        RDFNode constantValue = getConstantValue();
+        if (constantValue != null) {
+            return new FixedNodeMaker(constantValue.asNode(), isUnique);
         }
-        if (this.refersToClassMap == null) {
+        ClassMap refersToClassMap = getRefersToClassMap();
+        if (refersToClassMap == null) {
             return buildNodeMaker(wrapValueSource(buildValueSourceBase()), isUnique);
         }
-        return ((ClassMapImpl) this.refersToClassMap).buildAliasedNodeMaker(new AliasMap(aliases()), isUnique);
+        return ((ClassMapImpl) refersToClassMap).buildAliasedNodeMaker(new AliasMap(aliases()), isUnique);
     }
 
     public NodeMaker buildAliasedNodeMaker(AliasMap aliases, boolean unique) {
@@ -187,32 +257,32 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     protected ValueMaker buildValueSourceBase() {
-        if (this.bNodeIdColumns != null) {
-            return new BlankNodeID(PrettyPrinter.toString(this.asResource()),
-                    parseColumnList(this.bNodeIdColumns));
+        String bNodeIdColumns = getBNodeIdColumns();
+        if (bNodeIdColumns != null) {
+            return new BlankNodeID(PrettyPrinter.toString(this.asResource()), parseColumnList(bNodeIdColumns));
         }
-        if (this.uriColumn != null) {
-            return new Column(SQL.parseAttribute(this.uriColumn));
+        String uriColumn = getURIColumn();
+        if (uriColumn != null) {
+            return new Column(SQL.parseAttribute(uriColumn));
         }
-        if (this.uriPattern != null) {
-            Pattern p = new Pattern(this.uriPattern);
-            if (!p.literalPartsMatchRegex(MapParser.IRI_CHAR_REGEX)) {
-                throw new D2RQException("d2rq:uriPattern '"
-                        + this.uriPattern + "' contains characters not allowed in URIs",
-                        D2RQException.RESOURCEMAP_ILLEGAL_URIPATTERN);
-            }
-            return p;
+        String uriPattern = getURIPattern();
+        if (uriPattern != null) {
+            return new PropertyMap(uriPattern).buildValueSourceBase();
         }
-        if (this.column != null) {
-            return new Column(SQL.parseAttribute(this.column));
+        String column = getColumn();
+        if (column != null) {
+            return new Column(SQL.parseAttribute(column));
         }
-        if (this.pattern != null) {
-            return new Pattern(this.pattern);
+        String pattern = getPattern();
+        if (pattern != null) {
+            return new Pattern(pattern);
         }
-        if (this.sqlExpression != null) {
+        String sqlExpression = getSQLExpression();
+        if (sqlExpression != null) {
             return new SQLExpressionValueMaker(SQLExpression.create(sqlExpression));
         }
-        if (this.uriSqlExpression != null) {
+        String uriSqlExpression = getURISQLExpression();
+        if (uriSqlExpression != null) {
             return new SQLExpressionValueMaker(SQLExpression.create(uriSqlExpression));
         }
         throw new D2RQException(this + " needs a column/pattern/bNodeID specification");
@@ -220,51 +290,54 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     public ValueMaker wrapValueSource(ValueMaker values) {
         List<ValueConstraint> constraints = new ArrayList<>();
-        if (this.valueMaxLength != Integer.MAX_VALUE) {
-            constraints.add(ValueDecorator.maxLengthConstraint(this.valueMaxLength));
+        int valueMaxLength = getValueMaxLength();
+        if (valueMaxLength != Integer.MAX_VALUE) {
+            constraints.add(ValueDecorator.maxLengthConstraint(valueMaxLength));
         }
-        for (String contains : valueContainses) {
+        for (String contains : getValueContainsList()) {
             constraints.add(ValueDecorator.containsConstraint(contains));
         }
-        for (String regex : valueRegexes) {
+        for (String regex : getValueRegexList()) {
             constraints.add(ValueDecorator.regexConstraint(regex));
         }
-        if (this.translateWith == null) {
+        TranslationTable translateWith = getTranslateWith();
+        if (translateWith == null) {
             if (constraints.isEmpty()) {
                 return values;
             }
             return new ValueDecorator(values, constraints);
         }
-        return new ValueDecorator(values, constraints, this.translateWith.translator());
+        return new ValueDecorator(values, constraints, translateWith.translator());
     }
 
     protected NodeMaker buildNodeMaker(ValueMaker values, boolean isUnique) {
         return new TypedNodeMaker(nodeType(), values, isUnique);
     }
 
-    private NodeType nodeType() {
-        if (this.bNodeIdColumns != null) {
+    protected NodeType nodeType() {
+        if (getBNodeIdColumns() != null) {
             return TypedNodeMaker.BLANK;
         }
-        if (this.uriColumn != null || this.uriPattern != null) {
+        if (getURIColumn() != null || getURIPattern() != null) {
             return TypedNodeMaker.URI;
         }
-        if (this.uriSqlExpression != null) {
+        if (getURISQLExpression() != null) {
             return TypedNodeMaker.URI;
         }
-
         // literals
-        if (this.column == null && this.pattern == null && this.sqlExpression == null) {
+        if (getColumn() == null && getPattern() == null && getSQLExpression() == null) {
             throw new D2RQException(this + " needs a column/pattern/bNodeID/sqlExpression/uriSqlExpression specification");
         }
-        if (this.datatype != null && this.lang != null) {
+        String datatype = getDatatype();
+        String lang = getLang();
+        if (datatype != null && lang != null) {
             throw new D2RQException(this + " has both d2rq:lang and d2rq:datatype");
         }
-        if (this.datatype != null) {
-            return TypedNodeMaker.typedLiteral(buildDatatype(this.datatype));
+        if (datatype != null) {
+            return TypedNodeMaker.typedLiteral(buildDatatype(datatype));
         }
-        if (this.lang != null) {
-            return TypedNodeMaker.languageLiteral(this.lang);
+        if (lang != null) {
+            return TypedNodeMaker.languageLiteral(lang);
         }
         return TypedNodeMaker.PLAIN_LITERAL;
     }
@@ -308,15 +381,15 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     private boolean hasPrimarySpec(Property property) {
-        if (property.equals(D2RQ.bNodeIdColumns)) return this.bNodeIdColumns != null;
-        if (property.equals(D2RQ.uriColumn)) return this.uriColumn != null;
-        if (property.equals(D2RQ.uriPattern)) return this.uriPattern != null;
-        if (property.equals(D2RQ.column)) return this.column != null;
-        if (property.equals(D2RQ.pattern)) return this.pattern != null;
-        if (property.equals(D2RQ.sqlExpression)) return this.sqlExpression != null;
-        if (property.equals(D2RQ.uriSqlExpression)) return this.uriSqlExpression != null;
-        if (property.equals(D2RQ.refersToClassMap)) return this.refersToClassMap != null;
-        if (property.equals(D2RQ.constantValue)) return this.constantValue != null;
+        if (property.equals(D2RQ.bNodeIdColumns)) return getBNodeIdColumns() != null;
+        if (property.equals(D2RQ.uriColumn)) return getURIColumn() != null;
+        if (property.equals(D2RQ.uriPattern)) return getURIPattern() != null;
+        if (property.equals(D2RQ.column)) return getColumn() != null;
+        if (property.equals(D2RQ.pattern)) return getPattern() != null;
+        if (property.equals(D2RQ.sqlExpression)) return getSQLExpression() != null;
+        if (property.equals(D2RQ.uriSqlExpression)) return getURISQLExpression() != null;
+        if (property.equals(D2RQ.refersToClassMap)) return getRefersToClassMap() != null;
+        if (property.equals(D2RQ.constantValue)) return getConstantValue() != null;
         throw new D2RQException("No primary spec: " + property);
     }
 

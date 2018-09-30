@@ -7,6 +7,8 @@ import de.fuberlin.wiwiss.d2rq.nodes.TypedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
@@ -16,6 +18,13 @@ import java.util.Objects;
  */
 @SuppressWarnings("WeakerAccess")
 public class PropertyMap {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PropertyMap.class);
+
+    /**
+     * A regular expression that matches zero or more characters that are allowed inside IRIs
+     */
+    public static final String IRI_CHAR_REGEX = "([:/?#\\[\\]@!$&'()*+,;=a-zA-Z0-9._~\\x80-\\uFFFF-]|%[0-9A-Fa-f][0-9A-Fa-f])*";
+
     private String uriPattern;
 
     public PropertyMap(String pattern) {
@@ -26,13 +35,17 @@ public class PropertyMap {
         return new TypedNodeMaker(TypedNodeMaker.URI, buildValueSourceBase(), false);
     }
 
-    private ValueMaker buildValueSourceBase() {
-        Pattern res = new Pattern(this.uriPattern);
-        if (!res.literalPartsMatchRegex(MapParser.IRI_CHAR_REGEX)) {
+    protected ValueMaker buildValueSourceBase() {
+        Pattern res = toPattern();
+        if (!res.literalPartsMatchRegex(IRI_CHAR_REGEX)) {
             throw new D2RQException(String.format("d2rq:uriPattern '%s' contains characters not allowed in URIs", this.uriPattern),
                     D2RQException.RESOURCEMAP_ILLEGAL_URIPATTERN);
         }
         return res;
+    }
+
+    public Pattern toPattern() {
+        return new Pattern(this.uriPattern);
     }
 
     public RelationBuilder relationBuilder(ConnectedDB db) {
@@ -41,6 +54,19 @@ public class PropertyMap {
             res.addProjection(projection);
         }
         return res;
+    }
+
+    public static void validate(ResourceMap map) {
+        String uriPattern = map.getURIPattern();
+        if (uriPattern == null) return;
+        if (!new PropertyMap(uriPattern).toPattern().attributes().isEmpty()) {
+            return;
+        }
+        LOGGER.warn(String.format("%s has an uriPattern without any column specifications. " +
+                "This usually happens when no primary keys are defined for a table. " +
+                "If the configuration is left as is, all table rows will be mapped to a single instance. " +
+                "If this is not what you want, please define the keys in the database and re-run the mapping generator, " +
+                "or edit the mapping to provide the relevant keys.", map.toString()));
     }
 
     @Override

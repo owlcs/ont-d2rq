@@ -57,5 +57,5 @@ public interface ClassMap extends MapObject, HasDatabase<ClassMap> {
 
     void addPropertyBridge(PropertyBridge p);
 
-    Collection<PropertyBridge> propertyBridges();
+    Collection<PropertyBridge> getPropertyBridges();
 }

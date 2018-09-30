@@ -3,6 +3,7 @@ package de.fuberlin.wiwiss.d2rq.map.impl;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.Models;
@@ -146,9 +147,14 @@ public abstract class MapObjectImpl implements MapObject {
         }
     }
 
-    protected Model mustHaveModel() throws HasNoModelException {
-        Model res = mapping != null ? mapping.asModel() : resource.getModel();
-        if (res == null) throw new HasNoModelException(this);
+    public Model mustHaveModel() throws HasNoModelException {
+        return mustHaveModel(this);
+    }
+
+    private static Model mustHaveModel(MapObject object) throws NullPointerException, HasNoModelException {
+        Model res = object.asResource().getModel();
+        if (res == null) res = object.getMapping().asModel();
+        if (res == null) throw new HasNoModelException(object);
         return res;
     }
 
@@ -164,4 +170,27 @@ public abstract class MapObjectImpl implements MapObject {
     public int hashCode() {
         return Objects.hash(resource);
     }
+
+    /**
+     * Copies the content of the specified {@link MapObject MapObject} to this instance.
+     * Considers only top-level statements.
+     *
+     * @param other {@link MapObject}, not {@code null}
+     * @param <X>   subtype of {@link MapObject}
+     * @return this instance to allow cascading calls
+     * @throws NullPointerException if null argument
+     * @throws HasNoModelException  if either this or the given objects has no model
+     */
+    @SuppressWarnings("unchecked")
+    protected <X extends MapObject> X copy(MapObject other) throws NullPointerException, HasNoModelException {
+        Graph a = mustHaveModel().getGraph();
+        Graph b = mustHaveModel(Objects.requireNonNull(other)).getGraph();
+        if (Objects.equals(a, b)) {
+            return (X) this;
+        }
+        other.asResource().listProperties().forEachRemaining(s -> resource.addProperty(s.getPredicate(), s.getObject()));
+        return (X) this;
+    }
+
+
 }
