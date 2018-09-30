@@ -120,6 +120,8 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
             }
         }
         commonValidateURI();
+        commonValidateSQLAdditions();
+        commonValidateUnclassifiedAdditions();
         assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue);
         assertHasBeenDefined(contentDownloadColumn, D2RQ.contentDownloadColumn, D2RQException.DOWNLOADMAP_NO_CONTENTCOLUMN);
         RDFNode constantValue = getConstantValue();

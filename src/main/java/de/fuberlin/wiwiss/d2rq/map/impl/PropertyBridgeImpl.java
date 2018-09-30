@@ -79,6 +79,26 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     }
 
     @Override
+    public PropertyBridgeImpl setBNodeIdColumns(String columns) {
+        return (PropertyBridgeImpl) super.setBNodeIdColumns(columns);
+    }
+
+    @Override
+    public PropertyBridgeImpl addValueRegex(String regex) {
+        return (PropertyBridgeImpl) super.addValueRegex(regex);
+    }
+
+    @Override
+    public PropertyBridgeImpl addValueContains(String contains) {
+        return (PropertyBridgeImpl) super.addValueContains(contains);
+    }
+
+    @Override
+    public PropertyBridgeImpl setValueMaxLength(int maxLength) {
+        return (PropertyBridgeImpl) super.setValueMaxLength(maxLength);
+    }
+
+    @Override
     public Collection<Resource> properties() {
         return this.properties;
     }
@@ -206,6 +226,8 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
                     D2RQException.PROPERTYBRIDGE_MISSING_PREDICATESPEC);
         }
         commonValidateURI();
+        commonValidateSQLAdditions();
+        commonValidateUnclassifiedAdditions();
         assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
                 D2RQ.column, D2RQ.pattern, D2RQ.sqlExpression, D2RQ.uriSqlExpression, D2RQ.constantValue,
                 D2RQ.refersToClassMap);

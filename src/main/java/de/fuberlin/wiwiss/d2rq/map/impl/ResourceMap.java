@@ -35,10 +35,6 @@ import java.util.stream.Stream;
 public abstract class ResourceMap extends MapObjectImpl {
 
     // These can be set on PropertyBridges and ClassMaps
-    private String bNodeIdColumns = null;    // comma-separated list
-    private List<String> valueRegexes = new ArrayList<>();
-    private List<String> valueContainses = new ArrayList<>();
-    private int valueMaxLength = Integer.MAX_VALUE;
     private TranslationTable translateWith = null;
 
     // These can be set only on a PropertyBridge
@@ -61,13 +57,12 @@ public abstract class ResourceMap extends MapObjectImpl {
         super(resource, mapping);
     }
 
-    public void setBNodeIdColumns(String columns) {
-        assertNotYetDefined(getBNodeIdColumns(), D2RQ.bNodeIdColumns, D2RQException.RESOURCEMAP_DUPLICATE_BNODEIDCOLUMNS);
-        this.bNodeIdColumns = columns;
+    public ResourceMap setBNodeIdColumns(String columns) {
+        return setLiteral(D2RQ.bNodeIdColumns, columns);
     }
 
     public String getBNodeIdColumns() {
-        return bNodeIdColumns;
+        return findString(D2RQ.bNodeIdColumns).orElse(null);
     }
 
     public ResourceMap setURIColumn(String column) {
@@ -106,33 +101,36 @@ public abstract class ResourceMap extends MapObjectImpl {
         return setURI(D2RQ.constantValue, uri);
     }
 
-    public void addValueRegex(String regex) {
-        this.valueRegexes.add(regex);
+    public ResourceMap addValueRegex(String regex) {
+        return addLiteral(D2RQ.valueRegex, regex);
     }
 
-    public List<String> getValueRegexList() {
-        return this.valueRegexes;
+    public ExtendedIterator<String> getValueRegexesIterator() {
+        return listStrings(D2RQ.valueRegex);
     }
 
-    public void addValueContains(String contains) {
-        this.valueContainses.add(contains);
+    public Stream<String> listValueRegex() {
+        return Iter.asStream(getValueRegexesIterator());
     }
 
-    public List<String> getValueContainsList() {
-        return valueContainses;
+    public ResourceMap addValueContains(String contains) {
+        return addLiteral(D2RQ.valueContains, contains);
     }
 
-    public void setValueMaxLength(int maxLength) {
-        if (getValueMaxLength() != Integer.MAX_VALUE) {
-            // always fails
-            assertNotYetDefined(this, D2RQ.valueMaxLength,
-                    D2RQException.PROPERTYBRIDGE_DUPLICATE_VALUEMAXLENGTH);
-        }
-        this.valueMaxLength = maxLength;
+    public ExtendedIterator<String> getValueContainsIterator() {
+        return listStrings(D2RQ.valueContains);
     }
 
-    public int getValueMaxLength() {
-        return valueMaxLength;
+    public Stream<String> listValueContains() {
+        return Iter.asStream(getValueContainsIterator());
+    }
+
+    public ResourceMap setValueMaxLength(int maxLength) {
+        return setLiteral(D2RQ.valueMaxLength, maxLength);
+    }
+
+    public Integer getValueMaxLength() {
+        return findFirst(D2RQ.valueMaxLength, s -> s.getLiteral().getInt()).orElse(null);
     }
 
     public void setTranslateWith(TranslationTable table) {
@@ -292,16 +290,12 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     public ValueMaker wrapValueSource(ValueMaker values) {
         List<ValueConstraint> constraints = new ArrayList<>();
-        int valueMaxLength = getValueMaxLength();
-        if (valueMaxLength != Integer.MAX_VALUE) {
+        Integer valueMaxLength = getValueMaxLength();
+        if (valueMaxLength != null) {
             constraints.add(ValueDecorator.maxLengthConstraint(valueMaxLength));
         }
-        for (String contains : getValueContainsList()) {
-            constraints.add(ValueDecorator.containsConstraint(contains));
-        }
-        for (String regex : getValueRegexList()) {
-            constraints.add(ValueDecorator.regexConstraint(regex));
-        }
+        getValueContainsIterator().mapWith(ValueDecorator::containsConstraint).forEachRemaining(constraints::add);
+        getValueRegexesIterator().mapWith(ValueDecorator::regexConstraint).forEachRemaining(constraints::add);
         TranslationTable translateWith = getTranslateWith();
         if (translateWith == null) {
             if (constraints.isEmpty()) {
@@ -348,7 +342,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         return TypeMapper.getInstance().getSafeTypeByName(datatypeURI);
     }
 
-    private List<Attribute> parseColumnList(String commaSeperated) {
+    private static List<Attribute> parseColumnList(String commaSeperated) {
         List<Attribute> result = new ArrayList<>();
         for (String attr : commaSeperated.split(",")) {
             result.add(SQL.parseAttribute(attr));
@@ -395,6 +389,9 @@ public abstract class ResourceMap extends MapObjectImpl {
         throw new D2RQException("No primary spec: " + property);
     }
 
+    /**
+     * To validate all those things which are described in the {@link de.fuberlin.wiwiss.d2rq.map.HasURI} interface.
+     */
     protected void commonValidateURI() {
         Validator v = new Validator(this);
         Validator.ForProperty uriPattertn = v.forProperty(D2RQ.uriPattern);
@@ -415,6 +412,38 @@ public abstract class ResourceMap extends MapObjectImpl {
         if (uriSQLExpression.exists()) {
             uriSQLExpression.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_URI_SQL_EXPRESSION)
                     .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
+    }
+
+    /**
+     * To validate all those things which are described in the {@link de.fuberlin.wiwiss.d2rq.map.HasSQL} interface.
+     */
+    protected void commonValidateSQLAdditions() {
+        Validator v = new Validator(this);
+        Stream.of(D2RQ.alias, D2RQ.join, D2RQ.condition)
+                .map(v::forProperty)
+                .forEach(p -> p.requireContainsOnlyStrings(D2RQException.UNSPECIFIED));
+    }
+
+    /**
+     * To validate all those things which are described in the {@link de.fuberlin.wiwiss.d2rq.map.HasUnclassified} interface.
+     */
+    protected void commonValidateUnclassifiedAdditions() {
+        Validator v = new Validator(this);
+        Validator.ForProperty bNodeIdColumns = v.forProperty(D2RQ.bNodeIdColumns);
+        if (bNodeIdColumns.exists()) {
+            bNodeIdColumns
+                    .requireHasNoDuplicates(D2RQException.RESOURCEMAP_DUPLICATE_BNODEIDCOLUMNS)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
+        v.forProperty(D2RQ.valueRegex).requireContainsOnlyStrings(D2RQException.UNSPECIFIED);
+        v.forProperty(D2RQ.valueContains).requireContainsOnlyStrings(D2RQException.UNSPECIFIED);
+
+        Validator.ForProperty valueMaxLength = v.forProperty(D2RQ.valueMaxLength);
+        if (valueMaxLength.exists()) {
+            valueMaxLength
+                    .requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_VALUEMAXLENGTH)
+                    .requireIsIntegerLiteral(D2RQException.UNSPECIFIED);
         }
     }
 

@@ -66,17 +66,17 @@ public class TranslationTableTest {
 
     @Test
     public void testTranslationsWithSameValuesAreEqual() {
-        TranslationTableImpl.P t1 = new TranslationTableImpl.P("foo", "bar");
-        TranslationTableImpl.P t2 = new TranslationTableImpl.P("foo", "bar");
+        TranslationTableImpl.Pair t1 = new TranslationTableImpl.Pair("foo", "bar");
+        TranslationTableImpl.Pair t2 = new TranslationTableImpl.Pair("foo", "bar");
         Assert.assertEquals(t1, t2);
         Assert.assertEquals(t1.hashCode(), t2.hashCode());
     }
 
     @Test
     public void testTranslationsWithDifferentValuesAreNotEqual() {
-        TranslationTableImpl.P t1 = new TranslationTableImpl.P("foo", "bar");
-        TranslationTableImpl.P t2 = new TranslationTableImpl.P("foo", "bar2");
-        TranslationTableImpl.P t3 = new TranslationTableImpl.P("foo2", "bar");
+        TranslationTableImpl.Pair t1 = new TranslationTableImpl.Pair("foo", "bar");
+        TranslationTableImpl.Pair t2 = new TranslationTableImpl.Pair("foo", "bar2");
+        TranslationTableImpl.Pair t3 = new TranslationTableImpl.Pair("foo2", "bar");
         Assert.assertNotEquals(t1, t2);
         Assert.assertNotEquals(t2, t1);
         Assert.assertNotEquals(t1.hashCode(), t2.hashCode());

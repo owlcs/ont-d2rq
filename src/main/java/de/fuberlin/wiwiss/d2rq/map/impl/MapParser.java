@@ -191,33 +191,7 @@ public class MapParser {
 
     private void parseResourceMap(ResourceMap resourceMap, Resource r) {
         StmtIterator stmts;
-        stmts = r.listProperties(D2RQ.bNodeIdColumns);
-        while (stmts.hasNext()) {
-            resourceMap.setBNodeIdColumns(stmts.nextStatement().getString());
-        }
         r.listProperties(D2RQ.uriPattern).toSet().forEach(s -> resourceMap.setURIPattern(ensureIsAbsolute(s.getString())));
-        stmts = r.listProperties(D2RQ.uriSqlExpression);
-        while (stmts.hasNext()) {
-            resourceMap.setUriSQLExpression(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.valueRegex);
-        while (stmts.hasNext()) {
-            resourceMap.addValueRegex(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.valueContains);
-        while (stmts.hasNext()) {
-            resourceMap.addValueContains(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.valueMaxLength);
-        while (stmts.hasNext()) {
-            String s = stmts.nextStatement().getString();
-            try {
-                resourceMap.setValueMaxLength(Integer.parseInt(s));
-            } catch (NumberFormatException nfex) {
-                throw new D2RQException("d2rq:valueMaxLength \"" + s + "\" on " +
-                        PrettyPrinter.toString(r) + " must be an integer number");
-            }
-        }
         stmts = r.listProperties(D2RQ.translateWith);
         while (stmts.hasNext()) {
             resourceMap.setTranslateWith(this.mapping.findTranslationTable(stmts.nextStatement().getResource()));

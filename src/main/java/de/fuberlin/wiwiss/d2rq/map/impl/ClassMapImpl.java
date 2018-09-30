@@ -86,6 +86,26 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
         return (ClassMapImpl) super.addAlias(alias);
     }
 
+    @Override
+    public ClassMapImpl setBNodeIdColumns(String columns) {
+        return (ClassMapImpl) super.setBNodeIdColumns(columns);
+    }
+
+    @Override
+    public ClassMapImpl addValueRegex(String regex) {
+        return (ClassMapImpl) super.addValueRegex(regex);
+    }
+
+    @Override
+    public ClassMapImpl addValueContains(String contains) {
+        return (ClassMapImpl) super.addValueContains(contains);
+    }
+
+    @Override
+    public ClassMapImpl setValueMaxLength(int maxLength) {
+        return (ClassMapImpl) super.setValueMaxLength(maxLength);
+    }
+
     public void addClass(Resource clazz) {
         this.classes.add(clazz);
     }
@@ -114,6 +134,8 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
                 .requireIsResource(D2RQException.CLASSMAP_INVALID_DATABASE);
 
         commonValidateURI();
+        commonValidateSQLAdditions();
+        commonValidateUnclassifiedAdditions();
         assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue);
         RDFNode constantValue = getConstantValue();
         if (constantValue != null && constantValue.isLiteral()) {

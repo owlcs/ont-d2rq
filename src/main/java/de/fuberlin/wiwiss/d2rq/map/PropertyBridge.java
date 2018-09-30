@@ -8,7 +8,8 @@ import java.util.Collection;
 /**
  * Created by @ssz on 26.09.2018.
  */
-public interface PropertyBridge extends MapObject, HasURI<PropertyBridge>, HasSQLAddition<PropertyBridge> {
+public interface PropertyBridge extends MapObject,
+        HasURI<PropertyBridge>, HasSQL<PropertyBridge>, HasUnclassified<PropertyBridge> {
 
     void addProperty(Resource r);
 

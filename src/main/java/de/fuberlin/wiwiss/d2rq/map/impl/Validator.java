@@ -64,12 +64,31 @@ class Validator {
         }
 
         ForProperty requireIsStringLiteral(int code) {
+            return requireIsLiteralOfType(XSD.xstring, code);
+        }
+
+        ForProperty requireIsIntegerLiteral(int code) {
+            return requireIsLiteralOfType(XSD.integer, code);
+        }
+
+        ForProperty requireIsLiteralOfType(Resource datatypeURI, int code) {
             Literal res = asResource().getRequiredProperty(property).getLiteral();
-            if (XSD.xstring.getURI().endsWith(res.getDatatypeURI())) {
+            if (datatypeURI.getURI().equals(res.getDatatypeURI())) {
                 return this;
             }
             throw newException("the found literal for the predicate "
-                    + asString() + " is not a plain string: " + res, code);
+                    + asString() + " is not of the " + PrettyPrinter.toString(datatypeURI) + " type :" + res, code);
+        }
+
+        ForProperty requireContainsOnlyStrings(int code) {
+            Set<RDFNode> res = asResource().listProperties(property)
+                    .mapWith(Statement::getObject)
+                    .filterKeep(s -> !s.isLiteral() || !XSD.xstring.getURI().equals(s.asLiteral().getDatatypeURI()))
+                    .toSet();
+            if (res.isEmpty()) {
+                return this;
+            }
+            throw newException("found non-string literals for the property " + asString() + ": " + res, code);
         }
 
         ForProperty requireIsURI(int code) {

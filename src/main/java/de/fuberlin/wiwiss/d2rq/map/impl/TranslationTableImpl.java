@@ -19,7 +19,7 @@ import java.util.function.Function;
  */
 @SuppressWarnings("WeakerAccess")
 public class TranslationTableImpl extends MapObjectImpl implements TranslationTable {
-    private Collection<P> translations = new ArrayList<>();
+    private Collection<Pair> translations = new ArrayList<>();
     private String javaClass;
     private String href;
 
@@ -47,7 +47,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
     public void addTranslation(String dbValue, String rdfValue) {
         assertArgumentNotNull(dbValue, D2RQ.databaseValue, D2RQException.TRANSLATION_MISSING_DBVALUE);
         assertArgumentNotNull(rdfValue, D2RQ.rdfValue, D2RQException.TRANSLATION_MISSING_RDFVALUE);
-        this.translations.add(new P(dbValue, rdfValue));
+        this.translations.add(new Pair(dbValue, rdfValue));
     }
 
     /**
@@ -77,7 +77,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
             return new TableTranslator(new TranslationTableParser(href).parseTranslations(),
                     TranslationTableParser.Row::first, TranslationTableParser.Row::second);
         }
-        return new TableTranslator(this.translations, P::dbValue, P::rdfValue);
+        return new TableTranslator(this.translations, Pair::dbValue, Pair::rdfValue);
     }
 
     @Override
@@ -181,11 +181,11 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
         }
     }
 
-    public static class P {
+    public static class Pair {
         private final String dbValue;
         private final String rdfValue;
 
-        public P(String dbValue, String rdfValue) {
+        public Pair(String dbValue, String rdfValue) {
             this.dbValue = Objects.requireNonNull(dbValue);
             this.rdfValue = Objects.requireNonNull(rdfValue);
         }
@@ -204,16 +204,16 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
         }
 
         @Override
-        public boolean equals(Object otherObject) {
-            if (!(otherObject instanceof P)) return false;
-            P other = (P) otherObject;
-            return this.dbValue.equals(other.dbValue)
-                    && this.rdfValue.equals(other.rdfValue);
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (!(other instanceof Pair)) return false;
+            Pair p = (Pair) other;
+            return this.dbValue.equals(p.dbValue) && this.rdfValue.equals(p.rdfValue);
         }
 
         @Override
         public String toString() {
-            return "'" + this.dbValue + "'=>'" + this.rdfValue + "'";
+            return String.format("'%s'=>'%s'", this.dbValue, this.rdfValue);
         }
     }
 

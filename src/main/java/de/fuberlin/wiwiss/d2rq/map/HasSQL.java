@@ -13,7 +13,7 @@ import java.util.stream.Stream;
  *
  * @param <R> subtype of {@link MapObject}
  */
-interface HasSQLAddition<R extends MapObject> {
+interface HasSQL<R extends MapObject> {
 
     /**
      * Adds string literal for the {d2rq:alias} predicate.
