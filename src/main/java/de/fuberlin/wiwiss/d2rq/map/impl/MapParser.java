@@ -218,18 +218,6 @@ public class MapParser {
                         PrettyPrinter.toString(r) + " must be an integer number");
             }
         }
-        stmts = r.listProperties(D2RQ.join);
-        while (stmts.hasNext()) {
-            resourceMap.addJoin(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.condition);
-        while (stmts.hasNext()) {
-            resourceMap.addCondition(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.alias);
-        while (stmts.hasNext()) {
-            resourceMap.addAlias(stmts.nextStatement().getString());
-        }
         stmts = r.listProperties(D2RQ.translateWith);
         while (stmts.hasNext()) {
             resourceMap.setTranslateWith(this.mapping.findTranslationTable(stmts.nextStatement().getResource()));

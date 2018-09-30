@@ -19,8 +19,14 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.util.iterator.ExtendedIterator;
+import ru.avicomp.ontapi.jena.utils.Iter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * @author Richard Cyganiak (richard@cyganiak.de)
@@ -30,13 +36,9 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     // These can be set on PropertyBridges and ClassMaps
     private String bNodeIdColumns = null;    // comma-separated list
-
     private List<String> valueRegexes = new ArrayList<>();
     private List<String> valueContainses = new ArrayList<>();
     private int valueMaxLength = Integer.MAX_VALUE;
-    private List<String> joins = new ArrayList<>(); // for ClassMap, PropertyBridge and DownloadMap
-    private List<String> conditions = new ArrayList<>(); // for ClassMap, PropertyBridge and DownloadMap
-    private List<String> aliases = new ArrayList<>(); // for ClassMap, PropertyBridge and DownloadMap
     private TranslationTable translateWith = null;
 
     // These can be set only on a PropertyBridge
@@ -144,28 +146,40 @@ public abstract class ResourceMap extends MapObjectImpl {
         return translateWith;
     }
 
-    public void addJoin(String join) {
-        this.joins.add(join);
+    public ResourceMap addJoin(String join) {
+        return addLiteral(D2RQ.join, join);
     }
 
-    public List<String> getJoinList() {
-        return joins;
+    public Stream<String> joins() {
+        return Iter.asStream(listJoins());
     }
 
-    public void addCondition(String condition) {
-        this.conditions.add(condition);
+    public ExtendedIterator<String> listJoins() {
+        return listStrings(D2RQ.join);
     }
 
-    public List<String> getConditionList() {
-        return conditions;
+    public ResourceMap addCondition(String condition) {
+        return addLiteral(D2RQ.condition, condition);
     }
 
-    public void addAlias(String alias) {
-        this.aliases.add(alias);
+    public ExtendedIterator<String> listConditions() {
+        return listStrings(D2RQ.condition);
     }
 
-    public List<String> getAliasList() {
-        return aliases;
+    public Stream<String> conditions() {
+        return Iter.asStream(listConditions());
+    }
+
+    public ResourceMap addAlias(String alias) {
+        return addLiteral(D2RQ.alias, alias);
+    }
+
+    public ExtendedIterator<String> listAliases() {
+        return listStrings(D2RQ.alias);
+    }
+
+    public Stream<String> aliases() {
+        return Iter.asStream(listAliases());
     }
 
     public String getColumn() {
@@ -192,12 +206,8 @@ public abstract class ResourceMap extends MapObjectImpl {
         return getBoolean(D2RQ.containsDuplicates, false);
     }
 
-    protected Collection<Alias> aliases() {
-        Set<Alias> parsedAliases = new HashSet<>();
-        for (String alias : getAliasList()) {
-            parsedAliases.add(SQL.parseAlias(alias));
-        }
-        return parsedAliases;
+    protected Set<Alias> getAliases() {
+        return listAliases().mapWith(SQL::parseAlias).toSet();
     }
 
     public ClassMap getRefersToClassMap() {
@@ -210,13 +220,11 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     public RelationBuilder relationBuilder(ConnectedDB cd, boolean containsDuplicates) {
         RelationBuilder res = new RelationBuilder(cd);
-        for (Join join : SQL.parseJoins(getJoinList())) {
+        for (Join join : SQL.parseJoins(listJoins().toList())) {
             res.addJoinCondition(join);
         }
-        for (String condition : getConditionList()) {
-            res.addCondition(condition);
-        }
-        res.addAliases(aliases());
+        listConditions().forEachRemaining(res::addCondition);
+        res.addAliases(getAliases());
         for (ProjectionSpec projection : nodeMaker().projectionSpecs()) {
             res.addProjection(projection);
         }
@@ -242,7 +250,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         if (refersToClassMap == null) {
             return buildNodeMaker(wrapValueSource(buildValueSourceBase()), isUnique);
         }
-        return ((ClassMapImpl) refersToClassMap).buildAliasedNodeMaker(new AliasMap(aliases()), isUnique);
+        return ((ClassMapImpl) refersToClassMap).buildAliasedNodeMaker(new AliasMap(getAliases()), isUnique);
     }
 
     public NodeMaker buildAliasedNodeMaker(AliasMap aliases, boolean unique) {
@@ -348,7 +356,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         return result;
     }
 
-    protected void assertHasPrimarySpec(Property[] allowedSpecs) {
+    protected void assertHasPrimarySpec(Property... allowedSpecs) {
         List<Property> definedSpecs = new ArrayList<>();
         for (Property allowedProperty : allowedSpecs) {
             if (hasPrimarySpec(allowedProperty)) {

@@ -8,7 +8,6 @@ import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
@@ -72,6 +71,21 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
         return (ClassMapImpl) super.setUriSQLExpression(uriSqlExpression);
     }
 
+    @Override
+    public ClassMapImpl addJoin(String join) {
+        return (ClassMapImpl) super.addJoin(join);
+    }
+
+    @Override
+    public ClassMapImpl addCondition(String condition) {
+        return (ClassMapImpl) super.addCondition(condition);
+    }
+
+    @Override
+    public ClassMapImpl addAlias(String alias) {
+        return (ClassMapImpl) super.addAlias(alias);
+    }
+
     public void addClass(Resource clazz) {
         this.classes.add(clazz);
     }
@@ -100,9 +114,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
                 .requireIsResource(D2RQException.CLASSMAP_INVALID_DATABASE);
 
         commonValidateURI();
-        assertHasPrimarySpec(new Property[]{
-                D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue
-        });
+        assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue);
         RDFNode constantValue = getConstantValue();
         if (constantValue != null && constantValue.isLiteral()) {
             throw new D2RQException("d2rq:constantValue for class map " + toString() + " must be a URI or blank node",

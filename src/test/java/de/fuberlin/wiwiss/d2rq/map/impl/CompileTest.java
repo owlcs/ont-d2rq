@@ -7,7 +7,6 @@ import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,15 +24,14 @@ public class CompileTest {
 
     @Before
     public void setUp() {
-        Model model = ModelFactory.createDefaultModel();
         Mapping mapping = MappingFactory.createEmpty();
         Database database = mapping.createDatabase(null);
         database.useConnectedDB(new DummyDB());
 
-        ClassMap employees = createClassMap(database, "http://test/employee@@e.ID@@");
-        employees.addAlias("employees AS e");
-        employees.addJoin("e.ID = foo.bar");
-        employees.addCondition("e.status = 'active'");
+        ClassMap employees = createClassMap(database, "http://test/employee@@e.ID@@")
+                .addAlias("employees AS e")
+                .addJoin("e.ID = foo.bar")
+                .addCondition("e.status = 'active'");
         managerBridge = createPropertyBridge(employees, "http://terms.example.org/manager");
         managerBridge.addAlias("e AS m");
         managerBridge.setRefersToClassMap(employees);

@@ -8,7 +8,7 @@ import java.util.Collection;
 /**
  * Created by @ssz on 26.09.2018.
  */
-public interface PropertyBridge extends MapObject, HasURI<PropertyBridge> {
+public interface PropertyBridge extends MapObject, HasURI<PropertyBridge>, HasSQLAddition<PropertyBridge> {
 
     void addProperty(Resource r);
 
@@ -25,12 +25,6 @@ public interface PropertyBridge extends MapObject, HasURI<PropertyBridge> {
     String getColumn();
 
     void setColumn(String s);
-
-    void addCondition(String s);
-
-    void addAlias(String s);
-
-    void addJoin(String j);
 
     String getDatatype();
 

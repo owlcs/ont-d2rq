@@ -10,7 +10,7 @@ import java.util.Collection;
 /**
  * Created by @ssz on 26.09.2018.
  */
-public interface ClassMap extends MapObject, HasDatabase<ClassMap>, HasURI<ClassMap> {
+public interface ClassMap extends MapObject, HasDatabase<ClassMap>, HasURI<ClassMap>, HasSQLAddition<ClassMap> {
 
     // todo: remove from this interface
     NodeMaker nodeMaker();
@@ -51,12 +51,6 @@ public interface ClassMap extends MapObject, HasDatabase<ClassMap>, HasURI<Class
      * @see HasURI#setConstantValue(String)
      */
     ClassMap setConstantValue();
-
-    void addAlias(String alias);
-
-    void addJoin(String join);
-
-    void addCondition(String cond);
 
     void addPropertyBridge(PropertyBridge p);
 

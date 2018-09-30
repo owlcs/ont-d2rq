@@ -13,7 +13,6 @@ import de.fuberlin.wiwiss.d2rq.values.ConstantValueMaker;
 import de.fuberlin.wiwiss.d2rq.values.Pattern;
 import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
@@ -82,6 +81,21 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
         return (DownloadMapImpl) super.setUriSQLExpression(uriSqlExpression);
     }
 
+    @Override
+    public DownloadMapImpl addJoin(String join) {
+        return (DownloadMapImpl) super.addJoin(join);
+    }
+
+    @Override
+    public DownloadMapImpl addCondition(String condition) {
+        return (DownloadMapImpl) super.addCondition(condition);
+    }
+
+    @Override
+    public DownloadMapImpl addAlias(String alias) {
+        return (DownloadMapImpl) super.addAlias(alias);
+    }
+
     public void setMediaType(String mediaType) {
         assertNotYetDefined(this.mediaType, D2RQ.mediaType, D2RQException.DOWNLOADMAP_DUPLICATE_MEDIATYPE);
         this.mediaType = mediaType;
@@ -106,7 +120,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
             }
         }
         commonValidateURI();
-        assertHasPrimarySpec(new Property[]{D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue});
+        assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue);
         assertHasBeenDefined(contentDownloadColumn, D2RQ.contentDownloadColumn, D2RQException.DOWNLOADMAP_NO_CONTENTCOLUMN);
         RDFNode constantValue = getConstantValue();
         if (constantValue != null && !constantValue.isURIResource()) {

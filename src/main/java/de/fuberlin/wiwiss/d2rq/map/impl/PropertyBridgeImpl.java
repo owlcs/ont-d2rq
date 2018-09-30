@@ -14,7 +14,6 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
@@ -62,6 +61,21 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     @Override
     public PropertyBridgeImpl setUriSQLExpression(String uriSqlExpression) {
         return (PropertyBridgeImpl) super.setUriSQLExpression(uriSqlExpression);
+    }
+
+    @Override
+    public PropertyBridgeImpl addJoin(String join) {
+        return (PropertyBridgeImpl) super.addJoin(join);
+    }
+
+    @Override
+    public PropertyBridgeImpl addCondition(String condition) {
+        return (PropertyBridgeImpl) super.addCondition(condition);
+    }
+
+    @Override
+    public PropertyBridgeImpl addAlias(String alias) {
+        return (PropertyBridgeImpl) super.addAlias(alias);
     }
 
     @Override
@@ -192,11 +206,9 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
                     D2RQException.PROPERTYBRIDGE_MISSING_PREDICATESPEC);
         }
         commonValidateURI();
-        assertHasPrimarySpec(new Property[]{
-                D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
+        assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
                 D2RQ.column, D2RQ.pattern, D2RQ.sqlExpression, D2RQ.uriSqlExpression, D2RQ.constantValue,
-                D2RQ.refersToClassMap
-        });
+                D2RQ.refersToClassMap);
         String datatype = getDatatype();
         String lang = getLang();
         if (datatype != null && lang != null) {
