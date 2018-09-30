@@ -47,6 +47,31 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
         return r.size() == 1 ? mapping.asDatabase(r.get(0)) : null;
     }
 
+    @Override
+    public ClassMapImpl setURIPattern(String pattern) {
+        return (ClassMapImpl) super.setURIPattern(pattern);
+    }
+
+    @Override
+    public ClassMapImpl setURIColumn(String column) {
+        return (ClassMapImpl) super.setURIColumn(column);
+    }
+
+    @Override
+    public ClassMapImpl setConstantValue(String uri) {
+        return (ClassMapImpl) super.setConstantValue(uri);
+    }
+
+    @Override
+    public ClassMapImpl setConstantValue() {
+        return (ClassMapImpl) super.setConstantValue(mapping.asModel().createResource());
+    }
+
+    @Override
+    public ClassMapImpl setUriSQLExpression(String uriSqlExpression) {
+        return (ClassMapImpl) super.setUriSQLExpression(uriSqlExpression);
+    }
+
     public void addClass(Resource clazz) {
         this.classes.add(clazz);
     }
@@ -74,6 +99,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
                 .requireHasNoDuplicates(D2RQException.CLASSMAP_DUPLICATE_DATABASE)
                 .requireIsResource(D2RQException.CLASSMAP_INVALID_DATABASE);
 
+        commonValidateURI();
         assertHasPrimarySpec(new Property[]{
                 D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue
         });
@@ -107,7 +133,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
             this.compiledPropertyBridges.addAll(((PropertyBridgeImpl) bridge).toTripleRelations());
         }
         for (Resource clazz : getClasses()) {
-            PropertyBridgeImpl bridge = new PropertyBridgeImpl(this.resource, this.mapping);
+            PropertyBridgeImpl bridge = mapping.asPropertyBridge(mapping.asModel().createResource());
             bridge.setBelongsToClassMap(this);
             bridge.addProperty(RDF.type);
             bridge.setConstantValue(clazz);
@@ -124,4 +150,6 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     public String toString() {
         return "d2rq:ClassMap " + PrettyPrinter.toString(this.resource);
     }
+
+
 }

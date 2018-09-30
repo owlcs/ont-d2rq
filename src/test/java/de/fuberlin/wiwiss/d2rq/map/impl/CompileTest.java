@@ -40,14 +40,14 @@ public class CompileTest {
         managerBridge.addJoin("e.manager = m.ID");
 
         ClassMap cities = createClassMap(database, "http://test/city@@c.ID@@");
-        citiesTypeBridge = createPropertyBridge(cities, RDF.type.getURI());
-        citiesTypeBridge.setConstantValue(model.createResource("http://terms.example.org/City"));
+        citiesTypeBridge = createPropertyBridge(cities, RDF.type.getURI())
+                .setConstantValue("http://terms.example.org/City");
         citiesNameBridge = createPropertyBridge(cities, "http://terms.example.org/name");
         citiesNameBridge.setColumn("c.name");
         ClassMap countries = createClassMap(database, "http://test/countries/@@c.country@@");
         countries.setContainsDuplicates(true);
-        countriesTypeBridge = createPropertyBridge(countries, RDF.type.getURI());
-        countriesTypeBridge.setConstantValue(model.createResource("http://terms.example.org/Country"));
+        countriesTypeBridge = createPropertyBridge(countries, RDF.type.getURI())
+                .setConstantValue("http://terms.example.org/Country");
     }
 
     private static ClassMap createClassMap(Database database, String uriPattern) {

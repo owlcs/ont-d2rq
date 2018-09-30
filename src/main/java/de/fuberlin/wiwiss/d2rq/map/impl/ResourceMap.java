@@ -18,10 +18,7 @@ import de.fuberlin.wiwiss.d2rq.values.ValueDecorator.ValueConstraint;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 
 import java.util.*;
 
@@ -33,9 +30,7 @@ public abstract class ResourceMap extends MapObjectImpl {
 
     // These can be set on PropertyBridges and ClassMaps
     private String bNodeIdColumns = null;    // comma-separated list
-    private String uriColumn = null; // for ClassMap, PropertyBridge and DownloadMap
-    private String uriPattern = null; // for ClassMap, PropertyBridge and DownloadMap
-    private RDFNode constantValue = null; /// for ClassMap, PropertyBridge and DownloadMap
+
     private List<String> valueRegexes = new ArrayList<>();
     private List<String> valueContainses = new ArrayList<>();
     private int valueMaxLength = Integer.MAX_VALUE;
@@ -48,7 +43,6 @@ public abstract class ResourceMap extends MapObjectImpl {
     protected String column = null;
     protected String pattern = null;
     protected String sqlExpression = null;
-    private String uriSqlExpression = null; // also for all 2 other ... hate this monkey code.
     protected String datatype = null;
     protected String lang = null;
     protected ClassMap refersToClassMap = null;
@@ -74,40 +68,40 @@ public abstract class ResourceMap extends MapObjectImpl {
         return bNodeIdColumns;
     }
 
-    public void setURIColumn(String column) {
-        assertNotYetDefined(getURIColumn(), D2RQ.uriColumn, D2RQException.RESOURCEMAP_DUPLICATE_URICOLUMN);
-        this.uriColumn = column;
+    public ResourceMap setURIColumn(String column) {
+        return setLiteral(D2RQ.uriColumn, column);
     }
 
     public String getURIColumn() {
-        return uriColumn;
+        return findString(D2RQ.uriColumn).orElse(null);
     }
 
-    public void setURIPattern(String pattern) {
-        assertNotYetDefined(getURIPattern(), D2RQ.uriPattern, D2RQException.RESOURCEMAP_DUPLICATE_URIPATTERN);
-        this.uriPattern = pattern;
+    public ResourceMap setURIPattern(String pattern) {
+        return setLiteral(D2RQ.uriPattern, pattern);
     }
 
     public String getURIPattern() {
-        return uriPattern;
+        return findString(D2RQ.uriPattern).orElse(null);
     }
 
-    public void setUriSQLExpression(String uriSqlExpression) {
-        assertNotYetDefined(getURISQLExpression(), D2RQ.uriSqlExpression, D2RQException.PROPERTYBRIDGE_DUPLICATE_URI_SQL_EXPRESSION);
-        this.uriSqlExpression = uriSqlExpression;
+    public ResourceMap setUriSQLExpression(String uriSqlExpression) {
+        return setLiteral(D2RQ.uriSqlExpression, uriSqlExpression);
     }
 
-    public String getURISQLExpression() {
-        return uriSqlExpression;
+    public String getUriSQLExpression() {
+        return findString(D2RQ.uriSqlExpression).orElse(null);
     }
 
-    public void setConstantValue(RDFNode constantValue) {
-        assertNotYetDefined(getConstantValue(), D2RQ.constantValue, D2RQException.RESOURCEMAP_DUPLICATE_CONSTANTVALUE);
-        this.constantValue = constantValue;
+    public ResourceMap setConstantValue(RDFNode value) {
+        return setRDFNode(D2RQ.constantValue, value);
     }
 
     public RDFNode getConstantValue() {
-        return this.constantValue;
+        return findFirst(D2RQ.constantValue, Statement::getObject).orElse(null);
+    }
+
+    public ResourceMap setConstantValue(String uri) {
+        return setURI(D2RQ.constantValue, uri);
     }
 
     public void addValueRegex(String regex) {
@@ -194,7 +188,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         return lang;
     }
 
-    public boolean getContainsDuplicates() {
+    public boolean isContainsDuplicates() {
         return getBoolean(D2RQ.containsDuplicates, false);
     }
 
@@ -211,7 +205,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public RelationBuilder relationBuilder(ConnectedDB cd) {
-        return relationBuilder(cd, getContainsDuplicates());
+        return relationBuilder(cd, isContainsDuplicates());
     }
 
     public RelationBuilder relationBuilder(ConnectedDB cd, boolean containsDuplicates) {
@@ -239,7 +233,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     protected abstract Relation buildRelation();
 
     public NodeMaker nodeMaker() {
-        boolean isUnique = !getContainsDuplicates();
+        boolean isUnique = !isContainsDuplicates();
         RDFNode constantValue = getConstantValue();
         if (constantValue != null) {
             return new FixedNodeMaker(constantValue.asNode(), isUnique);
@@ -281,7 +275,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         if (sqlExpression != null) {
             return new SQLExpressionValueMaker(SQLExpression.create(sqlExpression));
         }
-        String uriSqlExpression = getURISQLExpression();
+        String uriSqlExpression = getUriSQLExpression();
         if (uriSqlExpression != null) {
             return new SQLExpressionValueMaker(SQLExpression.create(uriSqlExpression));
         }
@@ -321,7 +315,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         if (getURIColumn() != null || getURIPattern() != null) {
             return TypedNodeMaker.URI;
         }
-        if (getURISQLExpression() != null) {
+        if (getUriSQLExpression() != null) {
             return TypedNodeMaker.URI;
         }
         // literals
@@ -387,10 +381,33 @@ public abstract class ResourceMap extends MapObjectImpl {
         if (property.equals(D2RQ.column)) return getColumn() != null;
         if (property.equals(D2RQ.pattern)) return getPattern() != null;
         if (property.equals(D2RQ.sqlExpression)) return getSQLExpression() != null;
-        if (property.equals(D2RQ.uriSqlExpression)) return getURISQLExpression() != null;
+        if (property.equals(D2RQ.uriSqlExpression)) return getUriSQLExpression() != null;
         if (property.equals(D2RQ.refersToClassMap)) return getRefersToClassMap() != null;
         if (property.equals(D2RQ.constantValue)) return getConstantValue() != null;
         throw new D2RQException("No primary spec: " + property);
+    }
+
+    protected void commonValidateURI() {
+        Validator v = new Validator(this);
+        Validator.ForProperty uriPattertn = v.forProperty(D2RQ.uriPattern);
+        if (uriPattertn.exists()) {
+            uriPattertn.requireHasNoDuplicates(D2RQException.RESOURCEMAP_DUPLICATE_URIPATTERN)
+                    .requireIsStringLiteral(D2RQException.RESOURCEMAP_ILLEGAL_URIPATTERN);
+        }
+        Validator.ForProperty uriColumn = v.forProperty(D2RQ.uriColumn);
+        if (uriColumn.exists()) {
+            uriColumn.requireHasNoDuplicates(D2RQException.RESOURCEMAP_DUPLICATE_URICOLUMN)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
+        Validator.ForProperty constantValue = v.forProperty(D2RQ.constantValue);
+        if (constantValue.exists())
+            constantValue.requireHasNoDuplicates(D2RQException.RESOURCEMAP_DUPLICATE_CONSTANTVALUE);
+
+        Validator.ForProperty uriSQLExpression = v.forProperty(D2RQ.uriSqlExpression);
+        if (uriSQLExpression.exists()) {
+            uriSQLExpression.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_URI_SQL_EXPRESSION)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
     }
 
     public Collection<Literal> getDefinitionLabels() {

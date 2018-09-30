@@ -246,6 +246,10 @@ public class MappingImpl implements Mapping {
 
     @Override
     public PropertyBridgeImpl createPropertyBridge(Resource r) {
+        return asPropertyBridge(r);
+    }
+
+    public PropertyBridgeImpl asPropertyBridge(Resource r) {
         return new PropertyBridgeImpl(r.inModel(model), this);
     }
 

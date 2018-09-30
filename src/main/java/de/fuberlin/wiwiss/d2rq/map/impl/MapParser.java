@@ -195,21 +195,10 @@ public class MapParser {
         while (stmts.hasNext()) {
             resourceMap.setBNodeIdColumns(stmts.nextStatement().getString());
         }
-        stmts = r.listProperties(D2RQ.uriColumn);
-        while (stmts.hasNext()) {
-            resourceMap.setURIColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.uriPattern);
-        while (stmts.hasNext()) {
-            resourceMap.setURIPattern(ensureIsAbsolute(stmts.nextStatement().getString()));
-        }
+        r.listProperties(D2RQ.uriPattern).toSet().forEach(s -> resourceMap.setURIPattern(ensureIsAbsolute(s.getString())));
         stmts = r.listProperties(D2RQ.uriSqlExpression);
         while (stmts.hasNext()) {
             resourceMap.setUriSQLExpression(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.constantValue);
-        while (stmts.hasNext()) {
-            resourceMap.setConstantValue(stmts.nextStatement().getObject());
         }
         stmts = r.listProperties(D2RQ.valueRegex);
         while (stmts.hasNext()) {

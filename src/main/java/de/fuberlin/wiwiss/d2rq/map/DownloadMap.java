@@ -8,7 +8,7 @@ import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
 /**
  * Created by @ssz on 26.09.2018.
  */
-public interface DownloadMap extends MapObject, HasDatabase<DownloadMap> {
+public interface DownloadMap extends MapObject, HasDatabase<DownloadMap>, HasURI<DownloadMap> {
 
     // todo: remove from the interface
     Attribute getContentDownloadColumn();

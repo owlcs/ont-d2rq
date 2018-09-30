@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.Collection;
@@ -8,7 +8,7 @@ import java.util.Collection;
 /**
  * Created by @ssz on 26.09.2018.
  */
-public interface PropertyBridge extends MapObject {
+public interface PropertyBridge extends MapObject, HasURI<PropertyBridge> {
 
     void addProperty(Resource r);
 
@@ -28,12 +28,27 @@ public interface PropertyBridge extends MapObject {
 
     void addCondition(String s);
 
-    void setConstantValue(RDFNode v);
-
     void addAlias(String s);
 
     void addJoin(String j);
 
     String getDatatype();
+
+    /**
+     * Sets the given literal as {@code d2rq:constantValue}.
+     *
+     * @param literal {@link Literal}, not {@code null}
+     * @return this object to allow cascading calls
+     * @see HasURI#setConstantValue(String)
+     */
+    PropertyBridge setConstantValue(Literal literal);
+
+    /**
+     * Produces a blank node as {@code d2rq:constantValue}.
+     *
+     * @return this object to allow cascading calls
+     * @see HasURI#setConstantValue(String)
+     */
+    PropertyBridge setConstantValue();
 
 }

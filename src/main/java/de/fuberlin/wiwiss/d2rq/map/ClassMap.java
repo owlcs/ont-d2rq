@@ -3,7 +3,6 @@ package de.fuberlin.wiwiss.d2rq.map;
 import de.fuberlin.wiwiss.d2rq.map.impl.RelationBuilder;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.Collection;
@@ -11,21 +10,17 @@ import java.util.Collection;
 /**
  * Created by @ssz on 26.09.2018.
  */
-public interface ClassMap extends MapObject, HasDatabase<ClassMap> {
+public interface ClassMap extends MapObject, HasDatabase<ClassMap>, HasURI<ClassMap> {
 
-    // todo: remove from interface
+    // todo: remove from this interface
     NodeMaker nodeMaker();
 
-    // todo: remove from interface
+    // todo: remove from this interface
     RelationBuilder relationBuilder(ConnectedDB database);
 
     boolean hasProperties();
 
     Collection<Resource> getClasses();
-
-    void setURIPattern(String pattern);
-
-    void setConstantValue(RDFNode constantValue);
 
     /**
      * Sets {@code d2rq:containsDuplicates} boolean literal.
@@ -47,7 +42,15 @@ public interface ClassMap extends MapObject, HasDatabase<ClassMap> {
      * @return boolean
      * @see #setContainsDuplicates(boolean)
      */
-    boolean getContainsDuplicates();
+    boolean isContainsDuplicates();
+
+    /**
+     * Produces a blank node as {@code d2rq:constantValue}.
+     *
+     * @return this object to allow cascading calls
+     * @see HasURI#setConstantValue(String)
+     */
+    ClassMap setConstantValue();
 
     void addAlias(String alias);
 

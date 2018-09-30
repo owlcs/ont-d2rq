@@ -13,6 +13,7 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
@@ -31,6 +32,36 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     public PropertyBridgeImpl(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
+    }
+
+    @Override
+    public PropertyBridgeImpl setURIPattern(String pattern) {
+        return (PropertyBridgeImpl) super.setURIPattern(pattern);
+    }
+
+    @Override
+    public PropertyBridgeImpl setURIColumn(String pattern) {
+        return (PropertyBridgeImpl) super.setURIColumn(pattern);
+    }
+
+    @Override
+    public PropertyBridgeImpl setConstantValue(String uri) {
+        return (PropertyBridgeImpl) super.setConstantValue(uri);
+    }
+
+    @Override
+    public PropertyBridgeImpl setConstantValue(Literal literal) {
+        return (PropertyBridgeImpl) super.setConstantValue(literal);
+    }
+
+    @Override
+    public PropertyBridgeImpl setConstantValue() {
+        return (PropertyBridgeImpl) super.setConstantValue(mapping.asModel().createResource());
+    }
+
+    @Override
+    public PropertyBridgeImpl setUriSQLExpression(String uriSqlExpression) {
+        return (PropertyBridgeImpl) super.setUriSQLExpression(uriSqlExpression);
     }
 
     @Override
@@ -123,7 +154,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
      * @return boolean, usually {@code false}
      */
     @Override
-    public boolean getContainsDuplicates() {
+    public boolean isContainsDuplicates() {
         return getBoolean(D2RQ.containsDuplicates, true);
     }
 
@@ -160,6 +191,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
             throw new D2RQException(toString() + " needs a d2rq:property or d2rq:dynamicProperty",
                     D2RQException.PROPERTYBRIDGE_MISSING_PREDICATESPEC);
         }
+        commonValidateURI();
         assertHasPrimarySpec(new Property[]{
                 D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
                 D2RQ.column, D2RQ.pattern, D2RQ.sqlExpression, D2RQ.uriSqlExpression, D2RQ.constantValue,

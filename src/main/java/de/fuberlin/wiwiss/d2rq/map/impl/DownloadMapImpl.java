@@ -17,8 +17,6 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -36,7 +34,6 @@ import java.util.List;
  * @author RichardCyganiak
  */
 public class DownloadMapImpl extends ResourceMap implements DownloadMap {
-    private final static Logger LOGGER = LoggerFactory.getLogger(DownloadMapImpl.class);
 
     private ClassMap belongsToClassMap = null;
     private String mediaType = null;
@@ -65,6 +62,26 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
         return r.size() == 1 ? mapping.asDatabase(r.get(0)) : null;
     }
 
+    @Override
+    public DownloadMapImpl setURIPattern(String pattern) {
+        return (DownloadMapImpl) super.setURIPattern(pattern);
+    }
+
+    @Override
+    public DownloadMapImpl setURIColumn(String column) {
+        return (DownloadMapImpl) super.setURIColumn(column);
+    }
+
+    @Override
+    public DownloadMapImpl setConstantValue(String uri) {
+        return (DownloadMapImpl) super.setConstantValue(uri);
+    }
+
+    @Override
+    public DownloadMapImpl setUriSQLExpression(String uriSqlExpression) {
+        return (DownloadMapImpl) super.setUriSQLExpression(uriSqlExpression);
+    }
+
     public void setMediaType(String mediaType) {
         assertNotYetDefined(this.mediaType, D2RQ.mediaType, D2RQException.DOWNLOADMAP_DUPLICATE_MEDIATYPE);
         this.mediaType = mediaType;
@@ -88,7 +105,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
                         D2RQException.DOWNLOADMAP_NO_DATASTORAGE);
             }
         }
-
+        commonValidateURI();
         assertHasPrimarySpec(new Property[]{D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue});
         assertHasBeenDefined(contentDownloadColumn, D2RQ.contentDownloadColumn, D2RQException.DOWNLOADMAP_NO_CONTENTCOLUMN);
         RDFNode constantValue = getConstantValue();

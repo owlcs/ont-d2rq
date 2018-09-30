@@ -1,7 +1,8 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 /**
- * Auxiliary interface to provide access to {@link Database}.
+ * A technical interface to provide access to {@link Database}.
+ * Applicable for {@link ClassMap} and {@link DownloadMap}.
  * <p>
  * Created by @ssz on 27.09.2018.
  *
