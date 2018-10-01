@@ -214,7 +214,11 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
-    public TranslationTableImpl createTranslationTable(Resource r) {
+    public TranslationTableImpl createTranslationTable(String uri) {
+        return asTranslationTable(model.createResource(uri, D2RQ.TranslationTable));
+    }
+
+    public TranslationTableImpl asTranslationTable(Resource r) {
         return new TranslationTableImpl(r.inModel(model), this);
     }
 

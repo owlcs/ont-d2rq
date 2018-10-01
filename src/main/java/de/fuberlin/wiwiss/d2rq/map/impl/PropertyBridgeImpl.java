@@ -7,6 +7,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.expr.AttributeExpr;
 import de.fuberlin.wiwiss.d2rq.map.ClassMap;
 import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
+import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
@@ -96,6 +97,11 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     @Override
     public PropertyBridgeImpl setValueMaxLength(int maxLength) {
         return (PropertyBridgeImpl) super.setValueMaxLength(maxLength);
+    }
+
+    @Override
+    public PropertyBridgeImpl setTranslateWith(TranslationTable table) {
+        return (PropertyBridgeImpl) super.setTranslateWith(table);
     }
 
     @Override

@@ -10,7 +10,7 @@ import java.util.stream.Stream;
  *
  * @param <R> subtype of {@link MapObject}
  */
-interface HasUnclassified<R extends MapObject> {
+interface HasUnclassified<R extends MapObject> extends HasTranslateWith<R> {
 
     /**
      * Sets a literal value for the {@code d2rq:bNodeIdColumns} predicate, where its lexical form is

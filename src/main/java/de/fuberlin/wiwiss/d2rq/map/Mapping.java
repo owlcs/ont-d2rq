@@ -68,8 +68,7 @@ public interface Mapping extends AutoCloseable {
     // todo: should accept String, not Resource
     PropertyBridge createPropertyBridge(Resource r);
 
-    // todo: should accept String, not Resource
-    TranslationTable createTranslationTable(Resource r);
+    TranslationTable createTranslationTable(String uri);
 
     Stream<TranslationTable> listTranslationTables();
 

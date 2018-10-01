@@ -61,7 +61,7 @@ public class ParserTest {
         Mapping mapping = MappingFactory.create(this.model, null);
         TranslationTable table = mapping.findTranslationTable(r);
         Assert.assertEquals(1, table.size());
-        Translator translator = table.translator();
+        Translator translator = table.asTranslator();
         Assert.assertEquals("bar", translator.toRDFValue("foo"));
     }
 
@@ -99,14 +99,14 @@ public class ParserTest {
     public void testTranslationTableRDFValueCanBeLiteral() {
         Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
         TranslationTable tt = m.findTranslationTable(ResourceFactory.createResource("http://example.org/tt"));
-        Assert.assertEquals("http://example.org/foo", tt.translator().toRDFValue("literal"));
+        Assert.assertEquals("http://example.org/foo", tt.asTranslator().toRDFValue("literal"));
     }
 
     @Test
     public void testTranslationTableRDFValueCanBeURI() {
         Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
         TranslationTable tt = m.findTranslationTable(ResourceFactory.createResource("http://example.org/tt"));
-        Assert.assertEquals("http://example.org/foo", tt.translator().toRDFValue("uri"));
+        Assert.assertEquals("http://example.org/foo", tt.asTranslator().toRDFValue("uri"));
     }
 
     @Test

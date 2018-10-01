@@ -7,19 +7,18 @@ import de.fuberlin.wiwiss.d2rq.values.Translator;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Resource;
 
-import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.Function;
 
 /**
- * Represents a d2rq:TranslationTable.
+ * Represents a {@code d2rq:TranslationTable}.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  * @author zazi (http://github.com/zazi)
  */
 @SuppressWarnings("WeakerAccess")
 public class TranslationTableImpl extends MapObjectImpl implements TranslationTable {
-    private Collection<Pair> translations = new ArrayList<>();
+    private Collection<Entry> translations = new ArrayList<>();
     private String javaClass;
     private String href;
 
@@ -42,12 +41,14 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
      *
      * @param dbValue  the value on the database side (usually coming from a DB column)
      * @param rdfValue the value on the RDF side (a string or URI)
+     * @return {@link TranslationTableImpl}
      */
     @Override
-    public void addTranslation(String dbValue, String rdfValue) {
+    public TranslationTableImpl addTranslation(String dbValue, String rdfValue) {
         assertArgumentNotNull(dbValue, D2RQ.databaseValue, D2RQException.TRANSLATION_MISSING_DBVALUE);
         assertArgumentNotNull(rdfValue, D2RQ.rdfValue, D2RQException.TRANSLATION_MISSING_RDFVALUE);
-        this.translations.add(new Pair(dbValue, rdfValue));
+        this.translations.add(new Entry(dbValue, rdfValue));
+        return this;
     }
 
     /**
@@ -56,41 +57,62 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
      * This method will take care of generating an instance of the class.
      *
      * @param className name of a class implementing {@link Translator}
+     * @return {@link TranslationTableImpl}
      */
-    public void setJavaClass(String className) {
-        assertNotYetDefined(this.javaClass, D2RQ.javaClass, D2RQException.TRANSLATIONTABLE_DUPLICATE_JAVACLASS);
+    @Override
+    public TranslationTableImpl setJavaClass(String className) {
+        assertNotYetDefined(getJavaClass(), D2RQ.javaClass, D2RQException.TRANSLATIONTABLE_DUPLICATE_JAVACLASS);
         this.javaClass = className;
-    }
-
-    public void setHref(String href) {
-        assertNotYetDefined(this.href, D2RQ.href, D2RQException.TRANSLATIONTABLE_DUPLICATE_HREF);
-        this.href = href;
+        return this;
     }
 
     @Override
-    public Translator translator() {
+    public String getJavaClass() {
+        return javaClass;
+    }
+
+    @Override
+    public TranslationTableImpl setHref(String href) {
+        assertNotYetDefined(getHref(), D2RQ.href, D2RQException.TRANSLATIONTABLE_DUPLICATE_HREF);
+        this.href = href;
+        return this;
+    }
+
+    @Override
+    public String getHref() {
+        return href;
+    }
+
+    @Override
+    public Translator asTranslator() {
         validate();
-        if (this.javaClass != null) {
-            return instantiateJavaClass();
+        String javaClass = getJavaClass();
+        if (javaClass != null) {
+            return TranslatorHelper.createTranslator(javaClass, asResource());
         }
-        if (this.href != null) {
+        String href = getHref();
+        if (href != null) {
             return new TableTranslator(new TranslationTableParser(href).parseTranslations(),
                     TranslationTableParser.Row::first, TranslationTableParser.Row::second);
         }
-        return new TableTranslator(this.translations, Pair::dbValue, Pair::rdfValue);
+        return new TableTranslator(this.translations, Entry::dbValue, Entry::rdfValue);
     }
 
     @Override
     public void validate() throws D2RQException {
-        if (!this.translations.isEmpty() && this.javaClass != null) {
+        // todo: Why just don't allow to combine different kinds of translators ?
+        // todo: What it is - one more stupidity of the D2RQ developers or there is a deep meaning here ?
+        String href = getHref();
+        String javaClass = getJavaClass();
+        if (!this.translations.isEmpty() && javaClass != null) {
             throw new D2RQException("Can't combine d2rq:translation and d2rq:javaClass on " + this,
                     D2RQException.TRANSLATIONTABLE_TRANSLATION_AND_JAVACLASS);
         }
-        if (!this.translations.isEmpty() && this.href != null) {
+        if (!this.translations.isEmpty() && href != null) {
             throw new D2RQException("Can't combine d2rq:translation and d2rq:href on " + this,
                     D2RQException.TRANSLATIONTABLE_TRANSLATION_AND_HREF);
         }
-        if (this.href != null && this.javaClass != null) {
+        if (href != null && javaClass != null) {
             throw new D2RQException("Can't combine d2rq:href and d2rq:javaClass on " + this,
                     D2RQException.TRANSLATIONTABLE_HREF_AND_JAVACLASS);
         }
@@ -101,91 +123,11 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
         return "d2rq:TranslationTable " + super.toString();
     }
 
-    private Translator instantiateJavaClass() {
-        try {
-            Class<?> translatorClass = Class.forName(this.javaClass);
-            if (!checkTranslatorClassImplementation(translatorClass)) {
-                throw new D2RQException("d2rq:javaClass " + this.javaClass + " must implement " + Translator.class.getName());
-            }
-            if (hasConstructorWithArg(translatorClass)) {
-                return invokeConstructorWithArg(translatorClass, asResource());
-            }
-            if (hasConstructorWithoutArg(translatorClass)) {
-                return invokeConstructorWithoutArg(translatorClass);
-            }
-            throw new D2RQException("No suitable public constructor found on d2rq:javaClass " + this.javaClass);
-        } catch (ClassNotFoundException e) {
-            throw new D2RQException("d2rq:javaClass not on classpath: " + this.javaClass);
-        }
-    }
-
-    /**
-     * Checks whether the Translator class or a super class of it implements the Translator class interface.
-     *
-     * @param translatorClass a specific translator class or a more generic parent
-     * @return true, if the currently checked translator class implements the Translator class interface
-     */
-    private boolean checkTranslatorClassImplementation(Class<?> translatorClass) {
-        if (implementsTranslator(translatorClass)) {
-            return true;
-        }
-        if (translatorClass.getSuperclass() == null) {
-            return false;
-        }
-        return this.checkTranslatorClassImplementation(translatorClass
-                .getSuperclass());
-    }
-
-    private boolean implementsTranslator(Class<?> aClass) {
-        for (int i = 0; i < aClass.getInterfaces().length; i++) {
-            if (aClass.getInterfaces()[i].equals(Translator.class)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasConstructorWithArg(Class<?> aClass) {
-        try {
-            aClass.getConstructor(Resource.class);
-            return true;
-        } catch (NoSuchMethodException nsmex) {
-            return false;
-        }
-    }
-
-    private Translator invokeConstructorWithArg(Class<?> aClass, Resource r) {
-        try {
-            Constructor<?> c = aClass.getConstructor(Resource.class);
-            return (Translator) c.newInstance(r);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    private boolean hasConstructorWithoutArg(Class<?> aClass) {
-        try {
-            aClass.getConstructor();
-            return true;
-        } catch (NoSuchMethodException nsmex) {
-            return false;
-        }
-    }
-
-    private Translator invokeConstructorWithoutArg(Class<?> aClass) {
-        try {
-            Constructor<?> c = aClass.getConstructor();
-            return (Translator) c.newInstance();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public static class Pair {
+    public static class Entry {
         private final String dbValue;
         private final String rdfValue;
 
-        public Pair(String dbValue, String rdfValue) {
+        public Entry(String dbValue, String rdfValue) {
             this.dbValue = Objects.requireNonNull(dbValue);
             this.rdfValue = Objects.requireNonNull(rdfValue);
         }
@@ -206,8 +148,8 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
         @Override
         public boolean equals(Object other) {
             if (this == other) return true;
-            if (!(other instanceof Pair)) return false;
-            Pair p = (Pair) other;
+            if (!(other instanceof Entry)) return false;
+            Entry p = (Entry) other;
             return this.dbValue.equals(p.dbValue) && this.rdfValue.equals(p.rdfValue);
         }
 

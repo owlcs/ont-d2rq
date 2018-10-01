@@ -9,11 +9,11 @@ import java.util.stream.Stream;
 
 /**
  * Representation of a {@code d2rq:Database} from the mapping graph.
- * <p>
- * Created by @ssz on 26.09.2018.
  *
  * @author Chris Bizer chris@bizer.de
  * @author Richard Cyganiak (richard@cyganiak.de)
+ * <p>
+ * Created by @ssz on 26.09.2018.
  * @see <a href='http://d2rq.org/d2rq-language#database-properties'>3.1 Properties of d2rq:Database</a>
  */
 @SuppressWarnings("UnusedReturnValue")
@@ -21,14 +21,14 @@ public interface Database extends MapObject {
     int NO_LIMIT = -1;
     int NO_FETCH_SIZE = -1;
 
-    // todo: move to Mapping or hide somehow (?)
+    // todo: move to the Mapping utils
     ConnectedDB connectedDB();
 
     /**
      * Original comment:
      * This is a hack where we can pass a pre-existing ConnectedDB that
      * will be used by this Database, so we avoid that the Database opens another connection to the same DB.
-     * todo: move to Mapping or hide somehow (?)
+     * todo: move to the Mapping utils
      *
      * @param db {@link ConnectedDB}, not {@code null}
      */

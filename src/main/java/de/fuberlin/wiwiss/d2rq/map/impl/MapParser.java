@@ -152,7 +152,7 @@ public class MapParser {
         it = translationTableResources.iterator();
         while (it.hasNext()) {
             Resource r = it.next();
-            TranslationTableImpl table = this.mapping.createTranslationTable(r);
+            TranslationTableImpl table = this.mapping.asTranslationTable(r);
             parseTranslationTable(table, r);
             this.mapping.addTranslationTable(table);
         }

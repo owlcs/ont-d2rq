@@ -6,6 +6,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.map.ClassMap;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
+import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.RDFNode;
@@ -104,6 +105,11 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     @Override
     public ClassMapImpl setValueMaxLength(int maxLength) {
         return (ClassMapImpl) super.setValueMaxLength(maxLength);
+    }
+
+    @Override
+    public ClassMapImpl setTranslateWith(TranslationTable table) {
+        return (ClassMapImpl) super.setTranslateWith(table);
     }
 
     public void addClass(Resource clazz) {

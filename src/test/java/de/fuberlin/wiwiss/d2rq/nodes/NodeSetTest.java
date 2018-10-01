@@ -13,7 +13,6 @@ import de.fuberlin.wiwiss.d2rq.values.Translator;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.Assert;
 import org.junit.Before;
@@ -479,7 +478,7 @@ public class NodeSetTest {
     @Test
     public void testTranslatorUnsupported() {
         nodes.setUsesTranslator(Translator.IDENTITY);
-        nodes.setUsesTranslator(MappingFactory.createEmpty().createTranslationTable(ResourceFactory.createResource()).translator());
+        nodes.setUsesTranslator(MappingFactory.createEmpty().createTranslationTable(null).asTranslator());
         Assert.assertFalse(nodes.isEmpty());
         Assert.assertTrue(nodes.isUnsupported());
     }

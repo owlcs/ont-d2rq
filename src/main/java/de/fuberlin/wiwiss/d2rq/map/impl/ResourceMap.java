@@ -133,11 +133,12 @@ public abstract class ResourceMap extends MapObjectImpl {
         return findFirst(D2RQ.valueMaxLength, s -> s.getLiteral().getInt()).orElse(null);
     }
 
-    public void setTranslateWith(TranslationTable table) {
+    public ResourceMap setTranslateWith(TranslationTable table) {
         assertNotYetDefined(getTranslateWith(), D2RQ.translateWith,
                 D2RQException.RESOURCEMAP_DUPLICATE_TRANSLATEWITH);
         assertArgumentNotNull(table, D2RQ.translateWith, D2RQException.RESOURCEMAP_INVALID_TRANSLATEWITH);
         this.translateWith = table;
+        return this;
     }
 
     public TranslationTable getTranslateWith() {
@@ -303,7 +304,7 @@ public abstract class ResourceMap extends MapObjectImpl {
             }
             return new ValueDecorator(values, constraints);
         }
-        return new ValueDecorator(values, constraints, translateWith.translator());
+        return new ValueDecorator(values, constraints, translateWith.asTranslator());
     }
 
     protected NodeMaker buildNodeMaker(ValueMaker values, boolean isUnique) {
