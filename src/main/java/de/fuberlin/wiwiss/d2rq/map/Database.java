@@ -18,6 +18,7 @@ import java.util.stream.Stream;
  */
 @SuppressWarnings("UnusedReturnValue")
 public interface Database extends MapObject {
+    // todo: use Integer and null to indicate no field assigned
     int NO_LIMIT = -1;
     int NO_FETCH_SIZE = -1;
 
@@ -177,7 +178,7 @@ public interface Database extends MapObject {
      * @param value String, not {@code null}
      * @return this instance to allow cascading calls
      */
-    Database setConnectionProperty(String key, String value);
+    Database putConnectionProperty(String key, String value);
 
     /**
      * Gets JDBC connection properties.
@@ -202,6 +203,19 @@ public interface Database extends MapObject {
      * @see Column description
      */
     Stream<String> columns(Column type);
+
+    /**
+     * Adds the specified properties to the existing one.
+     *
+     * @param properties {@link Properties}, not {@code null}
+     * @return this instance to allow cascading calls
+     * @see #getConnectionProperties()
+     * @see #putConnectionProperty(String, String)
+     */
+    default Database addConnectionProperties(Properties properties) {
+        properties.forEach((k, v) -> putConnectionProperty(String.valueOf(k), String.valueOf(v)));
+        return this;
+    }
 
     /**
      * These properties are used to declare the column type of database columns.

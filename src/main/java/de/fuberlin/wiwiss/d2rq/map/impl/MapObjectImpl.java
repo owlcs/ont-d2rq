@@ -3,7 +3,6 @@ package de.fuberlin.wiwiss.d2rq.map.impl;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
-import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.Models;
@@ -173,7 +172,6 @@ public abstract class MapObjectImpl implements MapObject {
 
     /**
      * Copies the content of the specified {@link MapObject MapObject} to this instance.
-     * Considers only top-level statements.
      *
      * @param other {@link MapObject}, not {@code null}
      * @param <X>   subtype of {@link MapObject}
@@ -183,12 +181,20 @@ public abstract class MapObjectImpl implements MapObject {
      */
     @SuppressWarnings("unchecked")
     protected <X extends MapObject> X copy(MapObject other) throws NullPointerException, HasNoModelException {
-        Graph a = mustHaveModel().getGraph();
-        Graph b = mustHaveModel(Objects.requireNonNull(other)).getGraph();
-        if (Objects.equals(a, b)) {
+        Model b = mustHaveModel(Objects.requireNonNull(other));
+        Model a = mustHaveModel();
+        if (Objects.equals(a.getGraph(), b.getGraph())) {
             return (X) this;
         }
-        other.asResource().listProperties().forEachRemaining(s -> resource.addProperty(s.getPredicate(), s.getObject()));
+        Resource r = other.asResource();
+        // copy whole content from one model to another:
+        Models.getAssociatedStatements(r).forEach(s -> {
+            if (r.equals(s.getSubject())) { // top statement:
+                resource.addProperty(s.getPredicate(), s.getObject());
+            } else { // nested:
+                a.add(s);
+            }
+        });
         return (X) this;
     }
 

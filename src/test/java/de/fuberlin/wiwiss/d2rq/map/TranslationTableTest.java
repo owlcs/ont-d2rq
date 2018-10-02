@@ -1,9 +1,20 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import de.fuberlin.wiwiss.d2rq.map.impl.TranslationTableImpl;
+import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.rdf.model.RDFNode;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Tests the TranslationTable functionality
@@ -11,13 +22,14 @@ import org.junit.Test;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class TranslationTableTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TranslationTableTest.class);
     private String table1 = "http://test/table1";
 
     @Test
     public void testNewTranslationTableIsEmpty() {
         Mapping m = MappingFactory.createEmpty();
         TranslationTable table = m.createTranslationTable(table1);
-        Assert.assertEquals(0, table.size());
+        Assert.assertEquals(0, table.listTranslations().count());
     }
 
     @Test
@@ -25,7 +37,7 @@ public class TranslationTableTest {
         Mapping m = MappingFactory.createEmpty();
         TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
-        Assert.assertEquals(1, table.size());
+        Assert.assertEquals(1, table.listTranslations().count());
     }
 
     @Test
@@ -62,23 +74,99 @@ public class TranslationTableTest {
     }
 
     @Test
-    public void testTranslationsWithSameValuesAreEqual() {
-        TranslationTableImpl.Entry t1 = new TranslationTableImpl.Entry("foo", "bar");
-        TranslationTableImpl.Entry t2 = new TranslationTableImpl.Entry("foo", "bar");
-        Assert.assertEquals(t1, t2);
-        Assert.assertEquals(t1.hashCode(), t2.hashCode());
+    public void testCreationDuplicateTranslationsCausesValidationError() {
+        Mapping m = MappingFactory.createEmpty();
+        TranslationTable tb = m.createTranslationTable("table").addTranslation("foo", "bar");
+        tb.validate();
+        tb.createTranslation().setDatabaseValue("foo").setLiteral("bar");
+        try {
+            tb.validate();
+            Assert.fail("Expected error");
+        } catch (D2RQException e) {
+            LOGGER.debug("Expected: '{}'", e.getMessage());
+        }
     }
 
     @Test
-    public void testTranslationsWithDifferentValuesAreNotEqual() {
-        TranslationTableImpl.Entry t1 = new TranslationTableImpl.Entry("foo", "bar");
-        TranslationTableImpl.Entry t2 = new TranslationTableImpl.Entry("foo", "bar2");
-        TranslationTableImpl.Entry t3 = new TranslationTableImpl.Entry("foo2", "bar");
-        Assert.assertNotEquals(t1, t2);
-        Assert.assertNotEquals(t2, t1);
-        Assert.assertNotEquals(t1.hashCode(), t2.hashCode());
-        Assert.assertNotEquals(t1, t3);
-        Assert.assertNotEquals(t3, t1);
-        Assert.assertNotEquals(t1.hashCode(), t3.hashCode());
+    public void testAddMultipleTranslations() {
+        Mapping m = MappingFactory.createEmpty();
+        TranslationTable tb1 = m.createTranslationTable("tb1").addTranslation("foo", "bar").addTranslation("foo", "bar2");
+        Assert.assertEquals(1, m.listTranslationTables().count());
+        TranslationTable tb2 = m.createTranslationTable("tb2")
+                .createTranslation().setDatabaseValue("foo2").setLiteral("bar").getTable();
+        Assert.assertEquals(2, m.listTranslationTables().count());
+
+        Assert.assertEquals(2, tb1.listTranslations().count());
+        Assert.assertEquals(1, tb2.listTranslations().count());
+        Assert.assertEquals(2, tb1.listTranslations().filter(s -> "foo".equals(s.getDatabaseValue())).count());
+        Assert.assertEquals(1, tb1.listTranslations().filter(s -> "bar2".equals(s.getRDFValue())).count());
+        Assert.assertEquals(1, tb1.listTranslations().filter(s -> "bar".equals(s.getRDFValue())).count());
+
+        tb1.validate();
+        tb2.validate();
+
+        m.createDatabase("db").setJDBCDSN("jdbc:").getMapping().validate();
     }
+
+    @Test
+    public void testAddExternalTable() {
+        TranslationTable ex = MappingFactory.createEmpty()
+                .createTranslationTable("tb").addTranslation("a", "b").addTranslation("c", "c");
+
+        Mapping m = MappingFactory.createEmpty().addTranslationTable(ex);
+        Assert.assertEquals(1, m.listTranslationTables().count());
+        Assert.assertEquals(1, m.asModel().listStatements(null, RDF.type, D2RQ.TranslationTable).toSet().size());
+        Assert.assertEquals(2, m.asModel().listStatements(null, D2RQ.translation, (RDFNode) null).toSet().size());
+        Assert.assertEquals(2, m.listTranslationTables().flatMap(TranslationTable::listTranslations).count());
+
+        List<String> expected = m.listTranslationTables()
+                .flatMap(TranslationTable::listTranslations)
+                .flatMap(s -> Stream.of(s.getDatabaseValue(), s.getRDFValue()))
+                .sorted()
+                .collect(Collectors.toList());
+        Assert.assertEquals(Arrays.asList("a", "b", "c", "c"), expected);
+    }
+
+    @Test
+    public void testAddTranslationClass() {
+        String clazz = TestTranslator.class.getName();
+        LOGGER.debug("Set {}", clazz);
+        TranslationTable tb = MappingFactory.createEmpty()
+                .createTranslationTable("tb").setJavaClass(clazz);
+        Assert.assertEquals(clazz, tb.getJavaClass());
+        tb.validate();
+        Assert.assertEquals("A", tb.asTranslator().toRDFValue(null));
+        Translator tr = tb.asTranslator();
+        Assert.assertEquals("XZ", tr.toDBValue(null));
+        Assert.assertEquals("B", tr.toDBValue("A"));
+    }
+
+    @Test
+    public void testAddTranslationFile() {
+        String url = TranslationTableTest.class.getResource("/csv/translationtable.csv").toString();
+        LOGGER.debug("Set {}", url);
+        TranslationTable tb = MappingFactory.createEmpty()
+                .createTranslationTable("tb").setHref(url);
+        Assert.assertEquals(url, tb.getHref());
+        tb.validate();
+        Translator tr = tb.asTranslator();
+        Assert.assertEquals("db1", tr.toDBValue("rdf1"));
+        Assert.assertEquals("rdf2", tr.toRDFValue("db2"));
+        Assert.assertNull(tr.toDBValue("sss"));
+    }
+
+    // must be public
+    public static class TestTranslator implements Translator {
+        @Override
+        public String toRDFValue(String dbValue) {
+            return "A";
+        }
+
+        @Override
+        public String toDBValue(String rdfValue) {
+            return Objects.equals(rdfValue, "A") ? "B" : "XZ";
+        }
+
+    }
+
 }

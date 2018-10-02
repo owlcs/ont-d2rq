@@ -1,11 +1,17 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.csv.TranslationTableParser;
+import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
 import org.apache.jena.rdf.model.Resource;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A helper to work with {@link TranslationTableImpl}.
@@ -14,11 +20,32 @@ import java.util.Arrays;
  */
 class TranslatorHelper {
 
-    private static boolean hasImplementation(Class<?> test, Class<?> expected) {
-        if (Arrays.asList(test.getInterfaces()).contains(expected)) {
-            return true;
+    /**
+     * Creates a {@link Translator} from the given {@link TranslationTable}.
+     * <p>
+     * Although I don't know why D2RQ developers do not allow combining different kinds of translators,
+     * the original logic has been preserved.
+     * First checks for the class, then for file-url and only after all - parses RDF.
+     * TODO: I am afraid D2RQ devs did it not from a great mind; if so, this it would be nice to fix this method.
+     *
+     * @param table {@link TranslationTable}, not {@code null}
+     * @return {@link Translator}
+     */
+    static Translator getTranslator(TranslationTable table) {
+        // predefined class:
+        String javaClass = table.getJavaClass();
+        if (javaClass != null) {
+            return createTranslator(javaClass, table.asResource());
         }
-        return test.getSuperclass() != null && hasImplementation(test.getSuperclass(), expected);
+        // file:
+        String href = table.getHref();
+        if (href != null) {
+            return new Table(new TranslationTableParser(href).parseTranslations(),
+                    TranslationTableParser.Row::first, TranslationTableParser.Row::second);
+        }
+        // rdf:
+        return new Table(table.listTranslations().collect(Collectors.toSet()),
+                TranslationTable.Entry::getDatabaseValue, TranslationTable.Entry::getRDFValue);
     }
 
     private static Translator construct(Constructor<?> constructor, Object... args) {
@@ -46,14 +73,14 @@ class TranslatorHelper {
      * @return {@link Translator} instance.
      * @throws D2RQException in case it is no possible create an instance from the given params
      */
-    static Translator createTranslator(String classPath, Resource resource) throws D2RQException {
+    private static Translator createTranslator(String classPath, Resource resource) throws D2RQException {
         Class<?> clazz;
         try {
             clazz = Class.forName(classPath);
         } catch (ClassNotFoundException e) {
             throw new D2RQException("d2rq:javaClass not on classpath: " + classPath);
         }
-        if (!hasImplementation(clazz, Translator.class)) {
+        if (!Translator.class.isAssignableFrom(clazz)) {
             throw new D2RQException("d2rq:javaClass " + classPath + " must implement " + Translator.class.getName());
         }
         Constructor<?> res = getConstructor(clazz, Resource.class);
@@ -65,6 +92,27 @@ class TranslatorHelper {
             return construct(res);
         }
         throw new D2RQException("No suitable public constructor found on d2rq:javaClass " + classPath);
+    }
 
+    private static class Table implements Translator {
+        private Map<String, String> translationsByDBValue = new HashMap<>();
+        private Map<String, String> translationsByRDFValue = new HashMap<>();
+
+        <X> Table(Collection<X> map, Function<X, String> key, Function<X, String> value) {
+            for (X p : map) {
+                translationsByDBValue.put(key.apply(p), value.apply(p));
+                translationsByRDFValue.put(value.apply(p), key.apply(p));
+            }
+        }
+
+        @Override
+        public String toDBValue(String rdfValue) {
+            return translationsByRDFValue.get(rdfValue);
+        }
+
+        @Override
+        public String toRDFValue(String dbValue) {
+            return translationsByDBValue.get(dbValue);
+        }
     }
 }

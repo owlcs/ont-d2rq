@@ -10,7 +10,9 @@ import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Creates a {@link MappingImpl} from a Jena model representation of a D2RQ mapping file.
@@ -66,11 +68,10 @@ public class MapParser {
                 D2RQException.MAPPING_UNKNOWN_D2RQ_PROPERTY,
                 D2RQException.MAPPING_UNKNOWN_D2RQ_CLASS);
         ensureAllDistinct(new Resource[]{D2RQ.Database, D2RQ.ClassMap, D2RQ.PropertyBridge,
-                D2RQ.TranslationTable, D2RQ.Translation}, D2RQException.MAPPING_TYPECONFLICT);
+                D2RQ.TranslationTable, D2RQ.Translation});
         this.mapping = new MappingImpl(this.model);
         try {
             parseConfiguration();
-            parseTranslationTables();
             parseClassMaps();
             parsePropertyBridges();
             parseDownloadMaps();
@@ -86,7 +87,7 @@ public class MapParser {
         }
     }
 
-    private void ensureAllDistinct(Resource[] distinctClasses, int errorCode) {
+    private void ensureAllDistinct(Resource[] distinctClasses) {
         Collection<Resource> classes = Arrays.asList(distinctClasses);
         ResIterator it = this.model.listSubjects();
         while (it.hasNext()) {
@@ -100,7 +101,8 @@ public class MapParser {
                     matchingType = type;
                 } else {
                     throw new D2RQException("Name " + PrettyPrinter.toString(resource) + " cannot be both a "
-                            + PrettyPrinter.toString(matchingType) + " and a " + PrettyPrinter.toString(type), errorCode);
+                            + PrettyPrinter.toString(matchingType) + " and a " + PrettyPrinter.toString(type),
+                            D2RQException.MAPPING_TYPECONFLICT);
                 }
             }
         }
@@ -126,58 +128,6 @@ public class MapParser {
         }
     }
 
-    private void parseTranslationTables() {
-        Set<Resource> translationTableResources = new HashSet<>();
-        Iterator<? extends Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.TranslationTable);
-        while (it.hasNext()) {
-            translationTableResources.add(it.next());
-        }
-        StmtIterator stmts;
-        stmts = this.model.listStatements(null, D2RQ.translateWith, (Resource) null);
-        while (stmts.hasNext()) {
-            translationTableResources.add(stmts.nextStatement().getResource());
-        }
-        stmts = this.model.listStatements(null, D2RQ.translation, (RDFNode) null);
-        while (stmts.hasNext()) {
-            translationTableResources.add(stmts.nextStatement().getSubject());
-        }
-        stmts = this.model.listStatements(null, D2RQ.javaClass, (RDFNode) null);
-        while (stmts.hasNext()) {
-            translationTableResources.add(stmts.nextStatement().getSubject());
-        }
-        stmts = this.model.listStatements(null, D2RQ.href, (RDFNode) null);
-        while (stmts.hasNext()) {
-            translationTableResources.add(stmts.nextStatement().getSubject());
-        }
-        it = translationTableResources.iterator();
-        while (it.hasNext()) {
-            Resource r = it.next();
-            TranslationTableImpl table = this.mapping.asTranslationTable(r);
-            parseTranslationTable(table, r);
-            this.mapping.addTranslationTable(table);
-        }
-    }
-
-    private void parseTranslationTable(TranslationTableImpl table, Resource r) {
-        StmtIterator stmts;
-        stmts = r.listProperties(D2RQ.href);
-        while (stmts.hasNext()) {
-            table.setHref(stmts.nextStatement().getResource().getURI());
-        }
-        stmts = r.listProperties(D2RQ.javaClass);
-        while (stmts.hasNext()) {
-            table.setJavaClass(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.translation);
-        while (stmts.hasNext()) {
-            Resource translation = stmts.nextStatement().getResource();
-            String db = translation.getProperty(D2RQ.databaseValue).getString();
-            Statement stmt = translation.getProperty(D2RQ.rdfValue);
-            String rdf = stmt.getObject().isLiteral() ? stmt.getString() : stmt.getResource().getURI();
-            table.addTranslation(db, rdf);
-        }
-    }
-
     private void parseClassMaps() {
         Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.ClassMap);
         while (it.hasNext()) {
@@ -190,12 +140,7 @@ public class MapParser {
     }
 
     private void parseResourceMap(ResourceMap resourceMap, Resource r) {
-        StmtIterator stmts;
         r.listProperties(D2RQ.uriPattern).toSet().forEach(s -> resourceMap.setURIPattern(ensureIsAbsolute(s.getString())));
-        stmts = r.listProperties(D2RQ.translateWith);
-        while (stmts.hasNext()) {
-            resourceMap.setTranslateWith(this.mapping.findTranslationTable(stmts.nextStatement().getResource()));
-        }
     }
 
     private void parseClassMap(ClassMapImpl classMap, Resource r) {

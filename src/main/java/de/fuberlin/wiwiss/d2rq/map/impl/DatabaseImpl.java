@@ -11,8 +11,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.sql.Driver;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -186,7 +185,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
     }
 
     @Override
-    public Database setConnectionProperty(String key, String value) {
+    public Database putConnectionProperty(String key, String value) {
         return setLiteral(JDBC.property(key), value);
     }
 
@@ -236,27 +235,16 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
         Validator.ForProperty d = v.forProperty(D2RQ.jdbcDriver);
         if (d.exists()) {
             d.requireHasNoDuplicates(D2RQException.DATABASE_DUPLICATE_JDBCDRIVER)
-                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
-            String driver = resource.getRequiredProperty(D2RQ.jdbcDriver).getString();
-            try {
-                Class.forName(driver);
-            } catch (ClassNotFoundException e) {
-                throw new D2RQException("Can't find driver class " + driver, e,
-                        D2RQException.DATABASE_JDBCDRIVER_CLASS_NOT_FOUND);
-            }
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED)
+                    .requireValidClassReference(Driver.class, D2RQException.DATABASE_JDBCDRIVER_CLASS_NOT_FOUND);
         }
 
         // loading script:
         Validator.ForProperty s = v.forProperty(D2RQ.startupSQLScript);
         if (s.exists()) {
             s.requireHasNoDuplicates(D2RQException.DATABASE_DUPLICATE_STARTUPSCRIPT)
-                    .requireIsURI(D2RQException.UNSPECIFIED);
-            String script = resource.getRequiredProperty(D2RQ.startupSQLScript).getResource().getURI();
-            try {
-                new URL(script);
-            } catch (MalformedURLException m) {
-                throw new D2RQException("Wrong script: " + script, m);
-            }
+                    .requireIsURI(D2RQException.UNSPECIFIED)
+                    .requireIsValidURL(D2RQException.UNSPECIFIED);
         }
         // username and password
         Validator.ForProperty u = v.forProperty(D2RQ.username);
@@ -269,7 +257,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
                         .requireIsStringLiteral(D2RQException.UNSPECIFIED);
             }
         } else if (p.exists()) {
-            throw new D2RQException("Password without username");
+            throw new D2RQException("Password without username", D2RQException.UNSPECIFIED);
         }
     }
 

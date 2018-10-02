@@ -1,14 +1,20 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.csv.TranslationTableParser;
+import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.util.iterator.ExtendedIterator;
+import ru.avicomp.ontapi.jena.utils.Iter;
 
-import java.util.*;
-import java.util.function.Function;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Represents a {@code d2rq:TranslationTable}.
@@ -18,37 +24,56 @@ import java.util.function.Function;
  */
 @SuppressWarnings("WeakerAccess")
 public class TranslationTableImpl extends MapObjectImpl implements TranslationTable {
-    private Collection<Entry> translations = new ArrayList<>();
-    private String javaClass;
-    private String href;
 
     public TranslationTableImpl(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
     }
 
-    /**
-     * Returns the number of defined mappings.
-     *
-     * @return int
-     */
     @Override
-    public int size() {
-        return this.translations.size();
+    public EntryImpl createTranslation() {
+        Resource res;
+        resource.addProperty(D2RQ.translation, res = mustHaveModel().createResource());
+        return asTranslation(res);
+    }
+
+    public EntryImpl asTranslation(Resource r) {
+        return new EntryImpl(r, mapping);
+    }
+
+    @Override
+    public Stream<Entry> listTranslations() {
+        return Iter.asStream(listTranslationResources().mapWith(this::asTranslation));
     }
 
     /**
-     * Adds a translation mapping.
+     * Lists all {@code d2rq:translation} resources for the given db and rdf values
+     * and this {@code d2rq:TranslationTable} as subject.
      *
-     * @param dbValue  the value on the database side (usually coming from a DB column)
-     * @param rdfValue the value on the RDF side (a string or URI)
-     * @return {@link TranslationTableImpl}
+     * @param dbValue  String, the literal value for the {@code d2rq:databaseValue} predicate
+     * @param rdfValue String, either uri or literal value for the {@code d2rq:rdfValue} predicate
+     * @return {@link ExtendedIterator} of {@link Resource}s
      */
+    public ExtendedIterator<Resource> listTranslationResources(String dbValue, String rdfValue) {
+        return listTranslationResources()
+                .filterKeep(s -> s.hasProperty(D2RQ.databaseValue, dbValue))
+                .filterKeep(s -> s.listProperties(D2RQ.rdfValue)
+                        .mapWith(Statement::getObject)
+                        .mapWith(EntryImpl::getString)
+                        .toSet().contains(rdfValue));
+    }
+
+    /**
+     * Lists all {@code d2rq:translation} resources for this {@code d2rq:TranslationTable} as subject.
+     *
+     * @return {@link ExtendedIterator} of {@link Resource}s
+     */
+    public ExtendedIterator<Resource> listTranslationResources() {
+        return resource.listProperties(D2RQ.translation).mapWith(s -> s.getObject().asResource());
+    }
+
     @Override
-    public TranslationTableImpl addTranslation(String dbValue, String rdfValue) {
-        assertArgumentNotNull(dbValue, D2RQ.databaseValue, D2RQException.TRANSLATION_MISSING_DBVALUE);
-        assertArgumentNotNull(rdfValue, D2RQ.rdfValue, D2RQException.TRANSLATION_MISSING_RDFVALUE);
-        this.translations.add(new Entry(dbValue, rdfValue));
-        return this;
+    public String getJavaClass() {
+        return findString(D2RQ.javaClass).orElse(null);
     }
 
     /**
@@ -61,58 +86,67 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
      */
     @Override
     public TranslationTableImpl setJavaClass(String className) {
-        assertNotYetDefined(getJavaClass(), D2RQ.javaClass, D2RQException.TRANSLATIONTABLE_DUPLICATE_JAVACLASS);
-        this.javaClass = className;
-        return this;
-    }
-
-    @Override
-    public String getJavaClass() {
-        return javaClass;
-    }
-
-    @Override
-    public TranslationTableImpl setHref(String href) {
-        assertNotYetDefined(getHref(), D2RQ.href, D2RQException.TRANSLATIONTABLE_DUPLICATE_HREF);
-        this.href = href;
-        return this;
+        return setLiteral(D2RQ.javaClass, className);
     }
 
     @Override
     public String getHref() {
-        return href;
+        return findURI(D2RQ.href).orElse(null);
+    }
+
+    @Override
+    public TranslationTableImpl setHref(String href) {
+        return setURI(D2RQ.href, href);
     }
 
     @Override
     public Translator asTranslator() {
         validate();
-        String javaClass = getJavaClass();
-        if (javaClass != null) {
-            return TranslatorHelper.createTranslator(javaClass, asResource());
+        return TranslatorHelper.getTranslator(this);
+    }
+
+    /**
+     * Since D2RQ language allow both uri and literal nodes for the predicate {@code d2rq:rdfValue},
+     * it is important to avoid such collisions
+     *
+     * @param e {@link Entry}
+     */
+    private void checkNoDuplicates(Entry e) {
+        Set<Resource> res = listTranslationResources(e.getDatabaseValue(), e.getRDFValue()).toSet();
+        if (res.size() != 1) {
+            throw new D2RQException(e + ":: found duplicate d2rq:translation : " + res);
         }
-        String href = getHref();
-        if (href != null) {
-            return new TableTranslator(new TranslationTableParser(href).parseTranslations(),
-                    TranslationTableParser.Row::first, TranslationTableParser.Row::second);
-        }
-        return new TableTranslator(this.translations, Entry::dbValue, Entry::rdfValue);
     }
 
     @Override
     public void validate() throws D2RQException {
-        // todo: Why just don't allow to combine different kinds of translators ?
-        // todo: What it is - one more stupidity of the D2RQ developers or there is a deep meaning here ?
-        String href = getHref();
-        String javaClass = getJavaClass();
-        if (!this.translations.isEmpty() && javaClass != null) {
+        Set<Entry> translations = listTranslations()
+                .peek(MapObject::validate)
+                .peek(this::checkNoDuplicates)
+                .collect(Collectors.toSet());
+
+        Validator v = new Validator(this);
+        Validator.ForProperty javaClass = v.forProperty(D2RQ.javaClass);
+        if (javaClass.exists()) {
+            javaClass.requireHasNoDuplicates(D2RQException.TRANSLATIONTABLE_DUPLICATE_JAVACLASS)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED)
+                    .requireValidClassReference(Translator.class, D2RQException.UNSPECIFIED);
+        }
+        Validator.ForProperty href = v.forProperty(D2RQ.href);
+        if (href.exists()) {
+            href.requireHasNoDuplicates(D2RQException.TRANSLATIONTABLE_DUPLICATE_HREF)
+                    .requireIsURI(D2RQException.UNSPECIFIED)
+                    .requireIsValidURL(D2RQException.UNSPECIFIED);
+        }
+        if (!translations.isEmpty() && javaClass.exists()) {
             throw new D2RQException("Can't combine d2rq:translation and d2rq:javaClass on " + this,
                     D2RQException.TRANSLATIONTABLE_TRANSLATION_AND_JAVACLASS);
         }
-        if (!this.translations.isEmpty() && href != null) {
+        if (!translations.isEmpty() && href.exists()) {
             throw new D2RQException("Can't combine d2rq:translation and d2rq:href on " + this,
                     D2RQException.TRANSLATIONTABLE_TRANSLATION_AND_HREF);
         }
-        if (href != null && javaClass != null) {
+        if (href.exists() && javaClass.exists()) {
             throw new D2RQException("Can't combine d2rq:href and d2rq:javaClass on " + this,
                     D2RQException.TRANSLATIONTABLE_HREF_AND_JAVACLASS);
         }
@@ -123,61 +157,77 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
         return "d2rq:TranslationTable " + super.toString();
     }
 
-    public static class Entry {
-        private final String dbValue;
-        private final String rdfValue;
+    public static class EntryImpl extends MapObjectImpl implements Entry {
 
-        public Entry(String dbValue, String rdfValue) {
-            this.dbValue = Objects.requireNonNull(dbValue);
-            this.rdfValue = Objects.requireNonNull(rdfValue);
+        public EntryImpl(Resource resource, MappingImpl mapping) {
+            super(resource, mapping);
         }
 
-        public String dbValue() {
-            return this.dbValue;
-        }
-
-        public String rdfValue() {
-            return this.rdfValue;
+        /**
+         * Gets node as string.
+         * This is due to D2RQ allow both uri and blank nodes for the {@code d2rq:rdfValue} predicate.
+         *
+         * @param n {@link RDFNode}
+         * @return String, either uri or literal lexical form
+         */
+        private static String getString(RDFNode n) {
+            if (n.isURIResource())
+                return n.asResource().getURI();
+            if (n.isLiteral())
+                return n.asLiteral().getString();
+            throw new IllegalArgumentException("Can work only with uri or literal nodes: " + n);
         }
 
         @Override
-        public int hashCode() {
-            return this.dbValue.hashCode() ^ this.rdfValue.hashCode();
+        public EntryImpl setURI(String uri) {
+            return setURI(D2RQ.rdfValue, uri);
         }
 
         @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (!(other instanceof Entry)) return false;
-            Entry p = (Entry) other;
-            return this.dbValue.equals(p.dbValue) && this.rdfValue.equals(p.rdfValue);
+        public EntryImpl setLiteral(String value) {
+            return setLiteral(D2RQ.rdfValue, value);
+        }
+
+        @Override
+        public EntryImpl setDatabaseValue(String value) {
+            return setLiteral(D2RQ.databaseValue, value);
+        }
+
+        @Override
+        public TranslationTable getTable() {
+            List<Resource> res = mustHaveModel().listResourcesWithProperty(D2RQ.translation, resource).toList();
+            if (res.size() != 1) throw new IllegalStateException("Can't find d2rq:TranslationTable for " + toString());
+            return mapping.asTranslationTable(res.get(0));
+        }
+
+        @Override
+        public String getRDFValue() {
+            return findFirst(D2RQ.rdfValue, Statement::getObject)
+                    .map(EntryImpl::getString)
+                    .orElse(null);
+        }
+
+        @Override
+        public String getDatabaseValue() {
+            return findString(D2RQ.databaseValue).orElse(null);
+        }
+
+        @Override
+        public void validate() throws D2RQException {
+            Validator v = new Validator(this);
+            v.forProperty(D2RQ.rdfValue)
+                    .requireExists(D2RQException.TRANSLATION_MISSING_RDFVALUE)
+                    .requireHasNoDuplicates(D2RQException.UNSPECIFIED)
+                    .requireIsNotAnonymous(D2RQException.UNSPECIFIED);
+            v.forProperty(D2RQ.databaseValue)
+                    .requireExists(D2RQException.TRANSLATION_MISSING_DBVALUE)
+                    .requireHasNoDuplicates(D2RQException.UNSPECIFIED)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
         }
 
         @Override
         public String toString() {
-            return String.format("'%s'=>'%s'", this.dbValue, this.rdfValue);
-        }
-    }
-
-    private class TableTranslator implements Translator {
-        private Map<String, String> translationsByDBValue = new HashMap<>();
-        private Map<String, String> translationsByRDFValue = new HashMap<>();
-
-        <X> TableTranslator(Collection<X> map, Function<X, String> key, Function<X, String> value) {
-            for (X p : map) {
-                translationsByDBValue.put(key.apply(p), value.apply(p));
-                translationsByRDFValue.put(value.apply(p), key.apply(p));
-            }
-        }
-
-        @Override
-        public String toDBValue(String rdfValue) {
-            return translationsByRDFValue.get(rdfValue);
-        }
-
-        @Override
-        public String toRDFValue(String dbValue) {
-            return translationsByDBValue.get(dbValue);
+            return String.format("d2rq:translation [%s <=> %s]", getDatabaseValue(), getRDFValue());
         }
     }
 }

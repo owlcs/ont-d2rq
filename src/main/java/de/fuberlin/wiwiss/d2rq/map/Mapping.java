@@ -41,21 +41,47 @@ public interface Mapping extends AutoCloseable {
     Database createDatabase(String uri);
 
     /**
+     * Creates a {@code d2rq:TranslationTable} typed resource and wraps it as {@link TranslationTable}.
+     *
+     * @param uri a resource uri, can be {@code null} for anonymous resource
+     * @return {@link TranslationTable}, not {@code null}
+     * @see <a href='http://d2rq.org/d2rq-language#translationtable'>7. Translating values (d2rq:TranslationTable)</a>
+     */
+    TranslationTable createTranslationTable(String uri);
+
+    /**
      * Lists all {@link Database Database}s in the mapping graph.
-     * Each mapping database corresponds the type {@code d2rq:Database}.
+     * Each mapping database corresponds the {@code d2rq:Database} type.
      *
      * @return Stream of {@link Database}s
      */
     Stream<Database> listDatabases();
 
     /**
-     * Appends the specified database map object into the mapping.
-     * No op in case the {@link Database} is already present.
+     * Lists all {@link TranslationTable Translation Table}s that are declared in the mapping graph.
+     * Each mapping translation table corresponds the {@code d2rq:TranslationTable} type.
+     *
+     * @return Stream of {@link TranslationTable}s
+     */
+    Stream<TranslationTable> listTranslationTables();
+
+    /**
+     * Appends the specified database {@link MapObject map object} into the mapping.
+     * No op in case the given {@link Database} is already present in the graph.
      *
      * @param database {@link Database}, not {@code null}
      * @return this mapping model to allow cascading calls
      */
     Mapping addDatabase(Database database);
+
+    /**
+     * Appends the specified translation table {@link MapObject map object} into the mapping.
+     * No op in case the given {@link TranslationTable} is already present in the graph.
+     *
+     * @param table {@link TranslationTable}, not {@code null}
+     * @return this mapping model to allow cascading calls
+     */
+    Mapping addTranslationTable(TranslationTable table);
 
     // todo: should accept String, not Resource
     ClassMap createClassMap(Resource r);
@@ -68,27 +94,23 @@ public interface Mapping extends AutoCloseable {
     // todo: should accept String, not Resource
     PropertyBridge createPropertyBridge(Resource r);
 
-    TranslationTable createTranslationTable(String uri);
-
-    Stream<TranslationTable> listTranslationTables();
-
     // todo: should accept String, not Resource
     DownloadMap createDownloadMap(Resource r);
 
     Stream<DownloadMap> listDownloadMaps();
 
-    // todo: hide from the interface
+    // todo: hide from this interface
     Collection<TripleRelation> compiledPropertyBridges();
 
     void validate();
 
-    // todo: hide from the interface
+    // todo: hide from the interface or remove at all
     void connect();
 
     void close();
 
     /**
-     * Finds the database with the given jdbc-uri.
+     * Finds a database with the given jdbc-uri.
      *
      * @param jdbcURL db connection string for looking for, not {@code null}
      * @return {@link Optional} of the {@link Database}, can be empty
@@ -104,10 +126,6 @@ public interface Mapping extends AutoCloseable {
 
     default DownloadMap findDownloadMap(Resource name) {
         return listDownloadMaps().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElse(null);
-    }
-
-    default TranslationTable findTranslationTable(Resource name) {
-        return listTranslationTables().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElse(null);
     }
 
     default Model getDataModel() {

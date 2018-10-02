@@ -14,7 +14,6 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -28,39 +27,42 @@ import java.util.HashSet;
 public class ParserTest {
     private final static String TABLE_URI = "http://example.org/map#table1";
 
-    private Model model;
-
-    @Before
-    public void setUp() {
-        this.model = ModelFactory.createDefaultModel();
-    }
-
     @Test
     public void testEmptyTranslationTable() {
-        Resource r = addTranslationTableResource();
-        Mapping mapping = MappingFactory.create(this.model, null);
-        TranslationTable table = mapping.findTranslationTable(r);
+        Model model = ModelFactory.createDefaultModel();
+        Mapping mapping = MappingFactory.create(model, null);
+        Resource r = addTranslationTableResource(model);
+        Assert.assertEquals(1, mapping.listTranslationTables().count());
+        TranslationTable table = findFirst(mapping);
         Assert.assertNotNull(table);
-        Assert.assertEquals(0, table.size());
+        Assert.assertEquals(r, table.asResource());
+        Assert.assertEquals(0, table.listTranslations().count());
     }
 
     @Test
     public void testGetSameTranslationTable() {
-        Resource r = addTranslationTableResource();
-        addTranslationResource(r, "foo", "bar");
-        Mapping mapping = MappingFactory.create(this.model, null);
-        TranslationTable table1 = mapping.findTranslationTable(r);
-        TranslationTable table2 = mapping.findTranslationTable(r);
-        Assert.assertSame(table1, table2);
+        Model model = ModelFactory.createDefaultModel();
+        Resource r = addTranslationTableResource(model);
+        Resource t = addTranslationResource(r, "foo1", "bar1");
+        Mapping mapping = MappingFactory.create(model, null);
+        TranslationTable table1 = findFirst(mapping);
+        TranslationTable table2 = findFirst(mapping);
+        Assert.assertNotSame(table1, table2);
+        Assert.assertEquals(table1, table2);
+        Resource translation1 = findFirst(table1).asResource();
+        Resource translation2 = findFirst(table2).asResource();
+        Assert.assertEquals(t, translation1);
+        Assert.assertEquals(t, translation2);
     }
 
     @Test
     public void testParseTranslationTable() {
-        Resource r = addTranslationTableResource();
+        Model model = ModelFactory.createDefaultModel();
+        Resource r = addTranslationTableResource(model);
         addTranslationResource(r, "foo", "bar");
-        Mapping mapping = MappingFactory.create(this.model, null);
-        TranslationTable table = mapping.findTranslationTable(r);
-        Assert.assertEquals(1, table.size());
+        Mapping mapping = MappingFactory.create(model, null);
+        TranslationTable table = findFirst(mapping, r);
+        Assert.assertEquals(1, table.listTranslations().count());
         Translator translator = table.asTranslator();
         Assert.assertEquals("bar", translator.toRDFValue("foo"));
     }
@@ -98,14 +100,14 @@ public class ParserTest {
     @Test
     public void testTranslationTableRDFValueCanBeLiteral() {
         Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
-        TranslationTable tt = m.findTranslationTable(ResourceFactory.createResource("http://example.org/tt"));
+        TranslationTable tt = findFirst(m, ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.asTranslator().toRDFValue("literal"));
     }
 
     @Test
     public void testTranslationTableRDFValueCanBeURI() {
         Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
-        TranslationTable tt = m.findTranslationTable(ResourceFactory.createResource("http://example.org/tt"));
+        TranslationTable tt = findFirst(m, ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.asTranslator().toRDFValue("uri"));
     }
 
@@ -139,16 +141,30 @@ public class ParserTest {
         Assert.assertTrue(d.getRelation().joinConditions().isEmpty());
     }
 
-    private Resource addTranslationTableResource() {
-        return this.model.createResource(TABLE_URI, D2RQ.TranslationTable);
+    private static Resource addTranslationTableResource(Model model) {
+        return model.createResource(TABLE_URI, D2RQ.TranslationTable);
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
-    private Resource addTranslationResource(Resource table, String dbValue, String rdfValue) {
-        Resource translation = this.model.createResource();
-        translation.addProperty(D2RQ.databaseValue, dbValue);
-        translation.addProperty(D2RQ.rdfValue, rdfValue);
-        table.addProperty(D2RQ.translation, translation);
-        return translation;
+
+    private static Resource addTranslationResource(Resource table, String dbValue, String rdfValue) {
+        Resource res = table.getModel().createResource()
+                .addProperty(D2RQ.databaseValue, dbValue)
+                .addProperty(D2RQ.rdfValue, rdfValue);
+        table.addProperty(D2RQ.translation, res);
+        return res;
+    }
+
+    private static TranslationTable.Entry findFirst(TranslationTable table) {
+        return table.listTranslations().findFirst().orElseThrow(AssertionError::new);
+    }
+
+
+    private static TranslationTable findFirst(Mapping mapping) {
+        return mapping.listTranslationTables().findFirst().orElseThrow(AssertionError::new);
+    }
+
+    private static TranslationTable findFirst(Mapping mapping, Resource resource) {
+        return mapping.listTranslationTables()
+                .filter(t -> resource.equals(t.asResource())).findFirst().orElseThrow(AssertionError::new);
     }
 }

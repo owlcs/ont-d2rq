@@ -17,8 +17,6 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 
-import java.util.List;
-
 /**
  * A d2rq:DownloadMap instance. This is a d2rq:ResourceMap
  * that must produce URIs, can refer to a d2rq:ClassMap to
@@ -51,14 +49,12 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
     @Override
     public DownloadMap setDatabase(Database database) {
         DatabaseImpl res = mapping.asDatabase(database.asResource()).copy(database);
-        setRDFNode(D2RQ.dataStorage, res.asResource());
-        return this;
+        return setRDFNode(D2RQ.dataStorage, res.asResource());
     }
 
     @Override
     public DatabaseImpl getDatabase() {
-        List<Resource> r = resource.listProperties(D2RQ.dataStorage).mapWith(Statement::getResource).toList();
-        return r.size() == 1 ? mapping.asDatabase(r.get(0)) : null;
+        return findFirst(D2RQ.dataStorage, Statement::getResource).map(mapping::asDatabase).orElse(null);
     }
 
     @Override

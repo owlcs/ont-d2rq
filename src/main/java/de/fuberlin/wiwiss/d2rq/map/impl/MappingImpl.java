@@ -46,7 +46,6 @@ public class MappingImpl implements Mapping {
     private final Map<Resource, ConnectedDB> connections = new HashMap<>();
 
     private final Map<Resource, ClassMapImpl> classMaps = new HashMap<>();
-    private final Map<Resource, TranslationTable> translationTables = new HashMap<>();
     private final Map<Resource, DownloadMap> downloadMaps = new HashMap<>();
     private final Model model;
 
@@ -112,9 +111,7 @@ public class MappingImpl implements Mapping {
         for (Database db : databases) {
             db.validate();
         }
-        for (TranslationTable table : translationTables.values()) {
-            table.validate();
-        }
+        listTranslationTables().forEach(MapObject::validate);
         List<ClassMap> classMapsWithoutProperties = new ArrayList<>(classMaps.values());
         for (ClassMap classMap : classMaps.values()) {
             classMap.validate();    // Also validates attached bridges
@@ -218,6 +215,21 @@ public class MappingImpl implements Mapping {
         return asTranslationTable(model.createResource(uri, D2RQ.TranslationTable));
     }
 
+    @Override
+    public MappingImpl addTranslationTable(TranslationTable table) {
+        asTranslationTable(table.asResource()).copy(table);
+        return this;
+    }
+
+    @Override
+    public Stream<TranslationTable> listTranslationTables() {
+        return Iter.asStream(translationTables()).map(Function.identity());
+    }
+
+    public ExtendedIterator<TranslationTableImpl> translationTables() {
+        return model.listResourcesWithProperty(RDF.type, D2RQ.TranslationTable).mapWith(this::asTranslationTable);
+    }
+
     public TranslationTableImpl asTranslationTable(Resource r) {
         return new TranslationTableImpl(r.inModel(model), this);
     }
@@ -270,20 +282,6 @@ public class MappingImpl implements Mapping {
     @Override
     public ClassMapImpl findClassMap(Resource name) {
         return this.classMaps.get(name);
-    }
-
-    public void addTranslationTable(TranslationTable table) {
-        this.translationTables.put(table.asResource(), table);
-    }
-
-    @Override
-    public Stream<TranslationTable> listTranslationTables() {
-        return translationTables.values().stream();
-    }
-
-    @Override
-    public TranslationTable findTranslationTable(Resource name) {
-        return this.translationTables.get(name);
     }
 
     public void addDownloadMap(DownloadMap downloadMap) {

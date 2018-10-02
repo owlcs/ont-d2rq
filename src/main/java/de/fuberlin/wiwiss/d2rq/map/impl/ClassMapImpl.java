@@ -37,14 +37,12 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     @Override
     public ClassMapImpl setDatabase(Database database) {
         DatabaseImpl res = mapping.asDatabase(database.asResource()).copy(database);
-        setRDFNode(D2RQ.dataStorage, res.asResource());
-        return this;
+        return setRDFNode(D2RQ.dataStorage, res.asResource());
     }
 
     @Override
     public DatabaseImpl getDatabase() {
-        List<Resource> r = resource.listProperties(D2RQ.dataStorage).mapWith(Statement::getResource).toList();
-        return r.size() == 1 ? mapping.asDatabase(r.get(0)) : null;
+        return findFirst(D2RQ.dataStorage, Statement::getResource).map(mapping::asDatabase).orElse(null);
     }
 
     @Override

@@ -34,9 +34,6 @@ import java.util.stream.Stream;
 @SuppressWarnings("WeakerAccess")
 public abstract class ResourceMap extends MapObjectImpl {
 
-    // These can be set on PropertyBridges and ClassMaps
-    private TranslationTable translateWith = null;
-
     // These can be set only on a PropertyBridge
     protected String column = null;
     protected String pattern = null;
@@ -134,15 +131,12 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public ResourceMap setTranslateWith(TranslationTable table) {
-        assertNotYetDefined(getTranslateWith(), D2RQ.translateWith,
-                D2RQException.RESOURCEMAP_DUPLICATE_TRANSLATEWITH);
-        assertArgumentNotNull(table, D2RQ.translateWith, D2RQException.RESOURCEMAP_INVALID_TRANSLATEWITH);
-        this.translateWith = table;
-        return this;
+        TranslationTableImpl res = mapping.asTranslationTable(table.asResource()).copy(table);
+        return setRDFNode(D2RQ.translateWith, res.asResource());
     }
 
-    public TranslationTable getTranslateWith() {
-        return translateWith;
+    public TranslationTableImpl getTranslateWith() {
+        return findFirst(D2RQ.translateWith, Statement::getResource).map(mapping::asTranslationTable).orElse(null);
     }
 
     public ResourceMap addJoin(String join) {
@@ -445,6 +439,17 @@ public abstract class ResourceMap extends MapObjectImpl {
             valueMaxLength
                     .requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_VALUEMAXLENGTH)
                     .requireIsIntegerLiteral(D2RQException.UNSPECIFIED);
+        }
+
+        Validator.ForProperty translateWith = v.forProperty(D2RQ.translateWith);
+        if (translateWith.exists()) {
+            translateWith
+                    .requireHasNoDuplicates(D2RQException.RESOURCEMAP_DUPLICATE_TRANSLATEWITH);
+            try {
+                getTranslateWith().validate();
+            } catch (D2RQException e) {
+                throw new D2RQException(e.getMessage(), D2RQException.RESOURCEMAP_INVALID_TRANSLATEWITH);
+            }
         }
     }
 

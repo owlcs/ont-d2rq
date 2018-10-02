@@ -62,9 +62,4 @@ public class TranslationTableParserTest {
         Collection<TranslationTableParser.Row> translations = new TranslationTableParser(url.toString()).parseTranslations();
         Assert.assertEquals(this.simpleTranslations, new HashSet<>(translations));
     }
-
-    private static Collection<TranslationTableParser.Row> parseTranslations(String name) {
-        URL url = TranslationTableParser.class.getResource(name);
-        return new TranslationTableParser(url.toString()).parseTranslations();
-    }
 }

@@ -27,13 +27,19 @@ import java.util.Properties;
 
 /**
  * Created by @szuev on 29.03.2018.
+ *
  * @see <a href='file:resources/db.properties'>db.properties</a>
  */
 public enum ConnectionData {
     /**
      * to set up DB use <a href='file:doc/example/iswc-mysql.sql'>iswc-mysql.sql</a>
      */
-    MYSQL,
+    MYSQL {
+        @Override
+        public String getDefaultDriver() {
+            return "com.mysql.jdbc.Driver";
+        }
+    },
     /**
      * to set up DB use <a href='file:doc/example/iswc-postgres.sql'>iswc-postgres.sql</a>
      */
@@ -49,6 +55,11 @@ public enum ConnectionData {
         protected void beforeDrop(Statement statement, String databaseName) throws SQLException {
             statement.executeUpdate(String.format("ALTER DATABASE %s CONNECTION LIMIT 0;", databaseName));
             statement.executeQuery(String.format("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '%s'", databaseName));
+        }
+
+        @Override
+        public String getDefaultDriver() {
+            return "org.postgresql.Driver";
         }
 
         @Override
@@ -82,9 +93,16 @@ public enum ConnectionData {
         return PROPERTIES.getProperty(prefix() + "password");
     }
 
+    public String getDriver() {
+        String k = prefix() + "driver";
+        return PROPERTIES.containsKey(k) ? PROPERTIES.getProperty(k) : getDefaultDriver();
+    }
+
     private String prefix() {
         return String.format("%s.", name().toLowerCase());
     }
+
+    abstract String getDefaultDriver();
 
     public D2RQGraphDocumentSource toDocumentSource(String dbName) {
         return toDocumentSource(DEFAULT_BASE_IRI, dbName);
@@ -214,16 +232,15 @@ public enum ConnectionData {
      * Creates a fresh database {@link MapObjectImpl}.
      *
      * @param mapping {@link Mapping}, not {@code null}
-     * @param uri  String, resource uri, not {@code null}
-     * @param name String, database name, not {@code null}
+     * @param uri     String, resource uri, not {@code null}
+     * @param name    String, database name, not {@code null}
      * @return {@link Database}
      */
     public Database createDatabaseMapObject(Mapping mapping, String uri, String name) {
-        Database res = mapping.createDatabase(Objects.requireNonNull(uri, "Null uri"));
-        res.setJDBCDSN(getJdbcIRI(Objects.requireNonNull(name, "Null name")).getIRIString());
-        res.setJDBCDriver(getDeclaringClass().getName());
-        res.setUsername(getUser());
-        res.setPassword(getPwd());
-        return res;
+        return mapping.createDatabase(Objects.requireNonNull(uri, "Null uri"))
+                .setJDBCDSN(getJdbcIRI(Objects.requireNonNull(name, "Null name")).getIRIString())
+                .setJDBCDriver(getDriver())
+                .setUsername(getUser())
+                .setPassword(getPwd());
     }
 }

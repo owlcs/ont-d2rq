@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class MappingTest {
@@ -92,14 +93,31 @@ public class MappingTest {
 
     @Test
     public void testDatabaseWithWrongDriverCausesValidationError() {
+        String driver = "nonexistent";
+        String uri = "jdbc:mysql:///db";
         Database d = MappingFactory.createEmpty().createDatabase("x")
-                .setJDBCDSN("jdbc:mysql:///db").setJDBCDriver("nonexistent");
+                .setJDBCDSN(uri).setJDBCDriver(driver);
+        Assert.assertEquals(driver, d.getJDBCDriver());
+        Assert.assertEquals(uri, d.getJDBCDSN());
         try {
             d.validate();
         } catch (D2RQException ex) {
+            Assert.assertTrue(ex.getMessage().contains(driver));
             Assert.assertEquals("Message: " + ex.getMessage(),
                     D2RQException.DATABASE_JDBCDRIVER_CLASS_NOT_FOUND, ex.errorCode());
         }
+        driver = MappingTest.class.getName();
+        d.setJDBCDriver(driver);
+        Assert.assertEquals(driver, d.getJDBCDriver());
+        Assert.assertEquals(uri, d.getJDBCDSN());
+        try {
+            d.validate();
+        } catch (D2RQException ex) {
+            Assert.assertTrue(ex.getMessage().contains(driver));
+            Assert.assertEquals("Message: " + ex.getMessage(),
+                    D2RQException.DATABASE_JDBCDRIVER_CLASS_NOT_FOUND, ex.errorCode());
+        }
+
     }
 
     @Test
@@ -117,5 +135,37 @@ public class MappingTest {
         Assert.assertEquals(Collections.singleton(classMap1),
                 m.listClassMaps().map(MapObject::asResource).collect(Collectors.toSet()));
         Assert.assertEquals(c, m.findClassMap(classMap1));
+    }
+
+    @Test
+    public void testAddDatabaseConnectionProperties() {
+        Database d = MappingFactory.createEmpty().createDatabase("db").putConnectionProperty("a", "b");
+        Properties properties = d.getConnectionProperties();
+        Assert.assertNotNull(properties);
+        Assert.assertEquals(1, properties.size());
+        Assert.assertEquals("b", properties.getProperty("a"));
+
+        d.putConnectionProperty("a", "c").putConnectionProperty("A", "X");
+        properties = d.getConnectionProperties();
+        Assert.assertEquals(2, properties.size());
+        Assert.assertEquals("c", properties.getProperty("a"));
+        Assert.assertEquals("X", properties.getProperty("A"));
+
+        Properties props = System.getProperties();
+        Assert.assertEquals(props.size() + 2, d.addConnectionProperties(props).getConnectionProperties().size());
+    }
+
+
+    @Test
+    public void testAddDatabaseColumns() {
+        Database d = MappingFactory.createEmpty().createDatabase("db")
+                .addColumn(Database.Column.NUMERIC, "Table.Col1")
+                .addColumn(Database.Column.NUMERIC, "Table.Col2")
+                .addColumn(Database.Column.NUMERIC, "Table.Col2")
+                .addColumn(Database.Column.TEXT, "Table.Col2");
+        Assert.assertEquals(2, d.columns(Database.Column.NUMERIC).count());
+        Assert.assertEquals(1, d.columns(Database.Column.TEXT).count());
+
+        Assert.assertEquals("Table.Col2", d.columns(Database.Column.TEXT).findFirst().orElseThrow(AssertionError::new));
     }
 }
