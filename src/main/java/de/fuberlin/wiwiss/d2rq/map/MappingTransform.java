@@ -1,12 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.map.impl.ResourceMap;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.util.Objects;
 
@@ -98,17 +97,15 @@ public class MappingTransform {
                     }
                 }
             }
-            for (Literal propertyLabel : map.getDefinitionLabels()) {
-                model.add(targetResource, RDFS.label, propertyLabel);
-            }
-            for (Literal propertyComment : map.getDefinitionComments()) {
-                model.add(targetResource, RDFS.comment, propertyComment);
-            }
-            for (Resource additionalProperty : map.getAdditionalDefinitionProperties()) {
-                Property property = additionalProperty.getProperty(D2RQ.propertyName).getResource().as(Property.class);
-                RDFNode object = additionalProperty.getProperty(D2RQ.propertyValue).getObject();
+            map.listLabels().forEach(p -> model.add(targetResource, RDFS.label, p));
+            map.listComments().forEach(p -> model.add(targetResource, RDFS.comment, p));
+            map.listAdditionalProperties().forEach(p -> {
+                // todo: should be annotation property:
+                Property property = //model.createResource(p.getName(), OWL.AnnotationProperty).as(Property.class);
+                        model.createResource(p.getName()).as(Property.class);
+                RDFNode object = p.getValue();
                 model.add(targetResource, property, object);
-            }
+            });
         }
 
     }

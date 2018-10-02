@@ -9,7 +9,7 @@ import java.util.Collection;
  * Created by @ssz on 26.09.2018.
  */
 public interface PropertyBridge extends MapObject,
-        HasURI<PropertyBridge>, HasSQL<PropertyBridge>, HasUnclassified<PropertyBridge> {
+        HasURI<PropertyBridge>, HasSQL<PropertyBridge>, HasUnclassified<PropertyBridge>, HasProperties<PropertyBridge> {
 
     void addProperty(Resource r);
 

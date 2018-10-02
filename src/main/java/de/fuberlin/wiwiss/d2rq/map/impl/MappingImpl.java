@@ -16,10 +16,10 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
-import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.jena.utils.Iter;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.io.IOException;
 import java.net.URI;
@@ -47,6 +47,7 @@ public class MappingImpl implements Mapping {
 
     private final Map<Resource, ClassMapImpl> classMaps = new HashMap<>();
     private final Map<Resource, DownloadMap> downloadMaps = new HashMap<>();
+
     private final Model model;
 
     private Configuration configuration;
@@ -100,41 +101,6 @@ public class MappingImpl implements Mapping {
     @Override
     public PrefixMapping getPrefixMapping() {
         return prefixes == null ? prefixes = MappingFactory.Prefixes.createSchemaPrefixes(model) : prefixes;
-    }
-
-    @Override
-    public void validate() throws D2RQException {
-        Set<Database> databases = listDatabases().collect(Collectors.toSet());
-        if (databases.isEmpty()) {
-            throw new D2RQException("No d2rq:Database defined in the mapping", D2RQException.MAPPING_NO_DATABASE);
-        }
-        for (Database db : databases) {
-            db.validate();
-        }
-        listTranslationTables().forEach(MapObject::validate);
-        List<ClassMap> classMapsWithoutProperties = new ArrayList<>(classMaps.values());
-        for (ClassMap classMap : classMaps.values()) {
-            classMap.validate();    // Also validates attached bridges
-            if (classMap.hasProperties()) {
-                classMapsWithoutProperties.remove(classMap);
-            }
-            for (PropertyBridge bridge : classMap.getPropertyBridges()) {
-                ClassMap refersToClassMap = bridge.getRefersToClassMap();
-                if (refersToClassMap != null) {
-                    classMapsWithoutProperties.remove(refersToClassMap);
-                }
-            }
-        }
-        if (!classMapsWithoutProperties.isEmpty()) {
-            throw new D2RQException(classMapsWithoutProperties.iterator().next().toString() +
-                    " has no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
-        }
-        for (DownloadMap dlm : downloadMaps.values()) {
-            dlm.validate();
-        }
-        for (TripleRelation bridge : compiledPropertyBridges()) {
-            new AttributeTypeValidator(bridge).validate();
-        }
     }
 
     /**
@@ -235,6 +201,30 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
+    public AdditionalPropertyImpl createAdditionalProperty(String uri) {
+        return asAdditionalProperty(model.createResource(uri, D2RQ.AdditionalProperty));
+    }
+
+    @Override
+    public MappingImpl addAdditionalProperty(AdditionalProperty property) {
+        asAdditionalProperty(property.asResource()).copy(property);
+        return this;
+    }
+
+    @Override
+    public Stream<AdditionalProperty> listAdditionalProperties() {
+        return Iter.asStream(additionalProperties()).map(Function.identity());
+    }
+
+    public ExtendedIterator<AdditionalPropertyImpl> additionalProperties() {
+        return model.listResourcesWithProperty(RDF.type, D2RQ.AdditionalProperty).mapWith(this::asAdditionalProperty);
+    }
+
+    public AdditionalPropertyImpl asAdditionalProperty(Resource r) {
+        return new AdditionalPropertyImpl(r.inModel(model), this);
+    }
+
+    @Override
     public DownloadMapImpl createDownloadMap(Resource r) {
         return new DownloadMapImpl(r.inModel(model), this);
     }
@@ -330,11 +320,49 @@ public class MappingImpl implements Mapping {
         }
     }
 
+
+    @Override
+    public void validate() throws D2RQException {
+        Set<Database> databases = listDatabases().collect(Collectors.toSet());
+        if (databases.isEmpty()) {
+            throw new D2RQException("No d2rq:Database defined in the mapping", D2RQException.MAPPING_NO_DATABASE);
+        }
+        for (Database db : databases) {
+            db.validate();
+        }
+        listTranslationTables().forEach(MapObject::validate);
+        listAdditionalProperties().forEach(MapObject::validate);
+
+        List<ClassMap> classMapsWithoutProperties = new ArrayList<>(classMaps.values());
+        for (ClassMap classMap : classMaps.values()) {
+            classMap.validate();    // Also validates attached bridges
+            if (classMap.hasProperties()) {
+                classMapsWithoutProperties.remove(classMap);
+            }
+            for (PropertyBridge bridge : classMap.getPropertyBridges()) {
+                ClassMap refersToClassMap = bridge.getRefersToClassMap();
+                if (refersToClassMap != null) {
+                    classMapsWithoutProperties.remove(refersToClassMap);
+                }
+            }
+        }
+        if (!classMapsWithoutProperties.isEmpty()) {
+            throw new D2RQException(classMapsWithoutProperties.iterator().next().toString() +
+                    " has no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
+        }
+        for (DownloadMap dm : downloadMaps.values()) {
+            dm.validate();
+        }
+        for (TripleRelation bridge : compiledPropertyBridges()) {
+            new AttributeTypeValidator(bridge).validate();
+        }
+    }
+
     private class AttributeTypeValidator {
         private final Relation relation;
 
         AttributeTypeValidator(TripleRelation relation) {
-            this.relation = relation.baseRelation();
+            this.relation = Objects.requireNonNull(relation.baseRelation());
         }
 
         void validate() {
@@ -354,5 +382,6 @@ public class MappingImpl implements Mapping {
             }
         }
     }
+
 
 }

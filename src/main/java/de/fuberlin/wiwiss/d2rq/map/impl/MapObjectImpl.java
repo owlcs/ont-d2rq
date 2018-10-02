@@ -124,6 +124,10 @@ public abstract class MapObjectImpl implements MapObject {
         return listStrings(property).toList();
     }
 
+    protected ExtendedIterator<Literal> listLiterals(Property property) {
+        return resource.listProperties(property).mapWith(Statement::getLiteral);
+    }
+
     protected ExtendedIterator<String> listStrings(Property property) throws NullPointerException, HasNoModelException, LiteralRequiredException {
         return resource.listProperties(Objects.requireNonNull(property)).mapWith(Statement::getString);
     }
@@ -167,7 +171,7 @@ public abstract class MapObjectImpl implements MapObject {
 
     @Override
     public int hashCode() {
-        return Objects.hash(resource);
+        return Objects.hashCode(resource);
     }
 
     /**

@@ -42,6 +42,7 @@ public class D2RQ {
      */
     public static final Property additionalClassDefinitionProperty = property("additionalClassDefinitionProperty");
 
+    @Deprecated
     public static final Property additionalProperty = property("additionalProperty");
 
     /**

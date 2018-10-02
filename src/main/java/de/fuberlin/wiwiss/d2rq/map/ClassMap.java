@@ -11,7 +11,7 @@ import java.util.Collection;
  * Created by @ssz on 26.09.2018.
  */
 public interface ClassMap extends MapObject,
-        HasDatabase<ClassMap>, HasURI<ClassMap>, HasSQL<ClassMap>, HasUnclassified<ClassMap> {
+        HasDatabase<ClassMap>, HasURI<ClassMap>, HasSQL<ClassMap>, HasUnclassified<ClassMap>, HasProperties<ClassMap> {
 
     // todo: remove from this interface
     NodeMaker nodeMaker();

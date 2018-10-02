@@ -49,6 +49,16 @@ public interface Mapping extends AutoCloseable {
      */
     TranslationTable createTranslationTable(String uri);
 
+
+    /**
+     * Creates a {@code d2rq:AdditionalProperty} typed resource and wraps it as {@link AdditionalProperty}.
+     *
+     * @param uri a resource uri, can be {@code null} for anonymous resource
+     * @return {@link AdditionalProperty}, not {@code null}
+     * @see <a href='http://d2rq.org/d2rq-language#additionalproperty'>9.2 AdditionalProperty</a>
+     */
+    AdditionalProperty createAdditionalProperty(String uri);
+
     /**
      * Lists all {@link Database Database}s in the mapping graph.
      * Each mapping database corresponds the {@code d2rq:Database} type.
@@ -64,6 +74,13 @@ public interface Mapping extends AutoCloseable {
      * @return Stream of {@link TranslationTable}s
      */
     Stream<TranslationTable> listTranslationTables();
+
+    /**
+     * Lists all {@link AdditionalProperty}s.
+     *
+     * @return Stream of {@link AdditionalProperty}s
+     */
+    Stream<AdditionalProperty> listAdditionalProperties();
 
     /**
      * Appends the specified database {@link MapObject map object} into the mapping.
@@ -82,6 +99,15 @@ public interface Mapping extends AutoCloseable {
      * @return this mapping model to allow cascading calls
      */
     Mapping addTranslationTable(TranslationTable table);
+
+    /**
+     * Appends the specified additional property {@link MapObject map object} into the mapping.
+     * No op in case the given {@link AdditionalProperty} is already present in the graph.
+     *
+     * @param prop {@link AdditionalProperty}, not {@code null}
+     * @return this mapping model to allow cascading calls
+     */
+    Mapping addAdditionalProperty(AdditionalProperty prop);
 
     // todo: should accept String, not Resource
     ClassMap createClassMap(Resource r);

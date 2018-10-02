@@ -153,6 +153,7 @@ public class MapParser {
         while (stmts.hasNext()) {
             classMap.addClass(stmts.nextStatement().getSubject());
         }
+        // todo: legacy ?:
         stmts = r.listProperties(D2RQ.additionalProperty);
         while (stmts.hasNext()) {
             Resource additionalProperty = stmts.nextStatement().getResource();
@@ -161,19 +162,6 @@ public class MapParser {
             bridge.addProperty(additionalProperty.getProperty(D2RQ.propertyName).getResource());
             bridge.setConstantValue(additionalProperty.getProperty(D2RQ.propertyValue).getObject());
             classMap.addPropertyBridge(bridge);
-        }
-        stmts = r.listProperties(D2RQ.classDefinitionLabel);
-        while (stmts.hasNext()) {
-            classMap.addDefinitionLabel(stmts.nextStatement().getLiteral());
-        }
-        stmts = r.listProperties(D2RQ.classDefinitionComment);
-        while (stmts.hasNext()) {
-            classMap.addDefinitionComment(stmts.nextStatement().getLiteral());
-        }
-        stmts = r.listProperties(D2RQ.additionalClassDefinitionProperty);
-        while (stmts.hasNext()) {
-            Resource additionalProperty = stmts.nextStatement().getResource();
-            classMap.addDefinitionProperty(additionalProperty);
         }
     }
 
@@ -241,19 +229,6 @@ public class MapParser {
         stmts = this.model.listStatements(null, D2RQ.propertyBridge, r);
         while (stmts.hasNext()) {
             bridge.addProperty(stmts.nextStatement().getSubject());
-        }
-        stmts = r.listProperties(D2RQ.propertyDefinitionLabel);
-        while (stmts.hasNext()) {
-            bridge.addDefinitionLabel(stmts.nextStatement().getLiteral());
-        }
-        stmts = r.listProperties(D2RQ.propertyDefinitionComment);
-        while (stmts.hasNext()) {
-            bridge.addDefinitionComment(stmts.nextStatement().getLiteral());
-        }
-        stmts = r.listProperties(D2RQ.additionalPropertyDefinitionProperty);
-        while (stmts.hasNext()) {
-            Resource additionalProperty = stmts.nextStatement().getResource();
-            bridge.addDefinitionProperty(additionalProperty);
         }
         stmts = r.listProperties(D2RQ.limit);
         while (stmts.hasNext()) {

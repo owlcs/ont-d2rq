@@ -5,6 +5,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.OrderSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.expr.AttributeExpr;
+import de.fuberlin.wiwiss.d2rq.map.AdditionalProperty;
 import de.fuberlin.wiwiss.d2rq.map.ClassMap;
 import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
 import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
@@ -15,6 +16,7 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
@@ -37,6 +39,36 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     @Override
     public PropertyBridgeImpl setURIPattern(String pattern) {
         return (PropertyBridgeImpl) super.setURIPattern(pattern);
+    }
+
+    @Override
+    public PropertyBridgeImpl addAdditionalProperty(AdditionalProperty property) {
+        return (PropertyBridgeImpl) super.addAdditionalProperty(property);
+    }
+
+    @Override
+    public PropertyBridgeImpl addComment(Literal value) {
+        return (PropertyBridgeImpl) super.addComment(value);
+    }
+
+    @Override
+    public PropertyBridgeImpl addLabel(Literal value) {
+        return (PropertyBridgeImpl) super.addLabel(value);
+    }
+
+    @Override
+    Property definitionLabelPredicate() {
+        return D2RQ.propertyDefinitionLabel;
+    }
+
+    @Override
+    Property definitionCommentPredicate() {
+        return D2RQ.propertyDefinitionComment;
+    }
+
+    @Override
+    Property additionalPropertyPredicate() {
+        return D2RQ.additionalPropertyDefinitionProperty;
     }
 
     @Override

@@ -4,6 +4,7 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.*;
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;
 import de.fuberlin.wiwiss.d2rq.expr.SQLExpression;
+import de.fuberlin.wiwiss.d2rq.map.AdditionalProperty;
 import de.fuberlin.wiwiss.d2rq.map.ClassMap;
 import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
@@ -23,9 +24,9 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -42,16 +43,58 @@ public abstract class ResourceMap extends MapObjectImpl {
     protected String lang = null;
     protected ClassMap refersToClassMap = null;
 
-    Collection<Literal> definitionLabels = new ArrayList<>();
-    Collection<Literal> definitionComments = new ArrayList<>();
-
-    /**
-     * List of D2RQ.AdditionalProperty
-     */
-    Collection<Resource> additionalDefinitionProperties = new ArrayList<>();
-
     public ResourceMap(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
+    }
+
+    public ResourceMap addAdditionalProperty(AdditionalProperty property) {
+        AdditionalPropertyImpl res = mapping.asAdditionalProperty(property.asResource()).copy(property);
+        return addRDFNode(additionalPropertyPredicate(), res.asResource());
+    }
+
+    public Stream<AdditionalProperty> listAdditionalProperties() {
+        return Iter.asStream(additionalProperties()).map(Function.identity());
+    }
+
+    public ExtendedIterator<AdditionalPropertyImpl> additionalProperties() {
+        return resource.listProperties(additionalPropertyPredicate())
+                .mapWith(s -> mapping.asAdditionalProperty(s.getResource()));
+    }
+
+    public ResourceMap addComment(Literal value) {
+        return addRDFNode(definitionCommentPredicate(), value);
+    }
+
+    public Stream<Literal> listComments() {
+        return Iter.asStream(comments());
+    }
+
+    public ExtendedIterator<Literal> comments() {
+        return listLiterals(definitionCommentPredicate());
+    }
+
+    public ResourceMap addLabel(Literal value) {
+        return addRDFNode(definitionLabelPredicate(), value);
+    }
+
+    public Stream<Literal> listLabels() {
+        return Iter.asStream(labels());
+    }
+
+    public ExtendedIterator<Literal> labels() {
+        return listLiterals(definitionLabelPredicate());
+    }
+
+    Property definitionLabelPredicate() {
+        throw new IllegalStateException();
+    }
+
+    Property definitionCommentPredicate() {
+        throw new IllegalStateException();
+    }
+
+    Property additionalPropertyPredicate() {
+        throw new IllegalStateException();
     }
 
     public ResourceMap setBNodeIdColumns(String columns) {
@@ -451,29 +494,5 @@ public abstract class ResourceMap extends MapObjectImpl {
                 throw new D2RQException(e.getMessage(), D2RQException.RESOURCEMAP_INVALID_TRANSLATEWITH);
             }
         }
-    }
-
-    public Collection<Literal> getDefinitionLabels() {
-        return definitionLabels;
-    }
-
-    public Collection<Literal> getDefinitionComments() {
-        return definitionComments;
-    }
-
-    public Collection<Resource> getAdditionalDefinitionProperties() {
-        return additionalDefinitionProperties;
-    }
-
-    public void addDefinitionLabel(Literal definitionLabel) {
-        definitionLabels.add(definitionLabel);
-    }
-
-    public void addDefinitionComment(Literal definitionComment) {
-        definitionComments.add(definitionComment);
-    }
-
-    public void addDefinitionProperty(Resource additionalProperty) {
-        additionalDefinitionProperties.add(additionalProperty);
     }
 }

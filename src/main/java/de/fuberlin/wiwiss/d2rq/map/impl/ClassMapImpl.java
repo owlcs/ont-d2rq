@@ -3,15 +3,10 @@ package de.fuberlin.wiwiss.d2rq.map.impl;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
-import de.fuberlin.wiwiss.d2rq.map.ClassMap;
-import de.fuberlin.wiwiss.d2rq.map.Database;
-import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
+import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 
 import java.util.ArrayList;
@@ -43,6 +38,36 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     @Override
     public DatabaseImpl getDatabase() {
         return findFirst(D2RQ.dataStorage, Statement::getResource).map(mapping::asDatabase).orElse(null);
+    }
+
+    @Override
+    public ClassMapImpl addAdditionalProperty(AdditionalProperty property) {
+        return (ClassMapImpl) super.addAdditionalProperty(property);
+    }
+
+    @Override
+    public ClassMapImpl addComment(Literal value) {
+        return (ClassMapImpl) super.addComment(value);
+    }
+
+    @Override
+    public ClassMapImpl addLabel(Literal value) {
+        return (ClassMapImpl) super.addLabel(value);
+    }
+
+    @Override
+    Property definitionLabelPredicate() {
+        return D2RQ.classDefinitionLabel;
+    }
+
+    @Override
+    Property definitionCommentPredicate() {
+        return D2RQ.classDefinitionComment;
+    }
+
+    @Override
+    Property additionalPropertyPredicate() {
+        return D2RQ.additionalClassDefinitionProperty;
     }
 
     @Override
