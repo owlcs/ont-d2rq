@@ -6,6 +6,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.AliasMap.Alias;
 import de.fuberlin.wiwiss.d2rq.expr.SQLExpression;
 import de.fuberlin.wiwiss.d2rq.map.AdditionalProperty;
 import de.fuberlin.wiwiss.d2rq.map.ClassMap;
+import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
 import de.fuberlin.wiwiss.d2rq.nodes.FixedNodeMaker;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
@@ -35,11 +36,22 @@ import java.util.stream.Stream;
 @SuppressWarnings("WeakerAccess")
 public abstract class ResourceMap extends MapObjectImpl {
 
-    // These can be set only on a PropertyBridge
+    // d2rq:refersToClassMap is only for PropertyBridge (todo: this cache will be removed)
     protected ClassMap refersToClassMap = null;
+    // d2rq:belongsToClassMap is for PropertyBridge and DownloadMap (todo: this cache will be removed)
+    protected ClassMap belongsToClassMap = null;
 
     public ResourceMap(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
+    }
+
+    public ResourceMap setDatabase(Database database) {
+        DatabaseImpl res = mapping.asDatabase(database.asResource()).copy(database);
+        return setRDFNode(D2RQ.dataStorage, res.asResource());
+    }
+
+    public DatabaseImpl getDatabase() {
+        return findFirst(D2RQ.dataStorage, Statement::getResource).map(mapping::asDatabase).orElse(null);
     }
 
     public ResourceMap addAdditionalProperty(AdditionalProperty property) {
@@ -233,7 +245,7 @@ public abstract class ResourceMap extends MapObjectImpl {
         return findString(D2RQ.lang).orElse(null);
     }
 
-    public boolean isContainsDuplicates() {
+    public boolean containsDuplicates() {
         return getBoolean(D2RQ.containsDuplicates, false);
     }
 
@@ -245,8 +257,12 @@ public abstract class ResourceMap extends MapObjectImpl {
         return refersToClassMap;
     }
 
+    public ClassMap getBelongsToClassMap() {
+        return belongsToClassMap;
+    }
+
     public RelationBuilder relationBuilder(ConnectedDB cd) {
-        return relationBuilder(cd, isContainsDuplicates());
+        return relationBuilder(cd, containsDuplicates());
     }
 
     public RelationBuilder relationBuilder(ConnectedDB cd, boolean containsDuplicates) {
@@ -272,7 +288,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     protected abstract Relation buildRelation();
 
     public NodeMaker nodeMaker() {
-        boolean isUnique = !isContainsDuplicates();
+        boolean isUnique = !containsDuplicates();
         RDFNode constantValue = getConstantValue();
         if (constantValue != null) {
             return new FixedNodeMaker(constantValue.asNode(), isUnique);
@@ -383,7 +399,8 @@ public abstract class ResourceMap extends MapObjectImpl {
         return result;
     }
 
-    protected void assertHasPrimarySpec(Property... allowedSpecs) { // todo:
+    @Deprecated // todo: delete
+    protected void assertHasPrimarySpec(Property... allowedSpecs) {
         List<Property> definedSpecs = new ArrayList<>();
         for (Property p : allowedSpecs) {
             if (hasPrimarySpec(p)) {

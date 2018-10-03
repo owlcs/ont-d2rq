@@ -54,13 +54,6 @@ public abstract class MapObjectImpl implements MapObject {
         throw new D2RQException("Duplicate " + PrettyPrinter.toString(property) + " for " + this, errorCode);
     }
 
-    protected void assertHasBeenDefined(Object object, Property property, int errorCode) {
-        if (object != null) {
-            return;
-        }
-        throw new D2RQException("Missing " + PrettyPrinter.toString(property) + " for " + this, errorCode);
-    }
-
     protected void assertArgumentNotNull(Object object, Property property, int errorCode) {
         if (object != null) {
             return;
@@ -120,16 +113,20 @@ public abstract class MapObjectImpl implements MapObject {
         return findFirst(property, s -> s.getLiteral().getBoolean()).orElse(defaultValue);
     }
 
+    protected Integer getInteger(Property property, Integer defaultValue) {
+        return findFirst(property, s -> s.getLiteral().getInt()).orElse(defaultValue);
+    }
+
     protected List<String> getStrings(Property property) throws NullPointerException, HasNoModelException, LiteralRequiredException {
         return listStrings(property).toList();
     }
 
     protected ExtendedIterator<Literal> listLiterals(Property property) {
-        return resource.listProperties(property).mapWith(Statement::getLiteral);
+        return listStatements(property).mapWith(Statement::getLiteral);
     }
 
     protected ExtendedIterator<String> listStrings(Property property) throws NullPointerException, HasNoModelException, LiteralRequiredException {
-        return resource.listProperties(Objects.requireNonNull(property)).mapWith(Statement::getString);
+        return listStatements(property).mapWith(Statement::getString);
     }
 
     protected Optional<String> findURI(Property property) throws NullPointerException, HasNoModelException, ResourceRequiredException {
@@ -142,12 +139,16 @@ public abstract class MapObjectImpl implements MapObject {
 
     protected <X> Optional<X> findFirst(Property property,
                                         Function<Statement, X> extract) throws NullPointerException, HasNoModelException {
-        ExtendedIterator<Statement> res = resource.listProperties(Objects.requireNonNull(property, "Null property"));
+        ExtendedIterator<Statement> res = listStatements(property);
         try {
             return !res.hasNext() ? Optional.empty() : Optional.of(res.next()).map(extract);
         } finally {
             res.close();
         }
+    }
+
+    protected ExtendedIterator<Statement> listStatements(Property predicate) {
+        return resource.listProperties(Objects.requireNonNull(predicate, "Null predicate"));
     }
 
     public Model mustHaveModel() throws HasNoModelException {

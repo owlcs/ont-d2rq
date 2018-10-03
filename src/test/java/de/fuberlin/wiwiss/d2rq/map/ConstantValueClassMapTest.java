@@ -29,7 +29,7 @@ public class ConstantValueClassMapTest {
         Model m = classMap.asResource().getModel();
         PropertyBridge result = mapping.createPropertyBridge(m.createResource());
         result.setBelongsToClassMap(classMap);
-        result.addProperty(m.createProperty(propertyURI));
+        result.addProperty(propertyURI);
         classMap.addPropertyBridge(result);
         return result;
     }

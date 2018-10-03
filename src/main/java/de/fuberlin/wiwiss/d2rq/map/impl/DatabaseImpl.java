@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 
 /**
- * Representation of a d2rq:Database from the mapping file.
+ * Representation of a {@code d2rq:Database} from the mapping file.
  *
  * @author Chris Bizer chris@bizer.de
  * @author Richard Cyganiak (richard@cyganiak.de)
@@ -156,7 +156,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
 
     @Override
     public int getResultSizeLimit() {
-        return findFirst(D2RQ.resultSizeLimit, s -> s.getLiteral().getInt()).orElse(NO_LIMIT);
+        return getInteger(D2RQ.resultSizeLimit, NO_LIMIT);
     }
 
     @Override
@@ -166,7 +166,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
 
     @Override
     public int getFetchSize() {
-        return findFirst(D2RQ.fetchSize, s -> s.getLiteral().getInt()).filter(s -> s >= 0).orElse(NO_FETCH_SIZE);
+        return getInteger(D2RQ.fetchSize, NO_FETCH_SIZE);
     }
 
     @Override

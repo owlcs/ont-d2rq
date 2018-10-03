@@ -23,7 +23,7 @@ public abstract class DatatypeTestBase {
     private final static String dbURI = EX + "db";
     private final static Resource classMapURI = ResourceFactory.createResource(EX + "classmap");
     private final static Resource propertyBridgeURI = ResourceFactory.createResource(EX + "propertybridge");
-    private final static Resource valueProperty = ResourceFactory.createProperty(EX + "value");
+    private final static String valueProperty = EX + "value";
 
     private String jdbcURL;
     private String driver;
@@ -59,7 +59,7 @@ public abstract class DatatypeTestBase {
             Statement stmt = db.connection().createStatement();
             try {
                 for (String table : allTables()) {
-                    stmt.execute("DROP TABLE " + table);
+                    stmt.execute(String.format("DROP TABLE %s", table));
                 }
             } finally {
                 db.vendor().beforeClose(db.connection());

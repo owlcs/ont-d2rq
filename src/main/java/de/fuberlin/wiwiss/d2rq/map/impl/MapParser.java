@@ -145,21 +145,18 @@ public class MapParser {
 
     private void parseClassMap(ClassMapImpl classMap, Resource r) {
         StmtIterator stmts;
-        stmts = r.listProperties(D2RQ.clazz);
-        while (stmts.hasNext()) {
-            classMap.addClass(stmts.nextStatement().getResource());
-        }
+        // todo: legacy:
         stmts = this.model.listStatements(null, D2RQ.classMap, r);
         while (stmts.hasNext()) {
             classMap.addClass(stmts.nextStatement().getSubject());
         }
-        // todo: legacy ?:
+        // todo: legacy:
         stmts = r.listProperties(D2RQ.additionalProperty);
         while (stmts.hasNext()) {
             Resource additionalProperty = stmts.nextStatement().getResource();
             PropertyBridgeImpl bridge = mapping.createPropertyBridge(r);
             bridge.setBelongsToClassMap(classMap);
-            bridge.addProperty(additionalProperty.getProperty(D2RQ.propertyName).getResource());
+            bridge.addProperty(additionalProperty.getProperty(D2RQ.propertyName).getResource().getURI());
             bridge.setConstantValue(additionalProperty.getProperty(D2RQ.propertyValue).getObject());
             classMap.addPropertyBridge(bridge);
         }
@@ -204,33 +201,10 @@ public class MapParser {
             Resource classMapResource = stmts.nextStatement().getResource();
             bridge.setRefersToClassMap(this.mapping.findClassMap(classMapResource));
         }
-        stmts = r.listProperties(D2RQ.dynamicProperty);
-        while (stmts.hasNext()) {
-            bridge.addDynamicProperty(stmts.next().getString());
-        }
-        stmts = r.listProperties(D2RQ.property);
-        while (stmts.hasNext()) {
-            bridge.addProperty(stmts.nextStatement().getResource());
-        }
+        // todo: legacy:
         stmts = this.model.listStatements(null, D2RQ.propertyBridge, r);
         while (stmts.hasNext()) {
-            bridge.addProperty(stmts.nextStatement().getSubject());
-        }
-        stmts = r.listProperties(D2RQ.limit);
-        while (stmts.hasNext()) {
-            bridge.setLimit(stmts.nextStatement().getInt());
-        }
-        stmts = r.listProperties(D2RQ.limitInverse);
-        while (stmts.hasNext()) {
-            bridge.setLimitInverse(stmts.nextStatement().getInt());
-        }
-        stmts = r.listProperties(D2RQ.orderDesc);
-        while (stmts.hasNext()) {
-            bridge.setOrder(stmts.nextStatement().getString(), true);
-        }
-        stmts = r.listProperties(D2RQ.orderAsc);
-        while (stmts.hasNext()) {
-            bridge.setOrder(stmts.nextStatement().getString(), false);
+            bridge.addProperty(stmts.nextStatement().getSubject().getURI());
         }
     }
 
@@ -250,14 +224,6 @@ public class MapParser {
         stmts = r.listProperties(D2RQ.belongsToClassMap);
         while (stmts.hasNext()) {
             dm.setBelongsToClassMap(mapping.findClassMap(stmts.nextStatement().getResource()));
-        }
-        stmts = r.listProperties(D2RQ.contentDownloadColumn);
-        while (stmts.hasNext()) {
-            dm.setContentDownloadColumn(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.mediaType);
-        while (stmts.hasNext()) {
-            dm.setMediaType(stmts.nextStatement().getString());
         }
     }
 

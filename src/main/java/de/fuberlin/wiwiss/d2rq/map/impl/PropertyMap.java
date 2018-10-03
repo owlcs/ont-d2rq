@@ -56,7 +56,7 @@ public class PropertyMap {
         return res;
     }
 
-    public static void validate(ResourceMap map) {
+    public static void checkURIPattern(ResourceMap map) {
         String uriPattern = map.getURIPattern();
         if (uriPattern == null) return;
         if (!new PropertyMap(uriPattern).toPattern().attributes().isEmpty()) {

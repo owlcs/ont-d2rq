@@ -15,15 +15,13 @@ import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.Statement;
 
 /**
- * A d2rq:DownloadMap instance. This is a d2rq:ResourceMap
- * that must produce URIs, can refer to a d2rq:ClassMap to
- * provide further relation elements (joins, aliases, conditions),
- * and additionally has a d2rq:mediaType and d2rq:contentColumn.
- * <p>
- * Results can be retrieved via {@link #getContentDownloadColumn()},
+ * A {@code d2rq:DownloadMap} instance.
+ * This is a d2rq:ResourceMap that must produce URIs,
+ * can refer to a {@code d2rq:ClassMap} to provide further relation elements (joins, aliases, conditions),
+ * and additionally has a {@code d2rq:mediaType} and {@code d2rq:contentColumn}.
+ * Results can be retrieved via {@link #getContentDownloadColumnAttribute()},
  * {@link #getMediaTypeValueMaker()} (for the media type value make),
  * {@link #nodeMaker()} (for the URI spec),
  * and {@link #getRelation()}.
@@ -31,10 +29,6 @@ import org.apache.jena.rdf.model.Statement;
  * @author RichardCyganiak
  */
 public class DownloadMapImpl extends ResourceMap implements DownloadMap {
-
-    private ClassMap belongsToClassMap = null;
-    private String mediaType = null;
-    private Attribute contentDownloadColumn = null;
 
     public DownloadMapImpl(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
@@ -47,14 +41,8 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
     }
 
     @Override
-    public DownloadMap setDatabase(Database database) {
-        DatabaseImpl res = mapping.asDatabase(database.asResource()).copy(database);
-        return setRDFNode(D2RQ.dataStorage, res.asResource());
-    }
-
-    @Override
-    public DatabaseImpl getDatabase() {
-        return findFirst(D2RQ.dataStorage, Statement::getResource).map(mapping::asDatabase).orElse(null);
+    public DownloadMapImpl setDatabase(Database database) {
+        return (DownloadMapImpl) super.setDatabase(database);
     }
 
     @Override
@@ -92,44 +80,65 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
         return (DownloadMapImpl) super.addAlias(alias);
     }
 
-    public void setMediaType(String mediaType) {
-        assertNotYetDefined(this.mediaType, D2RQ.mediaType, D2RQException.DOWNLOADMAP_DUPLICATE_MEDIATYPE);
-        this.mediaType = mediaType;
+    @Override
+    public DownloadMapImpl setMediaType(String mediaType) {
+        return setLiteral(D2RQ.mediaType, mediaType);
     }
 
-    public void setContentDownloadColumn(String contentColumn) {
-        assertNotYetDefined(this.contentDownloadColumn, D2RQ.contentDownloadColumn, D2RQException.DOWNLOADMAP_DUPLICATE_CONTENTCOLUMN);
-        this.contentDownloadColumn = SQL.parseAttribute(contentColumn);
+    @Override
+    public String getMediaType() {
+        return findString(D2RQ.mediaType).orElse(null);
+    }
+
+    @Override
+    public DownloadMapImpl setContentDownloadColumn(String column) {
+        return setLiteral(D2RQ.contentDownloadColumn, column);
+    }
+
+    @Override
+    public String getContentDownloadColumn() {
+        return findString(D2RQ.contentDownloadColumn).orElse(null);
     }
 
     @Override
     public void validate() throws D2RQException {
         Validator v = new Validator(this);
-        Validator.ForProperty dbChecker = v.forProperty(D2RQ.dataStorage);
-        if (dbChecker.exists()) {
-            dbChecker.requireHasNoDuplicates(D2RQException.DOWNLOADMAP_DUPLICATE_DATABASE)
+        Validator.ForProperty dataStorage = v.forProperty(D2RQ.dataStorage);
+        if (dataStorage.exists()) {
+            dataStorage.requireHasNoDuplicates(D2RQException.DOWNLOADMAP_DUPLICATE_DATABASE)
                     .requireIsResource(D2RQException.DOWNLOADMAP_INVALID_DATABASE);
         } else {
+            ClassMap belongsToClassMap = getBelongsToClassMap();
             if (belongsToClassMap == null) {
                 throw new D2RQException("Download map " + toString() + " needs a d2rq:dataStorage (or d2rq:belongsToClassMap)",
                         D2RQException.DOWNLOADMAP_NO_DATASTORAGE);
             }
         }
+        Validator.ForProperty mediaType = v.forProperty(D2RQ.mediaType);
+        if (mediaType.exists()) {
+            mediaType.requireHasNoDuplicates(D2RQException.DOWNLOADMAP_DUPLICATE_MEDIATYPE)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
+        v.forProperty(D2RQ.contentDownloadColumn)
+                .requireExists(D2RQException.DOWNLOADMAP_NO_CONTENTCOLUMN)
+                .requireHasNoDuplicates(D2RQException.DOWNLOADMAP_DUPLICATE_CONTENTCOLUMN)
+                .requireIsStringLiteral(D2RQException.UNSPECIFIED);
         commonValidateURI();
         commonValidateSQLAdditions();
         commonValidateUnclassifiedAdditions();
         assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue);
-        assertHasBeenDefined(contentDownloadColumn, D2RQ.contentDownloadColumn, D2RQException.DOWNLOADMAP_NO_CONTENTCOLUMN);
         RDFNode constantValue = getConstantValue();
         if (constantValue != null && !constantValue.isURIResource()) {
             throw new D2RQException("d2rq:constantValue for download map " + toString() + " must be a URI",
                     D2RQException.DOWNLOADMAP_INVALID_CONSTANTVALUE);
         }
-        PropertyMap.validate(this);
+        PropertyMap.checkURIPattern(this);
     }
 
     @Override
     protected Relation buildRelation() {
+        Attribute contentDownloadColumn = getContentDownloadColumnAttribute();
+        ClassMap belongsToClassMap = getBelongsToClassMap();
         ConnectedDB db = mapping.getConnectedDB((belongsToClassMap == null ? getDatabase() : (DatabaseImpl) belongsToClassMap.getDatabase()));
         RelationBuilder builder = relationBuilder(db);
         builder.addProjection(contentDownloadColumn);
@@ -149,6 +158,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
     }
 
     public ValueMaker getMediaTypeValueMaker() {
+        String mediaType = getMediaType();
         if (mediaType == null) return ValueMaker.NULL;
         Pattern pattern = new Pattern(mediaType);
         if (pattern.attributes().isEmpty()) {
@@ -158,7 +168,8 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
     }
 
     @Override
-    public Attribute getContentDownloadColumn() {
-        return contentDownloadColumn;
+    public Attribute getContentDownloadColumnAttribute() {
+        String column = getContentDownloadColumn();
+        return column == null ? null : SQL.parseAttribute(column);
     }
 }

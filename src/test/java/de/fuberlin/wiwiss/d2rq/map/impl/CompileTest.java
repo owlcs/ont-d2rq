@@ -61,7 +61,7 @@ public class CompileTest {
         Model model = classMap.asResource().getModel();
         PropertyBridge res = mapping.createPropertyBridge(model.createResource());
         res.setBelongsToClassMap(classMap);
-        res.addProperty(model.createProperty(propertyURI));
+        res.addProperty(propertyURI);
         classMap.addPropertyBridge(res);
         return (PropertyBridgeImpl) res;
     }

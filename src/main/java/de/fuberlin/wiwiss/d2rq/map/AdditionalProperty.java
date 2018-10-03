@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 
 /**
@@ -25,11 +26,11 @@ public interface AdditionalProperty extends MapObject {
     AdditionalProperty setName(String uri);
 
     /**
-     * Returns an uri attached to the graph on property {@code d2rq:propertyName}.
+     * Returns an uri attached to the graph on the {@code d2rq:propertyName} predicate.
      *
-     * @return String or {@code null}
+     * @return {@link Property} or {@code null}
      */
-    String getName();
+    Property getName();
 
     /**
      * Sets {@code d2rq:propertyValue} property value, which can be any rdf-node.

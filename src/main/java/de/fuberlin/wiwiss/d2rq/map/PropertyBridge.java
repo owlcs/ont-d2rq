@@ -1,27 +1,92 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Property;
 
-import java.util.Collection;
+import java.util.stream.Stream;
 
 /**
+ * Representation of a {@code d2rq:PropertyBridge} from the mapping graph.
+ * <p>
  * Created by @ssz on 26.09.2018.
+ *
+ * @see <a href='http://d2rq.org/d2rq-language#propertybridge'>6. Adding properties to resources (d2rq:PropertyBridge)</a>
  */
 public interface PropertyBridge extends MapObject,
         HasURI<PropertyBridge>, HasSQL<PropertyBridge>, HasUnclassified<PropertyBridge>, HasProperties<PropertyBridge> {
 
-    void addProperty(Resource r);
+    /**
+     * Sets {@link ClassMap} for the {@code d2rq:refersToClassMap} predicate.
+     * For properties that correspond to a foreign key.
+     * References another {@link ClassMap d2rq:ClassMap}
+     * that creates the instances which are used as the values of this bridge.
+     * If these instances come from another table,
+     * then one or more {@code d2rq:join} properties must be specified to select the correct instances.
+     *
+     * @param c {@link ClassMap}, not {@code null}
+     * @return this bridge
+     */
+    PropertyBridge setRefersToClassMap(ClassMap c);
 
-    Collection<Resource> properties();
-
+    /**
+     * Returns {@link ClassMap} that is attached on the {@code d2rq:refersToClassMap} predicate.
+     *
+     * @return {@link ClassMap} or {@code null}
+     */
     ClassMap getRefersToClassMap();
 
-    void setRefersToClassMap(ClassMap c);
+    /**
+     * Specifies that the property bridge belongs to the given {@link ClassMap d2rq:ClassMap}.
+     * Must be specified for every property bridge.
+     *
+     * @param c {@link ClassMap}, not {@code null}
+     * @return this bridge
+     */
+    PropertyBridge setBelongsToClassMap(ClassMap c);
 
+    /**
+     * Returns {@link ClassMap} that is attached on the {@code d2rq:belongsToClassMap} predicate.
+     *
+     * @return {@link ClassMap} or {@code null}
+     */
     ClassMap getBelongsToClassMap();
 
-    void setBelongsToClassMap(ClassMap c);
+    /**
+     * Adds {@code d2rq:property} uri to the object.
+     * The RDF property that connects the ClassMap with the object or literal created by the bridge.
+     * Must be specified for every property bridge.
+     * If multiple {@code d2rq:property} are specified,
+     * then one triple with each property is generated per resource.
+     *
+     * @param uri String, not {@code null}
+     * @return this instance
+     */
+    PropertyBridge addProperty(String uri);
+
+    /**
+     * Lists all properties for the {@code d2rq:property} predicate.
+     *
+     * @return Stream of {@link Property}s
+     */
+    Stream<Property> listProperties();
+
+    /**
+     * Adds {@code d2rq:dynamicProperty} pattern to the object.
+     * The argument is an URI pattern that is used to generate the property at runtime.
+     * If multiple {@code d2rq:dynamicProperty} are specified,
+     * then one triple with each property is generated per resource.
+     *
+     * @param pattern String, not {@code null}
+     * @return this instance
+     */
+    PropertyBridge addDynamicProperty(String pattern);
+
+    /**
+     * Lists all patterns for the {@code d2rq:dynamicProperty} predicate.
+     *
+     * @return Stream of Strings
+     */
+    Stream<String> listDynamicProperties();
 
     /**
      * Sets {@code d2rq:sqlExpression} literal value.
@@ -115,6 +180,72 @@ public interface PropertyBridge extends MapObject,
     String getLang();
 
     /**
+     * Sets an integer value for the {@code d2rq:limit} predicate.
+     * That is the maximum number of results to retrieve from the database for this PropertyBridge.
+     * Also see {@link de.fuberlin.wiwiss.d2rq.vocab.D2RQ#resultSizeLimit d2rq:resultSizeLimit}.
+     *
+     * @param limit nonnegative integer number
+     * @return this instance
+     * @see Database#setResultSizeLimit(int)
+     */
+    PropertyBridge setLimit(int limit);
+
+    /**
+     * Returns the {@code d2rq:limit} literal int value.
+     *
+     * @return {@code Integer} or {@code null} if undefined
+     */
+    Integer getLimit();
+
+    /**
+     * Sets an integer value for the {@code d2rq:limitInverse} predicate.
+     * That is the maximum number of results to retrieve from the database
+     * for the inverse statements for this PropertyBridge.
+     *
+     * @param limit nonnegative integer number
+     * @return this instance
+     */
+    PropertyBridge setLimitInverse(int limit);
+
+    /**
+     * Returns the {@code d2rq:limitInverse} literal int value.
+     *
+     * @return {@code Integer} or {@code null} if undefined
+     */
+    Integer getLimitInverse();
+
+    /**
+     * Sets the column after which to sort results in
+     * ascending (if second parameter is {@code false}) or descending (if {@code desc = true}) order
+     * for this PropertyBridge.
+     * Useful when results are limited using {@code d2rq:limit}.
+     *
+     * @param column String column name, not {@code null}
+     * @param desc   {@code true} if desc, {@code false} is asc
+     * @return this instance
+     * @see #setLimit(int)
+     */
+    PropertyBridge setOrder(String column, boolean desc);
+
+    /**
+     * Returns the literal value for the {@code d2rq:orderDesc} or {@code d2rq:orderAsc} predicate,
+     * depending what is present in the RDF Graph.
+     *
+     * @return String or {@code null}
+     */
+    String getOrderColumn();
+
+    /**
+     * Answers {@code true} or {@code false}
+     * if the {@code d2rq:orderDesc} or {@code d2rq:ordersAsc} (respectively)
+     * is present inside model for this PropertyBridge.
+     * Returns {@code null} if none of them are found.
+     *
+     * @return boolean or {@code null} if undefined
+     */
+    Boolean getOrderDesc();
+
+    /**
      * Sets the given literal as {@code d2rq:constantValue}.
      *
      * @param literal {@link Literal}, not {@code null}
@@ -130,5 +261,9 @@ public interface PropertyBridge extends MapObject,
      * @see HasURI#setConstantValue(String)
      */
     PropertyBridge setConstantValue();
+
+    default PropertyBridge addProperty(Property p) {
+        return addProperty(p.getURI());
+    }
 
 }

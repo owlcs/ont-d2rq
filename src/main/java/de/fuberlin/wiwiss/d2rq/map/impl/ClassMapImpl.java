@@ -7,16 +7,18 @@ import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.RDF;
+import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 @SuppressWarnings("WeakerAccess")
 public class ClassMapImpl extends ResourceMap implements ClassMap {
 
-    private List<Resource> classes = new ArrayList<>();
     private List<PropertyBridge> propertyBridges = new ArrayList<>();
     private Collection<TripleRelation> compiledPropertyBridges = null;
 
@@ -25,19 +27,22 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     @Override
-    public Collection<Resource> getClasses() {
-        return classes;
+    public ClassMapImpl addClass(Resource clazz) {
+        return addRDFNode(D2RQ.clazz, clazz);
+    }
+
+    @Override
+    public Stream<Resource> listClasses() {
+        return Iter.asStream(classes());
+    }
+
+    public ExtendedIterator<Resource> classes() {
+        return listStatements(D2RQ.clazz).mapWith(Statement::getResource);
     }
 
     @Override
     public ClassMapImpl setDatabase(Database database) {
-        DatabaseImpl res = mapping.asDatabase(database.asResource()).copy(database);
-        return setRDFNode(D2RQ.dataStorage, res.asResource());
-    }
-
-    @Override
-    public DatabaseImpl getDatabase() {
-        return findFirst(D2RQ.dataStorage, Statement::getResource).map(mapping::asDatabase).orElse(null);
+        return (ClassMapImpl) super.setDatabase(database);
     }
 
     @Override
@@ -135,10 +140,6 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
         return (ClassMapImpl) super.setTranslateWith(table);
     }
 
-    public void addClass(Resource clazz) {
-        this.classes.add(clazz);
-    }
-
     @Override
     public void addPropertyBridge(PropertyBridge bridge) {
         this.propertyBridges.add(bridge);
@@ -171,16 +172,15 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
             throw new D2RQException("d2rq:constantValue for class map " + toString() + " must be a URI or blank node",
                     D2RQException.CLASSMAP_INVALID_CONSTANTVALUE);
         }
-        PropertyMap.validate(this);
+        PropertyMap.checkURIPattern(this);
         for (PropertyBridge bridge : getPropertyBridges()) {
             bridge.validate();
         }
         // TODO
     }
 
-    @Override
     public boolean hasProperties() {
-        return !getClasses().isEmpty() || !getPropertyBridges().isEmpty();
+        return listClasses().count() != 0 || !getPropertyBridges().isEmpty();
     }
 
     public Collection<TripleRelation> compiledPropertyBridges() {
@@ -195,13 +195,13 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
         for (PropertyBridge bridge : getPropertyBridges()) {
             this.compiledPropertyBridges.addAll(((PropertyBridgeImpl) bridge).toTripleRelations());
         }
-        for (Resource clazz : getClasses()) {
+        listClasses().forEach(clazz -> {
             PropertyBridgeImpl bridge = mapping.asPropertyBridge(mapping.asModel().createResource());
-            bridge.setBelongsToClassMap(this);
+            bridge.setBelongsToClassMap(ClassMapImpl.this);
             bridge.addProperty(RDF.type);
             bridge.setConstantValue(clazz);
-            this.compiledPropertyBridges.addAll(bridge.toTripleRelations());
-        }
+            ClassMapImpl.this.compiledPropertyBridges.addAll(bridge.toTripleRelations());
+        });
     }
 
     @Override

@@ -57,13 +57,9 @@ public class MappingTransform {
             mapping.listDatabases().forEach(d -> anon.addLiteral(RDFS.comment, "Database: <" + d.getJDBCDSN() + ">"));
 
             mapping.listClassMaps().forEach(classMap -> {
-                for (Resource clazz : classMap.getClasses()) {
-                    addDefinitions(model, (ResourceMap) classMap, clazz);
-                }
+                classMap.listClasses().forEach(c -> addDefinitions(model, (ResourceMap) classMap, c));
                 for (PropertyBridge bridge : classMap.getPropertyBridges()) {
-                    for (Resource property : bridge.properties()) {
-                        addDefinitions(model, (ResourceMap) bridge, property);
-                    }
+                    bridge.listProperties().forEach(p -> addDefinitions(model, (ResourceMap) bridge, p));
                     // TODO: What to do about dynamic properties?
                 }
             });
@@ -81,9 +77,7 @@ public class MappingTransform {
                 if (domain != null) {
                     if (range != null) { // if range != null -> object property (foreign key)
                         model.add(targetResource, RDF.type, OWL.ObjectProperty);
-                        for (Resource c : range.getClasses()) {
-                            model.add(targetResource, RDFS.range, c);
-                        }
+                        range.listClasses().forEach(c -> model.add(targetResource, RDFS.range, c));
                     }
                     if (column != null) { // if it has column -> data property (built-in properties has no column)
                         model.add(targetResource, RDF.type, OWL.DatatypeProperty);
@@ -91,9 +85,7 @@ public class MappingTransform {
                         model.add(targetResource, RDFS.range, model.getResource(dt));
                     }
                     if (column != null || range != null) {
-                        for (Resource c : domain.getClasses()) {
-                            model.add(targetResource, RDFS.domain, c);
-                        }
+                        domain.listClasses().forEach(c -> model.add(targetResource, RDFS.domain, c));
                     }
                 }
             }
@@ -101,8 +93,7 @@ public class MappingTransform {
             map.listComments().forEach(p -> model.add(targetResource, RDFS.comment, p));
             map.listAdditionalProperties().forEach(p -> {
                 // todo: should be annotation property:
-                Property property = //model.createResource(p.getName(), OWL.AnnotationProperty).as(Property.class);
-                        model.createResource(p.getName()).as(Property.class);
+                Property property = p.getName();
                 RDFNode object = p.getValue();
                 model.add(targetResource, property, object);
             });

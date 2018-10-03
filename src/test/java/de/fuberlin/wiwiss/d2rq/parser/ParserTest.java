@@ -129,7 +129,7 @@ public class ParserTest {
         DownloadMap d = m.findDownloadMap(name);
         Assert.assertNotNull(d);
         Assert.assertEquals("image/png", d.getMediaTypeValueMaker().makeValue(column -> null));
-        Assert.assertEquals("People.pic", d.getContentDownloadColumn().qualifiedName());
+        Assert.assertEquals("People.pic", d.getContentDownloadColumnAttribute().qualifiedName());
         Assert.assertEquals("URI(Pattern(http://example.org/downloads/@@People.ID@@))", d.nodeMaker().toString());
         Assert.assertEquals(new HashSet<ProjectionSpec>() {{
                                 add(SQL.parseAttribute("People.ID"));

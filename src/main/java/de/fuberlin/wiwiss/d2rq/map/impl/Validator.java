@@ -4,12 +4,16 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.rdf.model.*;
+import ru.avicomp.ontapi.jena.utils.Iter;
 import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A class-helper to check that mapping object is correct.
@@ -34,6 +38,28 @@ class Validator {
 
     private D2RQException newException(String message, int code) {
         return new D2RQException(resource.toString() + ":: " + message, code);
+    }
+
+    void requireHasOnlyOneOf(int code, Property... properties) {
+        Set<Property> found = Iter.of(properties).filterKeep(p -> asResource().hasProperty(p)).toSet();
+        if (found.isEmpty()) {
+            throw newException("no required spec found, needs one of: " + toString(Arrays.stream(properties)), code);
+        }
+        if (found.size() > 1) {
+            throw newException("must have only one of the following: " + toString(found.stream()), code);
+        }
+    }
+
+    void requireHasNoMoreThanOne(int code, Property... properties) {
+        Set<Property> found = Iter.of(properties).filterKeep(p -> asResource().hasProperty(p)).toSet();
+        if (found.size() <= 1) {
+            return;
+        }
+        throw newException("can't have more than one of the following: " + toString(found.stream()), code);
+    }
+
+    private static String toString(Stream<? extends RDFNode> properties) {
+        return properties.map(PrettyPrinter::toString).collect(Collectors.joining(", "));
     }
 
     @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
@@ -83,6 +109,10 @@ class Validator {
 
         ForProperty requireIsIntegerLiteral(int code) {
             return requireIsLiteralOfType(XSD.integer, code);
+        }
+
+        ForProperty requireIsBooleanLiteral(int code) {
+            return requireIsLiteralOfType(XSD.xboolean, code);
         }
 
         ForProperty requireIsLiteralOfType(Resource datatypeURI, int code) {

@@ -95,14 +95,14 @@ public class DownloadContentQuery {
         // URI didn't fit the node maker
         if (x.equals(NodeMaker.EMPTY)) return;
         Set<ProjectionSpec> requiredProjections = new HashSet<>();
-        requiredProjections.add(downloadMap.getContentDownloadColumn());
+        requiredProjections.add(downloadMap.getContentDownloadColumnAttribute());
         requiredProjections.addAll(mediaTypeValueMaker.projectionSpecs());
         newRelation.project(requiredProjections);
         newRelation.limit(1);
         Relation filteredRelation = newRelation.immutableSnapshot();
         SelectStatementBuilder builder = new SelectStatementBuilder(filteredRelation);
         String sql = builder.getSQLStatement();
-        int contentColumn = builder.getColumnSpecs().indexOf(downloadMap.getContentDownloadColumn()) + 1;
+        int contentColumn = builder.getColumnSpecs().indexOf(downloadMap.getContentDownloadColumnAttribute()) + 1;
         db = filteredRelation.database();
         Connection conn = db.connection();
         try {

@@ -334,7 +334,7 @@ public class MappingImpl implements Mapping {
         listAdditionalProperties().forEach(MapObject::validate);
 
         List<ClassMap> classMapsWithoutProperties = new ArrayList<>(classMaps.values());
-        for (ClassMap classMap : classMaps.values()) {
+        for (ClassMapImpl classMap : classMaps.values()) {
             classMap.validate();    // Also validates attached bridges
             if (classMap.hasProperties()) {
                 classMapsWithoutProperties.remove(classMap);

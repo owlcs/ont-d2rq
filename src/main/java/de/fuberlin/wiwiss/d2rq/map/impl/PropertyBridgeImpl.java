@@ -15,22 +15,20 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.graph.FrontsNode;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.util.iterator.ExtendedIterator;
+import ru.avicomp.ontapi.jena.utils.Iter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.stream.Stream;
 
 @SuppressWarnings("WeakerAccess")
 public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
-    private ClassMap belongsToClassMap = null;
-    private Set<Resource> properties = new HashSet<>();
-    private Set<String> dynamicPropertyPatterns = new HashSet<>();
-
-    private Integer limit = null;
-    private Integer limitInverse = null;
-    private String order = null;
-    private Boolean orderDesc = null;
 
     public PropertyBridgeImpl(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
@@ -137,20 +135,11 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     }
 
     @Override
-    public Collection<Resource> properties() {
-        return this.properties;
-    }
-
-    @Override
-    public ClassMap getBelongsToClassMap() {
-        return belongsToClassMap;
-    }
-
-    @Override
-    public void setBelongsToClassMap(ClassMap classMap) {
+    public PropertyBridgeImpl setBelongsToClassMap(ClassMap classMap) {
         assertNotYetDefined(getBelongsToClassMap(), D2RQ.belongsToClassMap, D2RQException.PROPERTYBRIDGE_DUPLICATE_BELONGSTOCLASSMAP);
         assertArgumentNotNull(classMap, D2RQ.belongsToClassMap, D2RQException.PROPERTYBRIDGE_INVALID_BELONGSTOCLASSMAP);
         this.belongsToClassMap = classMap;
+        return this;
     }
 
     @Override
@@ -178,43 +167,49 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         return setLiteral(D2RQ.lang, lang);
     }
 
-    public Integer getLimit() {
-        return limit;
-    }
-
-    public void setLimit(int limit) {
-        assertNotYetDefined(getLimit(), D2RQ.limit, D2RQException.PROPERTYBRIDGE_DUPLICATE_LIMIT);
-        this.limit = limit;
-    }
-
-    public Integer getLimitInverse() {
-        return limitInverse;
-    }
-
-    public void setLimitInverse(int limit) {
-        assertNotYetDefined(getLimitInverse(), D2RQ.limitInverse, D2RQException.PROPERTYBRIDGE_DUPLICATE_LIMITINVERSE);
-        this.limitInverse = limit;
-    }
-
-    public void setOrder(String column, boolean desc) {
-        assertNotYetDefined(getOrderColumn(), (desc ? D2RQ.orderDesc : D2RQ.orderAsc), D2RQException.PROPERTYBRIDGE_DUPLICATE_ORDER);
-        this.order = column;
-        this.orderDesc = desc;
-    }
-
-    public String getOrderColumn() {
-        return order;
-    }
-
-    public Boolean getOrderDesc() {
-        return orderDesc;
+    public PropertyBridgeImpl setLimit(int limit) {
+        return setLiteral(D2RQ.limit, limit);
     }
 
     @Override
-    public void setRefersToClassMap(ClassMap classMap) {
+    public Integer getLimit() {
+        return getInteger(D2RQ.limit, null);
+    }
+
+    @Override
+    public PropertyBridgeImpl setLimitInverse(int limit) {
+        return setLiteral(D2RQ.limitInverse, limit);
+    }
+
+    @Override
+    public Integer getLimitInverse() {
+        return getInteger(D2RQ.limitInverse, null);
+    }
+
+    @Override
+    public PropertyBridgeImpl setOrder(String column, boolean desc) {
+        resource.removeAll(D2RQ.orderAsc).removeAll(D2RQ.orderDesc);
+        return setLiteral(desc ? D2RQ.orderDesc : D2RQ.orderAsc, column);
+    }
+
+    @Override
+    public String getOrderColumn() {
+        return findString(D2RQ.orderAsc).orElseGet(() -> findString(D2RQ.orderDesc).orElse(null));
+    }
+
+    @Override
+    public Boolean getOrderDesc() {
+        if (resource.hasProperty(D2RQ.orderDesc)) return true;
+        if (resource.hasProperty(D2RQ.orderAsc)) return false;
+        return null;
+    }
+
+    @Override
+    public PropertyBridgeImpl setRefersToClassMap(ClassMap classMap) {
         assertNotYetDefined(getRefersToClassMap(), D2RQ.refersToClassMap, D2RQException.PROPERTYBRIDGE_DUPLICATE_REFERSTOCLASSMAP);
         assertArgumentNotNull(classMap, D2RQ.refersToClassMap, D2RQException.PROPERTYBRIDGE_INVALID_REFERSTOCLASSMAP);
         this.refersToClassMap = classMap;
+        return this;
     }
 
     /**
@@ -225,30 +220,46 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
      * @return boolean, usually {@code false}
      */
     @Override
-    public boolean isContainsDuplicates() {
+    public boolean containsDuplicates() {
         return getBoolean(D2RQ.containsDuplicates, true);
     }
 
     @Override
-    public void addProperty(Resource property) {
-        this.properties.add(property);
+    public PropertyBridgeImpl addProperty(String uri) {
+        return addURI(D2RQ.property, uri);
     }
 
-    public Set<Resource> getProperties() {
-        return properties;
+    @Override
+    public Stream<Property> listProperties() {
+        return Iter.asStream(properties());
     }
 
-    public void addDynamicProperty(String dynamicPropertyPattern) {
-        this.dynamicPropertyPatterns.add(dynamicPropertyPattern);
+    public ExtendedIterator<Property> properties() {
+        return listStatements(D2RQ.property).mapWith(s -> s.getObject().as(Property.class));
     }
 
-    public Set<String> getDynamicProperties() {
-        return this.dynamicPropertyPatterns;
+    @Override
+    public PropertyBridgeImpl addDynamicProperty(String pattern) {
+        return addLiteral(D2RQ.dynamicProperty, pattern);
+    }
+
+    @Override
+    public Stream<String> listDynamicProperties() {
+        return Iter.asStream(dynamicProperties());
+    }
+
+    public ExtendedIterator<String> dynamicProperties() {
+        return listLiterals(D2RQ.dynamicProperty).mapWith(Literal::getString);
     }
 
     @Override
     public void validate() throws D2RQException {
         Validator v = new Validator(this);
+        // todo: enable
+       /* v.requireHasOnlyOneOf(D2RQException.RESOURCEMAP_MISSING_PRIMARYSPEC,
+                D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
+                D2RQ.column, D2RQ.pattern, D2RQ.sqlExpression, D2RQ.uriSqlExpression, D2RQ.constantValue,
+                D2RQ.refersToClassMap);*/
         Validator.ForProperty column = v.forProperty(D2RQ.column);
         if (column.exists()) {
             column.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_COLUMN)
@@ -274,6 +285,27 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
             lang.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_LANG)
                     .requireIsStringLiteral(D2RQException.UNSPECIFIED);
         }
+        Validator.ForProperty limit = v.forProperty(D2RQ.limit);
+        if (limit.exists()) {
+            limit.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_LIMIT)
+                    .requireIsIntegerLiteral(D2RQException.UNSPECIFIED);
+        }
+        Validator.ForProperty limitInverse = v.forProperty(D2RQ.limitInverse);
+        if (limitInverse.exists()) {
+            limitInverse.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_LIMITINVERSE)
+                    .requireIsIntegerLiteral(D2RQException.UNSPECIFIED);
+        }
+        v.requireHasNoMoreThanOne(D2RQException.UNSPECIFIED, D2RQ.orderAsc, D2RQ.orderDesc);
+        Validator.ForProperty orderDesc = v.forProperty(D2RQ.orderDesc);
+        if (orderDesc.exists()) {
+            orderDesc.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_ORDER)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
+        Validator.ForProperty orderAscc = v.forProperty(D2RQ.orderAsc);
+        if (orderAscc.exists()) {
+            orderAscc.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_ORDER)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
         ClassMap refersToClassMap = getRefersToClassMap();
         ClassMap belongsToClassMap = getBelongsToClassMap();
         if (refersToClassMap != null) {
@@ -284,17 +316,17 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
             }
             // TODO refersToClassMap cannot be combined w/ value constraints or translation tables
         }
-        if (getProperties().isEmpty() && getDynamicProperties().isEmpty()) {
+        if (properties().toSet().isEmpty() && dynamicProperties().toSet().isEmpty()) {
             throw new D2RQException(toString() + " needs a d2rq:property or d2rq:dynamicProperty",
                     D2RQException.PROPERTYBRIDGE_MISSING_PREDICATESPEC);
         }
         commonValidateURI();
         commonValidateSQLAdditions();
         commonValidateUnclassifiedAdditions();
+        // todo: remove:
         assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
                 D2RQ.column, D2RQ.pattern, D2RQ.sqlExpression, D2RQ.uriSqlExpression, D2RQ.constantValue,
                 D2RQ.refersToClassMap);
-
         if (datatype.exists() && lang.exists()) {
             throw new D2RQException(toString() + " has both d2rq:datatype and d2rq:lang",
                     D2RQException.PROPERTYBRIDGE_LANG_AND_DATATYPE);
@@ -317,15 +349,16 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     protected Relation buildRelation() {
         ClassMapImpl belongsToClassMap = (ClassMapImpl) getBelongsToClassMap();
         ClassMapImpl refersToClassMap = (ClassMapImpl) getRefersToClassMap();
-        ConnectedDB database = mapping.getConnectedDB(belongsToClassMap.getDatabase());
-        RelationBuilder builder = belongsToClassMap.relationBuilder(database);
-        builder.addOther(relationBuilder(database));
+        ConnectedDB db = mapping.getConnectedDB(belongsToClassMap.getDatabase());
+        RelationBuilder builder = belongsToClassMap.relationBuilder(db);
+        builder.addOther(relationBuilder(db));
         if (refersToClassMap != null) {
-            builder.addAliased(refersToClassMap.relationBuilder(database));
+            builder.addAliased(refersToClassMap.relationBuilder(db));
         }
-        for (String pattern : getDynamicProperties()) {
-            builder.addOther(new PropertyMap(pattern).relationBuilder(database));
-        }
+        dynamicProperties()
+                .mapWith(PropertyMap::new)
+                .mapWith(p -> p.relationBuilder(db))
+                .forEachRemaining(builder::addOther);
         Integer limit = getLimit();
         if (limit != null) {
             builder.setLimit(limit);
@@ -346,12 +379,17 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         Collection<TripleRelation> results = new ArrayList<>();
         NodeMaker s = getBelongsToClassMap().nodeMaker();
         NodeMaker o = this.nodeMaker();
-        for (Resource property : getProperties()) {
-            results.add(new TripleRelation(buildRelation(), s, new FixedNodeMaker(property.asNode(), false), o));
-        }
-        for (String pattern : getDynamicProperties()) {
-            results.add(new TripleRelation(buildRelation(), s, new PropertyMap(pattern).nodeMaker(), o));
-        }
+        Relation base = buildRelation();
+        properties()
+                .mapWith(FrontsNode::asNode)
+                .mapWith(p -> new FixedNodeMaker(p, false))
+                .mapWith(p -> new TripleRelation(base, s, p, o))
+                .forEachRemaining(results::add);
+        dynamicProperties()
+                .mapWith(PropertyMap::new)
+                .mapWith(PropertyMap::nodeMaker)
+                .mapWith(p -> new TripleRelation(base, s, p, o))
+                .forEachRemaining(results::add);
         return results;
     }
 

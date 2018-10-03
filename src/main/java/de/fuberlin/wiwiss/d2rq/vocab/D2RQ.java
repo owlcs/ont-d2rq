@@ -367,7 +367,7 @@ public class D2RQ {
 
     /**
      * this property is new (for ONT-api)
-     * todo: add to schema ttl/rdf
+     * todo: add to schema ttl/rdf or move to another vocabulary
      */
     public static final Property warning = property("warning");
 
