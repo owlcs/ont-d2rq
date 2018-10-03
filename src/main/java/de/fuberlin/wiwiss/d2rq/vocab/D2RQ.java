@@ -42,6 +42,13 @@ public class D2RQ {
      */
     public static final Property additionalClassDefinitionProperty = property("additionalClassDefinitionProperty");
 
+    /**
+     * @see <a href='http://d2rq.org/d2rq-language#additionalproperty_deprecated'>12.2 d2rq:additionalProperty</a>
+     * @see D2RQ#additionalClassDefinitionProperty
+     * @see D2RQ#additionalPropertyDefinitionProperty
+     * @deprecated use {@code d2rq:additionalClassDefinitionProperty} or
+     * {@code d2rq:additionalPropertyDefinitionProperty} instead
+     */
     @Deprecated
     public static final Property additionalProperty = property("additionalProperty");
 
@@ -56,9 +63,11 @@ public class D2RQ {
     public static final Property alias = property("alias");
 
     /**
-     * <p>Value: true/false that describe the databases ability to handle DISTINCT correctly.
-     * Deprecated, the engine now determines this automatically.</p>
+     * Value: true/false that describe the databases ability to handle DISTINCT correctly.
+     * @deprecated the engine now determines this automatically
+     * @see <a href='http://d2rq.org/d2rq-language#deprecated-odbc-dsn'>12.4 d2rq:odbcDSN and d2rq:allowDistinct</a>
      */
+    @Deprecated
     public static final Property allowDistinct = property("allowDistinct");
 
     /**
@@ -99,9 +108,12 @@ public class D2RQ {
     public static final Property classDefinitionLabel = property("classDefinitionLabel");
 
     /**
-     * <p>Used to link RDFS or OWL classes to d2r:classMaps. Deprecated, use inverse
-     * d2rq:class instead.</p>
+     * Used to link RDFS or OWL classes to d2r:classMaps.
+     * @deprecated use inverse {@code d2rq:class} instead
+     * @see <a href='http://d2rq.org/d2rq-language#deprecated-class-map-property-bridge'>12.3 d2rq:classMap and d2rq:propertyBridge</a>
+     * @see D2RQ#clazz
      */
+    @Deprecated
     public static final Property classMap = property("classMap");
 
     public static final Property column = property("column");
@@ -214,7 +226,11 @@ public class D2RQ {
 
     /**
      * <p>ODBC DSN</p>
+     * @deprecated use {@code d2rq:jdbcDSN} instead
+     * @see <a href='http://d2rq.org/d2rq-language#deprecated-odbc-dsn'>12.4 d2rq:odbcDSN and d2rq:allowDistinct</a>
+     * @see D2RQ#jdbcDSN
      */
+    @Deprecated
     public static final Property odbcDSN = property("odbcDSN");
 
     /**
@@ -237,9 +253,12 @@ public class D2RQ {
     public static final Property property = property("property");
 
     /**
-     * <p>Used for linking RDFS properties to D2R property bridges. Deprecated, use
-     * inverse d2rq:property instead.</p>
+     * Used for linking RDFS properties to D2R property bridges.
+     * @deprecated use inverse {@code d2rq:property} instead
+     * @see <a href='http://d2rq.org/d2rq-language#deprecated-class-map-property-bridge'>12.3 d2rq:classMap and d2rq:propertyBridge</a>
+     * @see D2RQ#property
      */
+    @Deprecated
     public static final Property propertyBridge = property("propertyBridge");
 
     /**
@@ -381,7 +400,11 @@ public class D2RQ {
 
     /**
      * <p>(Deprecated) Maps a datatype property to one or more database columns.</p>
+     * @deprecated use {@code d2rq:PropertyBridge} instead
+     * @see <a href='http://d2rq.org/d2rq-language#datatype-object'>12.1 d2rq:DatatypePropertyBridge and d2rq:ObjectPropertyBridge</a>
+     * @see D2RQ#PropertyBridge
      */
+    @Deprecated
     public static final Resource DatatypePropertyBridge = resource("DatatypePropertyBridge");
 
     /**
@@ -391,7 +414,11 @@ public class D2RQ {
 
     /**
      * <p>(Deprecated) Maps an object property to one or more database columns.</p>
+     * @deprecated use {@code d2rq:PropertyBridge} instead
+     * @see <a href='http://d2rq.org/d2rq-language#datatype-object'>12.1 d2rq:DatatypePropertyBridge and d2rq:ObjectPropertyBridge</a>
+     * @see D2RQ#PropertyBridge
      */
+    @Deprecated
     public static final Resource ObjectPropertyBridge = resource("ObjectPropertyBridge");
 
     /**

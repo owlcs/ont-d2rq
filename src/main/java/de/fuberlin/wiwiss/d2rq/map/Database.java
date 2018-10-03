@@ -190,6 +190,7 @@ public interface Database extends MapObject {
     /**
      * Sets a column property as plain literal into the statement with the {@link Column#getPredicate()} predicate.
      *
+     * @param type {@link Column}, not {@code null}
      * @param value String, not {@code null}
      * @return this instance to allow cascading calls
      * @see Column description
@@ -198,7 +199,7 @@ public interface Database extends MapObject {
 
     /**
      * Lists all column literals parsed from the statements with the {@link Column#getPredicate()} predicate.
-     *
+     * @param type {@link Column}, not {@code null}
      * @return Stream of Strings
      * @see Column description
      */

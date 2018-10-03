@@ -36,11 +36,6 @@ import java.util.stream.Stream;
 public abstract class ResourceMap extends MapObjectImpl {
 
     // These can be set only on a PropertyBridge
-    protected String column = null;
-    protected String pattern = null;
-    protected String sqlExpression = null;
-    protected String datatype = null;
-    protected String lang = null;
     protected ClassMap refersToClassMap = null;
 
     public ResourceMap(Resource resource, MappingImpl mapping) {
@@ -219,23 +214,23 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public String getColumn() {
-        return column;
+        return findString(D2RQ.column).orElse(null);
     }
 
     public String getPattern() {
-        return pattern;
+        return findString(D2RQ.pattern).orElse(null);
     }
 
     public String getSQLExpression() {
-        return sqlExpression;
+        return findString(D2RQ.sqlExpression).orElse(null);
     }
 
     public String getDatatype() {
-        return datatype;
+        return findURI(D2RQ.datatype).orElse(null);
     }
 
     public String getLang() {
-        return lang;
+        return findString(D2RQ.lang).orElse(null);
     }
 
     public boolean isContainsDuplicates() {
@@ -388,11 +383,11 @@ public abstract class ResourceMap extends MapObjectImpl {
         return result;
     }
 
-    protected void assertHasPrimarySpec(Property... allowedSpecs) {
+    protected void assertHasPrimarySpec(Property... allowedSpecs) { // todo:
         List<Property> definedSpecs = new ArrayList<>();
-        for (Property allowedProperty : allowedSpecs) {
-            if (hasPrimarySpec(allowedProperty)) {
-                definedSpecs.add(allowedProperty);
+        for (Property p : allowedSpecs) {
+            if (hasPrimarySpec(p)) {
+                definedSpecs.add(p);
             }
         }
         if (definedSpecs.isEmpty()) {
@@ -428,7 +423,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     /**
-     * To validate all those things which are described in the {@link de.fuberlin.wiwiss.d2rq.map.HasURI} interface.
+     * To validate all those things which are described in the {@code de.fuberlin.wiwiss.d2rq.map.HasURI} interface.
      */
     protected void commonValidateURI() {
         Validator v = new Validator(this);
@@ -454,7 +449,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     /**
-     * To validate all those things which are described in the {@link de.fuberlin.wiwiss.d2rq.map.HasSQL} interface.
+     * To validate all those things which are described in the {@code de.fuberlin.wiwiss.d2rq.map.HasSQL} interface.
      */
     protected void commonValidateSQLAdditions() {
         Validator v = new Validator(this);
@@ -464,7 +459,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     /**
-     * To validate all those things which are described in the {@link de.fuberlin.wiwiss.d2rq.map.HasUnclassified} interface.
+     * To validate all those things which are described in the {@code de.fuberlin.wiwiss.d2rq.map.HasUnclassified} interface.
      */
     protected void commonValidateUnclassifiedAdditions() {
         Validator v = new Validator(this);

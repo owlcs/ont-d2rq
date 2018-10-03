@@ -11,7 +11,7 @@ interface HasTranslateWith<R extends MapObject> {
      * Assigns a {@code d2rq:TranslationTable} to the property bridge on the predicate {@code d2rq:translateWith}.
      * Values from the {@code d2rq:column} or {@code d2rq:pattern} will be translated by the given table.
      * See example:
-     * {@code map:ColorBridge a d2rq:PropertyBridge;
+     * <pre>{@code map:ColorBridge a d2rq:PropertyBridge;
      * d2rq:belongsToClassMap map:ShinyObjectMap;
      * d2rq:property :color;
      * d2rq:uriColumn "ShinyObject.Color";
@@ -21,10 +21,10 @@ interface HasTranslateWith<R extends MapObject> {
      * d2rq:translation [ d2rq:databaseValue "R"; d2rq:rdfValue :red; ];
      * d2rq:translation [ d2rq:databaseValue "G"; d2rq:rdfValue :green; ];
      * d2rq:translation [ d2rq:databaseValue "B"; d2rq:rdfValue :blue; ];
-     * .}
+     * .}</pre>
      *
      * @param table {@link TranslationTable}, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R setTranslateWith(TranslationTable table);
 

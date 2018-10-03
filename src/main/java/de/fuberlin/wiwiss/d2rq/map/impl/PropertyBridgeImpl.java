@@ -154,29 +154,28 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     }
 
     @Override
-    public void setColumn(String column) {
-        assertNotYetDefined(getColumn(), D2RQ.column, D2RQException.PROPERTYBRIDGE_DUPLICATE_COLUMN);
-        this.column = column;
+    public PropertyBridgeImpl setColumn(String column) {
+        return setLiteral(D2RQ.column, column);
     }
 
-    public void setPattern(String pattern) {
-        assertNotYetDefined(getPattern(), D2RQ.pattern, D2RQException.PROPERTYBRIDGE_DUPLICATE_PATTERN);
-        this.pattern = pattern;
+    @Override
+    public PropertyBridgeImpl setPattern(String pattern) {
+        return setLiteral(D2RQ.pattern, pattern);
     }
 
-    public void setSQLExpression(String sqlExpression) {
-        assertNotYetDefined(getSQLExpression(), D2RQ.sqlExpression, D2RQException.PROPERTYBRIDGE_DUPLICATE_SQL_EXPRESSION);
-        this.sqlExpression = sqlExpression;
+    @Override
+    public PropertyBridgeImpl setSQLExpression(String sqlExpression) {
+        return setLiteral(D2RQ.sqlExpression, sqlExpression);
     }
 
-    public void setDatatype(String datatype) {
-        assertNotYetDefined(getDatatype(), D2RQ.datatype, D2RQException.PROPERTYBRIDGE_DUPLICATE_DATATYPE);
-        this.datatype = datatype;
+    @Override
+    public PropertyBridgeImpl setDatatype(String uri) {
+        return setURI(D2RQ.datatype, uri);
     }
 
-    public void setLang(String lang) {
-        assertNotYetDefined(getLang(), D2RQ.lang, D2RQException.PROPERTYBRIDGE_DUPLICATE_LANG);
-        this.lang = lang;
+    @Override
+    public PropertyBridge setLang(String lang) {
+        return setLiteral(D2RQ.lang, lang);
     }
 
     public Integer getLimit() {
@@ -219,9 +218,9 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     }
 
     /**
-     * Note: the return value is always {@code false} unless it is specified in the graph for this property bridge.
+     * Note: the return value is never {@code false} unless it is specified in the graph for this property bridge.
      * I am not sure any property bridge may contain this parameter,
-     * but this is an original logic, that i dare not touch yet.
+     * but this is an original logic, that I dare not touch yet.
      *
      * @return boolean, usually {@code false}
      */
@@ -249,6 +248,32 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     public void validate() throws D2RQException {
+        Validator v = new Validator(this);
+        Validator.ForProperty column = v.forProperty(D2RQ.column);
+        if (column.exists()) {
+            column.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_COLUMN)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
+        Validator.ForProperty pattern = v.forProperty(D2RQ.pattern);
+        if (pattern.exists()) {
+            pattern.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_PATTERN)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
+        Validator.ForProperty sqlExpression = v.forProperty(D2RQ.sqlExpression);
+        if (sqlExpression.exists()) {
+            sqlExpression.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_SQL_EXPRESSION)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
+        Validator.ForProperty datatype = v.forProperty(D2RQ.datatype);
+        if (datatype.exists()) {
+            datatype.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_DATATYPE)
+                    .requireIsURI(D2RQException.UNSPECIFIED);
+        }
+        Validator.ForProperty lang = v.forProperty(D2RQ.lang);
+        if (lang.exists()) {
+            lang.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_LANG)
+                    .requireIsStringLiteral(D2RQException.UNSPECIFIED);
+        }
         ClassMap refersToClassMap = getRefersToClassMap();
         ClassMap belongsToClassMap = getBelongsToClassMap();
         if (refersToClassMap != null) {
@@ -269,26 +294,23 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
                 D2RQ.column, D2RQ.pattern, D2RQ.sqlExpression, D2RQ.uriSqlExpression, D2RQ.constantValue,
                 D2RQ.refersToClassMap);
-        String datatype = getDatatype();
-        String lang = getLang();
-        if (datatype != null && lang != null) {
+
+        if (datatype.exists() && lang.exists()) {
             throw new D2RQException(toString() + " has both d2rq:datatype and d2rq:lang",
                     D2RQException.PROPERTYBRIDGE_LANG_AND_DATATYPE);
         }
-
-        if (getColumn() == null && getPattern() == null && getSQLExpression() == null) {
-            if (datatype != null) {
+        if (!column.exists() && !pattern.exists() && !sqlExpression.exists()) {
+            if (datatype.exists()) {
                 throw new D2RQException("d2rq:datatype can only be used with d2rq:column, d2rq:pattern " +
                         "or d2rq:sqlExpression at " + this,
                         D2RQException.PROPERTYBRIDGE_NONLITERAL_WITH_DATATYPE);
             }
-            if (lang != null) {
+            if (lang.exists()) {
                 throw new D2RQException("d2rq:lang can only be used with d2rq:column, d2rq:pattern " +
                         "or d2rq:sqlExpression at " + this,
                         D2RQException.PROPERTYBRIDGE_NONLITERAL_WITH_LANG);
             }
         }
-
     }
 
     @Override

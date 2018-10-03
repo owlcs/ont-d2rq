@@ -128,6 +128,11 @@ public interface TranslationTable extends MapObject {
          */
         Entry setDatabaseValue(String value);
 
+        /**
+         * Gets a table that owns this translation.
+         *
+         * @return {@link TranslationTable}
+         */
         TranslationTable getTable();
 
         /**

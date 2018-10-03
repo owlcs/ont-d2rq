@@ -56,6 +56,14 @@ class Validator {
             return asResource().getRequiredProperty(property).getObject();
         }
 
+        Literal getLiteral(int code) {
+            RDFNode res = get();
+            if (!res.isLiteral()) {
+                throw newException("no literal for the predicate " + asString() + ": " + res, code);
+            }
+            return res.asLiteral();
+        }
+
         ForProperty requireExists(int code) {
             if (exists()) return this;
             throw newException("can't find predicate " + asString(), code);
@@ -78,7 +86,7 @@ class Validator {
         }
 
         ForProperty requireIsLiteralOfType(Resource datatypeURI, int code) {
-            Literal res = get().asLiteral();
+            Literal res = getLiteral(code);
             if (datatypeURI.getURI().equals(res.getDatatypeURI())) {
                 return this;
             }
@@ -131,7 +139,7 @@ class Validator {
         }
 
         ForProperty requireValidClassReference(Class<?> expected, int code) {
-            String className = get().asLiteral().getString();
+            String className = getLiteral(code).getString();
             Class<?> res;
             try {
                 res = Class.forName(className);

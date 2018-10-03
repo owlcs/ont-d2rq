@@ -19,7 +19,7 @@ interface HasUnclassified<R extends MapObject> extends HasTranslateWith<R> {
      * one distinct blank node per distinct tuple of these columns.
      *
      * @param columns String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R setBNodeIdColumns(String columns);
 
@@ -38,7 +38,7 @@ interface HasUnclassified<R extends MapObject> extends HasTranslateWith<R> {
      * on columns whose values are very different from other columns in the database.
      *
      * @param regex String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      * @see <a href='http://d2rq.org/d2rq-language#hint'>11.2 Example: Providing a regular expression</a>
      */
     R addValueRegex(String regex);
@@ -57,7 +57,7 @@ interface HasUnclassified<R extends MapObject> extends HasTranslateWith<R> {
      * Most useful in conjunction with {@link de.fuberlin.wiwiss.d2rq.vocab.D2RQ#column d2rq:column}.
      *
      * @param contains String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R addValueContains(String contains);
 
@@ -74,7 +74,7 @@ interface HasUnclassified<R extends MapObject> extends HasTranslateWith<R> {
      * This allows D2RQ to speed up queries.
      *
      * @param maxLength positive int
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R setValueMaxLength(int maxLength);
 

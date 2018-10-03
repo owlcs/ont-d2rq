@@ -16,31 +16,31 @@ import java.util.stream.Stream;
 interface HasSQL<R extends MapObject> {
 
     /**
-     * Adds string literal for the {d2rq:alias} predicate.
+     * Adds string literal for the {@code d2rq:alias} predicate.
      * <p>
      * Aliases take the form {@code Table AS Alias} and are used when a table needs to be joined to itself.
      * The table can be referred to using the alias within the property bridge.
      * See example:
-     * {@code map:ParentTopic a d2rq:PropertyBridge;
+     * <pre>{@code map:ParentTopic a d2rq:PropertyBridge;
      * d2rq:belongsToClassMap map:Topic;
      * d2rq:property :parentTopic;
      * d2rq:refersToClassMap map:Topic;
      * d2rq:join "Topics.ParentID => ParentTopics.ID";
-     * d2rq:alias "Topics AS ParentTopics";}
+     * d2rq:alias "Topics AS ParentTopics";}</pre>
      *
      * @param alias String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R addAlias(String alias);
 
     /**
-     * Adds string literal for the {d2rq:join} predicate.
+     * Adds string literal for the {@code d2rq:join} predicate.
      * <p>
      * If the columns used to create the literal value or object are not from the database table(s)
      * that contains the {@link MapObject Map Object}s columns,
      * then the tables have to be joined together using one or more {@code d2rq:join} properties.
      * See example:
-     * {@code map:authorName a d2rq:PropertyBridge;
+     * <pre>{@code map:authorName a d2rq:PropertyBridge;
      * d2rq:belongsToClassMap map:Papers;
      * d2rq:property :authorName;
      * d2rq:column "Persons.Name";
@@ -49,15 +49,14 @@ interface HasSQL<R extends MapObject> {
      * d2rq:datatype xsd:string;
      * d2rq:propertyDefinitionLabel "name"@en;
      * d2rq:propertyDefinitionComment "Name of an author."@en;
-     * .}
-     *
+     * .}</pre>
      * @param join String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R addJoin(String join);
 
     /**
-     * Adds string literal for the {d2rq:condition} predicate.
+     * Adds string literal for the {@code d2rq:condition} predicate.
      * <p>
      * Specifies an SQL {@code WHERE} condition.
      * An instance of this object will only be generated for database rows that satisfy the condition.
@@ -65,7 +64,7 @@ interface HasSQL<R extends MapObject> {
      * e.g. deny access to data which is older or newer than a certain date.
      *
      * @param condition String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      * @see <a href='http://d2rq.org/d2rq-language#conditional'>10. Conditional Mappings</a>
      */
     R addCondition(String condition);

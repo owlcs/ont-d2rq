@@ -17,7 +17,7 @@ interface HasDatabase<R extends MapObject> {
      * Note: a previously associated database link will be suppressed.
      *
      * @param database {@link Database}, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R setDatabase(Database database);
 

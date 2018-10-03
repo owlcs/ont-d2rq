@@ -183,35 +183,21 @@ public class MapParser {
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.column);
         while (stmts.hasNext()) {
+            String column = stmts.nextStatement().getString();
             //noinspection EqualsBetweenInconvertibleTypes
             if (D2RQ.ObjectPropertyBridge.equals(r.getProperty(RDF.type))) {
-                // Legacy
-                bridge.setURIColumn(stmts.nextStatement().getString());
-            } else {
-                bridge.setColumn(stmts.nextStatement().getString());
+                // todo: Legacy
+                bridge.setURIColumn(column);
             }
         }
         stmts = r.listProperties(D2RQ.pattern);
         while (stmts.hasNext()) {
+            String pattern = stmts.nextStatement().getString();
             //noinspection EqualsBetweenInconvertibleTypes
             if (D2RQ.ObjectPropertyBridge.equals(r.getProperty(RDF.type))) {
-                // Legacy
-                bridge.setURIPattern(stmts.nextStatement().getString());
-            } else {
-                bridge.setPattern(stmts.nextStatement().getString());
+                // todo: Legacy
+                bridge.setURIPattern(pattern);
             }
-        }
-        stmts = r.listProperties(D2RQ.sqlExpression);
-        while (stmts.hasNext()) {
-            bridge.setSQLExpression(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.lang);
-        while (stmts.hasNext()) {
-            bridge.setLang(stmts.nextStatement().getString());
-        }
-        stmts = r.listProperties(D2RQ.datatype);
-        while (stmts.hasNext()) {
-            bridge.setDatatype(stmts.nextStatement().getResource().getURI());
         }
         stmts = r.listProperties(D2RQ.refersToClassMap);
         while (stmts.hasNext()) {

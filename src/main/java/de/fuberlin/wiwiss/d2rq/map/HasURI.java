@@ -29,7 +29,7 @@ interface HasURI<R extends MapObject> {
      * Details are the same as for {@code d2rq:ClassMap} and {@code d2rq:PropertyBridge}.
      *
      * @param pattern String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      * @see <a href='http://d2rq.org/d2rq-language#resource-identity'>5.1 Resource Identity</a>
      */
     R setURIPattern(String pattern);
@@ -45,7 +45,7 @@ interface HasURI<R extends MapObject> {
      * Sets {@code d2rq:uriColumn} property value.
      *
      * @param column String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R setURIColumn(String column);
 
@@ -72,14 +72,14 @@ interface HasURI<R extends MapObject> {
      * The output must be a valid URI.
      * Note that querying for such a computed value might put a heavy load on the database.
      * See example:
-     * {@code map:HomepageURL a d2rq:PropertyBridge;
+     * <pre>{@code map:HomepageURL a d2rq:PropertyBridge;
      * d2rq:belongsToClassMap map:PersonsClassMap;
      * d2rq:property foaf:homepage;
      * d2rq:uriSqlExpression "CONCAT('http://www.company.com/homepages/', user.username)";
-     * .}
+     * .}</pre>
      *
      * @param expr String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      */
     R setUriSQLExpression(String expr);
 
@@ -94,7 +94,7 @@ interface HasURI<R extends MapObject> {
      * Sets {@code d2rq:constantValue} property uri.
      *
      * @param uri String, not {@code null}
-     * @return {@link R} to allow cascading calls
+     * @return this instance to allow cascading calls
      * @see PropertyBridge#setConstantValue(Literal) to produce literal constaint
      * @see ClassMap#setConstantValue() to produce anonymous constant
      * @see PropertyBridge#setConstantValue() to produce anonymous constant
