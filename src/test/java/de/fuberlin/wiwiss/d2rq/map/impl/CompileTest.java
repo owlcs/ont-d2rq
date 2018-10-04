@@ -6,7 +6,6 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.Assert;
 import org.junit.Before;
@@ -50,19 +49,16 @@ public class CompileTest {
 
     private static ClassMap createClassMap(Database database, String uriPattern) {
         Mapping mapping = database.getMapping();
-        ClassMap result = mapping.createClassMap(mapping.asModel().createResource());
-        result.setDatabase(database).setURIPattern(uriPattern);
+        ClassMap result = mapping.createClassMap(null).setDatabase(database).setURIPattern(uriPattern);
         mapping.addClassMap(result);
         return result;
     }
 
     private static PropertyBridgeImpl createPropertyBridge(ClassMap classMap, String propertyURI) {
         Mapping mapping = classMap.getMapping();
-        Model model = classMap.asResource().getModel();
-        PropertyBridge res = mapping.createPropertyBridge(model.createResource());
-        res.setBelongsToClassMap(classMap);
-        res.addProperty(propertyURI);
-        classMap.addPropertyBridge(res);
+        PropertyBridge res = mapping.createPropertyBridge(null)
+                .setBelongsToClassMap(classMap)
+                .addProperty(propertyURI);
         return (PropertyBridgeImpl) res;
     }
 

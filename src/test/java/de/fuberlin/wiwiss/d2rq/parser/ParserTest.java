@@ -5,7 +5,10 @@ import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
-import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -33,7 +36,7 @@ public class ParserTest {
         Mapping mapping = MappingFactory.create(model, null);
         Resource r = addTranslationTableResource(model);
         Assert.assertEquals(1, mapping.listTranslationTables().count());
-        TranslationTable table = findFirst(mapping);
+        TranslationTable table = MappingHelper.findTranslationTable(mapping);
         Assert.assertNotNull(table);
         Assert.assertEquals(r, table.asResource());
         Assert.assertEquals(0, table.listTranslations().count());
@@ -45,12 +48,12 @@ public class ParserTest {
         Resource r = addTranslationTableResource(model);
         Resource t = addTranslationResource(r, "foo1", "bar1");
         Mapping mapping = MappingFactory.create(model, null);
-        TranslationTable table1 = findFirst(mapping);
-        TranslationTable table2 = findFirst(mapping);
+        TranslationTable table1 = MappingHelper.findTranslationTable(mapping);
+        TranslationTable table2 = MappingHelper.findTranslationTable(mapping);
         Assert.assertNotSame(table1, table2);
         Assert.assertEquals(table1, table2);
-        Resource translation1 = findFirst(table1).asResource();
-        Resource translation2 = findFirst(table2).asResource();
+        Resource translation1 = MappingHelper.findTranslation(table1).asResource();
+        Resource translation2 = MappingHelper.findTranslation(table2).asResource();
         Assert.assertEquals(t, translation1);
         Assert.assertEquals(t, translation2);
     }
@@ -61,7 +64,7 @@ public class ParserTest {
         Resource r = addTranslationTableResource(model);
         addTranslationResource(r, "foo", "bar");
         Mapping mapping = MappingFactory.create(model, null);
-        TranslationTable table = findFirst(mapping, r);
+        TranslationTable table = MappingHelper.findTranslationTable(mapping, r);
         Assert.assertEquals(1, table.listTranslations().count());
         Translator translator = table.asTranslator();
         Assert.assertEquals("bar", translator.toRDFValue("foo"));
@@ -100,14 +103,14 @@ public class ParserTest {
     @Test
     public void testTranslationTableRDFValueCanBeLiteral() {
         Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
-        TranslationTable tt = findFirst(m, ResourceFactory.createResource("http://example.org/tt"));
+        TranslationTable tt = MappingHelper.findTranslationTable(m, ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.asTranslator().toRDFValue("literal"));
     }
 
     @Test
     public void testTranslationTableRDFValueCanBeURI() {
         Mapping m = MappingHelper.readFromTestFile("/parser/translation-table.ttl");
-        TranslationTable tt = findFirst(m, ResourceFactory.createResource("http://example.org/tt"));
+        TranslationTable tt = MappingHelper.findTranslationTable(m, ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.asTranslator().toRDFValue("uri"));
     }
 
@@ -124,10 +127,7 @@ public class ParserTest {
     public void testGenerateDownloadMap() {
         Mapping m = MappingHelper.readFromTestFile("/parser/download-map.ttl");
         MappingHelper.connectToDummyDBs(m);
-        Resource name = ResourceFactory.createResource("http://example.org/dm");
-        Assert.assertTrue(m.listDownloadMaps().map(MapObject::asResource).anyMatch(name::equals));
-        DownloadMap d = m.findDownloadMap(name);
-        Assert.assertNotNull(d);
+        DownloadMap d = MappingHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/dm"));
         Assert.assertEquals("image/png", d.getMediaTypeValueMaker().makeValue(column -> null));
         Assert.assertEquals("People.pic", d.getContentDownloadColumnAttribute().qualifiedName());
         Assert.assertEquals("URI(Pattern(http://example.org/downloads/@@People.ID@@))", d.nodeMaker().toString());
@@ -154,17 +154,4 @@ public class ParserTest {
         return res;
     }
 
-    private static TranslationTable.Entry findFirst(TranslationTable table) {
-        return table.listTranslations().findFirst().orElseThrow(AssertionError::new);
-    }
-
-
-    private static TranslationTable findFirst(Mapping mapping) {
-        return mapping.listTranslationTables().findFirst().orElseThrow(AssertionError::new);
-    }
-
-    private static TranslationTable findFirst(Mapping mapping, Resource resource) {
-        return mapping.listTranslationTables()
-                .filter(t -> resource.equals(t.asResource())).findFirst().orElseThrow(AssertionError::new);
-    }
 }

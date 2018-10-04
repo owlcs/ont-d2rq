@@ -132,15 +132,16 @@ public class MapParser {
         Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.ClassMap);
         while (it.hasNext()) {
             Resource r = it.next();
-            ClassMapImpl classMap = this.mapping.createClassMap(r);
+            ClassMapImpl classMap = this.mapping.asClassMap(r);
             parseClassMap(classMap, r);
             parseResourceMap(classMap, r);
-            this.mapping.addClassMap(classMap);
         }
     }
 
     private void parseResourceMap(ResourceMap resourceMap, Resource r) {
-        r.listProperties(D2RQ.uriPattern).toSet().forEach(s -> resourceMap.setURIPattern(ensureIsAbsolute(s.getString())));
+        r.listProperties(D2RQ.uriPattern)
+                .toSet()
+                .forEach(s -> resourceMap.setURIPattern(ensureIsAbsolute(s.getString())));
     }
 
     private void parseClassMap(ClassMapImpl classMap, Resource r) {
@@ -154,7 +155,7 @@ public class MapParser {
         stmts = r.listProperties(D2RQ.additionalProperty);
         while (stmts.hasNext()) {
             Resource additionalProperty = stmts.nextStatement().getResource();
-            PropertyBridgeImpl bridge = mapping.createPropertyBridge(r);
+            PropertyBridgeImpl bridge = mapping.createPropertyBridge(r.getURI());
             bridge.setBelongsToClassMap(classMap);
             bridge.addProperty(additionalProperty.getProperty(D2RQ.propertyName).getResource().getURI());
             bridge.setConstantValue(additionalProperty.getProperty(D2RQ.propertyValue).getObject());
@@ -165,14 +166,10 @@ public class MapParser {
     private void parsePropertyBridges() {
         StmtIterator stmts = this.model.listStatements(null, D2RQ.belongsToClassMap, (RDFNode) null);
         while (stmts.hasNext()) {
-            Statement stmt = stmts.nextStatement();
-            ClassMapImpl classMap = this.mapping.findClassMap(stmt.getResource());
-            Resource r = stmt.getSubject();
-            PropertyBridgeImpl bridge = mapping.createPropertyBridge(r);
-            bridge.setBelongsToClassMap(classMap);
+            Resource r = stmts.nextStatement().getSubject();
+            PropertyBridgeImpl bridge = mapping.asPropertyBridge(r);
             parseResourceMap(bridge, r);
             parsePropertyBridge(bridge, r);
-            classMap.addPropertyBridge(bridge);
         }
     }
 
@@ -196,11 +193,6 @@ public class MapParser {
                 bridge.setURIPattern(pattern);
             }
         }
-        stmts = r.listProperties(D2RQ.refersToClassMap);
-        while (stmts.hasNext()) {
-            Resource classMapResource = stmts.nextStatement().getResource();
-            bridge.setRefersToClassMap(this.mapping.findClassMap(classMapResource));
-        }
         // todo: legacy:
         stmts = this.model.listStatements(null, D2RQ.propertyBridge, r);
         while (stmts.hasNext()) {
@@ -209,23 +201,14 @@ public class MapParser {
     }
 
     private void parseDownloadMaps() {
-        Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.DownloadMap);
+        Iterator<Resource> it = this.model.listResourcesWithProperty(RDF.type, D2RQ.DownloadMap);
         while (it.hasNext()) {
-            Resource downloadMapResource = it.next();
-            DownloadMapImpl downloadMap = mapping.createDownloadMap(downloadMapResource);
-            parseResourceMap(downloadMap, downloadMapResource);
-            parseDownloadMap(downloadMap, downloadMapResource);
-            mapping.addDownloadMap(downloadMap);
+            Resource r = it.next();
+            DownloadMapImpl dm = mapping.asDownloadMap(r);
+            parseResourceMap(dm, r);
         }
     }
 
-    private void parseDownloadMap(DownloadMapImpl dm, Resource r) {
-        StmtIterator stmts;
-        stmts = r.listProperties(D2RQ.belongsToClassMap);
-        while (stmts.hasNext()) {
-            dm.setBelongsToClassMap(mapping.findClassMap(stmts.nextStatement().getResource()));
-        }
-    }
 
     // TODO: I guess this should be done at map compile time
     private String ensureIsAbsolute(String uriPattern) {

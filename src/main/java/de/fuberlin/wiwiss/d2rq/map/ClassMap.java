@@ -1,11 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import de.fuberlin.wiwiss.d2rq.map.impl.RelationBuilder;
-import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
-import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import org.apache.jena.rdf.model.Resource;
 
-import java.util.Collection;
 import java.util.stream.Stream;
 
 /**
@@ -15,12 +11,6 @@ import java.util.stream.Stream;
  */
 public interface ClassMap extends MapObject,
         HasDatabase<ClassMap>, HasURI<ClassMap>, HasSQL<ClassMap>, HasUnclassified<ClassMap>, HasProperties<ClassMap> {
-
-    // todo: remove from this interface
-    NodeMaker nodeMaker();
-
-    // todo: remove from this interface
-    RelationBuilder relationBuilder(ConnectedDB database);
 
     /**
      * Sets an RDF-S or OWL class for the predicate {@code d2rq:class}.
@@ -69,7 +59,22 @@ public interface ClassMap extends MapObject,
      */
     ClassMap setConstantValue();
 
-    void addPropertyBridge(PropertyBridge p);
+    /**
+     * Adds the specified {@link PropertyBridge d2rq:PropertyBridge} into this class-map.
+     * This methods creates the {@code d2rq:belongsToClassMap} relation for this class-map and the given property-bridge
+     * and copiers all the content of the property-bridge if it is not already in the graph.
+     *
+     * @param p {@link PropertyBridge} not {@code null}
+     * @return this instance
+     */
+    ClassMap addPropertyBridge(PropertyBridge p);
 
-    Collection<PropertyBridge> getPropertyBridges();
+    /**
+     * Lists all {@link PropertyBridge d2rq:PropertyBridge},
+     * that are attached to this class-map using the {@code d2rq:belongsToClassMap} relation.
+     *
+     * @return Stream of {@link PropertyBridge}s
+     */
+    Stream<PropertyBridge> listPropertyBridges();
+
 }

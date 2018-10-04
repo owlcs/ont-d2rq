@@ -27,6 +27,25 @@ public interface DownloadMap extends MapObject, HasDatabase<DownloadMap>, HasURI
     Relation getRelation();
 
     /**
+     * Sets {@link ClassMap} for the {@code d2rq:belongsToClassMap} predicate.
+     * Can be used instead of {@code d2rq:dataStorage} to point to an existing {@link ClassMap d2rq:ClassMap} instance.
+     * The ClassMap's data storage will be used, and any conditions,
+     * joins and aliases of the class map will be inherited by the download map.
+     * This facilitates the use of a single resource as both download map and {@link PropertyBridge PropertyBridge}.
+     *
+     * @param c{@link ClassMap}, not {@code null}
+     * @return this instance
+     */
+    DownloadMap setBelongsToClassMap(ClassMap c);
+
+    /**
+     * Returns {@link ClassMap} that is attached on the {@code d2rq:belongsToClassMap} predicate.
+     *
+     * @return {@link ClassMap} or {@code null}
+     */
+    ClassMap getBelongsToClassMap();
+
+    /**
      * Sets the given media type for the {@code d2rq:mediaType} predicate,
      * that is served from this download map.
      * It will be sent in the HTTP Content-Type header.

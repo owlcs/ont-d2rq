@@ -7,7 +7,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.junit.AfterClass;
@@ -111,14 +110,14 @@ public class MySQLDatatypeTest {
         Database database = connection.createDatabaseMapObject(mapping, DB_URI, MySQLDatatypeTest.database);
         //do not inject script to prevent database rebuilt:
         //database.setStartupSQLScript(ResourceFactory.createResource(scriptFile.toString()));
-        ClassMap classMap = mapping.createClassMap(ResourceFactory.createResource(CLASS_MAP_URI));
-        classMap.setDatabase(database);
-        classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");
+        ClassMap classMap = mapping.createClassMap(CLASS_MAP_URI)
+                .setDatabase(database)
+                .setURIPattern("row/@@T_" + datatype + ".ID@@");
         mapping.addClassMap(classMap);
-        PropertyBridge propertyBridge = mapping.createPropertyBridge(ResourceFactory.createResource(PROPERTY_BRIDGE_URI));
-        propertyBridge.setBelongsToClassMap(classMap);
-        propertyBridge.addProperty(VALUE_PROPERTY);
-        propertyBridge.setColumn("T_" + datatype + ".VALUE");
+        PropertyBridge propertyBridge = mapping.createPropertyBridge(PROPERTY_BRIDGE_URI)
+                .setBelongsToClassMap(classMap)
+                .addProperty(VALUE_PROPERTY)
+                .setColumn("T_" + datatype + ".VALUE");
         classMap.addPropertyBridge(propertyBridge);
         return mapping;
     }

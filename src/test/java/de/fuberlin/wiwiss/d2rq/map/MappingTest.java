@@ -2,8 +2,7 @@ package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.RDFS;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -14,7 +13,7 @@ import java.util.stream.Collectors;
 public class MappingTest {
     private final static String database1 = "http://test/db";
     private final static String database2 = "http://test/db2";
-    private final static Resource classMap1 = ResourceFactory.createResource("http://test/classMap1");
+    private final static String classMap1 = "http://test/classMap1";
 
     @Test
     public void testReturnAddedDatabase() {
@@ -39,7 +38,7 @@ public class MappingTest {
     public void testReturnResourceFromNewClassMap() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = m.createClassMap(classMap1);
-        Assert.assertEquals(classMap1, c.asResource());
+        Assert.assertEquals(classMap1, c.asResource().getURI());
     }
 
     @Test
@@ -61,9 +60,11 @@ public class MappingTest {
     @Test
     public void testMultipleDatabasesForClassMapCauseValidationError() {
         Mapping m = MappingFactory.createEmpty();
-        ClassMap c = m.createClassMap(classMap1);
         Database db1 = m.createDatabase(database1).setJDBCDSN("jdbc://x");
-        c.setDatabase(db1);
+        m.validate();
+        ClassMap c = m.createClassMap(classMap1).setDatabase(db1).setURIColumn("TestDB.TestCol1")
+                .addPropertyBridge(m.createPropertyBridge(null)
+                        .setURIColumn("TestDB.TestCol2").addProperty(RDFS.comment));
         m.validate();
         Database db2 = m.createDatabase(database2);
         c.asResource().addProperty(D2RQ.dataStorage, db2.asResource());
@@ -121,20 +122,26 @@ public class MappingTest {
     }
 
     @Test
-    public void testNewMappingHasNoClassMaps() {
+    public void testEmptyMapping() {
         Mapping m = MappingFactory.createEmpty();
         Assert.assertEquals(0, m.listClassMaps().count());
-        Assert.assertNull(m.findClassMap(classMap1));
+        Assert.assertEquals(0, m.listDatabases().count());
+        Assert.assertEquals(0, m.listDownloadMaps().count());
+        Assert.assertEquals(0, m.listAdditionalProperties().count());
+        Assert.assertEquals(0, m.listTranslationTables().count());
+        Assert.assertEquals(0, m.listPropertyBridges().count());
     }
 
     @Test
     public void testReturnAddedClassMaps() {
         Mapping m = MappingFactory.createEmpty();
         ClassMap c = m.createClassMap(classMap1);
-        m.addClassMap(c);
-        Assert.assertEquals(Collections.singleton(classMap1),
-                m.listClassMaps().map(MapObject::asResource).collect(Collectors.toSet()));
-        Assert.assertEquals(c, m.findClassMap(classMap1));
+        Assert.assertEquals(1, m.listClassMaps().count());
+        Assert.assertNotNull(m.addClassMap(c));
+        ClassMap found = m.listClassMaps().filter(x -> classMap1.equals(x.asResource().getURI()))
+                .findFirst().orElseThrow(AssertionError::new);
+        Assert.assertEquals(c, found);
+        Assert.assertEquals(1, m.listClassMaps().count());
     }
 
     @Test

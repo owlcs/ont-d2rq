@@ -34,10 +34,9 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
         super(resource, mapping);
     }
 
-    public void setBelongsToClassMap(ClassMap classMap) {
-        assertNotYetDefined(belongsToClassMap, D2RQ.belongsToClassMap, D2RQException.DOWNLOADMAP_DUPLICATE_BELONGSTOCLASSMAP);
-        assertArgumentNotNull(classMap, D2RQ.belongsToClassMap, D2RQException.DOWNLOADMAP_INVALID_BELONGSTOCLASSMAP);
-        belongsToClassMap = classMap;
+    @Override
+    public DownloadMapImpl setBelongsToClassMap(ClassMap classMap) {
+        return (DownloadMapImpl) super.setBelongsToClassMap(classMap);
     }
 
     @Override
@@ -103,16 +102,23 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
     @Override
     public void validate() throws D2RQException {
         Validator v = new Validator(this);
+        v.requireHasOnlyOneOf(D2RQException.UNSPECIFIED, D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue);
         Validator.ForProperty dataStorage = v.forProperty(D2RQ.dataStorage);
+        Validator.ForProperty belongsToClassMap = v.forProperty(D2RQ.belongsToClassMap);
         if (dataStorage.exists()) {
             dataStorage.requireHasNoDuplicates(D2RQException.DOWNLOADMAP_DUPLICATE_DATABASE)
                     .requireIsResource(D2RQException.DOWNLOADMAP_INVALID_DATABASE);
+        } else if (belongsToClassMap.exists()) {
+            belongsToClassMap.requireHasNoDuplicates(D2RQException.DOWNLOADMAP_DUPLICATE_BELONGSTOCLASSMAP)
+                    .requireIsResource(D2RQException.DOWNLOADMAP_INVALID_BELONGSTOCLASSMAP);
+            new Validator(getBelongsToClassMap())
+                    .forProperty(D2RQ.dataStorage)
+                    .requireExists(D2RQException.DOWNLOADMAP_NO_DATASTORAGE)
+                    .requireHasNoDuplicates(D2RQException.DOWNLOADMAP_DUPLICATE_DATABASE)
+                    .requireIsResource(D2RQException.DOWNLOADMAP_INVALID_DATABASE);
         } else {
-            ClassMap belongsToClassMap = getBelongsToClassMap();
-            if (belongsToClassMap == null) {
-                throw new D2RQException("Download map " + toString() + " needs a d2rq:dataStorage (or d2rq:belongsToClassMap)",
-                        D2RQException.DOWNLOADMAP_NO_DATASTORAGE);
-            }
+            throw new D2RQException("Download map " + toString() + " needs a d2rq:dataStorage (or d2rq:belongsToClassMap)",
+                    D2RQException.DOWNLOADMAP_NO_DATASTORAGE);
         }
         Validator.ForProperty mediaType = v.forProperty(D2RQ.mediaType);
         if (mediaType.exists()) {
@@ -126,7 +132,6 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
         commonValidateURI();
         commonValidateSQLAdditions();
         commonValidateUnclassifiedAdditions();
-        assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue);
         RDFNode constantValue = getConstantValue();
         if (constantValue != null && !constantValue.isURIResource()) {
             throw new D2RQException("d2rq:constantValue for download map " + toString() + " must be a URI",
@@ -138,15 +143,15 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
     @Override
     protected Relation buildRelation() {
         Attribute contentDownloadColumn = getContentDownloadColumnAttribute();
-        ClassMap belongsToClassMap = getBelongsToClassMap();
-        ConnectedDB db = mapping.getConnectedDB((belongsToClassMap == null ? getDatabase() : (DatabaseImpl) belongsToClassMap.getDatabase()));
+        ClassMapImpl belongsToClassMap = getBelongsToClassMap();
+        ConnectedDB db = mapping.getConnectedDB((belongsToClassMap == null ? getDatabase() : belongsToClassMap.getDatabase()));
         RelationBuilder builder = relationBuilder(db);
         builder.addProjection(contentDownloadColumn);
         for (ProjectionSpec projection : getMediaTypeValueMaker().projectionSpecs()) {
             builder.addProjection(projection);
         }
         if (belongsToClassMap != null) {
-            builder.addOther(((ClassMapImpl) belongsToClassMap).relationBuilder(db));
+            builder.addOther(belongsToClassMap.relationBuilder(db));
         }
         return builder.buildRelation();
     }

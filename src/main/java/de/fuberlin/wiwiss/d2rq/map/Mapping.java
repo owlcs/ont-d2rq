@@ -1,10 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 
 import java.util.Collection;
@@ -49,7 +49,6 @@ public interface Mapping extends AutoCloseable {
      */
     TranslationTable createTranslationTable(String uri);
 
-
     /**
      * Creates a {@code d2rq:AdditionalProperty} typed resource and wraps it as {@link AdditionalProperty}.
      *
@@ -58,6 +57,33 @@ public interface Mapping extends AutoCloseable {
      * @see <a href='http://d2rq.org/d2rq-language#additionalproperty'>9.2 AdditionalProperty</a>
      */
     AdditionalProperty createAdditionalProperty(String uri);
+
+    /**
+     * Creates a {@code d2rq:DownloadMap} typed resource and wraps it as {@link DownloadMap}.
+     *
+     * @param uri an uri, can be {@code null} to create an anonymous resource
+     * @return {@link DownloadMap}, not {@code null}
+     * @see <a href='http://d2rq.org/d2rq-language#download-map'>8. Enabling HTTP access to CLOBs/BLOBs (d2rq:DownloadMap)</a>
+     */
+    DownloadMap createDownloadMap(String uri);
+
+    /**
+     * Creates a {@code d2rq:ClassMap} typed resource and wraps it as {@link ClassMap}.
+     *
+     * @param uri an uri, can be {@code null} to create an anonymous resource
+     * @return {@link ClassMap}, not {@code null}
+     * @see <a href='http://d2rq.org/d2rq-language#classmap'>5. Creating RDF resources (d2rq:ClassMap)</a>
+     */
+    ClassMap createClassMap(String uri);
+
+    /**
+     * Creates a {@code d2rq:PropertyBridge} typed resource and wraps it as {@link PropertyBridge}.
+     *
+     * @param uri an uri or {@code null} to create an anonymous resource
+     * @return {@link PropertyBridge}, not {@code null}
+     * @see <a href='http://d2rq.org/d2rq-language#propertybridge'>6. Adding properties to resources (d2rq:PropertyBridge)</a>
+     */
+    PropertyBridge createPropertyBridge(String uri);
 
     /**
      * Lists all {@link Database Database}s in the mapping graph.
@@ -81,6 +107,27 @@ public interface Mapping extends AutoCloseable {
      * @return Stream of {@link AdditionalProperty}s
      */
     Stream<AdditionalProperty> listAdditionalProperties();
+
+    /**
+     * Lists all {@link DownloadMap Download Map}s that are declared in the mapping graph.
+     *
+     * @return Stream of {@link DownloadMap}s
+     */
+    Stream<DownloadMap> listDownloadMaps();
+
+    /**
+     * Lists all {@link ClassMap Class Map}s that are declared in the mapping graph.
+     *
+     * @return Stream of {@link ClassMap}s
+     */
+    Stream<ClassMap> listClassMaps();
+
+    /**
+     * Lists all {@link PropertyBridge Property Bridge}s that are declared in the mapping graph.
+     *
+     * @return Stream of {@link PropertyBridge}s
+     */
+    Stream<PropertyBridge> listPropertyBridges();
 
     /**
      * Appends the specified database {@link MapObject map object} into the mapping.
@@ -109,26 +156,37 @@ public interface Mapping extends AutoCloseable {
      */
     Mapping addAdditionalProperty(AdditionalProperty prop);
 
-    // todo: should accept String, not Resource
-    ClassMap createClassMap(Resource r);
+    /**
+     * Appends the given{@link DownloadMap download map} into the mapping.
+     * No op in case the specified map object is already in the graph.
+     *
+     * @param dm {@link DownloadMap}, not {@code null}
+     * @return this instance
+     */
+    Mapping addDownloadMap(DownloadMap dm);
 
-    Stream<ClassMap> listClassMaps();
+    /**
+     * Appends the given{@link ClassMap class map} into the mapping.
+     * No op in case the specified map object is already in the graph.
+     *
+     * @param c {@link ClassMap}, not {@code null}
+     * @return this instance
+     */
+    Mapping addClassMap(ClassMap c);
 
-    // todo: change or remove
-    void addClassMap(ClassMap classMap);
-
-    // todo: should accept String, not Resource
-    PropertyBridge createPropertyBridge(Resource r);
-
-    // todo: should accept String, not Resource
-    DownloadMap createDownloadMap(Resource r);
-
-    Stream<DownloadMap> listDownloadMaps();
+    /**
+     * Appends the given{@link PropertyBridge class map} into the mapping.
+     * No op in case the specified map object is already in the graph.
+     *
+     * @param p {@link PropertyBridge}, not {@code null}
+     * @return this instance
+     */
+    Mapping addPropertyBridge(PropertyBridge p);
 
     // todo: hide from this interface
     Collection<TripleRelation> compiledPropertyBridges();
 
-    void validate();
+    void validate() throws D2RQException;
 
     // todo: hide from the interface or remove at all
     void connect();
@@ -144,14 +202,6 @@ public interface Mapping extends AutoCloseable {
     default Optional<Database> findDatabase(String jdbcURL) {
         Objects.requireNonNull(jdbcURL, "Null JDBC URL");
         return listDatabases().filter(c -> Objects.equals(c.getJDBCDSN(), jdbcURL)).findFirst();
-    }
-
-    default ClassMap findClassMap(Resource name) {
-        return listClassMaps().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElse(null);
-    }
-
-    default DownloadMap findDownloadMap(Resource name) {
-        return listDownloadMaps().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElse(null);
     }
 
     default Model getDataModel() {

@@ -8,7 +8,6 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.Models;
 import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -45,20 +44,6 @@ public abstract class MapObjectImpl implements MapObject {
     @Override
     public String toString() {
         return PrettyPrinter.toString(this.resource);
-    }
-
-    protected void assertNotYetDefined(Object object, Property property, int errorCode) {
-        if (object == null) {
-            return;
-        }
-        throw new D2RQException("Duplicate " + PrettyPrinter.toString(property) + " for " + this, errorCode);
-    }
-
-    protected void assertArgumentNotNull(Object object, Property property, int errorCode) {
-        if (object != null) {
-            return;
-        }
-        throw new D2RQException("Object for " + PrettyPrinter.toString(property) + " not found at " + this, errorCode);
     }
 
     protected <X extends MapObject> X addURI(Property property, String uri) throws NullPointerException, HasNoModelException {
@@ -115,10 +100,6 @@ public abstract class MapObjectImpl implements MapObject {
 
     protected Integer getInteger(Property property, Integer defaultValue) {
         return findFirst(property, s -> s.getLiteral().getInt()).orElse(defaultValue);
-    }
-
-    protected List<String> getStrings(Property property) throws NullPointerException, HasNoModelException, LiteralRequiredException {
-        return listStrings(property).toList();
     }
 
     protected ExtendedIterator<Literal> listLiterals(Property property) {

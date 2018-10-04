@@ -2,13 +2,14 @@ package de.fuberlin.wiwiss.d2rq.sql;
 
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
-import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.map.ClassMap;
+import de.fuberlin.wiwiss.d2rq.map.Database;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.junit.After;
 import org.junit.Assert;
@@ -21,8 +22,8 @@ import java.util.*;
 public abstract class DatatypeTestBase {
     private final static String EX = "http://example.com/";
     private final static String dbURI = EX + "db";
-    private final static Resource classMapURI = ResourceFactory.createResource(EX + "classmap");
-    private final static Resource propertyBridgeURI = ResourceFactory.createResource(EX + "propertybridge");
+    private final static String classMapURI = EX + "classmap";
+    private final static String propertyBridgeURI = EX + "propertybridge";
     private final static String valueProperty = EX + "value";
 
     private String jdbcURL;
@@ -122,24 +123,23 @@ public abstract class DatatypeTestBase {
             return result;
         }
     }
+
     private Mapping generateMapping() {
         URL script = DatatypeTestBase.class.getResource(this.script);
         Mapping mapping = MappingFactory.createEmpty();
-        Database database = mapping.createDatabase(dbURI);
-        database.setJDBCDSN(jdbcURL);
-        database.setJDBCDriver(driver);
-        database.setUsername(user);
-        database.setPassword(password);
-        database.setStartupSQLScript(script.toString());
-        ClassMap classMap = mapping.addDatabase(database).createClassMap(classMapURI);
-        classMap.setDatabase(database);
-        classMap.setURIPattern("row/@@T_" + datatype + ".ID@@");
-        mapping.addClassMap(classMap);
-        PropertyBridge propertyBridge = mapping.createPropertyBridge(propertyBridgeURI);
-        propertyBridge.setBelongsToClassMap(classMap);
-        propertyBridge.addProperty(valueProperty);
-        propertyBridge.setColumn("T_" + datatype + ".VALUE");
-        classMap.addPropertyBridge(propertyBridge);
+        Database database = mapping.createDatabase(dbURI)
+                .setJDBCDSN(jdbcURL)
+                .setJDBCDriver(driver)
+                .setUsername(user)
+                .setPassword(password)
+                .setStartupSQLScript(script.toString());
+        ClassMap classMap = mapping.addDatabase(database).createClassMap(classMapURI)
+                .setDatabase(database)
+                .setURIPattern("row/@@T_" + datatype + ".ID@@");
+        mapping.createPropertyBridge(propertyBridgeURI)
+                .setBelongsToClassMap(classMap)
+                .addProperty(valueProperty)
+                .setColumn("T_" + datatype + ".VALUE");
         return mapping;
     }
 }

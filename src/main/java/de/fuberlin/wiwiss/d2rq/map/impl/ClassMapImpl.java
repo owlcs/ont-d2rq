@@ -14,13 +14,11 @@ import ru.avicomp.ontapi.jena.utils.Iter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @SuppressWarnings("WeakerAccess")
 public class ClassMapImpl extends ResourceMap implements ClassMap {
-
-    private List<PropertyBridge> propertyBridges = new ArrayList<>();
-    private Collection<TripleRelation> compiledPropertyBridges = null;
 
     public ClassMapImpl(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
@@ -141,13 +139,19 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     @Override
-    public void addPropertyBridge(PropertyBridge bridge) {
-        this.propertyBridges.add(bridge);
+    public ClassMapImpl addPropertyBridge(PropertyBridge bridge) {
+        PropertyBridgeImpl res = mapping.asPropertyBridge(bridge.asResource()).copy(bridge);
+        res.setBelongsToClassMap(this);
+        return this;
     }
 
     @Override
-    public List<PropertyBridge> getPropertyBridges() {
-        return this.propertyBridges;
+    public Stream<PropertyBridge> listPropertyBridges() {
+        return Iter.asStream(propertyBridges()).map(Function.identity());
+    }
+
+    public ExtendedIterator<PropertyBridgeImpl> propertyBridges() {
+        return mustHaveModel().listResourcesWithProperty(D2RQ.belongsToClassMap, resource).mapWith(mapping::asPropertyBridge);
     }
 
     @Override
@@ -163,45 +167,37 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
                 .requireHasNoDuplicates(D2RQException.CLASSMAP_DUPLICATE_DATABASE)
                 .requireIsResource(D2RQException.CLASSMAP_INVALID_DATABASE);
 
+        v.requireHasOnlyOneOf(D2RQException.UNSPECIFIED,
+                D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue);
         commonValidateURI();
         commonValidateSQLAdditions();
         commonValidateUnclassifiedAdditions();
-        assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue);
         RDFNode constantValue = getConstantValue();
         if (constantValue != null && constantValue.isLiteral()) {
             throw new D2RQException("d2rq:constantValue for class map " + toString() + " must be a URI or blank node",
                     D2RQException.CLASSMAP_INVALID_CONSTANTVALUE);
         }
         PropertyMap.checkURIPattern(this);
-        for (PropertyBridge bridge : getPropertyBridges()) {
-            bridge.validate();
-        }
+
+        //listPropertyBridges().forEach(MapObject::validate);
         // TODO
     }
 
     public boolean hasProperties() {
-        return listClasses().count() != 0 || !getPropertyBridges().isEmpty();
+        return listClasses().count() != 0 || listPropertyBridges().count() != 0;
     }
 
-    public Collection<TripleRelation> compiledPropertyBridges() {
-        if (this.compiledPropertyBridges == null) {
-            compile();
-        }
-        return this.compiledPropertyBridges;
-    }
-
-    private void compile() {
-        this.compiledPropertyBridges = new ArrayList<>();
-        for (PropertyBridge bridge : getPropertyBridges()) {
-            this.compiledPropertyBridges.addAll(((PropertyBridgeImpl) bridge).toTripleRelations());
-        }
+    public Collection<TripleRelation> toTripleRelations() {
+        List<TripleRelation> res = new ArrayList<>();
+        propertyBridges().mapWith(PropertyBridgeImpl::toTripleRelations).forEachRemaining(res::addAll);
         listClasses().forEach(clazz -> {
             PropertyBridgeImpl bridge = mapping.asPropertyBridge(mapping.asModel().createResource());
             bridge.setBelongsToClassMap(ClassMapImpl.this);
             bridge.addProperty(RDF.type);
             bridge.setConstantValue(clazz);
-            ClassMapImpl.this.compiledPropertyBridges.addAll(bridge.toTripleRelations());
+            res.addAll(bridge.toTripleRelations());
         });
+        return res;
     }
 
     @Override
@@ -213,6 +209,5 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     public String toString() {
         return "d2rq:ClassMap " + PrettyPrinter.toString(this.resource);
     }
-
 
 }

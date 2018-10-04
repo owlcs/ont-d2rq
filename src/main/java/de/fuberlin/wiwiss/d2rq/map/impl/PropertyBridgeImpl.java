@@ -25,6 +25,7 @@ import ru.avicomp.ontapi.jena.utils.Iter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @SuppressWarnings("WeakerAccess")
@@ -136,10 +137,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     public PropertyBridgeImpl setBelongsToClassMap(ClassMap classMap) {
-        assertNotYetDefined(getBelongsToClassMap(), D2RQ.belongsToClassMap, D2RQException.PROPERTYBRIDGE_DUPLICATE_BELONGSTOCLASSMAP);
-        assertArgumentNotNull(classMap, D2RQ.belongsToClassMap, D2RQException.PROPERTYBRIDGE_INVALID_BELONGSTOCLASSMAP);
-        this.belongsToClassMap = classMap;
-        return this;
+        return (PropertyBridgeImpl) super.setBelongsToClassMap(classMap);
     }
 
     @Override
@@ -206,10 +204,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     public PropertyBridgeImpl setRefersToClassMap(ClassMap classMap) {
-        assertNotYetDefined(getRefersToClassMap(), D2RQ.refersToClassMap, D2RQException.PROPERTYBRIDGE_DUPLICATE_REFERSTOCLASSMAP);
-        assertArgumentNotNull(classMap, D2RQ.refersToClassMap, D2RQException.PROPERTYBRIDGE_INVALID_REFERSTOCLASSMAP);
-        this.refersToClassMap = classMap;
-        return this;
+        return (PropertyBridgeImpl) super.setRefersToClassMap(classMap);
     }
 
     /**
@@ -255,11 +250,31 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     @Override
     public void validate() throws D2RQException {
         Validator v = new Validator(this);
-        // todo: enable
-       /* v.requireHasOnlyOneOf(D2RQException.RESOURCEMAP_MISSING_PRIMARYSPEC,
+        v.requireHasOnlyOneOf(D2RQException.PROPERTYBRIDGE_MISSING_PREDICATESPEC,
                 D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
                 D2RQ.column, D2RQ.pattern, D2RQ.sqlExpression, D2RQ.uriSqlExpression, D2RQ.constantValue,
-                D2RQ.refersToClassMap);*/
+                D2RQ.refersToClassMap);
+
+        Validator.ForProperty belongsToClassMap = v.forProperty(D2RQ.belongsToClassMap);
+        belongsToClassMap.requireExists(D2RQException.UNSPECIFIED)
+                .requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_BELONGSTOCLASSMAP)
+                .requireIsResource(D2RQException.PROPERTYBRIDGE_INVALID_BELONGSTOCLASSMAP);
+
+        Validator.ForProperty refersToClassMap = v.forProperty(D2RQ.refersToClassMap);
+        if (refersToClassMap.exists()) {
+            refersToClassMap.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_REFERSTOCLASSMAP)
+                    .requireIsResource(D2RQException.PROPERTYBRIDGE_INVALID_REFERSTOCLASSMAP);
+            if (!Objects.equals(getRefersToClassMap().getDatabase(), getBelongsToClassMap().getDatabase())) {
+                throw new D2RQException(toString() +
+                        " links two d2rq:ClassMaps with different d2rq:dataStorage",
+                        D2RQException.PROPERTYBRIDGE_CONFLICTING_DATABASES);
+            }
+            // TODO refersToClassMap cannot be combined w/ value constraints or translation tables
+        }
+
+        commonValidateURI();
+        commonValidateSQLAdditions();
+        commonValidateUnclassifiedAdditions();
         Validator.ForProperty column = v.forProperty(D2RQ.column);
         if (column.exists()) {
             column.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_COLUMN)
@@ -301,32 +316,15 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
             orderDesc.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_ORDER)
                     .requireIsStringLiteral(D2RQException.UNSPECIFIED);
         }
-        Validator.ForProperty orderAscc = v.forProperty(D2RQ.orderAsc);
-        if (orderAscc.exists()) {
-            orderAscc.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_ORDER)
+        Validator.ForProperty orderAsc = v.forProperty(D2RQ.orderAsc);
+        if (orderAsc.exists()) {
+            orderAsc.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_ORDER)
                     .requireIsStringLiteral(D2RQException.UNSPECIFIED);
-        }
-        ClassMap refersToClassMap = getRefersToClassMap();
-        ClassMap belongsToClassMap = getBelongsToClassMap();
-        if (refersToClassMap != null) {
-            if (!refersToClassMap.getDatabase().equals(belongsToClassMap.getDatabase())) {
-                throw new D2RQException(toString() +
-                        " links two d2rq:ClassMaps with different d2rq:dataStorages",
-                        D2RQException.PROPERTYBRIDGE_CONFLICTING_DATABASES);
-            }
-            // TODO refersToClassMap cannot be combined w/ value constraints or translation tables
         }
         if (properties().toSet().isEmpty() && dynamicProperties().toSet().isEmpty()) {
             throw new D2RQException(toString() + " needs a d2rq:property or d2rq:dynamicProperty",
                     D2RQException.PROPERTYBRIDGE_MISSING_PREDICATESPEC);
         }
-        commonValidateURI();
-        commonValidateSQLAdditions();
-        commonValidateUnclassifiedAdditions();
-        // todo: remove:
-        assertHasPrimarySpec(D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.bNodeIdColumns,
-                D2RQ.column, D2RQ.pattern, D2RQ.sqlExpression, D2RQ.uriSqlExpression, D2RQ.constantValue,
-                D2RQ.refersToClassMap);
         if (datatype.exists() && lang.exists()) {
             throw new D2RQException(toString() + " has both d2rq:datatype and d2rq:lang",
                     D2RQException.PROPERTYBRIDGE_LANG_AND_DATATYPE);
@@ -347,8 +345,8 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     protected Relation buildRelation() {
-        ClassMapImpl belongsToClassMap = (ClassMapImpl) getBelongsToClassMap();
-        ClassMapImpl refersToClassMap = (ClassMapImpl) getRefersToClassMap();
+        ClassMapImpl belongsToClassMap = getBelongsToClassMap();
+        ClassMapImpl refersToClassMap = getRefersToClassMap();
         ConnectedDB db = mapping.getConnectedDB(belongsToClassMap.getDatabase());
         RelationBuilder builder = belongsToClassMap.relationBuilder(db);
         builder.addOther(relationBuilder(db));
@@ -376,7 +374,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     public Collection<TripleRelation> toTripleRelations() {
         this.validate();
-        Collection<TripleRelation> results = new ArrayList<>();
+        Collection<TripleRelation> res = new ArrayList<>();
         NodeMaker s = getBelongsToClassMap().nodeMaker();
         NodeMaker o = this.nodeMaker();
         Relation base = buildRelation();
@@ -384,13 +382,13 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
                 .mapWith(FrontsNode::asNode)
                 .mapWith(p -> new FixedNodeMaker(p, false))
                 .mapWith(p -> new TripleRelation(base, s, p, o))
-                .forEachRemaining(results::add);
+                .forEachRemaining(res::add);
         dynamicProperties()
                 .mapWith(PropertyMap::new)
                 .mapWith(PropertyMap::nodeMaker)
                 .mapWith(p -> new TripleRelation(base, s, p, o))
-                .forEachRemaining(results::add);
-        return results;
+                .forEachRemaining(res::add);
+        return res;
     }
 
     @Override

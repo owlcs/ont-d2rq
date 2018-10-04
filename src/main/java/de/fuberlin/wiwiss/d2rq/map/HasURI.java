@@ -43,6 +43,8 @@ interface HasURI<R extends MapObject> {
 
     /**
      * Sets {@code d2rq:uriColumn} property value.
+     * A database column containing URI refs for identifying instances of this map.
+     * The column name has to be in the form {@code TableName.ColumnName}.
      *
      * @param column String, not {@code null}
      * @return this instance to allow cascading calls

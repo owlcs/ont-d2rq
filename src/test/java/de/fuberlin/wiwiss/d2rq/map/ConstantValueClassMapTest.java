@@ -1,7 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,24 +9,18 @@ public class ConstantValueClassMapTest {
 
     private ClassMap collection;
 
+    @SuppressWarnings("SameParameterValue")
     private static ClassMap createClassMap(Mapping m, Database d, String uriPattern) {
-        ClassMap result = m.createClassMap(m.asModel().createResource());
-        result.setDatabase(d);
-        result.setURIPattern(uriPattern);
-        m.addClassMap(result);
-        return result;
+        return m.createClassMap(null).setDatabase(d).setURIPattern(uriPattern);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static ClassMap createConstantClassMap(Mapping m, Database d, String uri) {
-        ClassMap result = m.createClassMap(m.asModel().createResource());
-        result.setDatabase(d).setConstantValue(uri);
-        m.addClassMap(result);
-        return result;
+        return m.createClassMap(null).setDatabase(d).setConstantValue(uri);
     }
 
     private PropertyBridge createPropertyBridge(Mapping mapping, ClassMap classMap, String propertyURI) {
-        Model m = classMap.asResource().getModel();
-        PropertyBridge result = mapping.createPropertyBridge(m.createResource());
+        PropertyBridge result = mapping.createPropertyBridge(null);
         result.setBelongsToClassMap(classMap);
         result.addProperty(propertyURI);
         classMap.addPropertyBridge(result);

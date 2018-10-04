@@ -58,10 +58,10 @@ public class MappingTransform {
 
             mapping.listClassMaps().forEach(classMap -> {
                 classMap.listClasses().forEach(c -> addDefinitions(model, (ResourceMap) classMap, c));
-                for (PropertyBridge bridge : classMap.getPropertyBridges()) {
-                    bridge.listProperties().forEach(p -> addDefinitions(model, (ResourceMap) bridge, p));
+                classMap.listPropertyBridges().forEach(b -> {
+                    b.listProperties().forEach(p -> addDefinitions(model, (ResourceMap) b, p));
                     // TODO: What to do about dynamic properties?
-                }
+                });
             });
             return model;
         }

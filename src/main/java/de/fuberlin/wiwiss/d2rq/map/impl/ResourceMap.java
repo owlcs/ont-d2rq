@@ -36,11 +36,6 @@ import java.util.stream.Stream;
 @SuppressWarnings("WeakerAccess")
 public abstract class ResourceMap extends MapObjectImpl {
 
-    // d2rq:refersToClassMap is only for PropertyBridge (todo: this cache will be removed)
-    protected ClassMap refersToClassMap = null;
-    // d2rq:belongsToClassMap is for PropertyBridge and DownloadMap (todo: this cache will be removed)
-    protected ClassMap belongsToClassMap = null;
-
     public ResourceMap(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
     }
@@ -253,12 +248,29 @@ public abstract class ResourceMap extends MapObjectImpl {
         return listAliases().mapWith(SQL::parseAlias).toSet();
     }
 
-    public ClassMap getRefersToClassMap() {
-        return refersToClassMap;
+    public ClassMapImpl getRefersToClassMap() {
+        return getClassMap(D2RQ.refersToClassMap);
     }
 
-    public ClassMap getBelongsToClassMap() {
-        return belongsToClassMap;
+    public ResourceMap setRefersToClassMap(ClassMap classMap) {
+        return setClassMap(D2RQ.refersToClassMap, classMap);
+    }
+
+    public ClassMapImpl getBelongsToClassMap() {
+        return getClassMap(D2RQ.belongsToClassMap);
+    }
+
+    public ResourceMap setBelongsToClassMap(ClassMap classMap) {
+        return setClassMap(D2RQ.belongsToClassMap, classMap);
+    }
+
+    protected ClassMapImpl getClassMap(Property predicate) {
+        return findFirst(predicate, Statement::getResource).map(mapping::asClassMap).orElse(null);
+    }
+
+    protected ResourceMap setClassMap(Property predicate, ClassMap classMap) {
+        ClassMapImpl res = mapping.asClassMap(classMap.asResource()).copy(classMap);
+        return setRDFNode(predicate, res.asResource());
     }
 
     public RelationBuilder relationBuilder(ConnectedDB cd) {
@@ -293,11 +305,11 @@ public abstract class ResourceMap extends MapObjectImpl {
         if (constantValue != null) {
             return new FixedNodeMaker(constantValue.asNode(), isUnique);
         }
-        ClassMap refersToClassMap = getRefersToClassMap();
+        ClassMapImpl refersToClassMap = getRefersToClassMap();
         if (refersToClassMap == null) {
             return buildNodeMaker(wrapValueSource(buildValueSourceBase()), isUnique);
         }
-        return ((ClassMapImpl) refersToClassMap).buildAliasedNodeMaker(new AliasMap(getAliases()), isUnique);
+        return refersToClassMap.buildAliasedNodeMaker(new AliasMap(getAliases()), isUnique);
     }
 
     public NodeMaker buildAliasedNodeMaker(AliasMap aliases, boolean unique) {
@@ -397,46 +409,6 @@ public abstract class ResourceMap extends MapObjectImpl {
             result.add(SQL.parseAttribute(attr));
         }
         return result;
-    }
-
-    @Deprecated // todo: delete
-    protected void assertHasPrimarySpec(Property... allowedSpecs) {
-        List<Property> definedSpecs = new ArrayList<>();
-        for (Property p : allowedSpecs) {
-            if (hasPrimarySpec(p)) {
-                definedSpecs.add(p);
-            }
-        }
-        if (definedSpecs.isEmpty()) {
-            StringBuilder error = new StringBuilder(toString());
-            error.append(" needs one of ");
-            for (int i = 0; i < allowedSpecs.length; i++) {
-                if (i > 0) {
-                    error.append(", ");
-                }
-                error.append(PrettyPrinter.toString(allowedSpecs[i]));
-            }
-            throw new D2RQException(error.toString(), D2RQException.RESOURCEMAP_MISSING_PRIMARYSPEC);
-        }
-        if (definedSpecs.size() > 1) {
-            throw new D2RQException(toString() + " can't have both " +
-                    PrettyPrinter.toString(definedSpecs.get(0)) +
-                    " and " +
-                    PrettyPrinter.toString(definedSpecs.get(1)));
-        }
-    }
-
-    private boolean hasPrimarySpec(Property property) {
-        if (property.equals(D2RQ.bNodeIdColumns)) return getBNodeIdColumns() != null;
-        if (property.equals(D2RQ.uriColumn)) return getURIColumn() != null;
-        if (property.equals(D2RQ.uriPattern)) return getURIPattern() != null;
-        if (property.equals(D2RQ.column)) return getColumn() != null;
-        if (property.equals(D2RQ.pattern)) return getPattern() != null;
-        if (property.equals(D2RQ.sqlExpression)) return getSQLExpression() != null;
-        if (property.equals(D2RQ.uriSqlExpression)) return getUriSQLExpression() != null;
-        if (property.equals(D2RQ.refersToClassMap)) return getRefersToClassMap() != null;
-        if (property.equals(D2RQ.constantValue)) return getConstantValue() != null;
-        throw new D2RQException("No primary spec: " + property);
     }
 
     /**
