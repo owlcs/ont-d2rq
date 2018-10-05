@@ -151,7 +151,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     public ExtendedIterator<PropertyBridgeImpl> propertyBridges() {
-        return mustHaveModel().listResourcesWithProperty(D2RQ.belongsToClassMap, resource).mapWith(mapping::asPropertyBridge);
+        return getModel().listResourcesWithProperty(D2RQ.belongsToClassMap, resource).mapWith(mapping::asPropertyBridge);
     }
 
     @Override
@@ -183,7 +183,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
         // TODO
     }
 
-    public boolean hasProperties() {
+    public boolean hasContent() {
         return listClasses().count() != 0 || listPropertyBridges().count() != 0;
     }
 

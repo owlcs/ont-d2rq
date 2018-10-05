@@ -1,6 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
-import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.rdf.model.*;
@@ -23,9 +22,10 @@ public abstract class MapObjectImpl implements MapObject {
     protected final Resource resource;
     protected final MappingImpl mapping;
 
-    public MapObjectImpl(Resource resource, MappingImpl mapping) {
-        this.resource = resource; // todo: check not null
-        this.mapping = mapping;
+    public MapObjectImpl(Resource resource, MappingImpl mapping) throws NullPointerException {
+        this.mapping = Objects.requireNonNull(mapping, "Null mapping");
+        this.resource = Objects.requireNonNull(resource, "Null resource")
+                .inModel(Objects.requireNonNull(mapping.asModel(), "No model"));
     }
 
     @Override
@@ -38,63 +38,54 @@ public abstract class MapObjectImpl implements MapObject {
         return mapping;
     }
 
-    @Override
-    public abstract void validate() throws D2RQException;
-
-    @Override
-    public String toString() {
-        return PrettyPrinter.toString(this.resource);
+    public Model getModel() {
+        return resource.getModel();
     }
 
-    protected <X extends MapObject> X addURI(Property property, String uri) throws NullPointerException, HasNoModelException {
-        Resource res = mustHaveModel().createResource(Objects.requireNonNull(uri, "Null uri"));
-        return addRDFNode(property, res);
-    }
-
-    protected <X extends MapObject> X setURI(Property property, String uri) throws NullPointerException, HasNoModelException {
-        Resource res = mustHaveModel().createResource(Objects.requireNonNull(uri, "Null uri"));
+    protected <X extends MapObject> X setURI(Property property, String uri) throws NullPointerException {
+        Resource res = getModel().createResource(Objects.requireNonNull(uri, "Null uri"));
         return setRDFNode(property, res);
     }
 
-    protected <X extends MapObject> X addLiteral(Property property, String literal) throws NullPointerException, HasNoModelException {
-        Literal res = mustHaveModel().createLiteral(Objects.requireNonNull(literal, "Null literal"));
+    protected <X extends MapObject> X addLiteral(Property property, String literal) throws NullPointerException {
+        Literal res = getModel().createLiteral(Objects.requireNonNull(literal, "Null literal"));
         return addRDFNode(property, res);
     }
 
     @SuppressWarnings("unchecked")
-    protected <X extends MapObject> X setNullable(Property property, String literal) throws NullPointerException, HasNoModelException {
+    protected <X extends MapObject> X setNullable(Property property, String literal) throws NullPointerException {
         resource.removeAll(Objects.requireNonNull(property, "Null property"));
         if (literal == null) return (X) this;
-        return addRDFNode(property, mustHaveModel().createLiteral(literal));
+        return addRDFNode(property, getModel().createLiteral(literal));
     }
 
-    protected <X extends MapObject> X setLiteral(Property property, String literal) throws NullPointerException, HasNoModelException {
-        Literal res = mustHaveModel().createLiteral(Objects.requireNonNull(literal, "Null literal"));
+    protected <X extends MapObject> X setLiteral(Property property, String literal) throws NullPointerException {
+        Literal res = getModel().createLiteral(Objects.requireNonNull(literal, "Null literal"));
         return setRDFNode(property, res);
     }
 
     protected <X extends MapObject> X setLiteral(Property property, int literal) {
-        Literal res = mustHaveModel().createLiteral(String.valueOf(literal), XSD.integer.getURI());
+        Literal res = getModel().createLiteral(String.valueOf(literal), XSD.integer.getURI());
         return setRDFNode(property, res);
     }
 
-    protected <X extends MapObject> X setBoolean(Property property, boolean value) throws NullPointerException, HasNoModelException {
+    protected <X extends MapObject> X setBoolean(Property property, boolean value) throws NullPointerException {
         return setRDFNode(property, value ? Models.TRUE : Models.FALSE);
     }
 
-    protected <X extends MapObject> X setRDFNode(Property property, RDFNode node) throws NullPointerException, HasNoModelException {
+    protected <X extends MapObject> X setRDFNode(Property property, RDFNode node) throws NullPointerException {
         resource.removeAll(Objects.requireNonNull(property, "Null property"));
         return addRDFNode(property, node);
     }
 
     @SuppressWarnings("unchecked")
-    protected <X extends MapObject> X addRDFNode(Property property, RDFNode node) throws NullPointerException, HasNoModelException {
+    protected <X extends MapObject> X addRDFNode(Property property, RDFNode node) throws NullPointerException {
         resource.addProperty(Objects.requireNonNull(property, "Null property"), Objects.requireNonNull(node, "Null value"));
         return (X) this;
     }
 
     protected boolean getBoolean(Property property,
-                                 boolean defaultValue) throws NullPointerException, HasNoModelException, LiteralRequiredException {
+                                 boolean defaultValue) throws NullPointerException, LiteralRequiredException {
         return findFirst(property, s -> s.getLiteral().getBoolean()).orElse(defaultValue);
     }
 
@@ -106,20 +97,24 @@ public abstract class MapObjectImpl implements MapObject {
         return listStatements(property).mapWith(Statement::getLiteral);
     }
 
-    protected ExtendedIterator<String> listStrings(Property property) throws NullPointerException, HasNoModelException, LiteralRequiredException {
+    protected ExtendedIterator<String> listStrings(Property property) throws NullPointerException, LiteralRequiredException {
         return listStatements(property).mapWith(Statement::getString);
     }
 
-    protected Optional<String> findURI(Property property) throws NullPointerException, HasNoModelException, ResourceRequiredException {
+    protected Optional<String> findURI(Property property) throws NullPointerException, ResourceRequiredException {
         return findFirst(property, s -> s.getResource().getURI());
     }
 
-    protected Optional<String> findString(Property property) throws NullPointerException, HasNoModelException, LiteralRequiredException {
+    protected String getString(Property property) {
+        return findString(property).orElse(null);
+    }
+
+    protected Optional<String> findString(Property property) throws NullPointerException, LiteralRequiredException {
         return findFirst(property, Statement::getString);
     }
 
     protected <X> Optional<X> findFirst(Property property,
-                                        Function<Statement, X> extract) throws NullPointerException, HasNoModelException {
+                                        Function<Statement, X> extract) throws NullPointerException {
         ExtendedIterator<Statement> res = listStatements(property);
         try {
             return !res.hasNext() ? Optional.empty() : Optional.of(res.next()).map(extract);
@@ -132,15 +127,9 @@ public abstract class MapObjectImpl implements MapObject {
         return resource.listProperties(Objects.requireNonNull(predicate, "Null predicate"));
     }
 
-    public Model mustHaveModel() throws HasNoModelException {
-        return mustHaveModel(this);
-    }
-
-    private static Model mustHaveModel(MapObject object) throws NullPointerException, HasNoModelException {
-        Model res = object.asResource().getModel();
-        if (res == null) res = object.getMapping().asModel();
-        if (res == null) throw new HasNoModelException(object);
-        return res;
+    @Override
+    public String toString() {
+        return PrettyPrinter.toString(this.resource);
     }
 
     @Override
@@ -166,9 +155,9 @@ public abstract class MapObjectImpl implements MapObject {
      * @throws HasNoModelException  if either this or the given objects has no model
      */
     @SuppressWarnings("unchecked")
-    protected <X extends MapObject> X copy(MapObject other) throws NullPointerException, HasNoModelException {
-        Model b = mustHaveModel(Objects.requireNonNull(other));
-        Model a = mustHaveModel();
+    protected <X extends MapObject> X copy(MapObject other) throws NullPointerException {
+        Model b = Objects.requireNonNull(other).asResource().getModel();
+        Model a = getModel();
         if (Objects.equals(a.getGraph(), b.getGraph())) {
             return (X) this;
         }

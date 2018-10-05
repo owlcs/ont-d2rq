@@ -221,7 +221,8 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     public PropertyBridgeImpl addProperty(String uri) {
-        return addURI(D2RQ.property, uri);
+        Resource res = getModel().createResource(Objects.requireNonNull(uri, "Null uri"));
+        return addRDFNode(D2RQ.property, res);
     }
 
     @Override

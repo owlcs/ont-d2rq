@@ -46,7 +46,6 @@ public class MappingImpl implements Mapping {
 
     private final Model model;
 
-    private Configuration configuration;
     private Collection<TripleRelation> compiledPropertyBridges;
     // cache for prefixes (todo: remove - should be obtained from schema)
     private PrefixMapping prefixes;
@@ -101,52 +100,6 @@ public class MappingImpl implements Mapping {
         return prefixes == null ? prefixes = MappingFactory.Prefixes.createSchemaPrefixes(model) : prefixes;
     }
 
-    /**
-     * Connects all databases. This is done automatically if needed.
-     * The method can be used to test the connections earlier.
-     * TODO: do not see any sense in this method. Scheduled to remove
-     *
-     * @throws D2RQException on connection failure
-     */
-    @Override
-    public void connect() {
-        if (connected) return;
-        connected = true;
-        for (ConnectedDB db : connections.values()) {
-            db.connection();
-        }
-        validate();
-    }
-
-    @Override
-    public void close() {
-        connections.values().forEach(ConnectedDB::close);
-    }
-
-    @Override
-    public DatabaseImpl createDatabase(String uri) {
-        return asDatabase(model.createResource(uri, D2RQ.Database));
-    }
-
-    protected DatabaseImpl asDatabase(Resource r) {
-        return new DatabaseImpl(r.inModel(model), this);
-    }
-
-    @Override
-    public MappingImpl addDatabase(Database database) {
-        asDatabase(database.asResource()).copy(database);
-        return this;
-    }
-
-    @Override
-    public Stream<Database> listDatabases() {
-        return Iter.asStream(databases()).map(Function.identity());
-    }
-
-    public ExtendedIterator<DatabaseImpl> databases() {
-        return model.listResourcesWithProperty(RDF.type, D2RQ.Database).mapWith(r -> new DatabaseImpl(r, this));
-    }
-
     public ConnectedDB getConnectedDB(DatabaseImpl db) {
         return connections.computeIfAbsent(db.asResource(), d -> createConnectionDB(db));
     }
@@ -174,6 +127,52 @@ public class MappingImpl implements Mapping {
         return res;
     }
 
+    /**
+     * Connects all databases. This is done automatically if needed.
+     * The method can be used to test the connections earlier.
+     * TODO: do not see any sense in this method. Scheduled to remove
+     *
+     * @throws D2RQException on connection failure
+     */
+    @Override
+    public void connect() {
+        if (connected) return;
+        connected = true;
+        for (ConnectedDB db : connections.values()) {
+            db.connection();
+        }
+        validate();
+    }
+
+    @Override
+    public void close() {
+        connections.values().forEach(ConnectedDB::close);
+    }
+
+    @Override
+    public DatabaseImpl createDatabase(String uri) {
+        return asDatabase(model.createResource(uri, D2RQ.Database));
+    }
+
+    @Override
+    public MappingImpl addDatabase(Database database) {
+        asDatabase(database.asResource()).copy(database);
+        return this;
+    }
+
+    @Override
+    public Stream<Database> listDatabases() {
+        return Iter.asStream(databases()).map(Function.identity());
+    }
+
+    public ExtendedIterator<DatabaseImpl> databases() {
+        return model.listResourcesWithProperty(RDF.type, D2RQ.Database).mapWith(this::asDatabase);
+    }
+
+    public DatabaseImpl asDatabase(Resource r) {
+        return new DatabaseImpl(r, this);
+    }
+
     @Override
     public TranslationTableImpl createTranslationTable(String uri) {
         return asTranslationTable(model.createResource(uri, D2RQ.TranslationTable));
@@ -195,7 +194,7 @@ public class MappingImpl implements Mapping {
     }
 
     public TranslationTableImpl asTranslationTable(Resource r) {
-        return new TranslationTableImpl(r.inModel(model), this);
+        return new TranslationTableImpl(r, this);
     }
 
     @Override
@@ -219,7 +218,7 @@ public class MappingImpl implements Mapping {
     }
 
     public AdditionalPropertyImpl asAdditionalProperty(Resource r) {
-        return new AdditionalPropertyImpl(r.inModel(model), this);
+        return new AdditionalPropertyImpl(r, this);
     }
 
     @Override
@@ -243,23 +242,18 @@ public class MappingImpl implements Mapping {
     }
 
     public DownloadMapImpl asDownloadMap(Resource r) {
-        return new DownloadMapImpl(r.inModel(model), this);
+        return new DownloadMapImpl(r, this);
     }
 
     @Override
     public Configuration getConfiguration() {
-        if (configuration != null) return configuration;
-        Resource r = Iter.asStream(model.listResourcesWithProperty(RDF.type, D2RQ.Configuration))
+        Resource r = Iter.asStream(listConfigurations())
                 .findFirst().orElseGet(() -> model.createResource(D2RQ.Configuration));
-        return configuration = createConfiguration(r);
-    }
-
-    public ConfigurationImpl createConfiguration(Resource r) {
         return new ConfigurationImpl(r, this);
     }
 
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
+    protected ExtendedIterator<Resource> listConfigurations() {
+        return model.listResourcesWithProperty(RDF.type, D2RQ.Configuration);
     }
 
     @Override
@@ -283,7 +277,7 @@ public class MappingImpl implements Mapping {
     }
 
     public PropertyBridgeImpl asPropertyBridge(Resource r) {
-        return new PropertyBridgeImpl(r.inModel(model), this);
+        return new PropertyBridgeImpl(r, this);
     }
 
     @Override
@@ -307,7 +301,7 @@ public class MappingImpl implements Mapping {
     }
 
     public ClassMapImpl asClassMap(Resource r) {
-        return new ClassMapImpl(r.inModel(model), this);
+        return new ClassMapImpl(r, this);
     }
 
     /**
@@ -316,6 +310,7 @@ public class MappingImpl implements Mapping {
     @Override
     public synchronized Collection<TripleRelation> compiledPropertyBridges() {
         if (compiledPropertyBridges == null) {
+            //validateRDF();
             compiledPropertyBridges = compilePropertyBridges();
             LOGGER.info("Compiled {} property bridges", compiledPropertyBridges.size());
             if (LOGGER.isDebugEnabled()) {
@@ -325,8 +320,8 @@ public class MappingImpl implements Mapping {
         return compiledPropertyBridges;
     }
 
-    private Collection<TripleRelation> compilePropertyBridges() {
-        /*
+    public Collection<TripleRelation> compilePropertyBridges() throws D2RQException {
+         /*
           validate temporarily disabled, see bug
           https://github.com/d2rq/d2rq/issues/194
 
@@ -339,9 +334,19 @@ public class MappingImpl implements Mapping {
         return Iter.flatMap(classMaps(), c -> c.toTripleRelations().iterator()).toList();
     }
 
-
     @Override
     public void validate() throws D2RQException {
+        validateRDF();
+        compiledPropertyBridges().forEach(MappingImpl::validateRelation);
+    }
+
+    public void validateRDF() throws D2RQException {
+        List<Resource> conf = listConfigurations().toList();
+        if (conf.size() == 1) {
+            getConfiguration().validate();
+        } else if (!conf.isEmpty()) {
+            throw new D2RQException("Duplicate configurations : " + conf);
+        }
         if (listDatabases().peek(MapObject::validate).count() == 0) {
             throw new D2RQException("No d2rq:Database defined in the mapping", D2RQException.MAPPING_NO_DATABASE);
         }
@@ -351,37 +356,31 @@ public class MappingImpl implements Mapping {
         listPropertyBridges().forEach(MapObject::validate);
 
         listClassMaps().forEach(MapObject::validate);
-        List<ClassMapImpl> classMapsWithoutProperties = classMaps().filterDrop(ClassMapImpl::hasProperties).toList();
-        if (!classMapsWithoutProperties.isEmpty()) {
-            throw new D2RQException("Class maps " + classMapsWithoutProperties +
-                    " have no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
-        }
-
-        for (TripleRelation bridge : compiledPropertyBridges()) {
-            new AttributeTypeValidator(bridge).validate();
+        List<ClassMapImpl> empty = classMaps().filterDrop(ClassMapImpl::hasContent).toList();
+        if (!empty.isEmpty()) {
+            throw new D2RQException((empty.size() == 1 ?
+                    String.format("Class map %s has", empty.get(0)) :
+                    String.format("Class maps %s have", empty)) +
+                    " no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
         }
     }
 
-    private static class AttributeTypeValidator {
-        private final Relation relation;
+    public static void validateRelation(TripleRelation tripleRelation) throws D2RQException {
+        validateRelation(tripleRelation.baseRelation());
+    }
 
-        AttributeTypeValidator(TripleRelation relation) {
-            this.relation = Objects.requireNonNull(relation.baseRelation());
-        }
-
-        void validate() {
-            for (Attribute attribute : relation.allKnownAttributes()) {
-                DataType dataType = relation.database().columnType(relation.aliases().originalOf(attribute));
-                if (dataType == null) {
-                    throw new D2RQException("Column " + relation.aliases().originalOf(attribute) +
-                            " has a datatype that is unknown to D2RQ; override it with d2rq:xxxColumn in the mapping file",
-                            D2RQException.DATATYPE_UNKNOWN);
-                }
-                if (dataType.isUnsupported()) {
-                    throw new D2RQException("Column " + relation.aliases().originalOf(attribute) +
-                            " has a datatype that D2RQ cannot express in RDF: " + dataType,
-                            D2RQException.DATATYPE_UNMAPPABLE);
-                }
+    public static void validateRelation(Relation relation) throws D2RQException {
+        for (Attribute attribute : relation.allKnownAttributes()) {
+            DataType dataType = relation.database().columnType(relation.aliases().originalOf(attribute));
+            if (dataType == null) {
+                throw new D2RQException("Column " + relation.aliases().originalOf(attribute) +
+                        " has a datatype that is unknown to D2RQ; override it with d2rq:xxxColumn in the mapping file",
+                        D2RQException.DATATYPE_UNKNOWN);
+            }
+            if (dataType.isUnsupported()) {
+                throw new D2RQException("Column " + relation.aliases().originalOf(attribute) +
+                        " has a datatype that D2RQ cannot express in RDF: " + dataType,
+                        D2RQException.DATATYPE_UNMAPPABLE);
             }
         }
     }

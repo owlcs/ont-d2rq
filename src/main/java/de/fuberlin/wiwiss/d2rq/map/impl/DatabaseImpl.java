@@ -72,7 +72,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
      */
     @Override
     public String getJDBCDSN() {
-        return findString(D2RQ.jdbcDSN).orElse(null);
+        return getString(D2RQ.jdbcDSN);
     }
 
     /**
@@ -88,12 +88,12 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
 
     @Override
     public String getJDBCDriver() {
-        return findString(D2RQ.jdbcDriver).orElse(null);
+        return getString(D2RQ.jdbcDriver);
     }
 
     @Override
     public String getUsername() {
-        return findString(D2RQ.username).orElse(null);
+        return getString(D2RQ.username);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
 
     @Override
     public String getPassword() {
-        return findString(D2RQ.password).orElse(null);
+        return getString(D2RQ.password);
     }
 
     @Override

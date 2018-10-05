@@ -86,7 +86,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
 
     @Override
     public String getMediaType() {
-        return findString(D2RQ.mediaType).orElse(null);
+        return getString(D2RQ.mediaType);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
 
     @Override
     public String getContentDownloadColumn() {
-        return findString(D2RQ.contentDownloadColumn).orElse(null);
+        return getString(D2RQ.contentDownloadColumn);
     }
 
     @Override

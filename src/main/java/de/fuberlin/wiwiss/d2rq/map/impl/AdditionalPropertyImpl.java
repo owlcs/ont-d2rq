@@ -24,7 +24,7 @@ public class AdditionalPropertyImpl extends MapObjectImpl implements AdditionalP
 
     @Override
     public Property getName() {
-        return findURI(D2RQ.propertyName).map(s -> mustHaveModel().getProperty(s)).orElse(null);
+        return findURI(D2RQ.propertyName).map(s -> getModel().getProperty(s)).orElse(null);
     }
 
     @Override

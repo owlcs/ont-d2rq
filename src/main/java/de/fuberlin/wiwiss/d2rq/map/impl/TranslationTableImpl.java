@@ -32,7 +32,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
     @Override
     public EntryImpl createTranslation() {
         Resource res;
-        resource.addProperty(D2RQ.translation, res = mustHaveModel().createResource());
+        resource.addProperty(D2RQ.translation, res = getModel().createResource());
         return asTranslation(res);
     }
 
@@ -73,7 +73,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
 
     @Override
     public String getJavaClass() {
-        return findString(D2RQ.javaClass).orElse(null);
+        return getString(D2RQ.javaClass);
     }
 
     /**
@@ -195,7 +195,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
 
         @Override
         public TranslationTable getTable() {
-            List<Resource> res = mustHaveModel().listResourcesWithProperty(D2RQ.translation, resource).toList();
+            List<Resource> res = getModel().listResourcesWithProperty(D2RQ.translation, resource).toList();
             if (res.size() != 1) throw new IllegalStateException("Can't find d2rq:TranslationTable for " + toString());
             return mapping.asTranslationTable(res.get(0));
         }
@@ -209,7 +209,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
 
         @Override
         public String getDatabaseValue() {
-            return findString(D2RQ.databaseValue).orElse(null);
+            return getString(D2RQ.databaseValue);
         }
 
         @Override

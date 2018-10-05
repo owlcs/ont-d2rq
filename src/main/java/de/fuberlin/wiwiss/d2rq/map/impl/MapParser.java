@@ -67,27 +67,17 @@ public class MapParser {
         new VocabularySummarizer(D2RQ.class).assertNoUndefinedTerms(model,
                 D2RQException.MAPPING_UNKNOWN_D2RQ_PROPERTY,
                 D2RQException.MAPPING_UNKNOWN_D2RQ_CLASS);
-        ensureAllDistinct(new Resource[]{D2RQ.Database, D2RQ.ClassMap, D2RQ.PropertyBridge,
-                D2RQ.TranslationTable, D2RQ.Translation});
+        ensureAllDistinct(D2RQ.Database, D2RQ.ClassMap, D2RQ.PropertyBridge, D2RQ.TranslationTable, D2RQ.Translation);
         this.mapping = new MappingImpl(this.model);
-        try {
-            parseConfiguration();
-            parseClassMaps();
-            parsePropertyBridges();
-            parseDownloadMaps();
-            LOGGER.info("Done reading D2RQ map with {} databases and {} class maps",
-                    mapping.listDatabases().count(), mapping.listClassMaps().count());
-            return this.mapping;
-        } catch (LiteralRequiredException ex) {
-            throw new D2RQException("Expected literal, found URI resource instead: " + ex.getMessage(),
-                    D2RQException.MAPPING_RESOURCE_INSTEADOF_LITERAL);
-        } catch (ResourceRequiredException ex) {
-            throw new D2RQException("Expected URI, found literal instead: " + ex.getMessage(),
-                    D2RQException.MAPPING_LITERAL_INSTEADOF_RESOURCE);
-        }
+        parseClassMaps();
+        parsePropertyBridges();
+        parseDownloadMaps();
+        LOGGER.info("Done reading D2RQ map with {} databases and {} class maps",
+                mapping.listDatabases().count(), mapping.listClassMaps().count());
+        return this.mapping;
     }
 
-    private void ensureAllDistinct(Resource[] distinctClasses) {
+    private void ensureAllDistinct(Resource... distinctClasses) {
         Collection<Resource> classes = Arrays.asList(distinctClasses);
         ResIterator it = this.model.listSubjects();
         while (it.hasNext()) {
@@ -105,26 +95,6 @@ public class MapParser {
                             D2RQException.MAPPING_TYPECONFLICT);
                 }
             }
-        }
-    }
-
-    private void parseConfiguration() {
-        Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.Configuration);
-        if (it.hasNext()) {
-            Resource configResource = it.next();
-            ConfigurationImpl configuration = this.mapping.createConfiguration(configResource);
-            StmtIterator stmts = configResource.listProperties(D2RQ.serveVocabulary);
-            while (stmts.hasNext()) {
-                configuration.setServeVocabulary(stmts.nextStatement().getBoolean());
-            }
-            stmts = configResource.listProperties(D2RQ.useAllOptimizations);
-            while (stmts.hasNext()) {
-                configuration.setUseAllOptimizations(stmts.nextStatement().getBoolean());
-            }
-            this.mapping.setConfiguration(configuration);
-
-            if (it.hasNext())
-                throw new D2RQException("Only one configuration block is allowed");
         }
     }
 

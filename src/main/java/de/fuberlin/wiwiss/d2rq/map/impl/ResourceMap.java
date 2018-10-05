@@ -104,7 +104,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public String getBNodeIdColumns() {
-        return findString(D2RQ.bNodeIdColumns).orElse(null);
+        return getString(D2RQ.bNodeIdColumns);
     }
 
     public ResourceMap setURIColumn(String column) {
@@ -112,7 +112,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public String getURIColumn() {
-        return findString(D2RQ.uriColumn).orElse(null);
+        return getString(D2RQ.uriColumn);
     }
 
     public ResourceMap setURIPattern(String pattern) {
@@ -120,7 +120,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public String getURIPattern() {
-        return findString(D2RQ.uriPattern).orElse(null);
+        return getString(D2RQ.uriPattern);
     }
 
     public ResourceMap setUriSQLExpression(String uriSqlExpression) {
@@ -128,7 +128,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public String getUriSQLExpression() {
-        return findString(D2RQ.uriSqlExpression).orElse(null);
+        return getString(D2RQ.uriSqlExpression);
     }
 
     public ResourceMap setConstantValue(RDFNode value) {
@@ -221,15 +221,15 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public String getColumn() {
-        return findString(D2RQ.column).orElse(null);
+        return getString(D2RQ.column);
     }
 
     public String getPattern() {
-        return findString(D2RQ.pattern).orElse(null);
+        return getString(D2RQ.pattern);
     }
 
     public String getSQLExpression() {
-        return findString(D2RQ.sqlExpression).orElse(null);
+        return getString(D2RQ.sqlExpression);
     }
 
     public String getDatatype() {
@@ -237,7 +237,7 @@ public abstract class ResourceMap extends MapObjectImpl {
     }
 
     public String getLang() {
-        return findString(D2RQ.lang).orElse(null);
+        return getString(D2RQ.lang);
     }
 
     public boolean containsDuplicates() {

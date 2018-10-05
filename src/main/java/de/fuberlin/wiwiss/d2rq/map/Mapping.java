@@ -13,9 +13,11 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * TODO: introduced as part of bulky refactoring. everything can be changed.
- * Created by @ssz on 25.09.2018.
+ * A D2RQ mapping.
+ * Consists of {@link ClassMap}s, {@link PropertyBridge}s, and several other {@link MapObject Map Object}s.
  *
+ * @author Richard Cyganiak (richard@cyganiak.de)
+ * Created by @ssz on 25.09.2018.
  * @see <a href='http://d2rq.org/d2rq-language#database'>The D2RQ Mapping Language</a>
  */
 public interface Mapping extends AutoCloseable {
@@ -23,12 +25,32 @@ public interface Mapping extends AutoCloseable {
     // todo: hide from this interface
     PrefixMapping getPrefixMapping();
 
+    // todo: hide from this interface
+    Collection<TripleRelation> compiledPropertyBridges();
+
+    // todo: hide from the interface or remove at all
+    void connect();
+
+    void close();
+
+    /**
+     * Returns model that is backed by this mapping and vice versa.
+     * Since any changes in the model is reflected in the mapping (and vice versa),
+     * don't forget to call {@link #validate()}.
+     *
+     * @return {@link Model}, not {@code null}
+     */
     Model asModel();
 
     Graph getSchema();
 
     Graph getData();
 
+    /**
+     * Gets the mapping's configuration.
+     *
+     * @return {@link Configuration}, not {@code null}
+     */
     Configuration getConfiguration();
 
     /**
@@ -183,15 +205,13 @@ public interface Mapping extends AutoCloseable {
      */
     Mapping addPropertyBridge(PropertyBridge p);
 
-    // todo: hide from this interface
-    Collection<TripleRelation> compiledPropertyBridges();
-
+    /**
+     * Validates the mapping is correct.
+     *
+     * @throws D2RQException if the mapping cannot be used to build relations
+     * @see MapObject#validate()
+     */
     void validate() throws D2RQException;
-
-    // todo: hide from the interface or remove at all
-    void connect();
-
-    void close();
 
     /**
      * Finds a database with the given jdbc-uri.

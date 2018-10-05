@@ -20,6 +20,7 @@ import java.util.stream.Stream;
  * <p>
  * Created by @ssz on 27.09.2018.
  */
+@SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
 class Validator {
 
     private final MapObject resource;
@@ -32,7 +33,7 @@ class Validator {
         return new ForProperty(p);
     }
 
-    private Resource asResource() {
+    private Resource getMapResource() {
         return resource.asResource();
     }
 
@@ -41,7 +42,7 @@ class Validator {
     }
 
     void requireHasOnlyOneOf(int code, Property... properties) {
-        Set<Property> found = Iter.of(properties).filterKeep(p -> asResource().hasProperty(p)).toSet();
+        Set<Property> found = Iter.of(properties).filterKeep(p -> getMapResource().hasProperty(p)).toSet();
         if (found.isEmpty()) {
             throw newException("no required spec found, needs one of: " + toString(Arrays.stream(properties)), code);
         }
@@ -51,7 +52,7 @@ class Validator {
     }
 
     void requireHasNoMoreThanOne(int code, Property... properties) {
-        Set<Property> found = Iter.of(properties).filterKeep(p -> asResource().hasProperty(p)).toSet();
+        Set<Property> found = Iter.of(properties).filterKeep(p -> getMapResource().hasProperty(p)).toSet();
         if (found.size() <= 1) {
             return;
         }
@@ -62,7 +63,6 @@ class Validator {
         return properties.map(PrettyPrinter::toString).collect(Collectors.joining(", "));
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
     class ForProperty {
         protected final Property property;
 
@@ -75,11 +75,15 @@ class Validator {
         }
 
         boolean exists() {
-            return asResource().hasProperty(property);
+            return getMapResource().hasProperty(property);
         }
 
         RDFNode get() {
-            return asResource().getRequiredProperty(property).getObject();
+            return getMapResource().getRequiredProperty(property).getObject();
+        }
+
+        Literal getLiteral() {
+            return getLiteral(D2RQException.MAPPING_RESOURCE_INSTEADOF_LITERAL);
         }
 
         Literal getLiteral(int code) {
@@ -90,13 +94,25 @@ class Validator {
             return res.asLiteral();
         }
 
+        Resource getResource() {
+            return getResource(D2RQException.MAPPING_LITERAL_INSTEADOF_RESOURCE);
+        }
+
+        Resource getResource(int code) {
+            RDFNode res = get();
+            if (!res.isResource()) {
+                throw newException("no resource for the predicate " + asString() + ": " + res, code);
+            }
+            return res.asResource();
+        }
+
         ForProperty requireExists(int code) {
             if (exists()) return this;
             throw newException("can't find predicate " + asString(), code);
         }
 
         ForProperty requireHasNoDuplicates(int code) {
-            Set<RDFNode> res = asResource().listProperties(property).mapWith(Statement::getObject).toSet();
+            Set<RDFNode> res = getMapResource().listProperties(property).mapWith(Statement::getObject).toSet();
             if (res.size() == 1) {
                 return this;
             }
@@ -116,7 +132,7 @@ class Validator {
         }
 
         ForProperty requireIsLiteralOfType(Resource datatypeURI, int code) {
-            Literal res = getLiteral(code);
+            Literal res = getLiteral();
             if (datatypeURI.getURI().equals(res.getDatatypeURI())) {
                 return this;
             }
@@ -125,7 +141,7 @@ class Validator {
         }
 
         ForProperty requireContainsOnlyStrings(int code) {
-            Set<RDFNode> res = asResource().listProperties(property)
+            Set<RDFNode> res = getMapResource().listProperties(property)
                     .mapWith(Statement::getObject)
                     .filterKeep(s -> !s.isLiteral() || !XSD.xstring.getURI().equals(s.asLiteral().getDatatypeURI()))
                     .toSet();
@@ -143,7 +159,7 @@ class Validator {
         }
 
         ForProperty requireIsValidURL(int code) {
-            String uri = get().asResource().getURI();
+            String uri = getResource().getURI();
             try {
                 new URL(uri);
                 return this;
@@ -169,7 +185,7 @@ class Validator {
         }
 
         ForProperty requireValidClassReference(Class<?> expected, int code) {
-            String className = getLiteral(code).getString();
+            String className = getLiteral().getString();
             Class<?> res;
             try {
                 res = Class.forName(className);

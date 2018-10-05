@@ -2,7 +2,10 @@ package de.fuberlin.wiwiss.d2rq.map.impl;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.Configuration;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Resource;
+
+import java.util.stream.Stream;
 
 
 /**
@@ -11,8 +14,6 @@ import org.apache.jena.rdf.model.Resource;
  * @author Christian Becker &lt;http://beckr.org#chris&gt;
  */
 public class ConfigurationImpl extends MapObjectImpl implements Configuration {
-    private boolean serveVocabulary = true;
-    private boolean useAllOptimizations = false;
 
     public ConfigurationImpl(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
@@ -20,22 +21,22 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
 
     @Override
     public boolean getServeVocabulary() {
-        return this.serveVocabulary;
+        return getBoolean(D2RQ.serveVocabulary, true);
     }
 
     @Override
-    public void setServeVocabulary(boolean serveVocabulary) {
-        this.serveVocabulary = serveVocabulary;
+    public ConfigurationImpl setServeVocabulary(boolean serveVocabulary) {
+        return setBoolean(D2RQ.serveVocabulary, serveVocabulary);
     }
 
     @Override
     public boolean getUseAllOptimizations() {
-        return this.useAllOptimizations;
+        return getBoolean(D2RQ.useAllOptimizations, false);
     }
 
     @Override
-    public void setUseAllOptimizations(boolean useAllOptimizations) {
-        this.useAllOptimizations = useAllOptimizations;
+    public ConfigurationImpl setUseAllOptimizations(boolean useAllOptimizations) {
+        return setBoolean(D2RQ.useAllOptimizations, useAllOptimizations);
     }
 
     @Override
@@ -45,6 +46,11 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
 
     @Override
     public void validate() throws D2RQException {
-        /* All settings are optional */
+        Validator v = new Validator(this);
+        Stream.of(D2RQ.serveVocabulary, D2RQ.useAllOptimizations)
+                .map(v::forProperty)
+                .filter(Validator.ForProperty::exists)
+                .forEach(p -> p.requireHasNoDuplicates(D2RQException.UNSPECIFIED)
+                        .requireIsBooleanLiteral(D2RQException.UNSPECIFIED));
     }
 }
