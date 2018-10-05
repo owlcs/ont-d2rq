@@ -55,12 +55,7 @@ public class MappingImpl implements Mapping {
     private GraphD2RQ dataGraph;
     private volatile boolean connected = false;
 
-    /**
-     * protected access: to get instance of this class please use {@link MappingFactory} or {@link MapParser}.
-     *
-     * @param model {@link Model} with D2RQ rules.
-     */
-    protected MappingImpl(Model model) {
+    public MappingImpl(Model model) {
         this.model = Objects.requireNonNull(model, "Null mapping model");
     }
 

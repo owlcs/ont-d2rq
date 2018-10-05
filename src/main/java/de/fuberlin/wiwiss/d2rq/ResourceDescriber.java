@@ -1,5 +1,10 @@
 package de.fuberlin.wiwiss.d2rq;
 
+import de.fuberlin.wiwiss.d2rq.algebra.Relation;
+import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.find.FindQuery;
+import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import org.apache.jena.atlas.lib.Alarm;
 import org.apache.jena.atlas.lib.AlarmClock;
 import org.apache.jena.graph.Graph;
@@ -10,10 +15,7 @@ import org.apache.jena.mem.GraphMem;
 import org.apache.jena.sparql.engine.ExecutionContext;
 import org.apache.jena.sparql.engine.iterator.QueryIterConcat;
 
-import de.fuberlin.wiwiss.d2rq.algebra.Relation;
-import de.fuberlin.wiwiss.d2rq.find.FindQuery;
-import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import java.util.Collection;
 
 public class ResourceDescriber {
     private final Mapping mapping;
@@ -48,20 +50,21 @@ public class ResourceDescriber {
             pingback = AlarmClock.get().add(qIter::cancel, timeout);
         }
 
+        Collection<TripleRelation> tripleRelations = mapping.compiledPropertyBridges();
         FindQuery outgoing = new FindQuery(
                 Triple.create(node, Node.ANY, Node.ANY),
-                mapping.compiledPropertyBridges(), limit, context);
+                tripleRelations, limit, context);
         qIter.add(outgoing.iterator());
 
         if (!onlyOutgoing) {
             FindQuery incoming = new FindQuery(
                     Triple.create(Node.ANY, Node.ANY, node),
-                    mapping.compiledPropertyBridges(), limit, context);
+                    tripleRelations, limit, context);
             qIter.add(incoming.iterator());
 
             FindQuery triples = new FindQuery(
                     Triple.create(Node.ANY, node, Node.ANY),
-                    mapping.compiledPropertyBridges(), limit, context);
+                    tripleRelations, limit, context);
             qIter.add(triples.iterator());
         }
         // todo: no more com.hp.hpl.jena.graph.BulkUpdateHandler. Use org.apache.jena.graph.GraphUtil:

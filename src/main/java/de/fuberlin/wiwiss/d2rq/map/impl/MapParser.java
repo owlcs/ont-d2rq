@@ -1,6 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
@@ -13,14 +14,15 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.BiFunction;
 
 /**
  * Creates a {@link MappingImpl} from a Jena model representation of a D2RQ mapping file.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-@Deprecated //TODO: scheduled to remove
-public class MapParser {
+@SuppressWarnings("WeakerAccess")
+public class MapParser implements BiFunction<Model, String, Mapping> {
     private final static Logger LOGGER = LoggerFactory.getLogger(MapParser.class);
 
     /**
@@ -38,86 +40,41 @@ public class MapParser {
         return IRIResolver.create().resolveToStringSilent(uri);
     }
 
-    private Model model;
-    private String baseURI;
-    private MappingImpl mapping;
-
-    /**
-     * Constructs a new MapParser from a Jena model containing the RDF statements from a D2RQ mapping file.
-     *
-     * @param mapModel a Jena model containing the RDF statements from a D2RQ mapping file
-     * @param baseURI  used for relative URI patterns. Could be null.
-     */
-    public MapParser(Model mapModel, String baseURI) {
-        this.model = mapModel;
-        this.baseURI = absolutizeURI(baseURI);
+    public static void appendBase(Model m, String baseURI) {
+        if (baseURI == null || baseURI.isEmpty()) return;
+        m.listStatements(null, D2RQ.uriPattern, (RDFNode) null)
+                .filterKeep(s -> s.getObject().isLiteral()
+                        && !s.getString().contains(":")
+                        && !s.getString().startsWith(baseURI))
+                .toSet()
+                .forEach(s -> {
+                    String uri = baseURI + s.getString();
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("{}: set uri patter: {}", s.getSubject(), uri);
+                    }
+                    m.add(s.getSubject(), s.getPredicate(), uri).remove(s);
+                });
     }
 
-    /**
-     * TODO: better to rewrite this initialization.
-     * Starts the parsing process. Must be called before results can be retrieved
-     * from the getter methods.
-     *
-     * @return {@link MappingImpl}
-     */
-    public MappingImpl parse() {
-        if (this.mapping != null) {
-            return mapping;
-        }
-        new VocabularySummarizer(D2RQ.class).assertNoUndefinedTerms(model,
-                D2RQException.MAPPING_UNKNOWN_D2RQ_PROPERTY,
-                D2RQException.MAPPING_UNKNOWN_D2RQ_CLASS);
-        ensureAllDistinct(D2RQ.Database, D2RQ.ClassMap, D2RQ.PropertyBridge, D2RQ.TranslationTable, D2RQ.Translation);
-        this.mapping = new MappingImpl(this.model);
-        parseClassMaps();
-        parsePropertyBridges();
-        parseDownloadMaps();
-        LOGGER.info("Done reading D2RQ map with {} databases and {} class maps",
-                mapping.listDatabases().count(), mapping.listClassMaps().count());
-        return this.mapping;
+    public static void fixLegacy(MappingImpl mapping) {
+        parseClassMaps(mapping);
+        parsePropertyBridges(mapping);
     }
 
-    private void ensureAllDistinct(Resource... distinctClasses) {
-        Collection<Resource> classes = Arrays.asList(distinctClasses);
-        ResIterator it = this.model.listSubjects();
-        while (it.hasNext()) {
-            Resource resource = it.nextResource();
-            Resource matchingType = null;
-            StmtIterator typeIt = resource.listProperties(RDF.type);
-            while (typeIt.hasNext()) {
-                Resource type = typeIt.nextStatement().getResource();
-                if (!classes.contains(type)) continue;
-                if (matchingType == null) {
-                    matchingType = type;
-                } else {
-                    throw new D2RQException("Name " + PrettyPrinter.toString(resource) + " cannot be both a "
-                            + PrettyPrinter.toString(matchingType) + " and a " + PrettyPrinter.toString(type),
-                            D2RQException.MAPPING_TYPECONFLICT);
-                }
-            }
-        }
-    }
-
-    private void parseClassMaps() {
-        Iterator<Resource> it = this.model.listSubjectsWithProperty(RDF.type, D2RQ.ClassMap);
+    private static void parseClassMaps(MappingImpl mapping) {
+        Iterator<Resource> it = mapping.asModel().listSubjectsWithProperty(RDF.type, D2RQ.ClassMap);
         while (it.hasNext()) {
             Resource r = it.next();
-            ClassMapImpl classMap = this.mapping.asClassMap(r);
+            ClassMapImpl classMap = mapping.asClassMap(r);
             parseClassMap(classMap, r);
-            parseResourceMap(classMap, r);
         }
     }
 
-    private void parseResourceMap(ResourceMap resourceMap, Resource r) {
-        r.listProperties(D2RQ.uriPattern)
-                .toSet()
-                .forEach(s -> resourceMap.setURIPattern(ensureIsAbsolute(s.getString())));
-    }
-
-    private void parseClassMap(ClassMapImpl classMap, Resource r) {
+    private static void parseClassMap(ClassMapImpl classMap, Resource r) {
+        MappingImpl mapping = classMap.getMapping();
         StmtIterator stmts;
         // todo: legacy:
-        stmts = this.model.listStatements(null, D2RQ.classMap, r);
+        stmts = mapping.asModel().listStatements(null, D2RQ.classMap, r);
         while (stmts.hasNext()) {
             classMap.addClass(stmts.nextStatement().getSubject());
         }
@@ -133,17 +90,17 @@ public class MapParser {
         }
     }
 
-    private void parsePropertyBridges() {
-        StmtIterator stmts = this.model.listStatements(null, D2RQ.belongsToClassMap, (RDFNode) null);
+    private static void parsePropertyBridges(MappingImpl mapping) {
+        StmtIterator stmts = mapping.asModel().listStatements(null, D2RQ.belongsToClassMap, (RDFNode) null);
         while (stmts.hasNext()) {
             Resource r = stmts.nextStatement().getSubject();
             PropertyBridgeImpl bridge = mapping.asPropertyBridge(r);
-            parseResourceMap(bridge, r);
             parsePropertyBridge(bridge, r);
         }
     }
 
-    private void parsePropertyBridge(PropertyBridgeImpl bridge, Resource r) {
+    private static void parsePropertyBridge(PropertyBridgeImpl bridge, Resource r) {
+        Model model = bridge.getModel();
         StmtIterator stmts;
         stmts = r.listProperties(D2RQ.column);
         while (stmts.hasNext()) {
@@ -164,27 +121,53 @@ public class MapParser {
             }
         }
         // todo: legacy:
-        stmts = this.model.listStatements(null, D2RQ.propertyBridge, r);
+        stmts = model.listStatements(null, D2RQ.propertyBridge, r);
         while (stmts.hasNext()) {
             bridge.addProperty(stmts.nextStatement().getSubject().getURI());
         }
     }
 
-    private void parseDownloadMaps() {
-        Iterator<Resource> it = this.model.listResourcesWithProperty(RDF.type, D2RQ.DownloadMap);
+    public static void checkVocabulary(Model model) throws D2RQException {
+        new VocabularySummarizer(D2RQ.class).assertNoUndefinedTerms(model,
+                D2RQException.MAPPING_UNKNOWN_D2RQ_PROPERTY,
+                D2RQException.MAPPING_UNKNOWN_D2RQ_CLASS);
+    }
+
+    public static void checkDistinctMapObjects(Model model) throws D2RQException {
+        ensureAllDistinct(model, D2RQ.Database, D2RQ.ClassMap, D2RQ.PropertyBridge, D2RQ.TranslationTable, D2RQ.Translation);
+    }
+
+    private static void ensureAllDistinct(Model model, Resource... distinctClasses) {
+        Collection<Resource> classes = Arrays.asList(distinctClasses);
+        ResIterator it = model.listSubjects();
         while (it.hasNext()) {
-            Resource r = it.next();
-            DownloadMapImpl dm = mapping.asDownloadMap(r);
-            parseResourceMap(dm, r);
+            Resource resource = it.nextResource();
+            Resource matchingType = null;
+            StmtIterator typeIt = resource.listProperties(RDF.type);
+            while (typeIt.hasNext()) {
+                Resource type = typeIt.nextStatement().getResource();
+                if (!classes.contains(type)) continue;
+                if (matchingType == null) {
+                    matchingType = type;
+                } else {
+                    throw new D2RQException("Name " + PrettyPrinter.toString(resource) + " cannot be both a "
+                            + PrettyPrinter.toString(matchingType) + " and a " + PrettyPrinter.toString(type),
+                            D2RQException.MAPPING_TYPECONFLICT);
+                }
+            }
         }
     }
 
-
-    // TODO: I guess this should be done at map compile time
-    private String ensureIsAbsolute(String uriPattern) {
-        if (baseURI != null && !uriPattern.contains(":")) {
-            return baseURI + uriPattern;
-        }
-        return uriPattern;
+    @Override
+    public Mapping apply(Model model, String base) {
+        String uri = absolutizeURI(base);
+        checkVocabulary(model);
+        checkDistinctMapObjects(model);
+        appendBase(model, uri);
+        MappingImpl res = new MappingImpl(model);
+        fixLegacy(res);
+        LOGGER.info("Done reading D2RQ map with {} databases and {} class maps",
+                res.listDatabases().count(), res.listClassMaps().count());
+        return res;
     }
 }

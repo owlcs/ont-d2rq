@@ -15,7 +15,6 @@ import org.apache.jena.vocabulary.XSD;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -24,18 +23,7 @@ import java.util.stream.Stream;
  * Created by szuev on 22.02.2017.
  */
 public class MappingFactory {
-    protected static Inner instance = (m, b) -> new MapParser(Objects.requireNonNull(m, "Null mapping model."), b).parse();
-
-    public static Inner getFactory() {
-        return instance;
-    }
-
-    public static Inner setFactory(Inner newInstance) {
-        Objects.requireNonNull(newInstance, "Null factory");
-        Inner res = MappingFactory.instance;
-        MappingFactory.instance = newInstance;
-        return res;
-    }
+    private static MapParser helper = new MapParser();
 
     /**
      * Creates an empty mapping.
@@ -43,7 +31,7 @@ public class MappingFactory {
      * @return {@link Mapping}
      */
     public static Mapping createEmpty() {
-        return instance.create(ModelFactory.createDefaultModel(), null);
+        return new MappingImpl(ModelFactory.createDefaultModel());
     }
 
     /**
@@ -54,7 +42,7 @@ public class MappingFactory {
      * @return {@link Mapping}
      */
     public static Mapping create(Model mapModel, String baseURI) {
-        return instance.create(mapModel, baseURI);
+        return helper.apply(mapModel, baseURI);
     }
 
     /**
@@ -95,11 +83,6 @@ public class MappingFactory {
     public static Mapping load(String mapURL) {
         return create(FileManager.get().loadModel(mapURL), mapURL + "#");
     }
-
-    public interface Inner {
-        Mapping create(Model model, String base);
-    }
-
     /**
      * Just a set of constants and auxiliary methods to work with prefixes (mapping + schema)
      * It is used by {@link de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator} and {@link MappingImpl}.

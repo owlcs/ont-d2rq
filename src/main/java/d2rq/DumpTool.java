@@ -82,8 +82,6 @@ public class DumpTool extends CommandLineTool {
         loader.setResultSizeLimit(Database.NO_LIMIT);
         Mapping mapping = loader.getMapping();
         try {
-            // Trigger compilation (todo: no need)
-            mapping.compiledPropertyBridges();
             // Override the d2rq:fetchSize given in the mapping
             mapping.listDatabases().forEach(db -> db.setFetchSize(DUMP_DEFAULT_FETCH_SIZE));
 
