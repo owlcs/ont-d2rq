@@ -8,8 +8,8 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.iterator.ExtendedIterator;
-import org.apache.jena.vocabulary.RDF;
 import ru.avicomp.ontapi.jena.utils.Iter;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -190,15 +190,29 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     public Collection<TripleRelation> toTripleRelations() {
         List<TripleRelation> res = new ArrayList<>();
         propertyBridges().mapWith(PropertyBridgeImpl::toTripleRelations).forEachRemaining(res::addAll);
-        listClasses().forEach(clazz -> {
-            PropertyBridgeImpl bridge = mapping.asPropertyBridge(mapping.asModel().createResource());
-            bridge.setBelongsToClassMap(ClassMapImpl.this);
-            bridge.addProperty(RDF.type);
-            bridge.setConstantValue(clazz);
-            res.addAll(bridge.toTripleRelations());
-        });
+        classes().mapWith(this::fetchPropertyForClass)
+                .mapWith(PropertyBridgeImpl::toTripleRelations)
+                .forEachRemaining(res::addAll);
         return res;
     }
+
+    public PropertyBridgeImpl fetchPropertyForClass(Resource clazz) {
+        ExtendedIterator<PropertyBridgeImpl> res = getModel()
+                .listResourcesWithProperty(D2RQ.constantValue, clazz)
+                .filterKeep(r -> r.hasProperty(D2RQ.belongsToClassMap, ClassMapImpl.this.resource)
+                        && r.hasProperty(D2RQ.property, RDF.type))
+                .mapWith(mapping::asPropertyBridge);
+        try {
+            if (res.hasNext()) return res.next();
+        } finally {
+            res.close();
+        }
+        return mapping.createPropertyBridge(null)
+                .setBelongsToClassMap(ClassMapImpl.this)
+                .addProperty(RDF.type)
+                .setConstantValue(clazz);
+    }
+
 
     @Override
     protected Relation buildRelation() {

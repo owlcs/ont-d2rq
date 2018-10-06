@@ -18,6 +18,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.FrontsNode;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.Iter;
@@ -82,12 +83,17 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     public PropertyBridgeImpl setConstantValue(Literal literal) {
-        return (PropertyBridgeImpl) super.setConstantValue(literal);
+        return setConstantValue((RDFNode) literal);
     }
 
     @Override
     public PropertyBridgeImpl setConstantValue() {
-        return (PropertyBridgeImpl) super.setConstantValue(mapping.asModel().createResource());
+        return setConstantValue(mapping.asModel().createResource());
+    }
+
+    @Override
+    public PropertyBridgeImpl setConstantValue(RDFNode value) {
+        return (PropertyBridgeImpl) super.setConstantValue(value);
     }
 
     @Override
@@ -221,8 +227,13 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     public PropertyBridgeImpl addProperty(String uri) {
-        Resource res = getModel().createResource(Objects.requireNonNull(uri, "Null uri"));
-        return addRDFNode(D2RQ.property, res);
+        Property res = getModel().createProperty(Objects.requireNonNull(uri, "Null uri"));
+        return addProperty(res);
+    }
+
+    @Override
+    public PropertyBridgeImpl addProperty(Property p) {
+        return addRDFNode(D2RQ.property, p);
     }
 
     @Override
