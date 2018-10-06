@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.parser;
 
-import de.fuberlin.wiwiss.d2rq.map.impl.MapParser;
+import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import org.junit.Assert;
 import org.junit.Test;
 

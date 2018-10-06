@@ -1,7 +1,9 @@
-package de.fuberlin.wiwiss.d2rq.map.impl;
+package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.impl.ClassMapImpl;
+import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
+import de.fuberlin.wiwiss.d2rq.map.impl.PropertyBridgeImpl;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
