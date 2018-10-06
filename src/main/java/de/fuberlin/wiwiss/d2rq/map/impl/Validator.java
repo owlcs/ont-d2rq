@@ -12,8 +12,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A class-helper to check that mapping object is correct.
@@ -44,10 +42,11 @@ class Validator {
     void requireHasOnlyOneOf(int code, Property... properties) {
         Set<Property> found = Iter.of(properties).filterKeep(p -> getMapResource().hasProperty(p)).toSet();
         if (found.isEmpty()) {
-            throw newException("no required spec found, needs one of: " + toString(Arrays.stream(properties)), code);
+            throw newException("no required spec found, needs one of: " +
+                    PrettyPrinter.toString(Arrays.asList(properties)), code);
         }
         if (found.size() > 1) {
-            throw newException("must have only one of the following: " + toString(found.stream()), code);
+            throw newException("must have only one of the following: " + PrettyPrinter.toString(found), code);
         }
     }
 
@@ -56,12 +55,9 @@ class Validator {
         if (found.size() <= 1) {
             return;
         }
-        throw newException("can't have more than one of the following: " + toString(found.stream()), code);
+        throw newException("can't have more than one of the following: " + PrettyPrinter.toString(found), code);
     }
 
-    private static String toString(Stream<? extends RDFNode> properties) {
-        return properties.map(PrettyPrinter::toString).collect(Collectors.joining(", "));
-    }
 
     class ForProperty {
         protected final Property property;

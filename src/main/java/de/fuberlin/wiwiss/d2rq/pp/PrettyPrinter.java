@@ -13,6 +13,9 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.shared.PrefixMapping;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 /**
  * Pretty printer for various kinds of objects.
  *
@@ -108,5 +111,9 @@ public class PrettyPrinter {
 
     public static String toString(RDFNode n) {
         return toString(n.asNode(), n.getModel());
+    }
+
+    public static String toString(Collection<? extends RDFNode> res) {
+        return res.stream().map(PrettyPrinter::toString).collect(Collectors.joining(", "));
     }
 }

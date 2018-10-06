@@ -1,31 +1,31 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.impl.ClassMapImpl;
-import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
-import de.fuberlin.wiwiss.d2rq.map.impl.PropertyBridgeImpl;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.system.IRIResolver;
+import org.apache.jena.util.iterator.WrappedIterator;
 import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.function.BiFunction;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Creates a {@link MappingImpl} from a Jena model representation of a D2RQ mapping file.
+ * A helper to perform various utility operations on a model that contains D2RQ instructions.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 @SuppressWarnings("WeakerAccess")
-public class MapParser implements BiFunction<Model, String, Mapping> {
+public class MapParser {
     private final static Logger LOGGER = LoggerFactory.getLogger(MapParser.class);
 
     /**
@@ -47,12 +47,12 @@ public class MapParser implements BiFunction<Model, String, Mapping> {
      * Inserts the given {@code baseURI} at the beginning to every {@code d2rq:uriPattern}.
      * It is supposed that this operation will switch every {@code d2rq:uriPattern} to generate absolute IRIs.
      *
-     * @param m       {@link Model}
+     * @param model   {@link Model}
      * @param baseURI String
      */
-    public static void insertBase(Model m, String baseURI) {
+    public static void insertBase(Model model, String baseURI) {
         if (baseURI == null || baseURI.isEmpty()) return;
-        m.listStatements(null, D2RQ.uriPattern, (RDFNode) null)
+        model.listStatements(null, D2RQ.uriPattern, (RDFNode) null)
                 .filterKeep(s -> s.getObject().isLiteral()
                         && !s.getString().contains(":")
                         && !s.getString().startsWith(baseURI))
@@ -62,7 +62,7 @@ public class MapParser implements BiFunction<Model, String, Mapping> {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("{}: set uri patter: {}", s.getSubject(), uri);
                     }
-                    m.add(s.getSubject(), s.getPredicate(), uri).remove(s);
+                    model.add(s.getSubject(), s.getPredicate(), uri).remove(s);
                 });
     }
 
@@ -78,37 +78,23 @@ public class MapParser implements BiFunction<Model, String, Mapping> {
      *
      * @param model {@link Model}
      */
-    public void validate(Model model) {
+    public static void validate(Model model) {
         checkVocabulary(model);
         checkDistinctMapObjects(model);
-    }
-
-    public static void fixLegacy(MappingImpl mapping) {
-        parseClassMaps(mapping);
-        parsePropertyBridges(mapping);
     }
 
     /**
      * Eliminates any legacy D2RQ entries.
      *
-     * @param m {@link Model}
+     * @param model {@link Model}
      * @see #fixLegacyAdditionalProperty(Model)
      * @see #fixLegacyReferences(Model)
      * @see #fixLegacyPropertyBridges(Model)
      */
-    public static void fixLegacy(Model m) {
-        fixLegacyReferences(m);
-        fixLegacyAdditionalProperty(m);
-        fixLegacyPropertyBridges(m);
-    }
-
-    private static void parseClassMaps(MappingImpl mapping) {
-        Iterator<Resource> it = mapping.asModel().listSubjectsWithProperty(RDF.type, D2RQ.ClassMap);
-        while (it.hasNext()) {
-            Resource r = it.next();
-            ClassMapImpl classMap = mapping.asClassMap(r);
-            parseClassMap(classMap, r);
-        }
+    public static void fixLegacy(Model model) {
+        fixLegacyReferences(model);
+        fixLegacyAdditionalProperty(model);
+        fixLegacyPropertyBridges(model);
     }
 
     /**
@@ -123,11 +109,11 @@ public class MapParser implements BiFunction<Model, String, Mapping> {
         inverse(m, LegacyD2RQ.propertyBridge, D2RQ.property);
     }
 
-    private static void inverse(Model m, Property legacy, Property replace) {
+    private static void inverse(Model m, Property legacy, Property replacement) {
         m.listStatements(null, legacy, (RDFNode) null)
                 .filterKeep(s -> s.getObject().isResource())
                 .toSet()
-                .forEach(s -> m.add(s.getResource(), replace, s.getSubject()).remove(s));
+                .forEach(s -> m.add(s.getResource(), replacement, s.getSubject()).remove(s));
     }
 
     /**
@@ -154,26 +140,6 @@ public class MapParser implements BiFunction<Model, String, Mapping> {
                 });
     }
 
-    private static void parseClassMap(ClassMapImpl classMap, Resource r) {
-        MappingImpl mapping = classMap.getMapping();
-        StmtIterator stmts;
-        // todo: legacy:
-        stmts = mapping.asModel().listStatements(null, LegacyD2RQ.classMap, r);
-        while (stmts.hasNext()) {
-            classMap.addClass(stmts.nextStatement().getSubject());
-        }
-        // todo: legacy:
-        stmts = r.listProperties(LegacyD2RQ.additionalProperty);
-        while (stmts.hasNext()) {
-            Resource additionalProperty = stmts.nextStatement().getResource();
-            PropertyBridgeImpl bridge = mapping.createPropertyBridge(r.getURI());
-            bridge.setBelongsToClassMap(classMap);
-            bridge.addProperty(additionalProperty.getProperty(D2RQ.propertyName).getResource().getURI());
-            bridge.setConstantValue(additionalProperty.getProperty(D2RQ.propertyValue).getObject());
-            classMap.addPropertyBridge(bridge);
-        }
-    }
-
     /**
      * Fixes {@link LegacyD2RQ#ObjectPropertyBridge d2rq:ObjectPropertyBridge} and
      * {@link LegacyD2RQ#DataPropertyBridge d2rq:DataPropertyBridge}.
@@ -196,48 +162,11 @@ public class MapParser implements BiFunction<Model, String, Mapping> {
                         .remove(r, RDF.type, LegacyD2RQ.ObjectPropertyBridge));
     }
 
-    private static void replace(Resource resource, Property legacy, Property replace) {
+    private static void replace(Resource resource, Property legacy, Property replacement) {
         Model m = resource.getModel();
         resource.listProperties(legacy)
                 .toSet()
-                .forEach(s -> m.add(s.getSubject(), replace, s.getObject()).remove(s));
-    }
-
-    private static void parsePropertyBridges(MappingImpl mapping) {
-        StmtIterator stmts = mapping.asModel().listStatements(null, D2RQ.belongsToClassMap, (RDFNode) null);
-        while (stmts.hasNext()) {
-            Resource r = stmts.nextStatement().getSubject();
-            PropertyBridgeImpl bridge = mapping.asPropertyBridge(r);
-            parsePropertyBridge(bridge, r);
-        }
-    }
-
-    private static void parsePropertyBridge(PropertyBridgeImpl bridge, Resource r) {
-        Model model = bridge.getModel();
-        StmtIterator stmts;
-        stmts = r.listProperties(D2RQ.column);
-        while (stmts.hasNext()) {
-            String column = stmts.nextStatement().getString();
-            //noinspection EqualsBetweenInconvertibleTypes
-            if (LegacyD2RQ.ObjectPropertyBridge.equals(r.getProperty(RDF.type))) {
-                // todo: Legacy
-                bridge.setURIColumn(column);
-            }
-        }
-        stmts = r.listProperties(D2RQ.pattern);
-        while (stmts.hasNext()) {
-            String pattern = stmts.nextStatement().getString();
-            //noinspection EqualsBetweenInconvertibleTypes
-            if (LegacyD2RQ.ObjectPropertyBridge.equals(r.getProperty(RDF.type))) {
-                // todo: Legacy
-                bridge.setURIPattern(pattern);
-            }
-        }
-        // todo: legacy:
-        stmts = model.listStatements(null, LegacyD2RQ.propertyBridge, r);
-        while (stmts.hasNext()) {
-            bridge.addProperty(stmts.nextStatement().getSubject().getURI());
-        }
+                .forEach(s -> m.add(s.getSubject(), replacement, s.getObject()).remove(s));
     }
 
     /**
@@ -258,46 +187,31 @@ public class MapParser implements BiFunction<Model, String, Mapping> {
         ensureAllDistinct(model, D2RQ.Database, D2RQ.ClassMap, D2RQ.PropertyBridge, D2RQ.TranslationTable, D2RQ.Translation);
     }
 
-    private static void ensureAllDistinct(Model model, Resource... distinctClasses) {
-        Collection<Resource> classes = Arrays.asList(distinctClasses);
-        ResIterator it = model.listSubjects();
-        while (it.hasNext()) {
-            Resource resource = it.nextResource();
-            Resource matchingType = null;
-            StmtIterator typeIt = resource.listProperties(RDF.type);
-            while (typeIt.hasNext()) {
-                Resource type = typeIt.nextStatement().getResource();
-                if (!classes.contains(type)) continue;
-                if (matchingType == null) {
-                    matchingType = type;
-                } else {
-                    throw new D2RQException("Name " + PrettyPrinter.toString(resource) + " cannot be both a "
-                            + PrettyPrinter.toString(matchingType) + " and a " + PrettyPrinter.toString(type),
-                            D2RQException.MAPPING_TYPECONFLICT);
-                }
-            }
+    private static void ensureAllDistinct(Model model, Resource... types) {
+        Set<Resource> set = new HashSet<>(Arrays.asList(types));
+        Set<Resource> res = Iter.flatMap(WrappedIterator.create(set.iterator()),
+                t -> model.listResourcesWithProperty(RDF.type, t))
+                .filterKeep(r -> r.listProperties(RDF.type)
+                        .filterKeep(s -> s.getObject().isResource()
+                                && set.contains(s.getResource())).toSet().size() > 1)
+                .toSet();
+        if (res.isEmpty()) return;
+        String prefix;
+        if (res.size() == 1) {
+            prefix = String.format("Resource %s has ", PrettyPrinter.toString(res.iterator().next()));
+        } else {
+            prefix = String.format("Resources %s have ", PrettyPrinter.toString(res));
         }
-    }
-
-    @Override
-    public Mapping apply(Model model, String base) {
-        String uri = absolutizeURI(base);
-        checkVocabulary(model);
-        checkDistinctMapObjects(model);
-        insertBase(model, uri);
-        MappingImpl res = new MappingImpl(model);
-        fixLegacy(res);
-        LOGGER.info("Done reading D2RQ map with {} databases and {} class maps",
-                res.listDatabases().count(), res.listClassMaps().count());
-        return res;
+        throw new D2RQException(prefix + " intersection in the allowed types (" + PrettyPrinter.toString(set) + ")",
+                D2RQException.MAPPING_TYPECONFLICT);
     }
 
     /**
-     * Vocabulary for deprecated things
+     * Vocabulary for deprecated D2RQ things.
      */
     public static class LegacyD2RQ extends D2RQ {
-        public static final Property ObjectPropertyBridge = property("ObjectPropertyBridge");
-        public static final Property DataPropertyBridge = property("DataPropertyBridge");
+        public static final Resource ObjectPropertyBridge = resource("ObjectPropertyBridge");
+        public static final Resource DataPropertyBridge = resource("DataPropertyBridge");
         public static final Property additionalProperty = D2RQ.property("additionalProperty");
         public static final Property classMap = D2RQ.property("classMap");
         public static final Property propertyBridge = D2RQ.property("propertyBridge");

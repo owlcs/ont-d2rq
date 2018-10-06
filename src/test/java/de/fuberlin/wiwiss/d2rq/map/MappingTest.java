@@ -17,7 +17,7 @@ public class MappingTest {
 
     @Test
     public void testReturnAddedDatabase() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         Database db = m.createDatabase(database1).setJDBCDSN("x");
         Assert.assertEquals(Collections.singletonList(db), m.listDatabases().collect(Collectors.toList()));
         Assert.assertTrue(m.findDatabase("x").isPresent());
@@ -25,7 +25,7 @@ public class MappingTest {
 
     @Test
     public void testNoDatabaseCausesValidationError() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         Assert.assertEquals(0, m.listDatabases().count());
         try {
             m.validate();
@@ -36,21 +36,21 @@ public class MappingTest {
 
     @Test
     public void testReturnResourceFromNewClassMap() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         ClassMap c = m.createClassMap(classMap1);
         Assert.assertEquals(classMap1, c.asResource().getURI());
     }
 
     @Test
     public void testNewClassMapHasNoDatabase() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         ClassMap c = m.createClassMap(classMap1);
         Assert.assertNull(c.getDatabase());
     }
 
     @Test
     public void testClassMapReturnsAssignedDatabase() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         Database db = m.createDatabase(database1);
         ClassMap c = m.createClassMap(classMap1);
         c.setDatabase(db);
@@ -59,7 +59,7 @@ public class MappingTest {
 
     @Test
     public void testMultipleDatabasesForClassMapCauseValidationError() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         Database db1 = m.createDatabase(database1).setJDBCDSN("jdbc://x");
         m.validate();
         ClassMap c = m.createClassMap(classMap1).setDatabase(db1).setURIColumn("TestDB.TestCol1")
@@ -77,7 +77,7 @@ public class MappingTest {
 
     @Test
     public void testClassMapWithoutDatabaseCausesValidationError() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         ClassMap c = m.createClassMap(classMap1);
         m.createDatabase(database1).setJDBCDSN("jdbc:mysql:///db");
         try {
@@ -96,7 +96,7 @@ public class MappingTest {
     public void testDatabaseWithWrongDriverCausesValidationError() {
         String driver = "nonexistent";
         String uri = "jdbc:mysql:///db";
-        Database d = MappingFactory.createEmpty().createDatabase("x")
+        Database d = MappingFactory.create().createDatabase("x")
                 .setJDBCDSN(uri).setJDBCDriver(driver);
         Assert.assertEquals(driver, d.getJDBCDriver());
         Assert.assertEquals(uri, d.getJDBCDSN());
@@ -123,7 +123,7 @@ public class MappingTest {
 
     @Test
     public void testEmptyMapping() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         Assert.assertEquals(0, m.listClassMaps().count());
         Assert.assertEquals(0, m.listDatabases().count());
         Assert.assertEquals(0, m.listDownloadMaps().count());
@@ -134,7 +134,7 @@ public class MappingTest {
 
     @Test
     public void testReturnAddedClassMaps() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         ClassMap c = m.createClassMap(classMap1);
         Assert.assertEquals(1, m.listClassMaps().count());
         Assert.assertNotNull(m.addClassMap(c));
@@ -146,7 +146,7 @@ public class MappingTest {
 
     @Test
     public void testAddDatabaseConnectionProperties() {
-        Database d = MappingFactory.createEmpty().createDatabase("db").putConnectionProperty("a", "b");
+        Database d = MappingFactory.create().createDatabase("db").putConnectionProperty("a", "b");
         Properties properties = d.getConnectionProperties();
         Assert.assertNotNull(properties);
         Assert.assertEquals(1, properties.size());
@@ -165,7 +165,7 @@ public class MappingTest {
 
     @Test
     public void testAddDatabaseColumns() {
-        Database d = MappingFactory.createEmpty().createDatabase("db")
+        Database d = MappingFactory.create().createDatabase("db")
                 .addColumn(Database.Column.NUMERIC, "Table.Col1")
                 .addColumn(Database.Column.NUMERIC, "Table.Col2")
                 .addColumn(Database.Column.NUMERIC, "Table.Col2")

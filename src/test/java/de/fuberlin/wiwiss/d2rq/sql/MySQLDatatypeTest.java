@@ -106,7 +106,7 @@ public class MySQLDatatypeTest {
     }
 
     private static Mapping generateMapping(String datatype) {
-        Mapping mapping = MappingFactory.createEmpty();
+        Mapping mapping = MappingFactory.create();
         Database database = connection.createDatabaseMapObject(mapping, DB_URI, MySQLDatatypeTest.database);
         //do not inject script to prevent database rebuilt:
         //database.setStartupSQLScript(ResourceFactory.createResource(scriptFile.toString()));

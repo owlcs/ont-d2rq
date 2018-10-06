@@ -27,14 +27,14 @@ public class TranslationTableTest {
 
     @Test
     public void testNewTranslationTableIsEmpty() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         TranslationTable table = m.createTranslationTable(table1);
         Assert.assertEquals(0, table.listTranslations().count());
     }
 
     @Test
     public void testTranslationTableIsSizeOneAfterAddingOneTranslation() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
         Assert.assertEquals(1, table.listTranslations().count());
@@ -42,7 +42,7 @@ public class TranslationTableTest {
 
     @Test
     public void testTranslationTableTranslator() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
         table.addTranslation("key2", "value2");
@@ -56,7 +56,7 @@ public class TranslationTableTest {
 
     @Test
     public void testUndefinedTranslation() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         TranslationTable table = m.createTranslationTable(table1).addTranslation("key1", "value1");
         Translator translator = table.asTranslator();
         Assert.assertNull(translator.toRDFValue("unknownKey"));
@@ -65,7 +65,7 @@ public class TranslationTableTest {
 
     @Test
     public void testNullTranslation() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
         Translator translator = table.asTranslator();
@@ -75,7 +75,7 @@ public class TranslationTableTest {
 
     @Test
     public void testCreationDuplicateTranslationsCausesValidationError() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         TranslationTable tb = m.createTranslationTable("table").addTranslation("foo", "bar");
         tb.validate();
         tb.createTranslation().setDatabaseValue("foo").setLiteral("bar");
@@ -89,7 +89,7 @@ public class TranslationTableTest {
 
     @Test
     public void testAddMultipleTranslations() {
-        Mapping m = MappingFactory.createEmpty();
+        Mapping m = MappingFactory.create();
         TranslationTable tb1 = m.createTranslationTable("tb1").addTranslation("foo", "bar").addTranslation("foo", "bar2");
         Assert.assertEquals(1, m.listTranslationTables().count());
         TranslationTable tb2 = m.createTranslationTable("tb2")
@@ -110,10 +110,10 @@ public class TranslationTableTest {
 
     @Test
     public void testAddExternalTable() {
-        TranslationTable ex = MappingFactory.createEmpty()
+        TranslationTable ex = MappingFactory.create()
                 .createTranslationTable("tb").addTranslation("a", "b").addTranslation("c", "c");
 
-        Mapping m = MappingFactory.createEmpty().addTranslationTable(ex);
+        Mapping m = MappingFactory.create().addTranslationTable(ex);
         Assert.assertEquals(1, m.listTranslationTables().count());
         Assert.assertEquals(1, m.asModel().listStatements(null, RDF.type, D2RQ.TranslationTable).toSet().size());
         Assert.assertEquals(2, m.asModel().listStatements(null, D2RQ.translation, (RDFNode) null).toSet().size());
@@ -131,7 +131,7 @@ public class TranslationTableTest {
     public void testAddTranslationClass() {
         String clazz = TestTranslator.class.getName();
         LOGGER.debug("Set {}", clazz);
-        TranslationTable tb = MappingFactory.createEmpty()
+        TranslationTable tb = MappingFactory.create()
                 .createTranslationTable("tb").setJavaClass(clazz);
         Assert.assertEquals(clazz, tb.getJavaClass());
         tb.validate();
@@ -145,7 +145,7 @@ public class TranslationTableTest {
     public void testAddTranslationFile() {
         String url = TranslationTableTest.class.getResource("/csv/translationtable.csv").toString();
         LOGGER.debug("Set {}", url);
-        TranslationTable tb = MappingFactory.createEmpty()
+        TranslationTable tb = MappingFactory.create()
                 .createTranslationTable("tb").setHref(url);
         Assert.assertEquals(url, tb.getHref());
         tb.validate();

@@ -126,7 +126,7 @@ public abstract class DatatypeTestBase {
 
     private Mapping generateMapping() {
         URL script = DatatypeTestBase.class.getResource(this.script);
-        Mapping mapping = MappingFactory.createEmpty();
+        Mapping mapping = MappingFactory.create();
         Database database = mapping.createDatabase(dbURI)
                 .setJDBCDSN(jdbcURL)
                 .setJDBCDriver(driver)

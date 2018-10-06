@@ -17,75 +17,83 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * Helper-factory to create/load {@link Mapping}.
+ * A factory to create and load {@link Mapping D2RQ Mapping}s.
  * <p>
  * Created by szuev on 22.02.2017.
  */
+@SuppressWarnings("WeakerAccess")
 public class MappingFactory {
-    private static MapParser helper = new MapParser();
 
     /**
      * Creates a fresh mapping.
-     * todo: rename
      *
      * @return {@link Mapping}
      */
-    public static Mapping createEmpty() {
-        return new MappingImpl(ModelFactory.createDefaultModel());
-    }
-
-    public static Mapping wrap(Model m) {
-        return new MappingImpl(m);
+    public static Mapping create() {
+        return wrap(ModelFactory.createDefaultModel().setNsPrefixes(Prefixes.MAPPING));
     }
 
     /**
-     * creates a mapping.
+     * Creates a mapping from the given model.
+     * The difference between the {@link #wrap(Model)} method and this one is that
+     * the first method does not change the model, whereas this method performs some operations on the model,
+     * for example it fixes legacy D2RQ instructions.
      *
-     * @param mapModel {@link Model} the mapping model contained D2RQ rules.
+     * @param model {@link Model} the mapping model contained D2RQ rules.
      * @return {@link Mapping}
      */
-    public static Mapping create(Model mapModel) {
-        return create(mapModel, null);
+    public static Mapping create(Model model) {
+        return create(model, null);
     }
 
     /**
-     * Creates a non-RDF database based model. The model is created
-     * from a D2RQ map that may be in "RDF/XML", "N-TRIPLES" or "TURTLE" format.
-     * Initially it was a constructor inside {@code de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ}.
+     * Loads a mapping from the specified location.
      *
-     * @param mapURL              URL of the D2RQ map to be used for this model
-     * @param serializationFormat the format of the map, or <tt>null</tt> for guessing based on the file extension
-     * @param baseURIForData      Base URI for turning relative URI patterns into absolute URIs; if <tt>null</tt>, then D2RQ will pick a base URI
+     * @param location URL of the D2RQ map to be used for this model
      * @return {@link Mapping}
      */
-    public static Mapping load(String mapURL, String serializationFormat, String baseURIForData) {
-        Model model = FileManager.get().loadModel(mapURL, serializationFormat);
-        String base = baseURIForData == null ? mapURL + "#" : baseURIForData;
-        return create(model, base);
+    public static Mapping load(String location) {
+        return load(location, null, location + "#");
     }
 
     /**
-     * Creates a non-RDF database based model.
-     * The model is created from a D2RQ map that will be loaded from the given URL.
-     * Its serialization format will be guessed from the file extension and defaults to RDF/XML.
-     * Initially it was a constructor inside {@code de.fuberlin.wiwiss.d2rq.jena.ModelD2RQ}.
+     * Loads a mapping from the specified location.
      *
-     * @param mapURL URL of the D2RQ map to be used for this model
+     * @param location URL of the D2RQ mapping file to be used for this model
+     * @param format   the format of the map, or {@code null} for guessing based on the file extension
+     * @param baseURI  Base URI for turning relative URI patterns into absolute URIs; if {@code null}, then D2RQ will pick a base URI
      * @return {@link Mapping}
      */
-    public static Mapping load(String mapURL) {
-        return create(FileManager.get().loadModel(mapURL), mapURL + "#");
+    public static Mapping load(String location, String format, String baseURI) {
+        Model model = FileManager.get().loadModel(location, format);
+        return create(model, baseURI == null ? location + "#" : baseURI);
     }
 
     /**
-     * Creates a mapping based on specified model.
+     * Creates a mapping that is backed by the specified model.
+     * Performs also several preliminary actions
+     * such as fixing legacy D2RQ rdf entries, inserting base uri to every {@code d2rq:uriPattern}, etc.
      *
-     * @param mapModel {@link Model} the mapping model contained D2RQ rules.
+     * @param model {@link Model} the mapping model contained D2RQ rules.
      * @param baseURI  the URL to fix relative URIs inside model. Optional.
      * @return {@link Mapping}
      */
-    public static Mapping create(Model mapModel, String baseURI) {
-        return helper.apply(mapModel, baseURI);
+    public static Mapping create(Model model, String baseURI) {
+        MapParser.validate(model);
+        baseURI = MapParser.absolutizeURI(baseURI);
+        MapParser.insertBase(model, baseURI);
+        MapParser.fixLegacy(model);
+        return wrap(model);
+    }
+
+    /**
+     * Wraps the given model as a {@link Mapping}.
+     *
+     * @param model {@link Model}, no {@code null}
+     * @return {@link Mapping}
+     */
+    public static Mapping wrap(Model model) {
+        return new MappingImpl(model);
     }
 
     /**

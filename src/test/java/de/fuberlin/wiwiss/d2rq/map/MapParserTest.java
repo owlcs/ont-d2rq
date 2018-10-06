@@ -153,7 +153,7 @@ public class MapParserTest {
 
     @Test(expected = D2RQException.class)
     public void validateDistinctMembers() {
-        Mapping m = MappingFactory.createEmpty()
+        Mapping m = MappingFactory.create()
                 .createDatabase("x").getMapping()
                 .createClassMap("x").getMapping();
         MapParser.checkDistinctMapObjects(m.asModel());

@@ -23,7 +23,7 @@ public class CompileTest {
 
     @Before
     public void setUp() {
-        Mapping mapping = MappingFactory.createEmpty();
+        Mapping mapping = MappingFactory.create();
         Database database = mapping.createDatabase(null);
         database.useConnectedDB(new DummyDB());
 

@@ -478,7 +478,7 @@ public class NodeSetTest {
     @Test
     public void testTranslatorUnsupported() {
         nodes.setUsesTranslator(Translator.IDENTITY);
-        nodes.setUsesTranslator(MappingFactory.createEmpty().createTranslationTable(null).asTranslator());
+        nodes.setUsesTranslator(MappingFactory.create().createTranslationTable(null).asTranslator());
         Assert.assertFalse(nodes.isEmpty());
         Assert.assertTrue(nodes.isUnsupported());
     }

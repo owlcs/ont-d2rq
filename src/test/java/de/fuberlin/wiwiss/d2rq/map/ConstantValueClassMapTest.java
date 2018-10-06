@@ -29,7 +29,7 @@ public class ConstantValueClassMapTest {
 
     @Before
     public void setUp() {
-        Mapping mapping = MappingFactory.createEmpty();
+        Mapping mapping = MappingFactory.create();
         Database database = mapping.createDatabase(null);
 
         ClassMap concept = createClassMap(mapping, database, "http://example.com/concept#@@c.ID@@");
