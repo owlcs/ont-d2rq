@@ -5,7 +5,7 @@ import org.apache.jena.rdf.model.RDFNode;
 
 /**
  * Represents {@link de.fuberlin.wiwiss.d2rq.vocab.D2RQ#AdditionalProperty d2rq:AdditionalProperty}.
- * Although {@link de.fuberlin.wiwiss.d2rq.vocab.D2RQ#additionalProperty d2rq:additionalProperty} is deprecated
+ * Although {@code d2rq:additionalProperty} is deprecated
  * (see <a href='http://d2rq.org/d2rq-language#additionalproperty_deprecated'>12.2 d2rq:additionalProperty</a>),
  * it is still used with
  * {@link de.fuberlin.wiwiss.d2rq.vocab.D2RQ#additionalClassDefinitionProperty d2rq:additionalClassDefinitionProperty} and

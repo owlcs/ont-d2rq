@@ -2,12 +2,11 @@ package de.fuberlin.wiwiss.d2rq.helpers;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
+import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.Objects;
 
@@ -42,12 +41,35 @@ public class MappingHelper {
         return mapping.listTranslationTables().findFirst().orElseThrow(AssertionError::new);
     }
 
-    public static TranslationTable findTranslationTable(Mapping mapping, Resource resource) {
+    public static TranslationTable findTranslationTable(Mapping mapping, Resource name) {
         return mapping.listTranslationTables()
-                .filter(t -> resource.equals(t.asResource())).findFirst().orElseThrow(AssertionError::new);
+                .filter(x -> Objects.equals(name, x.asResource()))
+                .findFirst().orElseThrow(AssertionError::new);
     }
 
     public static DownloadMap findDownloadMap(Mapping mapping, Resource name) {
-        return mapping.listDownloadMaps().filter(c -> Objects.equals(c.asResource(), name)).findFirst().orElseThrow(AssertionError::new);
+        return mapping.listDownloadMaps()
+                .filter(x -> Objects.equals(name, x.asResource()))
+                .findFirst().orElseThrow(AssertionError::new);
+    }
+
+    public static PropertyBridge findPropertyBridge(Mapping mapping, Resource name) {
+        return mapping.listPropertyBridges()
+                .filter(x -> Objects.equals(name, x.asResource()))
+                .findFirst().orElseThrow(AssertionError::new);
+    }
+
+    public static ClassMap findClassMap(Mapping mapping, Resource name) {
+        return mapping.listClassMaps()
+                .filter(x -> Objects.equals(name, x.asResource()))
+                .findFirst().orElseThrow(AssertionError::new);
+    }
+
+    public static void print(Mapping m) {
+        print(m.asModel());
+    }
+
+    public static void print(Model m) {
+        ReadWriteUtils.print(m);
     }
 }

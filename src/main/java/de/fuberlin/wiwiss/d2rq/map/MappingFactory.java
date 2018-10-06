@@ -8,10 +8,10 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.FileManager;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.vocabulary.XSD;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
+import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +26,8 @@ public class MappingFactory {
     private static MapParser helper = new MapParser();
 
     /**
-     * Creates an empty mapping.
+     * Creates a fresh mapping.
+     * todo: rename
      *
      * @return {@link Mapping}
      */
@@ -34,15 +35,8 @@ public class MappingFactory {
         return new MappingImpl(ModelFactory.createDefaultModel());
     }
 
-    /**
-     * Creates a mapping based on specified model.
-     *
-     * @param mapModel {@link Model} the mapping model contained D2RQ rules.
-     * @param baseURI  the URL to fix relative URIs inside model. Optional.
-     * @return {@link Mapping}
-     */
-    public static Mapping create(Model mapModel, String baseURI) {
-        return helper.apply(mapModel, baseURI);
+    public static Mapping wrap(Model m) {
+        return new MappingImpl(m);
     }
 
     /**
@@ -83,13 +77,26 @@ public class MappingFactory {
     public static Mapping load(String mapURL) {
         return create(FileManager.get().loadModel(mapURL), mapURL + "#");
     }
+
     /**
+     * Creates a mapping based on specified model.
+     *
+     * @param mapModel {@link Model} the mapping model contained D2RQ rules.
+     * @param baseURI  the URL to fix relative URIs inside model. Optional.
+     * @return {@link Mapping}
+     */
+    public static Mapping create(Model mapModel, String baseURI) {
+        return helper.apply(mapModel, baseURI);
+    }
+
+    /**
+     * Prefix helper.
      * Just a set of constants and auxiliary methods to work with prefixes (mapping + schema)
      * It is used by {@link de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator} and {@link MappingImpl}.
-     * todo: will be moved or deleted.
      * <p>
      * Created by szuev on 22.02.2017.
      */
+    @SuppressWarnings("WeakerAccess")
     public static class Prefixes {
         public static final String VOCAB_PREFIX = "vocab";
         public static final String MAP_PREFIX = "map";
@@ -102,12 +109,12 @@ public class MappingFactory {
                 .setNsPrefix("xsd", XSD.getURI()).lock();
 
         public static final PrefixMapping MAPPING = PrefixMapping.Factory.create()
-                .withDefaultMappings(COMMON)
+                .setNsPrefixes(COMMON)
                 .setNsPrefix(D2RQ_PREFIX, D2RQ.getURI())
                 .setNsPrefix(JDBC_PREFIX, JDBC.getURI()).lock();
 
         public static final PrefixMapping SCHEMA = PrefixMapping.Factory.create()
-                .withDefaultMappings(COMMON)
+                .setNsPrefixes(COMMON)
                 .setNsPrefix("owl", OWL.getURI()).lock();
 
         public static PrefixMapping createSchemaPrefixes(Model mapping) {

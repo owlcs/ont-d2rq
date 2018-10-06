@@ -34,7 +34,7 @@ public interface Mapping extends AutoCloseable {
     void close();
 
     /**
-     * Returns model that is backed by this mapping and vice versa.
+     * Returns the model that is backed by this mapping and vice versa.
      * Since any changes in the model is reflected in the mapping (and vice versa),
      * don't forget to call {@link #validate()}.
      *
