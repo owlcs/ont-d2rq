@@ -9,13 +9,13 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.TestVocab;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.shared.impl.PrefixMappingImpl;
 import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -40,14 +40,19 @@ public class MapFixture {
         return prefixes;
     }
 
-    public static Collection<TripleRelation> loadPropertyBridges(String mappingFileName) {
-        LOGGER.debug("Mapping file {}", mappingFileName);
+    public static Collection<TripleRelation> loadPropertyBridges(String file) {
+        LOGGER.debug("Mapping file {}", file);
+        if (!file.startsWith("/")) file = "/" + file;
         Model m = ModelFactory.createDefaultModel();
-        Resource dummyDB = m.getResource(TestVocab.DummyDatabase.getURI());
-        dummyDB.addProperty(RDF.type, D2RQ.Database);
-        if (!mappingFileName.startsWith("/")) mappingFileName = "/" + mappingFileName;
-        InputStream is = D2RQTestHelper.class.getResourceAsStream(mappingFileName);
-        m.read(is, null, "TURTLE");
+        try (InputStream is = D2RQTestHelper.class.getResourceAsStream(file)) {
+            m.read(is, null, "ttl");
+        } catch (IOException e) {
+            throw new AssertionError(e);
+        }
+        m.getResource(TestVocab.DummyDatabase.getURI())
+                .addProperty(RDF.type, D2RQ.Database)
+                .addProperty(D2RQ.jdbcDSN, "jdbc:" + file);
+
         Mapping res = MappingFactory.create(m, null);
         MappingHelper.connectToDummyDBs(res);
         return res.compiledPropertyBridges();

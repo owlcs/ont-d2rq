@@ -24,8 +24,8 @@ public class CompileTest {
     @Before
     public void setUp() {
         Mapping mapping = MappingFactory.create();
-        Database database = mapping.createDatabase(null);
-        database.useConnectedDB(new DummyDB());
+        Database database = mapping.createDatabase(null).setJDBCDSN("jdbc://x");
+        database.useConnectedDB(DummyDB.create(database));
 
         ClassMap employees = createClassMap(database, "http://test/employee@@e.ID@@")
                 .addAlias("employees AS e")

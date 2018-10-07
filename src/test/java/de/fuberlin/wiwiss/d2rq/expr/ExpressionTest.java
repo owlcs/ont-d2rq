@@ -3,6 +3,7 @@ package de.fuberlin.wiwiss.d2rq.expr;
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
+import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
@@ -73,20 +74,20 @@ public class ExpressionTest {
 
     @Test
     public void testConstantToSQL() {
-        Assert.assertEquals("'foo'", new Constant("foo").toSQL(new DummyDB(), AliasMap.NO_ALIASES));
+        Assert.assertEquals("'foo'", new Constant("foo").toSQL(DummyDB.create(), AliasMap.NO_ALIASES));
     }
 
     @Test
     public void testConstantToSQLWithType() {
         Attribute attribute = SQL.parseAttribute("table.col1");
-        DummyDB db = new DummyDB(Collections.singletonMap("table.col1", GenericType.NUMERIC));
+        ConnectedDB db = DummyDB.create(Collections.singletonMap("table.col1", GenericType.NUMERIC));
         Assert.assertEquals("42", new Constant("42", attribute).toSQL(db, AliasMap.NO_ALIASES));
     }
 
     @Test
     public void testConstantToSQLWithTypeAndAlias() {
         Attribute aliasedAttribute = SQL.parseAttribute("alias.col1");
-        DummyDB db = new DummyDB(Collections.singletonMap("table.col1", GenericType.NUMERIC));
+        ConnectedDB db = DummyDB.create(Collections.singletonMap("table.col1", GenericType.NUMERIC));
         Assert.assertEquals("42", new Constant("42", aliasedAttribute).toSQL(db, aliases));
     }
 

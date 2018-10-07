@@ -84,11 +84,9 @@ public class SQLBuildingTest {
 
     @Test
     public void testRelationNameQuoting() {
-        Vendor db = new DummyDB().vendor();
-        Assert.assertEquals("\"schema\".\"table\"",
-                db.quoteRelationName(new RelationName("schema", "table")));
-        Assert.assertEquals("\"table\"",
-                db.quoteRelationName(new RelationName(null, "table")));
+        Vendor db = DummyDB.create().vendor();
+        Assert.assertEquals("\"schema\".\"table\"", db.quoteRelationName(new RelationName("schema", "table")));
+        Assert.assertEquals("\"table\"", db.quoteRelationName(new RelationName(null, "table")));
     }
 
     @Test
@@ -107,7 +105,7 @@ public class SQLBuildingTest {
 
     @Test
     public void testNoLimit() {
-        ConnectedDB db = new DummyDB();
+        ConnectedDB db = DummyDB.create();
         Relation r = Relation.createSimpleRelation(db, new Attribute[]{foo});
         Assert.assertEquals("SELECT DISTINCT \"table\".\"foo\" FROM \"table\"",
                 new SelectStatementBuilder(r).getSQLStatement());
@@ -115,7 +113,7 @@ public class SQLBuildingTest {
 
     @Test
     public void testLimitStandard() {
-        DummyDB db = new DummyDB();
+        DummyDB db = DummyDB.create();
         db.setLimit(100);
         Relation r = Relation.createSimpleRelation(db, new Attribute[]{foo});
         Assert.assertEquals("SELECT DISTINCT \"table\".\"foo\" FROM \"table\" LIMIT 100",
@@ -124,7 +122,7 @@ public class SQLBuildingTest {
 
     @Test
     public void testNoLimitMSSQL() {
-        DummyDB db = new DummyDB(Vendor.SQLServer);
+        DummyDB db = DummyDB.create(Vendor.SQLServer);
         db.setLimit(100);
         Relation r = Relation.createSimpleRelation(db, new Attribute[]{foo});
         Assert.assertEquals("SELECT DISTINCT TOP 100 \"table\".\"foo\" FROM \"table\"",
@@ -133,7 +131,7 @@ public class SQLBuildingTest {
 
     @Test
     public void testNoLimitOracle() {
-        DummyDB db = new DummyDB(Vendor.Oracle);
+        DummyDB db = DummyDB.create(Vendor.Oracle);
         db.setLimit(100);
         Relation r = Relation.createSimpleRelation(db, new Attribute[]{foo});
         Assert.assertEquals("SELECT DISTINCT \"table\".\"foo\" FROM \"table\" WHERE (ROWNUM <= 100)",

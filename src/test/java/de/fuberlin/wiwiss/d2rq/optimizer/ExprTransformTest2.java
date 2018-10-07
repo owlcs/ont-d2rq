@@ -75,15 +75,23 @@ public class ExprTransformTest2 {
         Expr filterFR_BE = new E_LangMatches(new E_Lang(new ExprVar("o")), NodeValue.makeString("fr-BE"));
         Expr filterALL = new E_LangMatches(new E_Lang(new ExprVar("o")), NodeValue.makeString("*"));
 
-        Assert.assertEquals("LANGMATCHES(LANG(label_fr_be), \"fr\") should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterFR, label_fr_be));
-        Assert.assertEquals("LANGMATCHES(LANG(label_en), \"fr\") should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(filterFR, label_en));
-        Assert.assertEquals("LANGMATCHES(LANG(label_en), \"en\") should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterEN, label_en));
-        Assert.assertEquals("LANGMATCHES(LANG(label_fr_BE, \"fr_BE\") should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterFR_BE, label_fr_be));
+        Assert.assertEquals("LANGMATCHES(LANG(label_fr_be), \"fr\") should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(filterFR, label_fr_be));
+        Assert.assertEquals("LANGMATCHES(LANG(label_en), \"fr\") should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(filterFR, label_en));
+        Assert.assertEquals("LANGMATCHES(LANG(label_en), \"en\") should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(filterEN, label_en));
+        Assert.assertEquals("LANGMATCHES(LANG(label_fr_BE, \"fr_BE\") should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(filterFR_BE, label_fr_be));
 
-        Assert.assertEquals("LANGMATCHES(LANG(label), \"en\") should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(filterEN, label));
-        Assert.assertEquals("LANGMATCHES(LANG(label_fr_BE, \"*\") should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterALL, label_fr_be));
-        Assert.assertEquals("LANGMATCHES(LANG(label_en, \"*\") should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterALL, label_en));
-        Assert.assertEquals("LANGMATCHES(LANG(label, \"*\") should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(filterALL, label));
+        Assert.assertEquals("LANGMATCHES(LANG(label), \"en\") should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(filterEN, label));
+        Assert.assertEquals("LANGMATCHES(LANG(label_fr_BE, \"*\") should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(filterALL, label_fr_be));
+        Assert.assertEquals("LANGMATCHES(LANG(label_en, \"*\") should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(filterALL, label_en));
+        Assert.assertEquals("LANGMATCHES(LANG(label, \"*\") should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(filterALL, label));
     }
 
     @Test
@@ -96,7 +104,8 @@ public class ExprTransformTest2 {
         NodeRelation label_en = search("table1", "label_en", rels);
 
         pattern.clear();
-        pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
+        pattern.add(Triple.create(NodeFactory.createVariable("s"),
+                NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
         rels = translate(pattern, "optimizer/filtertests.n3");
 
         NodeRelation intvalue = search("table2", "intvalue", rels);
@@ -104,11 +113,16 @@ public class ExprTransformTest2 {
         Expr subject = new E_IsLiteral(new ExprVar("s"));
         Expr object = new E_IsLiteral(new ExprVar("o"));
 
-        Assert.assertEquals("ISLITERAL(literal) should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(object, label));
-        Assert.assertEquals("ISLITERAL(literal@lang) should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(object, label_en));
-        Assert.assertEquals("ISLITERAL(uri) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(subject, label));
-        Assert.assertEquals("ISLITERAL(intvalue) should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(object, intvalue));
-        Assert.assertEquals("ISLITERAL(blanknode) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(subject, intvalue));
+        Assert.assertEquals("ISLITERAL(literal) should be TRUE",
+                Expression.TRUE, TransformExprToSQLApplyer.convert(object, label));
+        Assert.assertEquals("ISLITERAL(literal@lang) should be TRUE",
+                Expression.TRUE, TransformExprToSQLApplyer.convert(object, label_en));
+        Assert.assertEquals("ISLITERAL(uri) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(subject, label));
+        Assert.assertEquals("ISLITERAL(intvalue) should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(object, intvalue));
+        Assert.assertEquals("ISLITERAL(blanknode) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(subject, intvalue));
     }
 
     @Test
@@ -121,7 +135,8 @@ public class ExprTransformTest2 {
         NodeRelation label_en = search("table1", "label_en", rels);
 
         pattern.clear();
-        pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
+        pattern.add(Triple.create(NodeFactory.createVariable("s"),
+                NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
         rels = translate(pattern, "optimizer/filtertests.n3");
 
         NodeRelation intvalue = search("table2", "intvalue", rels);
@@ -129,11 +144,16 @@ public class ExprTransformTest2 {
         Expr subject = new E_IsIRI(new ExprVar("s"));
         Expr object = new E_IsIRI(new ExprVar("o"));
 
-        Assert.assertEquals("ISIRI(literal) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(object, label));
-        Assert.assertEquals("ISIRI(literal@lang) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(object, label_en));
-        Assert.assertEquals("ISIRI(uri) should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(subject, label));
-        Assert.assertEquals("ISIRI(intvalue) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(object, intvalue));
-        Assert.assertEquals("ISIRI(blanknode) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(subject, intvalue));
+        Assert.assertEquals("ISIRI(literal) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(object, label));
+        Assert.assertEquals("ISIRI(literal@lang) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(object, label_en));
+        Assert.assertEquals("ISIRI(uri) should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(subject, label));
+        Assert.assertEquals("ISIRI(intvalue) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(object, intvalue));
+        Assert.assertEquals("ISIRI(blanknode) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(subject, intvalue));
     }
 
 
@@ -147,7 +167,8 @@ public class ExprTransformTest2 {
         NodeRelation label_en = search("table1", "label_en", rels);
 
         pattern.clear();
-        pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
+        pattern.add(Triple.create(NodeFactory.createVariable("s"),
+                NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
         rels = translate(pattern, "optimizer/filtertests.n3");
 
         NodeRelation intvalue = search("table2", "intvalue", rels);
@@ -155,17 +176,23 @@ public class ExprTransformTest2 {
         Expr subject = new E_IsBlank(new ExprVar("s"));
         Expr object = new E_IsBlank(new ExprVar("o"));
 
-        Assert.assertEquals("ISBLANK(literal) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(object, label));
-        Assert.assertEquals("ISBLANK(literal@lang) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(object, label_en));
-        Assert.assertEquals("ISBLANK(uri) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(subject, label));
-        Assert.assertEquals("ISBLANK(intvalue) should be FALSE", Expression.FALSE, TransformExprToSQLApplyer.convert(object, intvalue));
-        Assert.assertEquals("ISBLANK(blanknode) should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(subject, intvalue));
+        Assert.assertEquals("ISBLANK(literal) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(object, label));
+        Assert.assertEquals("ISBLANK(literal@lang) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(object, label_en));
+        Assert.assertEquals("ISBLANK(uri) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(subject, label));
+        Assert.assertEquals("ISBLANK(intvalue) should be FALSE", Expression.FALSE,
+                TransformExprToSQLApplyer.convert(object, intvalue));
+        Assert.assertEquals("ISBLANK(blanknode) should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(subject, intvalue));
     }
 
     @Test
     public void testDataType() {
         List<Triple> pattern = new ArrayList<>();
-        pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
+        pattern.add(Triple.create(NodeFactory.createVariable("s"),
+                NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
         NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 
         NodeRelation intvalue = search("table2", "intvalue", rels);
@@ -177,24 +204,32 @@ public class ExprTransformTest2 {
 
         NodeRelation langliteral = search("table1", "label_en", rels);
 
-        Expr filterint = new E_Equals(new E_Datatype(new ExprVar("o")), NodeValueNode.makeNode(NodeFactory.createURI(XSDDatatype.XSDint.getURI())));
-        Expr filterstring = new E_Equals(new E_Datatype(new ExprVar("o")), NodeValueNode.makeNode(NodeFactory.createURI(XSDDatatype.XSDstring.getURI())));
+        Expr filterint = new E_Equals(new E_Datatype(new ExprVar("o")),
+                NodeValueNode.makeNode(NodeFactory.createURI(XSDDatatype.XSDint.getURI())));
+        Expr filterstring = new E_Equals(new E_Datatype(new ExprVar("o")),
+                NodeValueNode.makeNode(NodeFactory.createURI(XSDDatatype.XSDstring.getURI())));
 
-        Assert.assertEquals("DATATYPE(intliteral) = xsd:int should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterint, intvalue));
-        Assert.assertEquals("DATATYPE(simpleliteral) = xsd:string should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterstring, value));
-        Assert.assertEquals("DATATYPE(langliteral) = xsd:string should be TRUE", Expression.TRUE, TransformExprToSQLApplyer.convert(filterstring, langliteral));
+        Assert.assertEquals("DATATYPE(intliteral) = xsd:int should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(filterint, intvalue));
+        Assert.assertEquals("DATATYPE(simpleliteral) = xsd:string should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(filterstring, value));
+        Assert.assertEquals("DATATYPE(langliteral) = xsd:string should be TRUE", Expression.TRUE,
+                TransformExprToSQLApplyer.convert(filterstring, langliteral));
     }
 
     @Test
     public void testDisjunction() {
         List<Triple> pattern = new ArrayList<>();
-        pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
+        pattern.add(Triple.create(NodeFactory.createVariable("s"),
+                NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
         NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 
         NodeRelation intvalue = search("table2", "intvalue", rels);
+        Assert.assertNotNull(intvalue);
 
         Expr disjunction = new E_LogicalOr(new E_Equals(new ExprVar("o"),
-                NodeValue.makeNode("1", XSDDatatype.XSDint)), new E_Equals(new ExprVar("o"), NodeValue.makeNode("2", XSDDatatype.XSDint)));
+                NodeValue.makeNode("1", XSDDatatype.XSDint)),
+                new E_Equals(new ExprVar("o"), NodeValue.makeNode("2", XSDDatatype.XSDint)));
 
         Expression result = TransformExprToSQLApplyer.convert(disjunction, intvalue);
         TypedNodeMaker nm = (TypedNodeMaker) intvalue.nodeMaker(Var.alloc("o"));
@@ -208,10 +243,12 @@ public class ExprTransformTest2 {
     @Test
     public void testSameTerm() {
         List<Triple> pattern = new ArrayList<>();
-        pattern.add(Triple.create(NodeFactory.createVariable("s"), NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
+        pattern.add(Triple.create(NodeFactory.createVariable("s"),
+                NodeFactory.createURI("http://example.org/value"), NodeFactory.createVariable("o")));
         NodeRelation[] rels = translate(pattern, "optimizer/filtertests.n3");
 
         NodeRelation intvalue = search("table2", "intvalue", rels);
+        Assert.assertNotNull(intvalue);
 
         Expr sameTerm = new E_SameTerm(new ExprVar("o"), NodeValue.makeNode("1", XSDDatatype.XSDint));
 
@@ -228,6 +265,7 @@ public class ExprTransformTest2 {
         Assert.assertEquals("sameTerm(?o, \"1\"^^xsd:decimal)", Expression.FALSE, result);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private NodeRelation[] translate(List<Triple> pattern, String mappingFile) {
         Collection<NodeRelation> rels = new GraphPatternTranslator(pattern,
                 MapFixture.loadPropertyBridges(mappingFile), true).translate();

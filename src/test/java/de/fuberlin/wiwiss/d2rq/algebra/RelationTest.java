@@ -14,7 +14,7 @@ public class RelationTest {
 
     @Before
     public void setUp() {
-        db = new DummyDB();
+        db = DummyDB.create();
         rel1 = Relation.createSimpleRelation(db,
                 new Attribute[]{new Attribute(null, "foo", "bar")});
     }

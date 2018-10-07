@@ -161,8 +161,7 @@ public class GraphPatternTranslatorTest {
     }
 
     private NodeRelation translate1(List<Triple> triplePatterns, String mappingFile) {
-        return translate1(triplePatterns,
-                MapFixture.loadPropertyBridges(mappingFile));
+        return translate1(triplePatterns, MapFixture.loadPropertyBridges(mappingFile));
     }
 
     private NodeRelation translate1(String pattern, Collection<TripleRelation> tripleRelations) {

@@ -25,7 +25,7 @@ public class CompatibleRelationGroupTest {
 
     @Before
     public void setUp() {
-        db = new DummyDB();
+        db = DummyDB.create();
         Set<ProjectionSpec> projections1 = Collections.singleton(new Attribute(null, "table", "unique"));
         Set<ProjectionSpec> projections2 = Collections.singleton(new Attribute(null, "table", "not_unique"));
         unique = new RelationImpl(

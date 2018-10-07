@@ -236,7 +236,7 @@ public class ConnectedDB implements AutoCloseable {
         return fetchSize != Database.NO_FETCH_SIZE;
     }
 
-    private void connect() {
+    protected void connect() {
         if (jdbcURL != null && !jdbcURL.toLowerCase().startsWith("jdbc:")) {
             throw new D2RQException("Not a JDBC URL: <" + jdbcURL + ">", D2RQException.D2RQ_DB_CONNECTION_FAILED);
         }
@@ -317,7 +317,7 @@ public class ConnectedDB implements AutoCloseable {
     }
 
     /**
-     * @return A helper for generating SQL statements conforming to the syntax
+     * @return a helper for generating SQL statements conforming to the syntax
      * of the database engine used in this connection
      */
     public Vendor vendor() {
@@ -438,20 +438,19 @@ public class ConnectedDB implements AutoCloseable {
     }
 
     @Override
-    public boolean equals(Object otherObject) {
-        if (this == otherObject) return true;
-        if (!(otherObject instanceof ConnectedDB)) {
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (!(other instanceof ConnectedDB)) {
             return false;
         }
-        ConnectedDB other = (ConnectedDB) otherObject;
-        return this.jdbcURL.equals(other.jdbcURL);
+        ConnectedDB db = (ConnectedDB) other;
+        return this.jdbcURL.equals(db.jdbcURL);
     }
 
     @Override
     public int hashCode() {
         return this.jdbcURL.hashCode();
     }
-
 
     /**
      * Tries to guess the class name of a suitable JDBC driver from a JDBC URL.

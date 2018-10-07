@@ -30,7 +30,7 @@ public class MappingHelper {
     }
 
     public static void connectToDummyDBs(Mapping m) {
-        m.listDatabases().forEach(d -> d.useConnectedDB(new DummyDB()));
+        m.listDatabases().forEach(d -> d.useConnectedDB(DummyDB.create(d)));
     }
 
     public static TranslationTable.Entry findTranslation(TranslationTable table) {
