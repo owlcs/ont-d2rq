@@ -5,13 +5,25 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.shared.PrefixMapping;
-import org.apache.jena.util.FileManager;
+import org.apache.jena.sys.JenaSystem;
 import org.apache.jena.vocabulary.RDFS;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -24,13 +36,17 @@ import java.util.stream.Stream;
 @SuppressWarnings("WeakerAccess")
 public class MappingFactory {
 
+    static {
+        JenaSystem.init();
+    }
+
     /**
      * Creates a fresh mapping.
      *
      * @return {@link Mapping}
      */
     public static Mapping create() {
-        return wrap(ModelFactory.createDefaultModel().setNsPrefixes(Prefixes.MAPPING));
+        return wrap(createModel().setNsPrefixes(Prefixes.MAPPING));
     }
 
     /**
@@ -66,9 +82,75 @@ public class MappingFactory {
      * @return {@link Mapping}
      */
     public static Mapping load(String location, String format, String baseURI) {
-        // todo: replace FileManager with direct loading
-        Model model = FileManager.get().loadModel(location, format);
+        Model model = loadModel(location, format);
         return create(model, baseURI == null ? location + "#" : baseURI);
+    }
+
+    private static Model loadModel(String location, String format) {
+        Lang lang = guessLang(location, format);
+        Model res = createModel();
+        try (InputStream in = open(location)) {
+            RDFDataMgr.read(res, in, lang);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Can't read <" + location + ">", e);
+        }
+        return res;
+    }
+
+    /**
+     * Guesses the {@link Lang RDF Language}.
+     *
+     * @param location String, the path to the RDF document
+     * @param format   String, syntax short form or mime type
+     * @return {@link Lang} or {@code null}
+     */
+    private static Lang guessLang(String location, String format) {
+        Lang res = RDFLanguages.nameToLang(format);
+        if (res != null) {
+            return res;
+        }
+        return RDFLanguages.filenameToLang(location);
+    }
+
+    /**
+     * Opens an {@link InputStream} for the specified document path.
+     *
+     * @param location String, location
+     * @return {@link InputStream}
+     * @throws IllegalArgumentException in case of wrong {@code location} (not URL or file path)
+     * @throws UncheckedIOException     if unable to open the document
+     */
+    private static InputStream open(String location) throws IllegalArgumentException, UncheckedIOException {
+        URI uri;
+        try {
+            uri = new URI(location);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Can't get URI from <" + location + ">", e);
+        }
+        if ("file".equals(uri.getScheme())) {
+            Path file = uri.isOpaque() ? Paths.get(uri.getSchemeSpecificPart()) : Paths.get(uri);
+            try {
+                return Files.newInputStream(file);
+            } catch (IOException e) {
+                throw new UncheckedIOException("Can't open <" + location + ">", e);
+            }
+        }
+        try {
+            return uri.toURL().openStream();
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Can't get URL from <" + location + ">", e);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Can't open <" + location + ">", e);
+        }
+    }
+
+    /**
+     * Answers a fresh standard {@link Model Jena Model} with the default personalities and in-memory graph.
+     *
+     * @return {@link Model}
+     */
+    private static Model createModel() {
+        return ModelFactory.createDefaultModel();
     }
 
     /**
@@ -76,8 +158,8 @@ public class MappingFactory {
      * Performs also several preliminary actions
      * such as fixing legacy D2RQ rdf entries, inserting base uri to every {@code d2rq:uriPattern}, etc.
      *
-     * @param model {@link Model} the mapping model contained D2RQ rules.
-     * @param baseURI  the URL to fix relative URIs inside model. Optional.
+     * @param model   {@link Model} the mapping model contained D2RQ rules.
+     * @param baseURI the URL to fix relative URIs inside model. Optional.
      * @return {@link Mapping}
      */
     public static Mapping create(Model model, String baseURI) {
