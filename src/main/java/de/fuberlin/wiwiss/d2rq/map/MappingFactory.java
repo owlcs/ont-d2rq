@@ -3,6 +3,7 @@ package de.fuberlin.wiwiss.d2rq.map;
 import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
@@ -173,11 +174,21 @@ public class MappingFactory {
     /**
      * Wraps the given model as a {@link Mapping}.
      *
-     * @param model {@link Model}, no {@code null}
+     * @param model {@link Model}, not {@code null}
      * @return {@link Mapping}
      */
     public static Mapping wrap(Model model) {
-        return new MappingImpl(model);
+        return wrap(model.getGraph());
+    }
+
+    /**
+     * Creates a {@link Mapping} for the specified {@link Graph}.
+     *
+     * @param graph {@link Graph}, not {@code null}
+     * @return {@link Mapping}
+     */
+    public static Mapping wrap(Graph graph) {
+        return new MappingImpl(graph);
     }
 
     /**

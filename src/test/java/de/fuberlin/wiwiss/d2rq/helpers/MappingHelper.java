@@ -9,6 +9,8 @@ import org.apache.jena.rdf.model.Resource;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Test helper for creating {@link Mapping}s.
@@ -42,27 +44,39 @@ public class MappingHelper {
     }
 
     public static TranslationTable findTranslationTable(Mapping mapping, Resource name) {
-        return mapping.listTranslationTables()
-                .filter(x -> Objects.equals(name, x.asResource()))
-                .findFirst().orElseThrow(AssertionError::new);
+        return find(mapping, Mapping::listTranslationTables, name);
     }
 
     public static DownloadMap findDownloadMap(Mapping mapping, Resource name) {
-        return mapping.listDownloadMaps()
-                .filter(x -> Objects.equals(name, x.asResource()))
-                .findFirst().orElseThrow(AssertionError::new);
+        return find(mapping, Mapping::listDownloadMaps, name);
     }
 
     public static PropertyBridge findPropertyBridge(Mapping mapping, Resource name) {
-        return mapping.listPropertyBridges()
+        return find(mapping, Mapping::listPropertyBridges, name);
+    }
+
+    public static PropertyBridge findPropertyBridge(Mapping mapping, String localName) {
+        return find(mapping, Mapping::listPropertyBridges, localName);
+    }
+
+    public static ClassMap findClassMap(Mapping mapping, Resource name) {
+        return find(mapping, Mapping::listClassMaps, name);
+    }
+
+    public static ClassMap findClassMap(Mapping mapping, String localName) {
+        return find(mapping, Mapping::listClassMaps, localName);
+    }
+
+    private static <X extends MapObject> X find(Mapping m, Function<Mapping, Stream<X>> get, Resource name) {
+        return get.apply(m)
                 .filter(x -> Objects.equals(name, x.asResource()))
                 .findFirst().orElseThrow(AssertionError::new);
     }
 
-    public static ClassMap findClassMap(Mapping mapping, Resource name) {
-        return mapping.listClassMaps()
-                .filter(x -> Objects.equals(name, x.asResource()))
-                .findFirst().orElseThrow(AssertionError::new);
+    private static <X extends MapObject> X find(Mapping m, Function<Mapping, Stream<X>> get, String localName) {
+        return get.apply(m)
+                .filter(x -> Objects.equals(localName, x.asResource().getLocalName()))
+                .findFirst().orElseThrow(() -> new AssertionError("Can't find name " + localName));
     }
 
     public static void print(Mapping m) {

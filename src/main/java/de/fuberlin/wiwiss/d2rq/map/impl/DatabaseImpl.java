@@ -6,8 +6,6 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
@@ -31,28 +29,6 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
     public DatabaseImpl(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
     }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected DatabaseImpl setRDFNode(Property property, RDFNode value) {
-        checkNotConnected();
-        return super.setRDFNode(property, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected DatabaseImpl addRDFNode(Property property, RDFNode value) {
-        checkNotConnected();
-        return super.addRDFNode(property, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected DatabaseImpl setNullable(Property property, String literal) {
-        checkNotConnected();
-        return super.setNullable(property, literal);
-    }
-
 
     /**
      * {@inheritDoc}
@@ -185,7 +161,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
     }
 
     @Override
-    public Database putConnectionProperty(String key, String value) {
+    public Database addConnectionProperty(String key, String value) {
         return setLiteral(JDBC.property(key), value);
     }
 
@@ -261,12 +237,5 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
         }
     }
 
-    protected void checkNotConnected() { // todo: this logic will be moved to graph listener
-        if (!mapping.hasConnection(this)) {
-            return;
-        }
-        throw new D2RQException("Cannot modify Database as it is already connected",
-                D2RQException.DATABASE_ALREADY_CONNECTED);
-    }
 
 }

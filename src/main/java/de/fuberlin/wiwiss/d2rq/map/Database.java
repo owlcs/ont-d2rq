@@ -178,7 +178,7 @@ public interface Database extends MapObject {
      * @param value String, not {@code null}
      * @return this instance to allow cascading calls
      */
-    Database putConnectionProperty(String key, String value);
+    Database addConnectionProperty(String key, String value);
 
     /**
      * Gets JDBC connection properties.
@@ -211,10 +211,10 @@ public interface Database extends MapObject {
      * @param properties {@link Properties}, not {@code null}
      * @return this instance to allow cascading calls
      * @see #getConnectionProperties()
-     * @see #putConnectionProperty(String, String)
+     * @see #addConnectionProperty(String, String)
      */
     default Database addConnectionProperties(Properties properties) {
-        properties.forEach((k, v) -> putConnectionProperty(String.valueOf(k), String.valueOf(v)));
+        properties.forEach((k, v) -> addConnectionProperty(String.valueOf(k), String.valueOf(v)));
         return this;
     }
 

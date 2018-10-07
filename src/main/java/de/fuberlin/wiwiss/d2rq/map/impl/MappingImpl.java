@@ -5,14 +5,19 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.jena.ControlledGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
@@ -24,7 +29,11 @@ import ru.avicomp.ontapi.jena.vocabulary.RDF;
 import java.io.IOException;
 import java.net.URI;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -41,22 +50,23 @@ public class MappingImpl implements Mapping {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingImpl.class);
 
-    // todo: control it using listeners
-    private final Map<Resource, ConnectedDB> connections = new HashMap<>();
+    // caches, that are reset in case of any change in the underlying graph:
+    protected final Map<Node, ConnectedDB> connections = new HashMap<>();
+    protected Collection<TripleRelation> compiledPropertyBridges;
+    // no need to be volatile, since the instance should not be shared between threads:
+    private boolean connected = false;
 
-    private final Model model;
+    protected final Model model;
 
-    private Collection<TripleRelation> compiledPropertyBridges;
     // cache for prefixes (todo: remove - should be obtained from schema)
     private PrefixMapping prefixes;
     // cache for schema (todo: remove)
     private Model vocabularyModel;
     // cache for dataGraph (todo: remove)
     private GraphD2RQ dataGraph;
-    private volatile boolean connected = false;
 
-    public MappingImpl(Model model) {
-        this.model = Objects.requireNonNull(model, "Null mapping model");
+    public MappingImpl(Graph base) {
+        this.model = ModelFactory.createModelForGraph(ControlledGraph.wrap(base, new CacheController()));
     }
 
     @Override
@@ -96,15 +106,11 @@ public class MappingImpl implements Mapping {
     }
 
     public ConnectedDB getConnectedDB(DatabaseImpl db) {
-        return connections.computeIfAbsent(db.asResource(), d -> createConnectionDB(db));
-    }
-
-    public boolean hasConnection(DatabaseImpl db) {
-        return connections.containsKey(db.asResource()) && connections.get(db.asResource()).isConnected();
+        return connections.computeIfAbsent(db.asResource().asNode(), n -> createConnectionDB(db));
     }
 
     void registerConnectedDB(DatabaseImpl db, ConnectedDB c) {
-        connections.put(db.asResource(), c);
+        connections.put(db.asResource().asNode(), c);
     }
 
     public ConnectedDB createConnectionDB(DatabaseImpl db) {
@@ -133,15 +139,14 @@ public class MappingImpl implements Mapping {
     public void connect() {
         if (connected) return;
         connected = true;
-        for (ConnectedDB db : connections.values()) {
-            db.connection();
-        }
         validate();
+        databases().mapWith(this::getConnectedDB).forEachRemaining(ConnectedDB::connection);
     }
 
     @Override
     public void close() {
         connections.values().forEach(ConnectedDB::close);
+        connected = false;
     }
 
     @Override
@@ -300,39 +305,34 @@ public class MappingImpl implements Mapping {
     }
 
     /**
-     * @return A collection of {@link TripleRelation}s corresponding to each of the property bridges.
+     * Notice that this method does not need to be synchronized (as it was before refactoring):
+     * both the mapping and the model graph are not shared between threads,
+     * if any standard {@link MappingFactory} method has been used to get this {@link Mapping} instance.
+     * If you still want to share mapping in multithreading, then take care about synchronization by yourself.
+     *
+     * @return a {@code Collection} of {@link TripleRelation}s corresponding to each of the property bridges.
      */
     @Override
-    public synchronized Collection<TripleRelation> compiledPropertyBridges() {
+    public Collection<TripleRelation> compiledPropertyBridges() {
         if (compiledPropertyBridges == null) {
-            //validateRDF();
-            compiledPropertyBridges = compilePropertyBridges();
-            LOGGER.info("Compiled {} property bridges", compiledPropertyBridges.size());
+            validateRDF();
+            compiledPropertyBridges = Iter.peek(tripleRelations(), MappingImpl::validateRelation).toList();
             if (LOGGER.isDebugEnabled()) {
-                compiledPropertyBridges.forEach(x -> LOGGER.debug("{}", x));
+                LOGGER.debug("Compiled {} property bridges", compiledPropertyBridges.size());
+                compiledPropertyBridges.forEach(x -> LOGGER.debug("TR={}", x));
             }
         }
         return compiledPropertyBridges;
     }
 
-    public Collection<TripleRelation> compilePropertyBridges() throws D2RQException {
-         /*
-          validate temporarily disabled, see bug
-          https://github.com/d2rq/d2rq/issues/194
-
-          Not adding tests since new development in other branch
-          but this patch reduces test errors from 92 to 38
-
-         validate();
-
-         */
-        return Iter.flatMap(classMaps(), c -> c.toTripleRelations().iterator()).toList();
+    public ExtendedIterator<TripleRelation> tripleRelations() throws D2RQException {
+        return Iter.flatMap(classMaps(), c -> c.toTripleRelations().iterator());
     }
 
     @Override
     public void validate() throws D2RQException {
         validateRDF();
-        compiledPropertyBridges().forEach(MappingImpl::validateRelation);
+        tripleRelations().forEachRemaining(MappingImpl::validateRelation);
     }
 
     public void validateRDF() throws D2RQException {
@@ -351,11 +351,11 @@ public class MappingImpl implements Mapping {
         listPropertyBridges().forEach(MapObject::validate);
 
         listClassMaps().forEach(MapObject::validate);
-        List<ClassMapImpl> empty = classMaps().filterDrop(ClassMapImpl::hasContent).toList();
-        if (!empty.isEmpty()) {
-            throw new D2RQException((empty.size() == 1 ?
-                    String.format("Class map %s has", empty.get(0)) :
-                    String.format("Class maps %s have", empty)) +
+        List<ClassMapImpl> incomplete = classMaps().filterDrop(ClassMapImpl::hasContent).toList();
+        if (!incomplete.isEmpty()) {
+            throw new D2RQException((incomplete.size() == 1 ?
+                    String.format("Class map %s has", incomplete.get(0)) :
+                    String.format("Class maps %s have", incomplete)) +
                     " no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
         }
     }
@@ -380,5 +380,23 @@ public class MappingImpl implements Mapping {
         }
     }
 
+    protected class CacheController implements BiConsumer<Triple, ControlledGraph.Event> {
+
+        @Override
+        public void accept(Triple triple, ControlledGraph.Event event) {
+            compiledPropertyBridges = null;
+            connected = false;
+            Node s = triple.getSubject();
+            if (!connections.containsKey(s)) {
+                return;
+            }
+            if (connections.get(s).isConnected()) {
+                throw new D2RQException(String.format("[%s][%s]:: cannot modify Database as it is already connected",
+                        event, PrettyPrinter.toString(triple, model)), D2RQException.DATABASE_ALREADY_CONNECTED);
+            }
+            connections.remove(s);
+
+        }
+    }
 
 }

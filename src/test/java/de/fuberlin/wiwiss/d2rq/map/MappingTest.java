@@ -1,19 +1,26 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class MappingTest {
-    private final static String database1 = "http://test/db";
-    private final static String database2 = "http://test/db2";
-    private final static String classMap1 = "http://test/classMap1";
+    private static final Logger LOGGER = LoggerFactory.getLogger(MappingTest.class);
+
+    private static String database1 = "http://test/db";
+    private static String database2 = "http://test/db2";
+    private static String classMap1 = "http://test/classMap1";
 
     @Test
     public void testReturnAddedDatabase() {
@@ -146,13 +153,13 @@ public class MappingTest {
 
     @Test
     public void testAddDatabaseConnectionProperties() {
-        Database d = MappingFactory.create().createDatabase("db").putConnectionProperty("a", "b");
+        Database d = MappingFactory.create().createDatabase("db").addConnectionProperty("a", "b");
         Properties properties = d.getConnectionProperties();
         Assert.assertNotNull(properties);
         Assert.assertEquals(1, properties.size());
         Assert.assertEquals("b", properties.getProperty("a"));
 
-        d.putConnectionProperty("a", "c").putConnectionProperty("A", "X");
+        d.addConnectionProperty("a", "c").addConnectionProperty("A", "X");
         properties = d.getConnectionProperties();
         Assert.assertEquals(2, properties.size());
         Assert.assertEquals("c", properties.getProperty("a"));
@@ -174,5 +181,50 @@ public class MappingTest {
         Assert.assertEquals(1, d.columns(Database.Column.TEXT).count());
 
         Assert.assertEquals("Table.Col2", d.columns(Database.Column.TEXT).findFirst().orElseThrow(AssertionError::new));
+    }
+
+    @Test
+    public void testConnectionWhileModification() {
+        String file = MappingTest.class.getResource("/mapping-iswc.mysql.ttl").toString();
+        try (Mapping m = MappingFactory.load(file, "ttl", "http://x#")) {
+            Assert.assertEquals(1, m.listDatabases().count());
+            Database db = m.listDatabases().findFirst().orElseThrow(AssertionError::new);
+            db.addConnectionProperty("a", "b");
+
+            m.connect();
+            try {
+                db.addConnectionProperty("c", "d");
+            } catch (D2RQException e) {
+                LOGGER.debug("Exception: {}", e.getMessage());
+                Assert.assertEquals(D2RQException.DATABASE_ALREADY_CONNECTED, e.errorCode());
+            }
+        }
+    }
+
+    @Test
+    public void testModifyCompiledPropertyBridges() {
+        String file = MappingTest.class.getResource("/mapping-iswc.mysql.ttl").toString();
+        try (Mapping m = MappingFactory.load(file, "ttl", "http://x#")) {
+            Assert.assertEquals(35, m.listPropertyBridges().count());
+            Assert.assertEquals(42, m.compiledPropertyBridges().size());
+            Assert.assertEquals(40, m.listPropertyBridges().count());
+
+            PropertyBridge b = MappingHelper.findPropertyBridge(m, "organizations_Type_U");
+            m.asModel().removeAll(b.asResource(), null, null);
+            Assert.assertEquals(39, m.listPropertyBridges().count());
+            Assert.assertEquals(41, m.compiledPropertyBridges().size());
+
+            // return back:
+            ClassMap c = MappingHelper.findClassMap(m, "Organizations");
+            m.createPropertyBridge(m.asModel().expandPrefix("map:organizations_Type_U"))
+                    .setBelongsToClassMap(c).addProperty(RDF.type)
+                    .setURIPattern("http://annotation.semanticweb.org/iswc/iswc.daml#University")
+                    .addCondition("organizations.Type = 'U'");
+
+            MappingHelper.print(m);
+            Assert.assertEquals(42, m.compiledPropertyBridges().size());
+            Assert.assertEquals(40, m.listPropertyBridges().count());
+
+        }
     }
 }

@@ -74,7 +74,8 @@ public abstract class MapObjectImpl implements MapObject {
     }
 
     protected <X extends MapObject> X setRDFNode(Property property, RDFNode node) throws NullPointerException {
-        resource.removeAll(Objects.requireNonNull(property, "Null property"));
+        if (resource.hasProperty(Objects.requireNonNull(property, "Null property")))
+            resource.removeAll(property);
         return addRDFNode(property, node);
     }
 
