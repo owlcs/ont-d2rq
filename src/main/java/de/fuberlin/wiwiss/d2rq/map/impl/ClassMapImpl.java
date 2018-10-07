@@ -11,10 +11,9 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.Iter;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("WeakerAccess")
@@ -188,12 +187,12 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     public Collection<TripleRelation> toTripleRelations() {
-        List<TripleRelation> res = new ArrayList<>();
-        propertyBridges().mapWith(PropertyBridgeImpl::toTripleRelations).forEachRemaining(res::addAll);
-        classes().mapWith(this::fetchPropertyForClass)
-                .mapWith(PropertyBridgeImpl::toTripleRelations)
-                .forEachRemaining(res::addAll);
-        return res;
+        return propertyBridges().andThen(classes().mapWith(this::fetchPropertyForClass))
+                .toSet() // no duplicates
+                .stream()
+                .map(PropertyBridgeImpl::toTripleRelations)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     public PropertyBridgeImpl fetchPropertyForClass(Resource clazz) {

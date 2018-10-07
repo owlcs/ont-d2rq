@@ -100,10 +100,14 @@ public class HSQLSimpleTest {
     public void testGenerateTripleFromSimpleD2RQMapping() {
         Mapping m = MappingHelper.readFromTestFile("/helpers/simple.ttl");
         m.getConfiguration().setServeVocabulary(false);
+        MappingHelper.print(m);
+
         db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
+
         Graph g = m.getData();
-        Assert.assertTrue(g.contains(
-                NodeFactory.createURI(EX + "test/1"), RDF.Nodes.type, NodeFactory.createURI(EX + "Test")));
+        Assert.assertTrue(g.contains(NodeFactory.createURI(EX + "test/1"),
+                RDF.Nodes.type, NodeFactory.createURI(EX + "Test")));
+        g.find().forEachRemaining(x -> LOGGER.debug("T={}", x));
         Assert.assertEquals(1, g.size());
     }
 

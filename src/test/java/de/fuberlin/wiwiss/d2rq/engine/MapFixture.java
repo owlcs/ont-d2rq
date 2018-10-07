@@ -2,6 +2,7 @@ package de.fuberlin.wiwiss.d2rq.engine;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -12,7 +13,8 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.shared.impl.PrefixMappingImpl;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -23,7 +25,7 @@ import java.util.Collection;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class MapFixture {
-    private static final Logger LOGGER = Logger.getLogger(MapFixture.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapFixture.class);
 
     private final static PrefixMapping prefixes = new PrefixMappingImpl() {{
         setNsPrefixes(PrefixMapping.Standard);
@@ -39,14 +41,15 @@ public class MapFixture {
     }
 
     public static Collection<TripleRelation> loadPropertyBridges(String mappingFileName) {
-        LOGGER.debug("Mapping file " + mappingFileName);
+        LOGGER.debug("Mapping file {}", mappingFileName);
         Model m = ModelFactory.createDefaultModel();
         Resource dummyDB = m.getResource(TestVocab.DummyDatabase.getURI());
         dummyDB.addProperty(RDF.type, D2RQ.Database);
         if (!mappingFileName.startsWith("/")) mappingFileName = "/" + mappingFileName;
         InputStream is = D2RQTestHelper.class.getResourceAsStream(mappingFileName);
         m.read(is, null, "TURTLE");
-        Mapping mapping = MappingFactory.create(m, null);
-        return mapping.compiledPropertyBridges();
+        Mapping res = MappingFactory.create(m, null);
+        MappingHelper.connectToDummyDBs(res);
+        return res.compiledPropertyBridges();
     }
 }

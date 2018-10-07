@@ -61,10 +61,12 @@ public class MappingFactory {
      *
      * @param location URL of the D2RQ mapping file to be used for this model
      * @param format   the format of the map, or {@code null} for guessing based on the file extension
-     * @param baseURI  Base URI for turning relative URI patterns into absolute URIs; if {@code null}, then D2RQ will pick a base URI
+     * @param baseURI  Base URI for turning relative URI patterns into absolute URIs; if {@code null},
+     *                 then D2RQ will pick a base URI
      * @return {@link Mapping}
      */
     public static Mapping load(String location, String format, String baseURI) {
+        // todo: replace FileManager with direct loading
         Model model = FileManager.get().loadModel(location, format);
         return create(model, baseURI == null ? location + "#" : baseURI);
     }

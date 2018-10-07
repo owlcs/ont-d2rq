@@ -65,7 +65,7 @@ public class MappingTest {
         ClassMap c = m.createClassMap(classMap1).setDatabase(db1).setURIColumn("TestDB.TestCol1")
                 .addPropertyBridge(m.createPropertyBridge(null)
                         .setURIColumn("TestDB.TestCol2").addProperty(RDFS.comment));
-        m.validate();
+        //m.validate();
         Database db2 = m.createDatabase(database2);
         c.asResource().addProperty(D2RQ.dataStorage, db2.asResource());
         try {

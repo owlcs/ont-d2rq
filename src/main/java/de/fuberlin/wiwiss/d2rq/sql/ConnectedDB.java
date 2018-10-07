@@ -238,14 +238,14 @@ public class ConnectedDB implements AutoCloseable {
 
     private void connect() {
         if (jdbcURL != null && !jdbcURL.toLowerCase().startsWith("jdbc:")) {
-            throw new D2RQException("Not a JDBC URL: " + jdbcURL, D2RQException.D2RQ_DB_CONNECTION_FAILED);
+            throw new D2RQException("Not a JDBC URL: <" + jdbcURL + ">", D2RQException.D2RQ_DB_CONNECTION_FAILED);
         }
         try {
-            LOGGER.info("Establishing JDBC connection to {}", jdbcURL);
+            LOGGER.info("Establishing JDBC connection to <{}>", jdbcURL);
             this.connection = DriverManager.getConnection(this.jdbcURL, getConnectionProperties());
         } catch (SQLException ex) {
             close();
-            throw new D2RQException("Database connection to " + jdbcURL + " failed (user: " + username + "): " + ex.getMessage(),
+            throw new D2RQException("Database connection to <" + jdbcURL + "> failed (user: " + username + "): " + ex.getMessage(),
                     ex,
                     D2RQException.D2RQ_DB_CONNECTION_FAILED);
         }
@@ -385,6 +385,7 @@ public class ConnectedDB implements AutoCloseable {
         return !isZerofillColumn(column1) && !isZerofillColumn(column2);
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean isZerofillColumn(Attribute column) {
         if (!Vendor.MySQL.equals(vendor())) return false;
         if (!zerofillCache.containsKey(column)) {
