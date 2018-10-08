@@ -1,6 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
@@ -63,11 +64,11 @@ public class MySQLDatatypeTest {
     @Test
     public void testDatatype() {
         Mapping mapping = createMapping(data.name());
+        MappingHelper.print(mapping);
+
         Graph graph = mapping.getData();
         Assert.assertNotNull(graph);
 
-        //debug:
-        //ru.avicomp.ontapi.utils.ReadWriteUtils.print(org.apache.jena.rdf.model.ModelFactory.createModelForGraph(graph));
 
         DatabaseSchemaInspector inspector = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new)
                 .connectedDB().schemaInspector();
@@ -128,22 +129,35 @@ public class MySQLDatatypeTest {
      * @see de.fuberlin.wiwiss.d2rq.sql.types.SQLExactNumeric
      */
     enum Data {
-        SERIAL(XSD.unsignedLong, "1", "2", "18446744073709551615"),
+        SERIAL(//XSD.unsignedLong,
+                XSD.integer, "1", "2", "18446744073709551615"),
         BIT_4(XSD.xstring, "0", "1", "1000", "1111"),
         BIT(XSD.xstring, "0", "1"),
-        TINYINT(XSD.xbyte, "0", "1", "-128", "127"),
+        TINYINT(//XSD.xbyte,
+                XSD.integer, "0", "1", "-128", "127"),
         TINYINT_1(XSD.xboolean, "false", "true", "true"),
-        TINYINT_UNSIGNED(XSD.unsignedByte, "0", "1", "255"),
-        SMALLINT(XSD.xshort, "0", "1", "-32768", "32767"),
-        SMALLINT_UNSIGNED(XSD.unsignedShort, "0", "1", "65535"),
-        MEDIUMINT(XSD.xint, "0", "1", "-8388608", "8388607"),
-        MEDIUMINT_UNSIGNED(XSD.unsignedInt, "0", "1", "16777215"),
-        INTEGER(XSD.xint, "0", "1", "-2147483648", "2147483647"),
-        INTEGER_UNSIGNED(XSD.unsignedInt, "0", "1", "4294967295"),
-        INT(XSD.xint, "0", "1", "-2147483648", "2147483647"),
-        INT_UNSIGNED(XSD.unsignedInt, "0", "1", "4294967295"),
-        BIGINT(XSD.xlong, "0", "1", "-9223372036854775808", "9223372036854775807"),
-        BIGINT_UNSIGNED(XSD.unsignedLong, "0", "1", "18446744073709551615"),
+        TINYINT_UNSIGNED(//XSD.unsignedByte,
+                XSD.integer, "0", "1", "255"),
+        SMALLINT(//XSD.xshort,
+                XSD.integer, "0", "1", "-32768", "32767"),
+        SMALLINT_UNSIGNED(//XSD.unsignedShort,
+                XSD.integer, "0", "1", "65535"),
+        MEDIUMINT(//XSD.xint,
+                XSD.integer, "0", "1", "-8388608", "8388607"),
+        MEDIUMINT_UNSIGNED(//XSD.unsignedInt,
+                XSD.integer, "0", "1", "16777215"),
+        INTEGER(//XSD.xint,
+                XSD.integer, "0", "1", "-2147483648", "2147483647"),
+        INTEGER_UNSIGNED(//XSD.unsignedInt,
+                XSD.integer, "0", "1", "4294967295"),
+        INT(//XSD.xint,
+                XSD.integer, "0", "1", "-2147483648", "2147483647"),
+        INT_UNSIGNED(//XSD.unsignedInt,
+                XSD.integer, "0", "1", "4294967295"),
+        BIGINT(//XSD.xlong,
+                XSD.integer, "0", "1", "-9223372036854775808", "9223372036854775807"),
+        BIGINT_UNSIGNED(//XSD.unsignedLong,
+                XSD.integer, "0", "1", "18446744073709551615"),
         DECIMAL(XSD.decimal, "0", "1", "100000000", "-100000000"),
         DECIMAL_4_2(XSD.decimal, "0", "1", "4.95", "99.99", "-99.99"),
         DEC(XSD.decimal, "0", "1", "100000000", "-100000000"),
