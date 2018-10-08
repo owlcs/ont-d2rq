@@ -1,10 +1,9 @@
 /* CVS $Id: $ */
 package de.fuberlin.wiwiss.d2rq.vocab;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 /**
  * Vocabulary definitions from file:doc/terms/d2rq.ttl
@@ -12,11 +11,6 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("unused")
 public class D2RQ {
-
-    /**
-     * <p>The RDF model that holds the vocabulary terms</p>
-     */
-    private static Model model = ModelFactory.createDefaultModel();
 
     /**
      * The URI.
@@ -444,10 +438,10 @@ public class D2RQ {
 
 
     protected static Resource resource(String local) {
-        return model.createResource(NS + local);
+        return ResourceFactory.createResource(NS + local);
     }
 
     protected static Property property(String local) {
-        return model.createProperty(NS + local);
+        return ResourceFactory.createProperty(NS + local);
     }
 }

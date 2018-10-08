@@ -5,7 +5,6 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.shared.PrefixMapping;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -21,9 +20,6 @@ import java.util.stream.Stream;
  * @see <a href='http://d2rq.org/d2rq-language#database'>The D2RQ Mapping Language</a>
  */
 public interface Mapping extends AutoCloseable {
-
-    // todo: hide from this interface
-    PrefixMapping getPrefixMapping();
 
     // todo: hide from this interface
     Collection<TripleRelation> compiledPropertyBridges();

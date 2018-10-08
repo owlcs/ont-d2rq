@@ -1,21 +1,16 @@
 package de.fuberlin.wiwiss.d2rq.vocab;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 public class VoID {
 
-    private static Model model = ModelFactory.createDefaultModel();
-    
     public static final String NS = "http://rdfs.org/ns/void#";
-
-    public static final Resource NAMESPACE = model.createResource(NS);
 
     public static final Resource Dataset = resource("Dataset");
 
-    public static final Property homepage = model.createProperty("http://xmlns.com/foaf/0.1/homepage");
+    public static final Property homepage = ResourceFactory.createProperty("http://xmlns.com/foaf/0.1/homepage");
 
     public static final Property feature = property("feature");
 
@@ -38,10 +33,10 @@ public class VoID {
     public static final Property inDataset = property("inDataset");
 
     protected static Resource resource(String localName) {
-        return model.createResource(NS + localName);
+        return ResourceFactory.createResource(NS + localName);
     }
 
     protected static Property property(String localName) {
-        return model.createProperty(NS + localName);
+        return ResourceFactory.createProperty(NS + localName);
     }
 }

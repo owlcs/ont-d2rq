@@ -1,10 +1,9 @@
 /* CVS $Id: ISWC.java,v 1.1 2006/09/07 21:33:19 cyganiak Exp $ */
 package de.fuberlin.wiwiss.d2rq.vocab;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 /**
  * Vocabulary definitions from http://annotation.semanticweb.org/iswc/iswc.daml
@@ -13,11 +12,6 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("unused")
 public class ISWC {
-
-    /**
-     * <p>The RDF model that holds the vocabulary terms</p>
-     */
-    private static Model model = ModelFactory.createDefaultModel();
 
     /**
      * <p>The namespace of the vocabulary as a string</p>
@@ -32,11 +26,6 @@ public class ISWC {
     public static String getURI() {
         return NS;
     }
-
-    /**
-     * <p>The namespace of the vocabulary as a resource</p>
-     */
-    public static final Resource NAMESPACE = model.createResource(NS);
 
     public static final Property persons_involved = property("persons_involved");
 
@@ -224,7 +213,8 @@ public class ISWC {
 
     public static final Resource Knowledge_Portals = resource("Knowledge_Portals");
 
-    public static final Resource TowardsSemanticWebMining = model.createResource("http://annotation.semanticweb.org/iswc/Towards_Semantic_Web_Mining.html#TowardsSemanticWebMining");
+    public static final Resource TowardsSemanticWebMining = ResourceFactory
+            .createResource("http://annotation.semanticweb.org/iswc/Towards_Semantic_Web_Mining.html#TowardsSemanticWebMining");
 
     public static final Resource Knowledge_Management_Methodology = resource("Knowledge_Management_Methodology");
 
@@ -275,11 +265,11 @@ public class ISWC {
     public static final Resource AIFB = resource("AIFB");
 
     protected static Property property(String localName) {
-        return model.createProperty(NS + localName);
+        return ResourceFactory.createProperty(NS + localName);
     }
 
     protected static Resource resource(String localName) {
-        return model.createResource(NS + localName);
+        return ResourceFactory.createResource(NS + localName);
     }
 
 }

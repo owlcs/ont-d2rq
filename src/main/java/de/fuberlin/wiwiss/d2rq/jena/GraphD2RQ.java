@@ -85,7 +85,8 @@ public class GraphD2RQ extends GraphBase implements Graph {
      */
     public GraphD2RQ(Mapping mapping) throws D2RQException {
         this.mapping = mapping;
-        getPrefixMapping().setNsPrefixes(mapping.getPrefixMapping());
+        // prefixes snapshot:
+        getPrefixMapping().setNsPrefixes(mapping.getSchema().getPrefixMapping());
     }
 
     @Override

@@ -19,7 +19,6 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,14 +54,10 @@ public class MappingImpl implements Mapping {
     // no need to be volatile, since the instance should not be shared between threads:
     private boolean connected = false;
 
-    protected final Model model;
+    // todo: replace with dynamic graph reflecting by the mapping model
+    private Model schemaCache;
 
-    // cache for prefixes (todo: remove - should be obtained from schema)
-    private PrefixMapping prefixes;
-    // cache for schema (todo: remove)
-    private Model vocabularyModel;
-    // cache for dataGraph (todo: remove)
-    private GraphD2RQ dataGraph;
+    protected final Model model;
 
     public MappingImpl(Graph base) {
         this.model = ModelFactory.createModelForGraph(ControlledGraph.wrap(base, new CacheController()));
@@ -74,7 +69,7 @@ public class MappingImpl implements Mapping {
     }
 
     public Model getVocabularyModel() {
-        return vocabularyModel == null ? vocabularyModel = MappingTransform.getModelBuilder().build(this) : vocabularyModel;
+        return schemaCache == null ? schemaCache = MappingTransform.getModelBuilder().build(this) : schemaCache;
     }
 
     @Override
@@ -84,24 +79,19 @@ public class MappingImpl implements Mapping {
 
     @Override
     public GraphD2RQ getData() {
-        return dataGraph == null ? dataGraph = new GraphD2RQ(this) : dataGraph;
+        return new GraphD2RQ(this);
     }
 
     /**
-     * moved from {@link de.fuberlin.wiwiss.d2rq.SystemLoader}
-     * TODO: it seems we don't need it at all.
+     * Has been moved from {@link de.fuberlin.wiwiss.d2rq.SystemLoader}
+     * TODO: it seems we don't need it at all, remove.
      *
      * @return {@link ClassMapLister}
-     * @deprecated todo: remove
+     * @deprecated going to delete
      */
     @Deprecated
     public ClassMapLister getClassMapLister() {
         return new ClassMapLister(this);
-    }
-
-    @Override
-    public PrefixMapping getPrefixMapping() {
-        return prefixes == null ? prefixes = MappingFactory.Prefixes.createSchemaPrefixes(model) : prefixes;
     }
 
     public ConnectedDB getConnectedDB(DatabaseImpl db) {

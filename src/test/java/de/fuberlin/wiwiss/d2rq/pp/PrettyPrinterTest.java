@@ -22,7 +22,7 @@ public class PrettyPrinterTest {
     public void testNodePrettyPrinting() {
         Assert.assertEquals("\"foo\"", PrettyPrinter.toString(NodeFactory.createLiteral("foo")));
         Assert.assertEquals("\"foo\"@en", PrettyPrinter.toString(NodeFactory.createLiteral("foo", "en", null)));
-        Assert.assertEquals("\"1\"^^<" + XSDDatatype.XSDint.getURI() + ">",
+        Assert.assertEquals("\"1\"^^" + PrettyPrinter.LIBRARY.shortForm(XSDDatatype.XSDint.getURI()),
                 PrettyPrinter.toString(NodeFactory.createLiteral("1", null, XSDDatatype.XSDint)));
         Assert.assertEquals("\"1\"^^xsd:int",
                 PrettyPrinter.toString(NodeFactory.createLiteral("1", null, XSDDatatype.XSDint), PrefixMapping.Standard));
@@ -36,7 +36,7 @@ public class PrettyPrinterTest {
 
     @Test
     public void testTriplePrettyPrinting() {
-        Assert.assertEquals("<http://example.org/a> <" + RDFS.label.getURI() + "> \"Example\" .",
+        Assert.assertEquals("<http://example.org/a> " + PrettyPrinter.LIBRARY.shortForm(RDFS.label.getURI()) + " \"Example\" .",
                 PrettyPrinter.toString(new Triple(NodeFactory.createURI("http://example.org/a"),
                         RDFS.label.asNode(),
                         NodeFactory.createLiteral("Example", null, null))));

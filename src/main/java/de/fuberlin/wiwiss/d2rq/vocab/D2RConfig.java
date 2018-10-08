@@ -1,10 +1,9 @@
 /* CVS $Id: $ */
 package de.fuberlin.wiwiss.d2rq.vocab;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 /**
  * Vocabulary definitions from file:doc/terms/config.ttl
@@ -13,11 +12,6 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("unused")
 public class D2RConfig {
-
-    /**
-     * <p>The RDF model that holds the vocabulary terms</p>
-     */
-    private static Model model = ModelFactory.createDefaultModel();
 
     /**
      * <p>The namespace of the vocabulary as a string</p>
@@ -33,11 +27,6 @@ public class D2RConfig {
     public static String getURI() {
         return NS;
     }
-
-    /**
-     * <p>The namespace of the vocabulary as a resource</p>
-     */
-    public static final Resource NAMESPACE = model.createResource(NS);
 
     /**
      * <p>Whether D2R Server should check for an updated mapping file with every request.</p>
@@ -115,11 +104,11 @@ public class D2RConfig {
     public static final Resource Server = resource("Server");
 
     protected static Resource resource(String localName) {
-        return model.createResource(NS + localName);
+        return ResourceFactory.createResource(NS + localName);
     }
 
     protected static Property property(String localName) {
-        return model.createProperty(NS + localName);
+        return ResourceFactory.createProperty(NS + localName);
     }
 
 }

@@ -108,7 +108,7 @@ public class ClassMapLister {
             return null;
         }
         Model result = ModelFactory.createDefaultModel();
-        result.setNsPrefixes(mapping.getPrefixMapping());
+        result.setNsPrefixes(mapping.getSchema().getPrefixMapping());
         FindQuery query = new FindQuery(Triple.ANY, inventoryBridges, limitPerClassMap, null);
         // todo: no more com.hp.hpl.jena.graph.BulkUpdateHandler. Use org.apache.jena.graph.GraphUtil:
         //result.getGraph().getBulkUpdateHandler().add(TripleQueryIter.create(query.iterator()));

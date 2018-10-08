@@ -1,9 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.vocab;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 /**
  * Open namespace for JDBC connection properties. A JDBC connection
@@ -15,11 +13,6 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("unused")
 public class JDBC {
-
-    /**
-     * The RDF model that holds the vocabulary terms.
-     */
-    private static Model model = ModelFactory.createDefaultModel();
 
     /**
      * The namespace of the vocabulary as a string.
@@ -35,12 +28,8 @@ public class JDBC {
         return NS;
     }
 
-    /**
-     * The namespace of the vocabulary as a resource.
-     */
-    public static final Resource NAMESPACE = model.createResource(NS);
 
     public static Property property(String k) {
-        return model.getProperty(NS + k);
+        return ResourceFactory.createProperty(NS + k);
     }
 }

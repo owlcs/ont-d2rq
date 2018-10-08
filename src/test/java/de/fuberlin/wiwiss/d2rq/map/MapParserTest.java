@@ -25,7 +25,7 @@ public class MapParserTest {
         String pattern = ns + "@@Persons.Type@@";
 
         Model m = ModelFactory.createDefaultModel()
-                .setNsPrefixes(MappingFactory.Prefixes.MAPPING).setNsPrefix("test", ns);
+                .setNsPrefixes(MappingFactory.MAPPING).setNsPrefix("test", ns);
         Resource op = m.createResource(ns + "op", MapParser.LegacyD2RQ.ObjectPropertyBridge)
                 .addProperty(D2RQ.column, column).addProperty(D2RQ.pattern, pattern);
         Resource dp = m.createResource(ns + "dp", MapParser.LegacyD2RQ.DataPropertyBridge);
@@ -65,7 +65,7 @@ public class MapParserTest {
         Resource iri = ResourceFactory.createResource("http://annotation.semanticweb.org/iswc2003/");
 
         Model m = ModelFactory.createDefaultModel()
-                .setNsPrefixes(MappingFactory.Prefixes.MAPPING)
+                .setNsPrefixes(MappingFactory.MAPPING)
                 .setNsPrefix("map", mapNS)
                 .setNsPrefix("", schemaNS);
         Resource a = m.createResource(mapNS + "SeeAlsoStatement", D2RQ.AdditionalProperty)
@@ -109,7 +109,7 @@ public class MapParserTest {
         String mapNS = "http://y#";
 
         Model m = ModelFactory.createDefaultModel()
-                .setNsPrefixes(MappingFactory.Prefixes.MAPPING)
+                .setNsPrefixes(MappingFactory.MAPPING)
                 .setNsPrefix("owl", OWL.NS)
                 .setNsPrefix("map", mapNS)
                 .setNsPrefix("", schemaNS);

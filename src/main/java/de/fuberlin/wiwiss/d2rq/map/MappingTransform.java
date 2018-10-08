@@ -2,6 +2,7 @@ package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.map.impl.ResourceMap;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
@@ -49,21 +50,20 @@ public class MappingTransform {
 
         @Override
         public Model build(Mapping mapping) {
-            Model model = ModelFactory.createDefaultModel();
-            model.setNsPrefixes(mapping.getPrefixMapping());
+            Model res = ModelFactory.createDefaultModel().setNsPrefixes(createSchemaPrefixes(mapping.asModel()));
 
-            Resource anon = model.createResource();
+            Resource anon = res.createResource();
             anon.addProperty(RDF.type, OWL.Ontology);
             mapping.listDatabases().forEach(d -> anon.addLiteral(RDFS.comment, "Database: <" + d.getJDBCDSN() + ">"));
 
             mapping.listClassMaps().forEach(classMap -> {
-                classMap.listClasses().forEach(c -> addDefinitions(model, (ResourceMap) classMap, c));
+                classMap.listClasses().forEach(c -> addDefinitions(res, (ResourceMap) classMap, c));
                 classMap.listPropertyBridges().forEach(b -> {
-                    b.listProperties().forEach(p -> addDefinitions(model, (ResourceMap) b, p));
+                    b.listProperties().forEach(p -> addDefinitions(res, (ResourceMap) b, p));
                     // TODO: What to do about dynamic properties?
                 });
             });
-            return model;
+            return res;
         }
 
         protected void addDefinitions(Model model, ResourceMap map, Resource targetResource) {
@@ -97,6 +97,15 @@ public class MappingTransform {
                 RDFNode object = p.getValue();
                 model.add(targetResource, property, object);
             });
+        }
+
+        private static PrefixMapping createSchemaPrefixes(Model mapping) {
+            return PrefixMapping.Factory.create()
+                    .setNsPrefixes(MappingFactory.SCHEMA)
+                    .setNsPrefixes(mapping.getNsPrefixMap())
+                    .removeNsPrefix(MappingFactory.D2RQ_PREFIX)
+                    .removeNsPrefix(MappingFactory.JDBC_PREFIX)
+                    .removeNsPrefix(MappingFactory.MAP_PREFIX).lock();
         }
 
     }

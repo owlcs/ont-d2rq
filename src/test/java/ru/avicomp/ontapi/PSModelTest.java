@@ -128,7 +128,7 @@ public class PSModelTest {
         List<String> pkTableColumns = Arrays.asList("id", "numeric_column", "text_column");
         for (String col : pkTableColumns) {
 
-            Property predicate = ResourceFactory.createProperty(psIRI + MappingFactory.Prefixes.VOCAB_PREFIX + "#pk_table_" + col);
+            Property predicate = ResourceFactory.createProperty(psIRI + MappingFactory.VOCAB_PREFIX + "#pk_table_" + col);
             List<OntStatement> statements = model.statements(null, predicate, null).collect(Collectors.toList());
             Assert.assertEquals("Statements for " + predicate, 6, statements.size());
             Assert.assertEquals("Individuals for " + predicate, 6, statements.stream().map(OntStatement::getSubject)
@@ -139,7 +139,7 @@ public class PSModelTest {
         LOGGER.info("Validate data from no_k_table (WARNING: only single individual since table has no primary key)");
         List<String> noPkTableColumns = Arrays.asList("value", "number", "parameter");
         for (String col : noPkTableColumns) {
-            Property predicate = ResourceFactory.createProperty(psIRI + MappingFactory.Prefixes.VOCAB_PREFIX + "#no_pk_table_" + col);
+            Property predicate = ResourceFactory.createProperty(psIRI + MappingFactory.VOCAB_PREFIX + "#no_pk_table_" + col);
             List<OntStatement> statements = model.statements(null, predicate, null).collect(Collectors.toList());
             Assert.assertEquals("Statements for " + predicate, 8, statements.size());
             Assert.assertEquals("Distinct statements for " + predicate, 7, statements.stream().distinct().count());

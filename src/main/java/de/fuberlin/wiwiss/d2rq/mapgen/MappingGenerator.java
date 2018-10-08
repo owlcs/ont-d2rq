@@ -190,9 +190,9 @@ public class MappingGenerator {
     protected Model createMappingModel() {
         try {
             Model res = ModelFactory.createDefaultModel();
-            res.setNsPrefixes(MappingFactory.Prefixes.MAPPING);
-            res.setNsPrefix(MappingFactory.Prefixes.MAP_PREFIX, mapNamespaceURI.toString());
-            res.setNsPrefix(MappingFactory.Prefixes.VOCAB_PREFIX, vocabNamespaceURI.toString());
+            res.setNsPrefixes(MappingFactory.MAPPING);
+            res.setNsPrefix(MappingFactory.MAP_PREFIX, mapNamespaceURI.toString());
+            res.setNsPrefix(MappingFactory.VOCAB_PREFIX, vocabNamespaceURI.toString());
             if (!serveVocabulary) {
                 addConfiguration(res);
             }

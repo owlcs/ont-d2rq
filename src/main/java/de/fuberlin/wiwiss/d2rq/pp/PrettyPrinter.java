@@ -2,8 +2,6 @@ package de.fuberlin.wiwiss.d2rq.pp;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RConfig;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.JenaRuntime;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -23,14 +21,8 @@ import java.util.stream.Collectors;
  */
 public class PrettyPrinter {
 
-    static {
-        // todo: wrong logic: vocabulary constants must not contain nonnull model
-        // Make sure that the model behind all the
-        // D2RQ vocabulary terms has the d2rq prefix
-        D2RQ.ClassMap.getModel().setNsPrefix(MappingFactory.Prefixes.D2RQ_PREFIX, D2RQ.NS);
-        // Same for D2RConfig
-        D2RConfig.Server.getModel().setNsPrefix("d2r", D2RConfig.NS);
-    }
+    public static final PrefixMapping LIBRARY = PrefixMapping.Factory.create()
+            .setNsPrefixes(MappingFactory.MAPPING).setNsPrefixes(MappingFactory.SCHEMA).lock();
 
     /**
      * Pretty-prints an RDF node.
@@ -50,6 +42,7 @@ public class PrettyPrinter {
      * @return An N-Triples style textual representation with URIs shortened to QNames
      */
     public static String toString(Node n, PrefixMapping prefixes) {
+        if (prefixes == null) prefixes = LIBRARY;
         if (n.isURI()) {
             return qNameOrURI(n.getURI(), prefixes);
         }

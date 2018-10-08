@@ -1,16 +1,12 @@
 package de.fuberlin.wiwiss.d2rq.vocab;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 public class SD {
-    private static Model model = ModelFactory.createDefaultModel();
-    
-    public static final String NS = "http://www.w3.org/ns/sparql-service-description#";
 
-    public static final Resource NAMESPACE = model.createResource(NS);
+    public static final String NS = "http://www.w3.org/ns/sparql-service-description#";
 
     public static final Resource Service = resource("Service");
 
@@ -27,11 +23,11 @@ public class SD {
     public static final Property resultFormat = property("resultFormat");
 
     protected static Resource resource(String localName) {
-        return model.createResource(localName);
+        return ResourceFactory.createResource(NS + localName);
     }
 
     protected static Property property(String localName) {
-        return model.createProperty(localName);
+        return ResourceFactory.createProperty(NS + localName);
     }
 
 

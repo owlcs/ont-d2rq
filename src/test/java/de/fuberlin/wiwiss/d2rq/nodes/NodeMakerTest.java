@@ -1,6 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.nodes;
 
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
+import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.values.BlankNodeID;
 import de.fuberlin.wiwiss.d2rq.values.Column;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -20,7 +21,7 @@ public class NodeMakerTest {
                 new FixedNodeMaker(NodeFactory.createLiteral("foo"), true).toString());
         Assert.assertEquals("Fixed(\"foo\"@en)",
                 new FixedNodeMaker(NodeFactory.createLiteral("foo", "en", null), true).toString());
-        Assert.assertEquals("Fixed(\"1\"^^<" + XSDDatatype.XSDint.getURI() + ">)",
+        Assert.assertEquals("Fixed(\"1\"^^" + PrettyPrinter.LIBRARY.shortForm(XSDDatatype.XSDint.getURI()) + ")",
                 new FixedNodeMaker(NodeFactory.createLiteral("1", null, XSDDatatype.XSDint), true).toString());
         Assert.assertEquals("Fixed(_:foo)",
                 new FixedNodeMaker(NodeFactory.createBlankNode("foo"), true).toString());

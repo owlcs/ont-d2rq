@@ -1,10 +1,9 @@
 /* CVS $Id: SKOS.java,v 1.1 2006/09/07 21:33:19 cyganiak Exp $ */
 package de.fuberlin.wiwiss.d2rq.vocab;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 /**
  * Vocabulary definitions from http://www.w3.org/2004/02/skos/core
@@ -13,11 +12,6 @@ import org.apache.jena.rdf.model.Resource;
  */
 @SuppressWarnings("unused")
 public class SKOS {
-
-    /**
-     * <p>The RDF model that holds the vocabulary terms</p>
-     */
-    private static Model model = ModelFactory.createDefaultModel();
 
     /**
      * <p>The namespace of the vocabulary as a string</p>
@@ -32,11 +26,6 @@ public class SKOS {
     public static String getURI() {
         return NS;
     }
-
-    /**
-     * <p>The namespace of the vocabulary as a resource</p>
-     */
-    public static final Resource NAMESPACE = model.createResource(NS);
 
     /**
      * <p>Acronyms, abbreviations, spelling variants, and irregular plural/singular
@@ -171,11 +160,11 @@ public class SKOS {
     public static final Resource ConceptScheme = resource("ConceptScheme");
 
     protected static Resource resource(String localName) {
-        return model.createResource(NS + localName);
+        return ResourceFactory.createResource(NS + localName);
     }
 
     protected static Property property(String localName) {
-        return model.createProperty(NS + localName);
+        return ResourceFactory.createProperty(NS + localName);
     }
 
 }
