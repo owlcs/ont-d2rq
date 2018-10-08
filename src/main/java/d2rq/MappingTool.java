@@ -66,12 +66,12 @@ public class MappingTool extends CommandLineTool {
             loader.setSystemBaseURI(cmd.getArg(baseArg).getValue());
         }
 
-        Mapping generator = loader.getMapping();
+        Mapping generator = loader.build();
         try {
             Model model = cmd.contains(vocabAsOutput) ? generator.getVocabularyModel() : generator.asModel();
             RDFDataMgr.write(out, model, RDFLanguages.TURTLE);
         } finally {
-            loader.closeMappingGenerator();
+            loader.close();
         }
     }
 }

@@ -81,7 +81,7 @@ public class QueryTool extends CommandLineTool {
         }
 
         loader.setFastMode(true);
-        Model d2rqModel = loader.getMapping().getDataModel();
+        Model d2rqModel = loader.build().getDataModel();
 
         StringBuilder prefixes = new StringBuilder();
         for (String prefix : d2rqModel.getNsPrefixMap().keySet()) {

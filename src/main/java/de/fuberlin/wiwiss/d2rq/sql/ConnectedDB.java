@@ -102,6 +102,7 @@ public class ConnectedDB implements AutoCloseable {
                         try {
                             s.close();
                         } catch (Exception ignore) {
+                            // ignore
                         }
                     }
                     resetConnection();
@@ -109,6 +110,7 @@ public class ConnectedDB implements AutoCloseable {
                     if (s != null) try {
                         s.close();
                     } catch (Exception ignore) {
+                        // ignore
                     }
                 }
             }
@@ -131,9 +133,9 @@ public class ConnectedDB implements AutoCloseable {
         }
         try {
             this.connection.close();
-        } catch (SQLException sqlExc) {
+        } catch (SQLException e) {
             // ignore...
-            LOGGER.error("Error while closing current connection: {}", sqlExc.getMessage(), sqlExc);
+            LOGGER.error("Error while closing current connection: {}", e.getMessage(), e);
         } finally {
             this.connection = null;
         }
@@ -145,36 +147,45 @@ public class ConnectedDB implements AutoCloseable {
         this(jdbcURL, username, password, Collections.emptyMap(), Database.NO_LIMIT, Database.NO_FETCH_SIZE, null);
     }
 
+    /**
+     * @param jdbcURL     a JDBC conntection String, not {@code null}
+     * @param username    a JDBC user login, possible {@code null}
+     * @param password    a JDBC user password, possible {@code null}
+     * @param columnTypes column types Map, possible empty
+     * @param limit       positive integer or {@link Database#NO_LIMIT}
+     * @param fetchSize   positive integer or {@link Database#NO_FETCH_SIZE}
+     * @param properties  JDBC connection {@link Properties}, possible {@code null}
+     */
     public ConnectedDB(String jdbcURL,
                        String username,
                        String password,
                        Map<String, GenericType> columnTypes,
                        int limit,
                        int fetchSize,
-                       Properties connectionProperties) {
+                       Properties properties) {
         // TODO replace column type arguments with a single column => type map
-        this.jdbcURL = jdbcURL;
+        this.jdbcURL = Objects.requireNonNull(jdbcURL);
         this.username = username;
         this.password = password;
         this.limit = limit;
         this.fetchSize = fetchSize;
-        this.connectionProperties = connectionProperties;
+        this.connectionProperties = properties;
 
         for (String columnName : columnTypes.keySet()) {
             overriddenColumnTypes.put(SQL.parseAttribute(columnName), columnTypes.get(columnName));
         }
 
         // create keep alive agent if enabled
-        if (connectionProperties != null && connectionProperties.containsKey(KEEP_ALIVE_PROPERTY)) {
+        if (properties != null && properties.containsKey(KEEP_ALIVE_PROPERTY)) {
             int interval = DEFAULT_KEEP_ALIVE_INTERVAL;
             String query = DEFAULT_KEEP_ALIVE_QUERY;
             try {
-                interval = new Integer((String) connectionProperties.get(KEEP_ALIVE_PROPERTY));
+                interval = new Integer((String) properties.get(KEEP_ALIVE_PROPERTY));
                 if (interval <= 0) interval = DEFAULT_KEEP_ALIVE_INTERVAL;
             } catch (NumberFormatException ignore) {
             } // use default
-            if (connectionProperties.containsKey(KEEP_ALIVE_QUERY_PROPERTY))
-                query = connectionProperties.getProperty(KEEP_ALIVE_QUERY_PROPERTY);
+            if (properties.containsKey(KEEP_ALIVE_QUERY_PROPERTY))
+                query = properties.getProperty(KEEP_ALIVE_QUERY_PROPERTY);
 
             this.keepAliveAgent = new KeepAliveAgent(interval, query);
             this.keepAliveAgent.start();
@@ -261,12 +272,12 @@ public class ConnectedDB implements AutoCloseable {
     }
 
     private Properties getConnectionProperties() {
-        Properties result = (connectionProperties == null) ? new Properties() : (Properties) connectionProperties.clone();
+        Properties res = connectionProperties == null ? new Properties() : (Properties) connectionProperties.clone();
         if (username != null) {
-            result.setProperty("user", username);
+            res.setProperty("user", username);
         }
         if (password != null) {
-            result.setProperty("password", password);
+            res.setProperty("password", password);
         }
 
 //		/*
@@ -280,7 +291,7 @@ public class ConnectedDB implements AutoCloseable {
 //			result.setProperty("useServerPrepStmts", "true"); /* prerequisite */
 //		}
 
-        return result;
+        return res;
     }
 
     public DatabaseSchemaInspector schemaInspector() {

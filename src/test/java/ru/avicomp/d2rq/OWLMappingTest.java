@@ -1,21 +1,22 @@
 package ru.avicomp.d2rq;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import de.fuberlin.wiwiss.d2rq.SystemLoader;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
-
-import de.fuberlin.wiwiss.d2rq.SystemLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * compare original d2rq default OWL representation of ISWC database with new one (ont-d2rq changes).
@@ -24,28 +25,25 @@ import ru.avicomp.ontapi.utils.ReadWriteUtils;
  */
 public class OWLMappingTest {
 
-    private static final Logger LOGGER = Logger.getLogger(OWLMappingTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OWLMappingTest.class);
     private static final String JDBC_URI = "jdbc:mysql://127.0.0.1/iswc?user=root";
 
     @Test
     public void test() {
         Model original = ReadWriteUtils.loadResourceTTLFile("original.iswc.owl.ttl");
-        SystemLoader loader = new SystemLoader();
-        loader.setJdbcURL(JDBC_URI);
-        loader.setSystemBaseURI("http://db#");
-        LOGGER.info("System base URI: " + loader.getSystemBaseURI());
-        try {
-            LOGGER.info("Load schema with data.");
-            Model actual = loader.getMapping().getDataModel();
-            ReadWriteUtils.print(actual);
+        try (SystemLoader loader = new SystemLoader().setJdbcURL(JDBC_URI).setSystemBaseURI("http://db#")) {
+            LOGGER.info("System base URI: {}", loader.getSystemBaseURI());
+            LOGGER.debug("Load schema with data.");
+            Model actual = loader.build().getDataModel();
+            MappingHelper.print(actual);
             Stream.of(OWL.Class, OWL.DatatypeProperty, OWL.ObjectProperty).forEach(t -> {
-                LOGGER.debug("Test " + t);
+                LOGGER.debug("Test {}", t);
                 Set<Resource> classes_ex = subjects(original, t).collect(Collectors.toSet());
                 Set<Resource> classes_ac = subjects(actual, t).collect(Collectors.toSet());
-                Assert.assertEquals(String.valueOf(t) + ": expected=" + classes_ex.size() + ", actual=" + classes_ac.size(), classes_ex, classes_ac);
+                Assert.assertEquals(String.valueOf(t) + ": expected=" + classes_ex.size() +
+                                ", actual=" + classes_ac.size(),
+                        classes_ex, classes_ac);
             });
-        } finally {
-            loader.closeMappingGenerator();
         }
     }
 

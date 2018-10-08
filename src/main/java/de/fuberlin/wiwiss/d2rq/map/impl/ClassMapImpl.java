@@ -166,8 +166,14 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
                 .requireHasNoDuplicates(D2RQException.CLASSMAP_DUPLICATE_DATABASE)
                 .requireIsResource(D2RQException.CLASSMAP_INVALID_DATABASE);
 
-        v.requireHasOnlyOneOf(D2RQException.UNSPECIFIED,
+        v.requireHasOnlyOneOf(D2RQException.RESOURCEMAP_MISSING_PRIMARYSPEC,
                 D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.uriSqlExpression, D2RQ.bNodeIdColumns, D2RQ.constantValue);
+
+        Validator.ForProperty containsDuplicates = v.forProperty(D2RQ.containsDuplicates);
+        if (containsDuplicates.exists()) {
+            containsDuplicates.requireHasNoDuplicates(D2RQException.RESOURCEMAP_ILLEGAL_CONTAINSDUPLICATE)
+                    .requireIsBooleanLiteral(D2RQException.RESOURCEMAP_ILLEGAL_CONTAINSDUPLICATE);
+        }
         commonValidateURI();
         commonValidateSQLAdditions();
         commonValidateUnclassifiedAdditions();
@@ -177,9 +183,6 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
                     D2RQException.CLASSMAP_INVALID_CONSTANTVALUE);
         }
         PropertyMap.checkURIPattern(this);
-
-        //listPropertyBridges().forEach(MapObject::validate);
-        // TODO
     }
 
     public boolean hasContent() {
@@ -211,7 +214,6 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
                 .addProperty(RDF.type)
                 .setConstantValue(clazz);
     }
-
 
     @Override
     protected Relation buildRelation() {

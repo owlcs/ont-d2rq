@@ -62,7 +62,7 @@ class Validator {
     class ForProperty {
         protected final Property property;
 
-        ForProperty(Property property) {
+        private ForProperty(Property property) {
             this.property = Objects.requireNonNull(property);
         }
 

@@ -22,6 +22,7 @@ import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -128,8 +129,11 @@ public class MappingFactory {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Can't get URI from <" + location + ">", e);
         }
-        if ("file".equals(uri.getScheme())) {
-            Path file = uri.isOpaque() ? Paths.get(uri.getSchemeSpecificPart()) : Paths.get(uri);
+        if (!uri.isAbsolute() || "file".equals(uri.getScheme())) {
+            Path file = parseLocation(uri);
+            if (file == null) {
+                throw new IllegalArgumentException("Unable to determine path from <" + location + ">");
+            }
             try {
                 return Files.newInputStream(file);
             } catch (IOException e) {
@@ -143,6 +147,29 @@ public class MappingFactory {
         } catch (IOException e) {
             throw new UncheckedIOException("Can't open <" + location + ">", e);
         }
+    }
+
+    /**
+     * Creates a {@link Path} from {@link URI}.
+     *
+     * @param uri {@link URI}
+     * @return {@link Path}
+     * @throws IllegalArgumentException can't make Path from URI
+     */
+    private static Path parseLocation(URI uri) throws IllegalArgumentException {
+        if (!uri.isAbsolute()) {
+            URL url = MappingFactory.class.getResource(uri.toString());
+            if (url != null && !url.getFile().isEmpty()) {
+                try {
+                    return Paths.get(url.toURI());
+                } catch (URISyntaxException e) {
+                    // ignore
+                }
+            } else {
+                return Paths.get(uri.toString());
+            }
+        }
+        return uri.isOpaque() ? Paths.get(uri.getSchemeSpecificPart()) : Paths.get(uri);
     }
 
     /**

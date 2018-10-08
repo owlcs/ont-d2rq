@@ -1,5 +1,6 @@
 package ru.avicomp.ontapi;
 
+import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.rdf.model.Property;
@@ -71,7 +72,7 @@ public class PSModelTest {
         LOGGER.debug("Mapping:");
         psMapping = src.getMapping();
         Assert.assertNotNull(psMapping);
-        ReadWriteUtils.print(psMapping.asModel());
+        MappingHelper.print(psMapping.asModel());
 
         // simple validation of all data in graphs
         validatePSDatabase(data);
@@ -84,7 +85,7 @@ public class PSModelTest {
         OntologyModel o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.create(psMapping).getGraph());
         OntGraphModel data = D2RQGraphs.reassembly(o.asGraphModel());
         LOGGER.debug("Scheme+Data:");
-        ReadWriteUtils.print(data);
+        MappingHelper.print(data);
         validatePSDatabase(data);
     }
 

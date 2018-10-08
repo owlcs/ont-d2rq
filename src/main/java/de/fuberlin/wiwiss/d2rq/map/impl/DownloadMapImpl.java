@@ -102,7 +102,7 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
     @Override
     public void validate() throws D2RQException {
         Validator v = new Validator(this);
-        v.requireHasOnlyOneOf(D2RQException.UNSPECIFIED, D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue);
+        v.requireHasOnlyOneOf(D2RQException.RESOURCEMAP_MISSING_PRIMARYSPEC, D2RQ.uriColumn, D2RQ.uriPattern, D2RQ.constantValue);
         Validator.ForProperty dataStorage = v.forProperty(D2RQ.dataStorage);
         Validator.ForProperty belongsToClassMap = v.forProperty(D2RQ.belongsToClassMap);
         if (dataStorage.exists()) {

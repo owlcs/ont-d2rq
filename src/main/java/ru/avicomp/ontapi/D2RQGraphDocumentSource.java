@@ -108,7 +108,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
         if (pwd != null) {
             loader.setPassword(pwd);
         }
-        return create(loader.getMapping());
+        return create(loader.build());
     }
 
     /**

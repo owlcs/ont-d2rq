@@ -11,102 +11,95 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 import org.apache.jena.atlas.AtlasException;
 import org.apache.jena.n3.turtle.TurtleParseException;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.shared.JenaException;
-import org.apache.jena.sys.JenaSystem;
-import org.apache.jena.util.FileManager;
 import org.apache.jena.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.MalformedInputException;
+import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Objects;
 
 /**
- * Factory for MappingGenerators, ModelD2RQs and the like.
- * Many of these artifacts can be configured in multiple ways
- * (from the command line, from configuration files, etc.), and
- * creating one may require that others are previously created
- * and configured correctly. This class helps setting everything
- * up correctly.
+ * Builder for MappingGenerators, ModelD2RQs and the like.
+ * Many of these artifacts can be configured in multiple ways (from the command line, from configuration files, etc.),
+ * and creating one may require that others are previously created and configured correctly.
+ * This class helps setting everything up correctly.
  * <p>
- * TODO: {@link MapParser#absolutizeURI(String)} and {WebappInitListener#absolutize} need to be consolidated and/or folded into this class
+ * TODO: {@link MapParser#absolutizeURI(String)} and {@code WebappInitListener#absolutize} need to be consolidated and/or folded into this class
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
+ * @see MappingGenerator
+ * @see MappingFactory
+ * @see ConnectedDB
  */
-public class SystemLoader {
-
-    static {
-        JenaSystem.init();    // Wire RIOT into Jena, etc.
-    }
-
+@SuppressWarnings({"UnusedReturnValue", "unused", "WeakerAccess"})
+public class SystemLoader implements AutoCloseable {
     private final static Logger LOGGER = LoggerFactory.getLogger(SystemLoader.class);
 
     public static final String DEFAULT_JDBC_URL = "jdbc:hsqldb:mem:temp";
 
-    private String username = null;
-    private String password = null;
-    private String jdbcDriverClass = null;
-    private String sqlScript = null;
-    private boolean generateDirectMapping = false;
-    private String jdbcURL = null;
-    private String mappingFile = null;
-    private String baseURI = null;
-    private String resourceStem = "";
-    private Filter filter = null;
-    private boolean fastMode = false;
+    private String username;
+    private String password;
+    private String jdbcDriverClass;
     private int resultSizeLimit = Database.NO_LIMIT;
+    private int fetchSize = Database.NO_FETCH_SIZE;
+    private String sqlScript;
+    private boolean generateDirectMapping;
+    private String jdbcURL;
+    private String mappingFile;
+    private String baseURI;
+    private String resourceStem = "";
+    private Filter filter;
+    private boolean fastMode;
 
-    private ConnectedDB connectedDB = null;
-    private Mapping mapping = null;
+    private ConnectedDB connectedDB;
 
-    public void setUsername(String username) {
+    public SystemLoader setJdbcURL(String jdbcURL) {
+        this.jdbcURL = Objects.requireNonNull(jdbcURL);
+        return this;
+    }
+
+    public SystemLoader setUsername(String username) {
         this.username = username;
+        return this;
     }
 
-    public void setPassword(String password) {
+    public SystemLoader setPassword(String password) {
         this.password = password;
+        return this;
     }
 
-    public void setFilter(Filter filter) {
-        this.filter = filter;
+    public SystemLoader setFilter(Filter filter) {
+        this.filter = Objects.requireNonNull(filter);
+        return this;
     }
 
-    public void setJDBCDriverClass(String driver) {
+    public SystemLoader setJDBCDriverClass(String driver) {
         this.jdbcDriverClass = driver;
-        ConnectedDB.registerJDBCDriver(driver);
+        return this;
     }
 
-    public void setStartupSQLScript(String sqlFile) {
+    public SystemLoader setStartupSQLScript(String sqlFile) {
         this.sqlScript = sqlFile;
+        return this;
     }
 
-    public void setGenerateW3CDirectMapping(boolean flag) {
+    public SystemLoader setGenerateW3CDirectMapping(boolean flag) {
         this.generateDirectMapping = flag;
+        return this;
     }
 
-    public void setJdbcURL(String jdbcURL) {
-        this.jdbcURL = jdbcURL;
-    }
-
-    public void setMappingFileOrJdbcURL(String value) {
-        if (value.toLowerCase().startsWith("jdbc:")) {
-            jdbcURL = value;
-        } else {
-            mappingFile = value;
+    public SystemLoader setMappingFileOrJdbcURL(String value) {
+        if (Objects.requireNonNull(value).toLowerCase().startsWith("jdbc:")) {
+            return setJdbcURL(value);
         }
-    }
-
-    public void setSystemBaseURI(String baseURI) {
-        if (!URI.create(baseURI).isAbsolute()) {
-            throw new D2RQException("Base URI '" + baseURI + "' must be an absolute URI", D2RQException.STARTUP_BASE_URI_NOT_ABSOLUTE);
-        }
-        this.baseURI = baseURI;
+        return setMappingURL(value);
     }
 
     /**
@@ -119,9 +112,40 @@ public class SystemLoader {
      * system base.
      *
      * @param value A string relative to the system base URI
+     * @return this instance
      */
-    public void setResourceStem(String value) {
-        resourceStem = value;
+    public SystemLoader setResourceStem(String value) {
+        resourceStem = Objects.requireNonNull(value);
+        return this;
+    }
+
+    public SystemLoader setSystemBaseURI(String baseURI) {
+        if (!URI.create(baseURI).isAbsolute()) {
+            throw new D2RQException("Base URI '" + baseURI + "' must be an absolute URI",
+                    D2RQException.STARTUP_BASE_URI_NOT_ABSOLUTE);
+        }
+        this.baseURI = baseURI;
+        return this;
+    }
+
+    public SystemLoader setFastMode(boolean flag) {
+        this.fastMode = flag;
+        return this;
+    }
+
+    public SystemLoader setMappingURL(String mappingURL) {
+        this.mappingFile = mappingURL;
+        return this;
+    }
+
+    public SystemLoader setResultSizeLimit(int value) {
+        this.resultSizeLimit = value;
+        return this;
+    }
+
+    public SystemLoader setFetchSize(int value) {
+        this.fetchSize = value;
+        return this;
     }
 
     /**
@@ -139,115 +163,68 @@ public class SystemLoader {
         return base != null ? base + resourceStem : resourceStem;
     }
 
-    public void setFastMode(boolean flag) {
-        this.fastMode = flag;
-    }
-
-    public void setMappingURL(String mappingURL) {
-        this.mappingFile = mappingURL;
-    }
-
-    public void setResultSizeLimit(int value) {
-        this.resultSizeLimit = value;
-    }
-
     private ConnectedDB getConnectedDB() {
         return connectedDB == null ? connectedDB = createConnectedDB() : connectedDB;
     }
 
     private ConnectedDB createConnectedDB() {
-        ConnectedDB connectedDB = new ConnectedDB(jdbcURL, username, password);
+        ConnectedDB res = new ConnectedDB(jdbcURL, username, password,
+                Collections.emptyMap(), resultSizeLimit, fetchSize, null);
         if (sqlScript != null) {
             try {
-                SQLScriptLoader.loadFile(new File(sqlScript), connectedDB.connection());
+                SQLScriptLoader.loadFile(Paths.get(sqlScript), res.connection());
             } catch (IOException ex) {
-                connectedDB.close();
-                throw new D2RQException("Error accessing SQL startup script: " + sqlScript, D2RQException.STARTUP_SQL_SCRIPT_ACCESS);
+                res.close();
+                throw new D2RQException("Error accessing SQL startup script: " + sqlScript,
+                        D2RQException.STARTUP_SQL_SCRIPT_ACCESS);
             } catch (SQLException ex) {
-                connectedDB.close();
-                throw new D2RQException("Error importing " + sqlScript + " " + ex.getMessage(), D2RQException.STARTUP_SQL_SCRIPT_SYNTAX);
+                res.close();
+                throw new D2RQException("Error importing " + sqlScript + " " + ex.getMessage(),
+                        D2RQException.STARTUP_SQL_SCRIPT_SYNTAX);
             }
         }
-        return connectedDB;
+        return res;
     }
 
     /**
-     * Returns a mapping generator. Needs to be explicitly closed
-     * using {@link #closeMappingGenerator()}.
+     * Returns a mapping generator.
+     * A connection needs to be explicitly closed using {@link #close()}.
+     *
+     * @return {@link MappingGenerator}
      */
-    private MappingGenerator openMappingGenerator() {
-        ConnectedDB connection = getConnectedDB();
-        MappingGenerator generator = generateDirectMapping ? new W3CMappingGenerator(connection) : new MappingGenerator(connection);
+    private MappingGenerator getMappingGenerator() {
+        ConnectedDB conn = getConnectedDB();
+        MappingGenerator res = generateDirectMapping ? new W3CMappingGenerator(conn) : new MappingGenerator(conn);
         if (jdbcDriverClass != null) {
-            generator.setJDBCDriverClass(jdbcDriverClass);
+            res.setJDBCDriverClass(jdbcDriverClass);
         }
         if (filter != null) {
-            generator.setFilter(filter);
+            res.setFilter(filter);
         }
         if (sqlScript != null) {
             // If there's a startup SQL script, copy its name into the generated mapping
-            generator.setStartupSQLScript(new File(sqlScript).toURI());
+            res.setStartupSQLScript(Paths.get(sqlScript).toUri());
         }
-        return generator;
+        return res;
     }
 
-    public void closeMappingGenerator() {
-        if (connectedDB != null) {
-            connectedDB.close();
+    @Override
+    public void close() {
+        if (connectedDB == null) {
+            return;
         }
+        connectedDB.close();
+        connectedDB = null;
     }
 
-    private Model fetchMappingModel() {
-        Model mapModel;
-        if (jdbcURL != null && mappingFile != null) {
-            throw new D2RQException("conflicting mapping locations " + mappingFile + " and " + jdbcURL + "; specify at most one");
-        }
-        if (jdbcURL == null && mappingFile == null) {
-            throw new D2RQException("no mapping file or JDBC URL specified");
-        }
-        if (jdbcURL != null) {
-            mapModel = openMappingGenerator().mappingModel(getResourceBaseURI());
-        } else {
-            LOGGER.info("Reading mapping file from " + mappingFile);
-            // Guess the language/type of mapping file based on file extension. If it is not among the known types then assume that the file has TURTLE syntax and force to use TURTLE parser
-            String lang = FileUtils.guessLang(mappingFile, "unknown");
-            try {
-                if (lang.equals("unknown")) {
-                    mapModel = FileManager.get().loadModel(mappingFile, getResourceBaseURI(), "TURTLE");
-                } else {
-                    // if the type is known then let Jena auto-detect it and load the appropriate parser
-                    mapModel = FileManager.get().loadModel(mappingFile, getResourceBaseURI(), null);
-                }
-            } catch (TurtleParseException ex) {
-                // We have wired RIOT into Jena in the static initializer above,
-                // so this should never happen (it's for the old Jena Turtle/N3 parser)
-                throw new D2RQException("Error parsing " + mappingFile + ": " + ex.getMessage(), ex, 77);
-            } catch (JenaException ex) {
-                if (ex.getCause() != null && ex.getCause() instanceof RiotException) {
-                    throw new D2RQException("Error parsing " + mappingFile + ": " + ex.getCause().getMessage(), ex, 77);
-                }
-                throw ex;
-            } catch (AtlasException ex) {
-                // Detect the specific case of non-UTF-8 encoded input files
-                // and do a custom error message
-                if (FileUtils.langTurtle.equals(lang) && ex.getCause() != null && (ex.getCause() instanceof MalformedInputException)) {
-                    throw new D2RQException(String.format("Error parsing %s: Turtle files must be in UTF-8 encoding; bad encoding found at byte %d",
-                            mappingFile, ((MalformedInputException) ex.getCause()).getInputLength()), ex, 77);
-                }
-                // Generic error message for other parse errors
-                throw new D2RQException("Error parsing " + mappingFile + ": " + ex.getMessage(), ex, 77);
-            }
-        }
-        return mapModel;
-    }
-
-    public Mapping getMapping() {
-        return mapping == null ? mapping = createMapping() : mapping;
-    }
-
-    private Mapping createMapping() {
-        Mapping res = MappingFactory.create(fetchMappingModel(), getResourceBaseURI());
+    public Mapping build() {
+        Mapping res = fetchMapping();
         res.getConfiguration().setUseAllOptimizations(fastMode);
+        if (fetchSize != Database.NO_FETCH_SIZE || resultSizeLimit != Database.NO_LIMIT) {
+            res.listDatabases()
+                    .filter(d -> Objects.equals(d.getJDBCDSN(), jdbcURL))
+                    .forEach(d -> d.setResultSizeLimit(resultSizeLimit).setFetchSize(fetchSize));
+        }
         if (connectedDB != null) {
             // Hack! We don't want the Database to open another ConnectedDB,
             // so we check if it's connected to the same DB, and in that case
@@ -256,13 +233,58 @@ public class SystemLoader {
             // script twice on startup.
             res.listDatabases()
                     .filter(d -> Objects.equals(d.getJDBCDSN(), connectedDB.getJdbcURL()))
-                    .forEach(db -> {
-                        if (resultSizeLimit != Database.NO_LIMIT) {
-                            db.setResultSizeLimit(resultSizeLimit);
-                        }
-                        db.useConnectedDB(connectedDB);
-                    });
+                    .forEach(d -> d.useConnectedDB(connectedDB));
         }
         return res;
+    }
+
+    /**
+     * Makes a {@link Mapping} using the given settings.
+     *
+     * @return {@link Mapping} fresh instance, either generated or loaded
+     * @throws D2RQException in case some arguments are incorrect
+     */
+    private Mapping fetchMapping() throws D2RQException {
+        if (jdbcURL != null && mappingFile != null) {
+            throw new D2RQException("conflicting mapping locations " + mappingFile + " and " + jdbcURL + "; specify at most one");
+        }
+        if (jdbcURL == null && mappingFile == null) {
+            throw new D2RQException("no mapping file or JDBC URL specified");
+        }
+        String baseURI = getResourceBaseURI();
+        if (jdbcURL != null) {
+            return MappingFactory.create(getMappingGenerator().mappingModel(baseURI), baseURI);
+        }
+        LOGGER.info("Reading mapping file from <{}>", mappingFile);
+        try {
+            return MappingFactory.load(mappingFile, null, baseURI);
+        } catch (TurtleParseException e) {
+            // We have wired RIOT into Jena in the static initializer above,
+            // so this should never happen (it's for the old Jena Turtle/N3 parser)
+            throw new D2RQException("Error parsing " + mappingFile + ": " + e.getMessage(), e,
+                    D2RQException.MAPPING_TURTLE_SYNTAX);
+        } catch (JenaException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RiotException) {
+                throw new D2RQException("Error parsing " + mappingFile + ": " + cause.getMessage(), e,
+                        D2RQException.MAPPING_TURTLE_SYNTAX);
+            }
+            throw e;
+        } catch (AtlasException e) {
+            String lang = FileUtils.guessLang(mappingFile, "unknown");
+            // Detect the specific case of non-UTF-8 encoded input files
+            // and do a custom error message
+            Throwable cause = e.getCause();
+            if (FileUtils.langTurtle.equals(lang) && cause instanceof MalformedInputException) {
+                throw new D2RQException(String.format("Error parsing %s: Turtle files must be in UTF-8 encoding; " +
+                                "bad encoding found at byte %d",
+                        mappingFile, ((MalformedInputException) cause).getInputLength()), e,
+                        D2RQException.MAPPING_TURTLE_SYNTAX);
+            }
+            // Generic error message for other parse errors
+            throw new D2RQException("Error parsing " + mappingFile + ": " + e.getMessage(), e,
+                    D2RQException.MAPPING_TURTLE_SYNTAX);
+        }
+
     }
 }

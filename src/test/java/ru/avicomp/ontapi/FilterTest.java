@@ -1,5 +1,6 @@
 package ru.avicomp.ontapi;
 
+import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -18,7 +19,6 @@ import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntOPE;
 import ru.avicomp.ontapi.jena.model.OntPE;
 import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
-import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,7 +68,7 @@ public class FilterTest {
         // set iri"
         OWLOntologyID id2 = new OWLOntologyID(IRI.create("http://d2rq.example.com"), IRI.create("http://d2rq.example.com/version/1.0"));
         filteredByProperties.applyChange(new SetOntologyID(filteredByProperties, id2));
-        ReadWriteUtils.print(filteredByProperties.asGraphModel());
+        MappingHelper.print(filteredByProperties.asGraphModel());
         // validate:
         Assert.assertEquals("Expected two ontologies", 2, manager.ontologies().count());
         Assert.assertTrue("Can't find " + id2, manager.contains(id2));
@@ -92,7 +92,7 @@ public class FilterTest {
         OntologyModel filteredByClasses = manager.loadOntologyFromOntologyDocument(source3);
         OWLOntologyID id3 = new OWLOntologyID(IRI.create("http://d2rq.example.com"), IRI.create("http://d2rq.example.com/version/2.0"));
         filteredByClasses.applyChange(new SetOntologyID(filteredByClasses, id3));
-        ReadWriteUtils.print(filteredByClasses.asGraphModel());
+        MappingHelper.print(filteredByClasses.asGraphModel());
         // validate:
         Assert.assertEquals("Expected three ontologies", 3, manager.ontologies().count());
         Assert.assertTrue("Can't find " + id3, manager.contains(id3));

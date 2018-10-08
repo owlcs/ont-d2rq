@@ -79,14 +79,9 @@ public class DumpTool extends CommandLineTool {
             loader.setSystemBaseURI(cmd.getArg(baseArg).getValue());
         }
 
-        loader.setResultSizeLimit(Database.NO_LIMIT);
-        Mapping mapping = loader.getMapping();
+        Mapping mapping = loader.setResultSizeLimit(Database.NO_LIMIT).setFetchSize(DUMP_DEFAULT_FETCH_SIZE).build();
         try {
-            // Override the d2rq:fetchSize given in the mapping
-            mapping.listDatabases().forEach(db -> db.setFetchSize(DUMP_DEFAULT_FETCH_SIZE));
-
-            Model d2rqModel = loader.getMapping().getDataModel();
-
+            Model d2rqModel = mapping.getDataModel();
             try {
                 RDFWriter writer = d2rqModel.getWriter(format.toUpperCase());
                 // todo: no need anymore
