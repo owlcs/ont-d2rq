@@ -66,7 +66,9 @@ public class MySQL extends SQL92 {
 
         // MySQL reports BIT columns in result sets as VARBINARY,
         // and formats the value as a number. This makes no sense.
-        if (jdbcType == Types.VARBINARY && "BIT".equals(name)) {
+        if ((jdbcType == Types.VARBINARY
+                || (jdbcType == Types.BIT && size != 0) // <-- checked for 5.7.15 mysql
+        ) && "BIT".equals(name)) {
             return new MySQLCompatibilityBitDataType(this);
         }
 
