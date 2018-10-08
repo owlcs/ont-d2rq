@@ -34,9 +34,10 @@ public interface Mapping extends AutoCloseable {
     void close();
 
     /**
-     * Returns the model that is backed by this mapping and vice versa.
-     * Since any changes in the model is reflected in the mapping (and vice versa),
-     * don't forget to call {@link #validate()}.
+     * Returns a {@link Model} view of this mapping.
+     * The model is backed by the mapping, so changes to the mapping are reflected in the model, and vice-versa.
+     * Since it is possible to encode any RDF structure through model view,
+     * the method {@link #validate(boolean)} should be used to verify that mapping is correct.
      *
      * @return {@link Model}, not {@code null}
      */
@@ -44,7 +45,22 @@ public interface Mapping extends AutoCloseable {
 
     Graph getSchema();
 
+    /**
+     * Returns the dynamic RDF view of the referenced relational database structure.
+     * The returning graph is read only.
+     *
+     * @return {@link Graph}, not {@code null}
+     */
     Graph getData();
+
+    /**
+     * Validates the RDF structure and (if the flag {@code onlyRDF} equals {@code true}) the DB connectivity.
+     *
+     * @param onlyRDF boolean, if {@code true} performs only RDF checking
+     * @throws D2RQException if the mapping cannot be used to build relations
+     * @see #validate()
+     */
+    void validate(boolean onlyRDF) throws D2RQException;
 
     /**
      * Gets the mapping's configuration.
@@ -211,7 +227,9 @@ public interface Mapping extends AutoCloseable {
      * @throws D2RQException if the mapping cannot be used to build relations
      * @see MapObject#validate()
      */
-    void validate() throws D2RQException;
+    default void validate() throws D2RQException {
+        validate(false);
+    }
 
     /**
      * Finds a database with the given jdbc-uri.

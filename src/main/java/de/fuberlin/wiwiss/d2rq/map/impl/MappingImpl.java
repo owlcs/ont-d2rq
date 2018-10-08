@@ -41,7 +41,6 @@ import java.util.stream.Stream;
  * A D2RQ mapping. Consists of {@link ClassMap}s, {@link PropertyBridge}s, and several other classes.
  * <p>
  * TODO: Move TripleRelation/NodeMaker building and ConnectedDB to a separate class (MappingRunner?)
- * TODO: #add* methods should write to mapping model also.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -315,7 +314,7 @@ public class MappingImpl implements Mapping {
     @Override
     public Collection<TripleRelation> compiledPropertyBridges() {
         if (compiledPropertyBridges == null) {
-            validateRDF();
+            validate(true);
             compiledPropertyBridges = Iter.peek(tripleRelations(), MappingImpl::validateRelation).toList();
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Compiled {} property bridges", compiledPropertyBridges.size());
@@ -330,12 +329,7 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
-    public void validate() throws D2RQException {
-        validateRDF();
-        tripleRelations().forEachRemaining(MappingImpl::validateRelation);
-    }
-
-    public void validateRDF() throws D2RQException {
+    public void validate(boolean onlyRDF) throws D2RQException {
         List<Resource> conf = listConfigurations().toList();
         if (conf.size() == 1) {
             getConfiguration().validate();
@@ -358,6 +352,8 @@ public class MappingImpl implements Mapping {
                     String.format("Class maps %s have", incomplete)) +
                     " no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
         }
+        if (onlyRDF) return;
+        tripleRelations().forEachRemaining(MappingImpl::validateRelation);
     }
 
     public static void validateRelation(TripleRelation tripleRelation) throws D2RQException {
@@ -380,6 +376,11 @@ public class MappingImpl implements Mapping {
         }
     }
 
+    /**
+     * To control caches.
+     *
+     * @see ControlledGraph
+     */
     protected class CacheController implements BiConsumer<Triple, ControlledGraph.Event> {
 
         @Override
