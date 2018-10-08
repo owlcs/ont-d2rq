@@ -444,6 +444,7 @@ public class ConnectedDB implements AutoCloseable {
             // ignore...
             LOGGER.error("Error while closing current connection: '{}'", e.getMessage(), e);
         } finally {
+            schemaInspector = null;
             connection = null;
         }
     }
