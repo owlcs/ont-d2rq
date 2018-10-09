@@ -7,7 +7,7 @@ import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
-import ru.avicomp.ontapi.jena.HybridImpl;
+import ru.avicomp.ontapi.jena.HybridGraph;
 
 import java.net.URI;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 /**
  * This is an extended {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource document source}
  * for loading graph from database in form of {@link org.semanticweb.owlapi.model.OWLOntology OWL2 ontology}.
- * The graph is provided in the hybrid form (see {@link ru.avicomp.ontapi.jena.Hybrid})
+ * The graph is provided in the hybrid form (see {@link ru.avicomp.ontapi.jena.HybridGraph})
  * and includes DB-schema as primary {@link org.apache.jena.mem.GraphMem} and
  * DB-data (with schema attached also) as virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ graph}.
  * <p>
@@ -150,7 +150,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      */
     @Override
     public Graph getGraph() {
-        return new HybridImpl(mapping.getSchema(), mapping.getData());
+        return new HybridGraph(mapping.getSchema(), mapping.getData());
     }
 
     /**

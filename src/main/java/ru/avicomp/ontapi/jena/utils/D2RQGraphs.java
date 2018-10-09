@@ -4,7 +4,7 @@ import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import org.apache.jena.graph.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.jena.Hybrid;
+import ru.avicomp.ontapi.jena.HybridGraph;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.OntGraphModelImpl;
@@ -69,15 +69,15 @@ public class D2RQGraphs {
 
     /**
      * Makes a new {@link UnionGraph} from existing one by extracting hidden {@link GraphD2RQ} graphs.
-     * The result graph has the same structure as specified, but instead a {@link Hybrid hybrid} there are {@link GraphD2RQ d2rq} members.
+     * The result graph has the same structure as specified, but instead a {@link HybridGraph hybrid} there are {@link GraphD2RQ d2rq} members.
      *
      * @param graph {@link UnionGraph}
      * @return {@link UnionGraph}
      */
     public static UnionGraph reassembly(UnionGraph graph) {
-        UnionGraph res = new UnionGraph(graph.getBaseGraph() instanceof Hybrid ? extractD2RQ(graph.getBaseGraph()) : graph.getBaseGraph());
+        UnionGraph res = new UnionGraph(graph.getBaseGraph() instanceof HybridGraph ? extractD2RQ(graph.getBaseGraph()) : graph.getBaseGraph());
         graph.getUnderlying().graphs()
-                .map(g -> g instanceof Hybrid ? extractD2RQ(g) : g)
+                .map(g -> g instanceof HybridGraph ? extractD2RQ(g) : g)
                 .forEach(g -> res.addGraph(g instanceof UnionGraph ? reassembly((UnionGraph) g) : g));
         return res;
     }
@@ -92,8 +92,8 @@ public class D2RQGraphs {
         if (g instanceof GraphD2RQ) {
             return (GraphD2RQ) g;
         }
-        if (g instanceof Hybrid) {
-            return ((Hybrid) g).hidden()
+        if (g instanceof HybridGraph) {
+            return ((HybridGraph) g).hidden()
                     .filter(GraphD2RQ.class::isInstance)
                     .map(GraphD2RQ.class::cast)
                     .findFirst()
