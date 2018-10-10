@@ -15,8 +15,9 @@ import java.util.Objects;
  * Currently there is only one model builder ({@link OWLModelBuilder}), which makes simple OWL2 DL ontology.
  * <p>
  * Created by @szuev on 19.02.2017.
+ * @deprecated TODO: will be replaced with {@link de.fuberlin.wiwiss.d2rq.map.impl.schema.SchemaGenerator}
  */
-@Deprecated // TODO: will be replaced with another solution service
+@Deprecated
 @SuppressWarnings("WeakerAccess")
 public class MappingTransform {
     private static ModelBuilder defaultFactory = new OWLModelBuilder();
