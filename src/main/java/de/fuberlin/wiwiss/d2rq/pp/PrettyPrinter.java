@@ -9,6 +9,7 @@ import org.apache.jena.datatypes.xsd.impl.RDFLangString;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.shared.PrefixMapping;
 
 import java.util.Collection;
@@ -86,6 +87,10 @@ public class PrettyPrinter {
         }
         return "<" + uri + ">";
 
+    }
+
+    public static String toString(Statement s) {
+        return toString(s.asTriple(), s.getModel());
     }
 
     public static String toString(Triple t) {

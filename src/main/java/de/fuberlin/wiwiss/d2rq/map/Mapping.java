@@ -42,21 +42,24 @@ public interface Mapping extends AutoCloseable {
     Graph getSchema();
 
     /**
-     * Returns the dynamic RDF view of the referenced relational database structure.
+     * Returns a dynamic RDF view of the referenced relational database structure.
      * The returning graph is read only.
+     * Method will throw {@link D2RQException} in case {@link #validate() validation} is failed.
      *
-     * @return {@link Graph}, not {@code null}
+     * @return virtual D2RQ {@link Graph Graph}, not {@code null}
      */
     Graph getData();
 
     /**
-     * Validates the RDF structure and (if the flag {@code onlyRDF} equals {@code true}) the DB connectivity.
+     * Validates the RDF structure and (if the flag {@code onlyRDF} equals {@code true}) the DB connectivity
+     * including compilation of relations.
      *
-     * @param onlyRDF boolean, if {@code true} performs only RDF checking
+     * @param withDBConnectivity boolean, if {@code true} performs also checks DB connectivity,
+     *                           otherwise does only RDF validation
      * @throws D2RQException if the mapping cannot be used to build relations
      * @see #validate()
      */
-    void validate(boolean onlyRDF) throws D2RQException;
+    void validate(boolean withDBConnectivity) throws D2RQException;
 
     /**
      * Gets the mapping's configuration.
@@ -219,12 +222,13 @@ public interface Mapping extends AutoCloseable {
 
     /**
      * Validates the mapping is correct.
+     * This checking includes both verifying the RDF structure and the DB connectivity.
      *
      * @throws D2RQException if the mapping cannot be used to build relations
      * @see MapObject#validate()
      */
     default void validate() throws D2RQException {
-        validate(false);
+        validate(true);
     }
 
     /**

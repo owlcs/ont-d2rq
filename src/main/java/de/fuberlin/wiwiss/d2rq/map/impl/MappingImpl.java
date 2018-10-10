@@ -304,7 +304,7 @@ public class MappingImpl implements Mapping {
     @Override
     public Collection<TripleRelation> compiledPropertyBridges() {
         if (compiledPropertyBridges == null) {
-            validate(true);
+            validate(false);
             compiledPropertyBridges = Iter.peek(tripleRelations(), MappingImpl::validateRelation).toList();
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Compiled {} property bridges", compiledPropertyBridges.size());
@@ -319,7 +319,7 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
-    public void validate(boolean onlyRDF) throws D2RQException {
+    public void validate(boolean withDBConnectivity) throws D2RQException {
         List<Resource> conf = listConfigurations().toList();
         if (conf.size() == 1) {
             getConfiguration().validate();
@@ -342,7 +342,7 @@ public class MappingImpl implements Mapping {
                     String.format("Class maps %s have", incomplete)) +
                     " no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
         }
-        if (onlyRDF) return;
+        if (withDBConnectivity)
         tripleRelations().forEachRemaining(MappingImpl::validateRelation);
     }
 

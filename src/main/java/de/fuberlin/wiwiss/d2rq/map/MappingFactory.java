@@ -26,6 +26,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 /**
  * A factory to create and load {@link Mapping D2RQ Mapping}s.
@@ -84,7 +85,7 @@ public class MappingFactory {
      * @return {@link Mapping}
      */
     public static Mapping load(String location) {
-        return load(location, null, location + "#");
+        return load(Objects.requireNonNull(location, "null location"), null, location + "#");
     }
 
     /**
