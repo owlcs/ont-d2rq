@@ -12,6 +12,10 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import java.util.Objects;
 
 /**
+ * A virtual graph, which is a simple graph wrapper with a few exceptions.
+ * It is not possible to {@link #close() close} or {@link #clear() clear} this graph,
+ * Methods {@link #isEmpty()} and {@link #size()} also do not return the actual information.
+ *
  * Created by @ssz on 10.10.2018.
  */
 @SuppressWarnings("WeakerAccess")

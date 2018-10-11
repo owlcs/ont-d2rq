@@ -6,6 +6,8 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
 
 /**
+ * A functional interface that is used to transform triples to another form.
+ *
  * Created by @ssz on 22.09.2018.
  */
 public interface DynamicTriples {

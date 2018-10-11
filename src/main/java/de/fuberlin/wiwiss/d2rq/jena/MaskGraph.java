@@ -11,6 +11,10 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 
 /**
+ * A virtual mask graph
+ * that is provided a possibility to hide some desired parts of the encapsulated base graph
+ * using specified {@link BiPredicate}, which accepts {@link Graph} and {@link Triple} as parameters.
+ * <p>
  * Created by @ssz on 10.10.2018.
  */
 public class MaskGraph extends VirtualGraph {

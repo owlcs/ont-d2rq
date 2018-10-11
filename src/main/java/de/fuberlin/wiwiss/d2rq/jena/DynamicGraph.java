@@ -7,6 +7,10 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import java.util.Objects;
 
 /**
+ * A dynamic virtual graph that is based on {@link DynamicTriples} transformation mechanism.
+ * Such a sort of an inference: having a base graph,
+ * it is possible to get another view of the same data but in totally different form.
+ *
  * Created by @ssz on 21.09.2018.
  */
 public class DynamicGraph extends VirtualGraph {

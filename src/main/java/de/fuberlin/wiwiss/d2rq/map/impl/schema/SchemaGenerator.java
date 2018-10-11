@@ -8,18 +8,22 @@ import org.apache.jena.graph.compose.Union;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
-import org.apache.jena.util.iterator.WrappedIterator;
 import ru.avicomp.ontapi.jena.utils.BuiltIn;
 import ru.avicomp.ontapi.jena.utils.Graphs;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import static de.fuberlin.wiwiss.d2rq.map.impl.schema.SchemaHelper.*;
 
 /**
  * Created by @ssz on 22.09.2018.
+ *
+ * @see MaskGraph
+ * @see DynamicGraph
  */
 @SuppressWarnings("WeakerAccess")
 public class SchemaGenerator {
@@ -46,7 +50,7 @@ public class SchemaGenerator {
         return (g, m) -> {
             Node ms = m.getSubject();
             Node mp = m.getPredicate();
-            if (!mp.matches(SchemaHelper.RDFSisDefinedBy) && !mp.matches(SchemaHelper.RDFtype)) {
+            if (!mp.matches(Nodes.RDFSisDefinedBy) && !mp.matches(Nodes.RDFtype)) {
                 return NullIterator.instance();
             }
             Node s = Graphs.ontologyNode(g).orElse(null);
@@ -54,103 +58,143 @@ public class SchemaGenerator {
             if (!ms.matches(s)) {
                 return NullIterator.instance();
             }
-            ExtendedIterator<Triple> res = SchemaHelper.listJdbsNodes(g)
-                    .mapWith(n -> Triple.create(s, SchemaHelper.RDFSisDefinedBy, NodeFactory.createURI(n.getLiteralValue().toString())));
+            ExtendedIterator<Triple> res = listJdbsNodes(g)
+                    .mapWith(n -> Triple.create(s, Nodes.RDFSisDefinedBy,
+                            NodeFactory.createURI(n.getLiteralValue().toString())));
             return res.filterKeep(m::matches);
         };
     }
 
-    private static DynamicTriples classDefinitions(Set<Node> builtins) {
+    private static DynamicTriples classDeclarations(Set<Node> builtins) {
         return new DynamicTriples() {
             @Override
             public boolean test(Triple m) {
-                Node mp = m.getPredicate();
-                if (mp.matches(SchemaHelper.RDFtype) && m.getObject().matches(SchemaHelper.OWLClass))
-                    return true;
-                return mp.matches(SchemaHelper.OWLequivalentClass);
+                return m.getObject().matches(Nodes.OWLClass) && m.getPredicate().matches(Nodes.RDFtype);
             }
 
             @Override
             public ExtendedIterator<Triple> list(Graph g, Triple m) {
-                return Iter.flatMap(g.find(Node.ANY, SchemaHelper.RDFtype, SchemaHelper.D2RQClassMap).mapWith(Triple::getSubject),
-                        n -> {
-                            Set<Node> classes = SchemaHelper.listClasses(g, n).toSet();
-                            Set<Triple> res = classes.stream()
-                                    .filter(c -> !builtins.contains(c))
-                                    .map(c -> Triple.create(c, SchemaHelper.RDFtype, SchemaHelper.OWLClass))
-                                    .collect(Collectors.toSet());
-                            if (classes.size() > 1) {
-                                Iterator<Node> nodes = classes.iterator();
-                                Node first = nodes.next();
-                                while (nodes.hasNext()) {
-                                    res.add(Triple.create(first, SchemaHelper.OWLequivalentClass, nodes.next()));
-                                }
-                            }
-                            return WrappedIterator.create(res.iterator());
-                        }).filterKeep(m::matches);
+                return distinctMatch(Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQClassMap),
+                        t -> listClasses(g, t.getSubject())).filterDrop(builtins::contains)
+                        .mapWith(c -> Triple.create(c, Nodes.RDFtype, Nodes.OWLClass)), m);
             }
-
         };
     }
 
     private static DynamicTriples propertyDeclarations(Node type,
-                                                       Function<Graph, ExtendedIterator<Node>> extractor,
-                                                       Set<Node> builtIns) {
+                                                       Function<Graph, ExtendedIterator<Node>> extractor) {
         return new DynamicTriples() {
 
             @Override
             public boolean test(Triple m) {
-                return m.getObject().matches(type) && m.getPredicate().matches(SchemaHelper.RDFtype);
+                return m.getObject().matches(type) && m.getPredicate().matches(Nodes.RDFtype);
             }
 
             @Override
             public ExtendedIterator<Triple> list(Graph g, Triple m) {
-                return Iter.distinct(extractor.apply(g)
-                        .filterDrop(builtIns::contains)
-                        .mapWith(s -> Triple.create(s, SchemaHelper.RDFtype, type))
-                        .filterKeep(m::matches));
+                return distinctMatch(extractor.apply(g)
+                        .mapWith(s -> Triple.create(s, Nodes.RDFtype, type)), m);
             }
         };
     }
 
-    public static DynamicTriples domainAssertions(Set<Node> builtIns) {
+    public static DynamicTriples domainAssertions(Set<Node> forbiddenClasses, Set<Node> forbiddenProperties) {
         return new DynamicTriples() {
 
             @Override
             public boolean test(Triple m) {
-                return m.getPredicate().matches(SchemaHelper.RDFSdomain);
+                return m.getPredicate().matches(Nodes.RDFSdomain);
             }
 
             @Override
             public ExtendedIterator<Triple> list(Graph g, Triple m) {
-                return Iter.distinct(Iter.flatMap(g.find(Node.ANY, SchemaHelper.D2RQbelongsToClassMap, Node.ANY),
-                        t -> Iter.flatMap(SchemaHelper.listProperties(g, t.getSubject()).filterDrop(builtIns::contains),
-                                s -> SchemaHelper.listClasses(g, t.getObject()).mapWith(o -> Triple.create(s, SchemaHelper.RDFSdomain, o))))
-                        .filterKeep(m::matches));
+                return distinctMatch(Iter.flatMap(g.find(Node.ANY, Nodes.D2RQbelongsToClassMap, Node.ANY),
+                        t -> listProperties(g, t.getSubject()).filterDrop(forbiddenProperties::contains)
+                                .mapWith(p -> findFirstClass(g, t.getObject(), forbiddenClasses)
+                                        .map(c -> Triple.create(p, Nodes.RDFSdomain, c)).orElse(null))
+                                .filterDrop(Objects::isNull)), m);
             }
         };
     }
 
-    public static DynamicTriples rangeAssertions(Set<Node> builtIns) {
+    public static DynamicTriples rangeAssertions(Set<Node> forbiddenClasses, Set<Node> forbiddenProperties) {
         return new DynamicTriples() {
             @Override
             public boolean test(Triple m) {
-                return m.getPredicate().matches(SchemaHelper.RDFSrange);
+                return m.getPredicate().matches(Nodes.RDFSrange);
             }
 
             @Override
             public ExtendedIterator<Triple> list(Graph g, Triple m) {
-                ExtendedIterator<Triple> op = Iter.flatMap(g.find(Node.ANY, SchemaHelper.D2RQrefersToClassMap, Node.ANY),
-                        t -> Iter.flatMap(SchemaHelper.listProperties(g, t.getSubject()).filterDrop(builtIns::contains),
-                                s -> SchemaHelper.listClasses(g, t.getObject()).mapWith(o -> Triple.create(s, SchemaHelper.RDFSrange, o))));
-
-                ExtendedIterator<Triple> dp = Iter.flatMap(g.find(Node.ANY, SchemaHelper.RDFtype, SchemaHelper.D2RQPropertyBridge),
-                        t -> Iter.flatMap(SchemaHelper.listProperties(g, t.getSubject()).filterDrop(builtIns::contains),
-                                s -> SchemaHelper.listDataRanges(g, t.getSubject()).mapWith(o -> Triple.create(s, SchemaHelper.RDFSrange, o))));
-
-                return Iter.distinct(Iter.concat(op, dp)).filterKeep(m::matches);
+                return distinctMatch(Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQPropertyBridge),
+                        t -> Iter.flatMap(listProperties(g, t.getSubject()).filterDrop(forbiddenProperties::contains),
+                                p -> g.find(t.getSubject(), Nodes.D2RQrefersToClassMap, Node.ANY)
+                                        .mapWith(x -> findFirstClass(g, x.getObject(), forbiddenClasses).orElse(null))
+                                        .filterDrop(Objects::isNull)
+                                        .andThen(listDataRanges(g, t.getSubject()))
+                                        .mapWith(r -> Triple.create(p, Nodes.RDFSrange, r)))), m);
             }
         };
+    }
+
+    public static Optional<Node> findFirstClass(Graph g, Node classMap, Set<Node> builtins) {
+        return findFirst(listClasses(g, classMap).filterDrop(builtins::contains).toList());
+    }
+
+    public static Optional<Node> findFirstProperty(Graph g, Node propertyBridge, Set<Node> builtins) {
+        return findFirst(listProperties(g, propertyBridge).filterDrop(builtins::contains).toList());
+    }
+
+    public static DynamicTriples additionalDefinitions(Set<Node> forbiddenClasses, Set<Node> forbiddenProperties) {
+        return (g, m) -> distinctMatch(Iter.flatMap(g.find(Node.ANY, Nodes.D2RQpropertyName, m.getPredicate()), t -> {
+            Node a = t.getSubject();
+            Set<Node> objects = g.find(a, Nodes.D2RQpropertyValue, m.getObject()).mapWith(Triple::getObject).toSet();
+            if (objects.isEmpty()) return NullIterator.instance();
+            Set<Node> predicates = g.find(a, Nodes.D2RQpropertyName, m.getObject()).mapWith(Triple::getObject).toSet();
+            if (predicates.isEmpty()) return NullIterator.instance();
+            Node o = objects.iterator().next();
+            Node p = predicates.iterator().next();
+            return g.find(Node.ANY, Nodes.D2RQadditionalClassDefinitionProperty, a)
+                    .mapWith(x -> findFirstClass(g, x.getSubject(), forbiddenClasses).orElse(null))
+                    .andThen(g.find(Node.ANY, Nodes.D2RQadditionalClassDefinitionProperty, a)
+                            .mapWith(x -> findFirstProperty(g, x.getSubject(), forbiddenProperties).orElse(null)))
+                    .filterDrop(Objects::isNull)
+                    .mapWith(s -> Triple.create(s, p, o));
+        }), m);
+    }
+
+    private static DynamicTriples annotations(Node desiredPredicate,
+                                              Node mappingClassPredicate,
+                                              Node mappingPropertyPredicate,
+                                              Set<Node> forbiddenClasses,
+                                              Set<Node> forbiddenProperties) {
+        return new DynamicTriples() {
+            @Override
+            public boolean test(Triple m) {
+                return m.getPredicate().matches(desiredPredicate);
+            }
+
+            @Override
+            public ExtendedIterator<Triple> list(Graph graph, Triple m) {
+                ExtendedIterator<Triple> a = listLiteralAnnotations(graph, desiredPredicate, mappingClassPredicate,
+                        (g, c) -> SchemaHelper.listClasses(g, c).filterDrop(forbiddenClasses::contains));
+                ExtendedIterator<Triple> b = listLiteralAnnotations(graph, desiredPredicate, mappingPropertyPredicate,
+                        (g, p) -> SchemaHelper.listProperties(g, p).filterDrop(forbiddenProperties::contains));
+                return distinctMatch(Iter.concat(a, b), m);
+            }
+        };
+    }
+
+    private static ExtendedIterator<Triple> listLiteralAnnotations(Graph g,
+                                                                   Node desiredPredicate,
+                                                                   Node mappingPredicate,
+                                                                   BiFunction<Graph, Node, ExtendedIterator<Node>> extractor) {
+        return Iter.flatMap(g.find(Node.ANY, mappingPredicate, Node.ANY).filterKeep(t -> t.getObject().isLiteral()),
+                t -> extractor.apply(g, t.getSubject()).mapWith(s -> Triple.create(s, desiredPredicate, t.getObject())));
+    }
+
+    private static ExtendedIterator<Triple> distinctMatch(ExtendedIterator<Triple> triples, Triple m) {
+        return Iter.distinct(triples.filterKeep(m::matches));
     }
 
     public static DynamicTriples buildVisiblePart(BuiltIn.Vocabulary builtIn) {
@@ -163,7 +207,12 @@ public class SchemaGenerator {
 
     public static BiPredicate<Graph, Triple> buildHiddenPart() {
         BiPredicate<Graph, Triple> res = null;
-        for (Node type : Arrays.asList(SchemaHelper.D2RQClassMap, SchemaHelper.D2RQPropertyBridge)) {
+        for (Node type : Arrays.asList(Nodes.D2RQConfiguration
+                , Nodes.D2RQDatabase
+                , Nodes.D2RQClassMap
+                , Nodes.D2RQPropertyBridge
+                , Nodes.D2RQDownloadMap
+                , Nodes.D2RQAdditionalProperty)) {
             BiPredicate<Graph, Triple> b = hidePart(type);
             if (res == null) {
                 res = b;
@@ -175,41 +224,59 @@ public class SchemaGenerator {
     }
 
     public static BiPredicate<Graph, Triple> hidePart(Node type) {
-        return (g, t) -> g.contains(t.getSubject(), SchemaHelper.RDFtype, type);
+        return (g, t) -> g.contains(t.getSubject(), Nodes.RDFtype, type);
     }
 
-    public DynamicTriples classDefinitions() {
-        return classDefinitions(classes);
+    public DynamicTriples classDeclarations() {
+        return classDeclarations(classes);
     }
 
     public DynamicTriples objectPropertyDeclarations() {
-        return propertyDeclarations(SchemaHelper.OWLObjectProperty, SchemaHelper::listObjectProperties, reservedProperties);
+        return propertyDeclarations(Nodes.OWLObjectProperty,
+                g -> listObjectProperties(g).filterDrop(reservedProperties::contains));
     }
 
     public DynamicTriples dataPropertyDeclarations() {
-        return propertyDeclarations(SchemaHelper.OWLDataProperty, SchemaHelper::listDataProperties, reservedProperties);
+        return propertyDeclarations(Nodes.OWLDataProperty,
+                g -> listDataProperties(g).filterDrop(reservedProperties::contains));
     }
 
     public DynamicTriples annotationPropertyDeclarations() {
-        return propertyDeclarations(SchemaHelper.OWLAnnotationProperty, SchemaHelper::listAnnotationProperties, reservedProperties);
+        return propertyDeclarations(Nodes.OWLAnnotationProperty,
+                g -> listAnnotationProperties(g).filterDrop(reservedProperties::contains));
     }
 
     public DynamicTriples domainAssertions() {
-        return domainAssertions(reservedProperties);
+        return domainAssertions(classes, reservedProperties);
     }
 
     public DynamicTriples rangeAssertions() {
-        return rangeAssertions(reservedProperties);
+        return rangeAssertions(classes, reservedProperties);
+    }
+
+    public DynamicTriples additionalAssertions() {
+        return additionalDefinitions(classes, reservedProperties);
+    }
+
+    public DynamicTriples labels() {
+        return annotations(Nodes.RDFSlabel, Nodes.D2RQclassDefinitionLabel, Nodes.D2RQpropertyDefinitionLabel, classes, reservedProperties);
+    }
+
+    public DynamicTriples comments() {
+        return annotations(Nodes.RDFScomment, Nodes.D2RQclassDefinitionComment, Nodes.D2RQpropertyDefinitionComment, classes, reservedProperties);
     }
 
     public DynamicTriples build() {
         return ontologyID()
-                .andThen(classDefinitions())
+                .andThen(classDeclarations())
                 .andThen(objectPropertyDeclarations())
                 .andThen(dataPropertyDeclarations())
                 .andThen(annotationPropertyDeclarations())
                 .andThen(domainAssertions())
-                .andThen(rangeAssertions());
+                .andThen(rangeAssertions())
+                .andThen(additionalAssertions())
+                .andThen(labels())
+                .andThen(comments());
     }
 
 }

@@ -1,6 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import de.fuberlin.wiwiss.d2rq.map.impl.ResourceMap;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.vocabulary.RDFS;
@@ -58,16 +57,16 @@ public class MappingTransform {
             mapping.listDatabases().forEach(d -> anon.addLiteral(RDFS.comment, "Database: <" + d.getJDBCDSN() + ">"));
 
             mapping.listClassMaps().forEach(classMap -> {
-                classMap.listClasses().forEach(c -> addDefinitions(res, (ResourceMap) classMap, c));
+                classMap.listClasses().forEach(c -> addDefinitions(res, classMap, c));
                 classMap.listPropertyBridges().forEach(b -> {
-                    b.listProperties().forEach(p -> addDefinitions(res, (ResourceMap) b, p));
+                    b.listProperties().forEach(p -> addDefinitions(res, b, p));
                     // TODO: What to do about dynamic properties?
                 });
             });
             return res;
         }
 
-        protected void addDefinitions(Model model, ResourceMap map, Resource targetResource) {
+        protected void addDefinitions(Model model, HasProperties<?> map, Resource targetResource) {
             if (map instanceof ClassMap) {
                 model.add(targetResource, RDF.type, OWL.Class);
             } else if (map instanceof PropertyBridge) {

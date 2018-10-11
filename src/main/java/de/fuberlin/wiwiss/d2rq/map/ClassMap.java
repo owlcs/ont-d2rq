@@ -77,4 +77,9 @@ public interface ClassMap extends MapObject,
      */
     Stream<PropertyBridge> listPropertyBridges();
 
+
+    default ClassMap addClass(String uri) {
+        return addClass(getMapping().asModel().createResource(uri));
+    }
+
 }
