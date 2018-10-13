@@ -4,6 +4,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 
+@Deprecated // todo: it is not used by the system -> scheduled to remove
 public class SD {
 
     public static final String NS = "http://www.w3.org/ns/sparql-service-description#";

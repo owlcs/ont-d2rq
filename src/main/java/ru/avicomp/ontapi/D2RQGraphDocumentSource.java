@@ -4,6 +4,7 @@ import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.vocab.AVC;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("WeakerAccess")
 public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements AutoCloseable {
-    public static final IRI DEFAULT_BASE_IRI = IRI.create("http://d2rq.avc.ru/");
+    public static final IRI DEFAULT_BASE_IRI = IRI.create(AVC.getURI());
 
     protected final Mapping mapping;
     protected final URI doc;

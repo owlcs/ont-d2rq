@@ -8,6 +8,7 @@ import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
+import de.fuberlin.wiwiss.d2rq.vocab.AVC;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
 import org.apache.jena.datatypes.RDFDatatype;
@@ -414,7 +415,7 @@ public class MappingGenerator {
 
     protected void writeWarning(Resource parent, String msg) {
         LOGGER.warn(msg);
-        parent.addLiteral(D2RQ.warning, msg);
+        parent.addLiteral(AVC.warning, msg);
     }
 
     protected List<Attribute> identifierColumns(Resource table, RelationName tableName) {
