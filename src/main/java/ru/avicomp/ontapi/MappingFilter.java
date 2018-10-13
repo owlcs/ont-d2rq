@@ -1,12 +1,12 @@
 package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingTransform;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.rdf.model.*;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLProperty;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.util.HashSet;
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
  * <p>
  * Created by @szuev on 24.02.2017.
  */
-public class MappingFilter implements MappingTransform.ModelBuilder {
+public class MappingFilter {
     private Set<Resource> properties = new HashSet<>();
     private Set<Resource> classes = new HashSet<>();
 
@@ -47,7 +47,6 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
         return properties.isEmpty() && classes.isEmpty();
     }
 
-    @Override
     public Model build(Mapping mapping) {
         Model m = mapping.asModel();
         return isEmpty() ? m : filter(m);
@@ -70,14 +69,15 @@ public class MappingFilter implements MappingTransform.ModelBuilder {
      */
     public Model filter(Model model) {
         validate(model);
-        MappingFilter _filter = compile(model);
+        MappingFilter f = compile(model);
         Model res = ModelFactory.createDefaultModel();
         res.setNsPrefixes(model.getNsPrefixMap());
         @SuppressWarnings("SuspiciousMethodCalls")
         Set<Resource> exclude = model.listStatements(null, D2RQ.clazz, (RDFNode) null)
-                .filterDrop(s -> _filter.classes.contains(s.getObject()))
+                .filterDrop(s -> f.classes.contains(s.getObject()))
                 .andThen(model.listStatements(null, D2RQ.property, (RDFNode) null)
-                        .filterDrop(s -> _filter.properties.contains(s.getObject())))
+                        .filterDrop(s -> f.properties.contains(s.getObject())))
+                .andThen(model.listStatements(null, RDF.type, OWL.Ontology))
                 .mapWith(Statement::getSubject).toSet();
         model.listStatements().filterDrop(s -> exclude.contains(s.getSubject())).forEachRemaining(res::add);
         return res;

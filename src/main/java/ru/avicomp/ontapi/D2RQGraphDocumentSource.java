@@ -40,6 +40,8 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      */
     protected D2RQGraphDocumentSource(Mapping mapping) throws OntApiException {
         this.mapping = Objects.requireNonNull(mapping, "Null mapping");
+        // todo: document iri should not reflect d2rq:jdbcDSN since everything in the mapping graph are editable
+        // todo: and therefore these connection strings may changed
         this.doc = calculateURI(mapping, () -> D2RQGraphDocumentSource.super.getDocumentIRI().toURI());
     }
 

@@ -2,9 +2,8 @@ package de.fuberlin.wiwiss.d2rq.functional_tests;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.DC;
 import org.junit.After;
 import org.junit.Assert;
@@ -12,7 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.jena.utils.Models;
+import ru.avicomp.ontapi.jena.utils.Iter;
 
 /**
  * Functional tests that exercise a ModelD2RQ by calling Model API functions. For
@@ -30,7 +29,6 @@ public class ModelAPITest {
     public void setUp() {
         this.model = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"),
                 "TURTLE", "http://test/").getDataModel();
-//		this.model.enableDebug();
     }
 
     @After
@@ -40,14 +38,8 @@ public class ModelAPITest {
 
     @Test
     public void testListStatements() {
-        StmtIterator iter = this.model.listStatements();
-        int count = 0;
-        while (iter.hasNext()) {
-            Statement s = iter.nextStatement();
-            LOGGER.debug("S={}", Models.toString(s));
-            count++;
-        }
-        Assert.assertEquals(358, count);
+        Assert.assertEquals(358, Iter.asStream(this.model.listStatements())
+                .peek(s -> LOGGER.debug("S={}", PrettyPrinter.toString(s))).count());
     }
 
     @Test

@@ -3,9 +3,11 @@ package de.fuberlin.wiwiss.d2rq.map.impl.schema;
 import de.fuberlin.wiwiss.d2rq.jena.DynamicGraph;
 import de.fuberlin.wiwiss.d2rq.jena.DynamicTriples;
 import de.fuberlin.wiwiss.d2rq.jena.MaskGraph;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.graph.*;
 import org.apache.jena.graph.compose.Union;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
 import ru.avicomp.ontapi.jena.utils.BuiltIn;
@@ -21,6 +23,7 @@ import static de.fuberlin.wiwiss.d2rq.map.impl.schema.SchemaHelper.*;
 
 /**
  * Created by @ssz on 22.09.2018.
+ * todo: handle multiple classes and properties as equivalent ?
  *
  * @see MaskGraph
  * @see DynamicGraph
@@ -40,10 +43,42 @@ public class SchemaGenerator {
         return from.stream().map(FrontsNode::asNode).collect(Iter.toUnmodifiableSet());
     }
 
+    /**
+     * Creates a virtual schema graph that reflects the given mapping graph.
+     * The return graph is an {@link Union Union Graph} which consist of two parts:
+     * the left is a {@link MaskGraph MaskGraph}, which hides everything related to D2RQ language,
+     * and the right is a {@link DynamicGraph DynamicGraph}, which maps D2RQ instructions to the OWL2 assertions.
+     * The adding and removing are performed transitively on the base (specified) graph.
+     *
+     * @param base {@link Graph}, not {@code null}, containing D2RQ instructions
+     * @return {@link Graph}, virtual graph, containing only the OWL2 assertions
+     */
     public static Graph createMagicGraph(Graph base) {
         BiPredicate<Graph, Triple> toHide = buildHiddenPart();
         DynamicTriples toShow = buildVisiblePart();
-        return new Union(new MaskGraph(base, toHide), new DynamicGraph(base, toShow));
+        Graph res = new Union(new MaskGraph(base, toHide), new DynamicGraph(base, toShow)) {
+
+            @Override
+            public void performDelete(Triple t) {
+                L.delete(t);
+            }
+
+            @Override
+            public String toString() {
+                return "MagicGraph@" + Integer.toHexString(hashCode());
+            }
+        };
+        res.getPrefixMapping().clearNsPrefixMap().setNsPrefixes(createSchemaPrefixes(base));
+        return res;
+    }
+
+    private static PrefixMapping createSchemaPrefixes(Graph mapping) {
+        return PrefixMapping.Factory.create()
+                .setNsPrefixes(MappingFactory.SCHEMA)
+                .setNsPrefixes(mapping.getPrefixMapping())
+                .removeNsPrefix(MappingFactory.D2RQ_PREFIX)
+                .removeNsPrefix(MappingFactory.JDBC_PREFIX)
+                .removeNsPrefix(MappingFactory.MAP_PREFIX).lock();
     }
 
     public DynamicTriples ontologyID() {

@@ -34,7 +34,7 @@ import java.util.stream.Stream;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 @SuppressWarnings("WeakerAccess")
-public abstract class ResourceMap extends MapObjectImpl {
+abstract class ResourceMap extends MapObjectImpl {
 
     public ResourceMap(Resource resource, MappingImpl mapping) {
         super(resource, mapping);

@@ -8,6 +8,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.jena.ControlledGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.map.impl.schema.SchemaGenerator;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
@@ -54,8 +55,6 @@ public class MappingImpl implements Mapping {
     // no need to be volatile, since the instance should not be shared between threads:
     private boolean connected = false;
 
-    // todo: replace with dynamic graph reflecting by the mapping model
-    private Model schemaCache;
 
     protected final Model model;
 
@@ -68,13 +67,9 @@ public class MappingImpl implements Mapping {
         return model;
     }
 
-    public Model getVocabularyModel() {
-        return schemaCache == null ? schemaCache = MappingTransform.getModelBuilder().build(this) : schemaCache;
-    }
-
     @Override
     public Graph getSchema() {
-        return getVocabularyModel().getGraph();
+        return SchemaGenerator.createMagicGraph(model.getGraph());
     }
 
     @Override
@@ -343,7 +338,7 @@ public class MappingImpl implements Mapping {
                     " no d2rq:PropertyBridges and no d2rq:class", D2RQException.CLASSMAP_NO_PROPERTYBRIDGES);
         }
         if (withDBConnectivity)
-        tripleRelations().forEachRemaining(MappingImpl::validateRelation);
+            tripleRelations().forEachRemaining(MappingImpl::validateRelation);
     }
 
     public static void validateRelation(TripleRelation tripleRelation) throws D2RQException {
