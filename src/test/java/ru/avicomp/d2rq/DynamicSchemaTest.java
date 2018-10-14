@@ -2,12 +2,17 @@ package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.jena.MaskGraph;
-import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.map.MappingTransform;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
 import org.junit.Assert;
@@ -20,10 +25,8 @@ import ru.avicomp.ontapi.jena.model.*;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
-import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -73,9 +76,10 @@ public class DynamicSchemaTest {
     public void testConnectedPredefinedISWC() {
         int totalNumberOfStatements = 452;
         Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
-        mapping.getConfiguration().setServeVocabulary(false);
-        populateOWL(mapping);
+        mapping.getConfiguration().setServeVocabulary(false).setControlOWL(true);
+
         Assert.assertFalse(mapping.getConfiguration().getServeVocabulary());
+        Assert.assertTrue(mapping.getConfiguration().getControlOWL());
 
         Model data = mapping.getDataModel();
         int compiledTriples = mapping.compiledPropertyBridges().size();
@@ -84,11 +88,11 @@ public class DynamicSchemaTest {
 
         OntGraphModel all = OntModelFactory.createModel();
         all.add(schema);
-        Assert.assertEquals(9, all.listClasses().count());
+//        Assert.assertEquals(8, all.listClasses().peek(x -> LOGGER.debug("SCHEMA CLASS: {}", x)).count());
         all.add(data);
-        Assert.assertEquals(9, all.listClasses().count());
-
+//        Assert.assertEquals(13, all.listClasses().peek(x -> LOGGER.debug("SCHEMA+DATA CLASS: {}", x)).count());
         MappingHelper.print(all);
+
         Assert.assertEquals(9, all.listClasses().count());
         Assert.assertEquals(totalNumberOfStatements, all.statements().count());
 
@@ -107,15 +111,19 @@ public class DynamicSchemaTest {
         MappingHelper.print(schema);
         commonValidatePredefinedSchema(schema);
 
-        populateOWL(mapping);
+        Assert.assertEquals(7, schema.listClasses().peek(x -> LOGGER.debug("CLASS: {}", x)).count());
+
+        mapping.getConfiguration().setControlOWL(true);
+        // require db connection:
+        mapping.compiledPropertyBridges();
 
         MappingHelper.print(schema);
         commonValidatePredefinedSchema(schema);
 
-        Assert.assertEquals(9, schema.listClasses().count());
+        Assert.assertEquals(8, schema.listClasses().peek(x -> LOGGER.debug("CLASS: {}", x)).count());
         schema.createOntEntity(OntClass.class, "OneMore");
 
-        Assert.assertEquals(10, schema.listClasses().peek(c -> LOGGER.debug("{}", c)).count());
+        Assert.assertEquals(9, schema.listClasses().count());
         Assert.assertEquals(1, mapping.asModel().listStatements(null, RDF.type, OWL.Class).toSet().size());
 
         Assert.assertEquals(8, schema.listObjectProperties().peek(p -> LOGGER.debug("{}", p)).count());
@@ -243,36 +251,6 @@ public class DynamicSchemaTest {
         }
     }
 
-    public static void populateOWL(Mapping mapping) { // todo: will be moved to the mapping (or mapping-generator ?)
-        // owl:NamedIndividual declaration, class type for anonymous individuals;
-        mapping.listClassMaps().forEach(x -> {
-            if (x.listClasses().count() == 0) {
-                //todo:
-                Resource clazz = x.asResource();
-                if (clazz.isAnon()) {
-                    clazz = ResourceFactory.createResource("Unknown-" + clazz.getId());
-                }
-                x.addClass(clazz);
-            }
-            if (x.getBNodeIdColumns() == null)
-                x.addClass(OWL.NamedIndividual);
-        });
-
-        // owl:sameAs, owl:differentFrom NamedIndividuals:
-        Set<Property> symmetricIndividualPredicates = Stream.of(OWL.sameAs, OWL.differentFrom).collect(Collectors.toSet());
-        mapping.listPropertyBridges()
-                .filter(p -> p.listProperties().anyMatch(symmetricIndividualPredicates::contains))
-                .forEach(p -> {
-                    String u = p.getURIColumn();
-                    if (u == null) return;
-                    ClassMap c = p.getBelongsToClassMap();
-                    if (c == null) return;
-                    Database d = c.getDatabase();
-                    mapping.createClassMap(null).setDatabase(d).addClass(OWL.NamedIndividual).setURIColumn(u);
-                });
-        // todo: PropertyBridge with rdf:type and uriPattern
-        // todo: dynamic properties
-    }
 
     @Test
     public void testMaskGraph() {

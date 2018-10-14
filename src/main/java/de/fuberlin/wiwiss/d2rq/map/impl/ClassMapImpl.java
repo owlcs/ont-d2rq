@@ -9,7 +9,6 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.Iter;
-import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -190,29 +189,14 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     public Collection<TripleRelation> toTripleRelations() {
-        return propertyBridges().andThen(classes().mapWith(this::fetchPropertyForClass))
+        return propertyBridges()
+                .andThen(classes()
+                        .mapWith(c -> MappingImpl.generatePropertyBridgeWithConstantType(ClassMapImpl.this, c)))
                 .toSet() // no duplicates
                 .stream()
                 .map(PropertyBridgeImpl::toTripleRelations)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
-    }
-
-    public PropertyBridgeImpl fetchPropertyForClass(Resource clazz) {
-        ExtendedIterator<PropertyBridgeImpl> res = getModel()
-                .listResourcesWithProperty(D2RQ.constantValue, clazz)
-                .filterKeep(r -> r.hasProperty(D2RQ.belongsToClassMap, ClassMapImpl.this.resource)
-                        && r.hasProperty(D2RQ.property, RDF.type))
-                .mapWith(mapping::asPropertyBridge);
-        try {
-            if (res.hasNext()) return res.next();
-        } finally {
-            res.close();
-        }
-        return mapping.createPropertyBridge(null)
-                .setBelongsToClassMap(ClassMapImpl.this)
-                .addProperty(RDF.type)
-                .setConstantValue(clazz);
     }
 
     @Override

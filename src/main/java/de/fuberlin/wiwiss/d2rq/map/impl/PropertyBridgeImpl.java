@@ -23,10 +23,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 @SuppressWarnings("WeakerAccess")
@@ -257,6 +254,11 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     public ExtendedIterator<String> dynamicProperties() {
         return listLiterals(D2RQ.dynamicProperty).mapWith(Literal::getString);
+    }
+
+    @Override
+    public DatabaseImpl getDatabase() {
+        return Optional.ofNullable(getBelongsToClassMap()).map(ResourceMap::getDatabase).orElse(null);
     }
 
     @Override

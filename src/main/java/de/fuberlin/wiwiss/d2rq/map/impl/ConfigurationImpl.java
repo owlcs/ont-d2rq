@@ -2,6 +2,7 @@ package de.fuberlin.wiwiss.d2rq.map.impl;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.Configuration;
+import de.fuberlin.wiwiss.d2rq.vocab.AVC;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Resource;
 
@@ -37,6 +38,16 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
     @Override
     public ConfigurationImpl setUseAllOptimizations(boolean useAllOptimizations) {
         return setBoolean(D2RQ.useAllOptimizations, useAllOptimizations);
+    }
+
+    @Override
+    public Configuration setControlOWL(boolean controlOWL) {
+        return setBoolean(AVC.controlOWL, controlOWL);
+    }
+
+    @Override
+    public boolean getControlOWL() {
+        return getBoolean(AVC.controlOWL, false);
     }
 
     @Override

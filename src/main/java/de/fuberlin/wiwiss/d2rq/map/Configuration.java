@@ -38,4 +38,25 @@ public interface Configuration extends MapObject {
      */
     boolean getUseAllOptimizations();
 
+    /**
+     * Sets {@link de.fuberlin.wiwiss.d2rq.vocab.AVC#controlOWL avc:controlOWL} boolean value.
+     *
+     * @param controlOWL boolean
+     * @return this instance
+     */
+    Configuration setControlOWL(boolean controlOWL);
+
+    /**
+     * Answers whether to use {@code avc:controlOWL} option.
+     * By default it is {@code false}.
+     * If this option is specified, the generated data (see {@link Mapping#getData()})
+     * will also be supplemented with OWL2 declarations and other axioms.
+     * For example in OWL2 named individuals must have
+     * {@link ru.avicomp.ontapi.jena.vocabulary.OWL#NamedIndividual owl:NamedIndividual} {@code rdf:type}.
+     *
+     * @return boolean
+     * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>
+     */
+    boolean getControlOWL();
+
 }

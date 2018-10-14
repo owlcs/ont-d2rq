@@ -13,28 +13,30 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 import de.fuberlin.wiwiss.d2rq.sql.types.DataType;
+import de.fuberlin.wiwiss.d2rq.vocab.AVC;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.ontapi.jena.utils.BuiltIn;
 import ru.avicomp.ontapi.jena.utils.Iter;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.io.IOException;
 import java.net.URI;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -48,6 +50,8 @@ import java.util.stream.Stream;
 public class MappingImpl implements Mapping {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingImpl.class);
+
+    private static SchemaGenerator schemaGenerator = new SchemaGenerator(BuiltIn.OWL_VOCABULARY);
 
     // caches, that are reset in case of any change in the underlying graph:
     protected final Map<Node, ConnectedDB> connections = new HashMap<>();
@@ -69,7 +73,7 @@ public class MappingImpl implements Mapping {
 
     @Override
     public Graph getSchema() {
-        return SchemaGenerator.createMagicGraph(model.getGraph());
+        return schemaGenerator.createMagicGraph(model.getGraph());
     }
 
     @Override
@@ -299,7 +303,13 @@ public class MappingImpl implements Mapping {
     @Override
     public Collection<TripleRelation> compiledPropertyBridges() {
         if (compiledPropertyBridges == null) {
+            // validate only RDF:
             validate(false);
+            // populates OWL declarations:
+            if (getConfiguration().getControlOWL()) {
+                compileOWL();
+            }
+            // validate all bridges:
             compiledPropertyBridges = Iter.peek(tripleRelations(), MappingImpl::validateRelation).toList();
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Compiled {} property bridges", compiledPropertyBridges.size());
@@ -359,6 +369,104 @@ public class MappingImpl implements Mapping {
                         D2RQException.DATATYPE_UNMAPPABLE);
             }
         }
+    }
+
+    /**
+     * TODO: description
+     */
+    public void compileOWL() {
+        // owl:NamedIndividual declaration + class type for anonymous individuals:
+        classMaps()  // skip auto generated:
+                .filterDrop(c -> c.asResource().isAnon() // todo: add a flag to indicate auto-generated entities ?
+                        && c.listClasses().anyMatch(x -> OWL.Class.equals(x) || OWL.NamedIndividual.equals(x)))
+                .forEachRemaining(c -> {
+                    Set<Resource> classes = schemaGenerator.listClasses(model, c.asResource()).toSet();
+                    if (classes.size() == 0) {
+                        Resource clazz = c.asResource();
+                        if (clazz.isAnon()) {
+                            // require all classes to be named:
+                            clazz = AVC.UnknownClass(clazz.getId().toString());
+                        }
+                        generatePropertyBridgeWithConstantType(c, clazz);
+                    }
+                    if (c.getBNodeIdColumns() == null) {
+                        // explicit declaration for named individuals
+                        generatePropertyBridgeWithConstantType(c, OWL.NamedIndividual);
+                    }
+                });
+        // owl:sameAs, owl:differentFrom individual assertions:
+        Set<Property> symmetricIndividualPredicates = Stream.of(OWL.sameAs, OWL.differentFrom)
+                .collect(Collectors.toSet());
+        propertyBridges()
+                .filterKeep(p -> p.listProperties().anyMatch(symmetricIndividualPredicates::contains))
+                .forEachRemaining(p -> generateClassMapWithTypeAndPredicate(p, OWL.NamedIndividual, D2RQ.uriColumn));
+        // rdf:type
+        propertyBridges()
+                .filterKeep(p -> p.listProperties().anyMatch(RDF.type::equals))
+                .forEachRemaining(p -> generateClassMapWithTypeAndPredicate(p, OWL.Class, D2RQ.uriPattern));
+        // todo: handle dynamic properties
+    }
+
+    /**
+     * Finds or creates a PropertyBridge for the given ClassMap and {@code rdf:type}.
+     *
+     * @param c    {@link ClassMapImpl}, not {@code null}
+     * @param type {@link Resource}, type, not {@code null}
+     * @return {@link PropertyBridgeImpl}, fresh or found
+     */
+    protected static PropertyBridgeImpl generatePropertyBridgeWithConstantType(ClassMapImpl c, Resource type) {
+        MappingImpl m = c.getMapping();
+        ExtendedIterator<PropertyBridgeImpl> res = m.asModel()
+                .listResourcesWithProperty(D2RQ.constantValue, type)
+                .filterKeep(r -> r.hasProperty(D2RQ.belongsToClassMap, c.resource)
+                        && r.hasProperty(D2RQ.property, RDF.type))
+                .mapWith(m::asPropertyBridge);
+        try {
+            if (res.hasNext()) return res.next();
+        } finally {
+            res.close();
+        }
+        PropertyBridgeImpl p = m.createPropertyBridge(null);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Generate {} for {}", p, c);
+        }
+        return p.setBelongsToClassMap(c)
+                .addProperty(RDF.type)
+                .setConstantValue(type);
+    }
+
+    /**
+     * Finds or creates a ClassMap for the given PropertyBridge, {@code rdf:type} and predicate {@code p}.
+     *
+     * @param p         {@link PropertyBridgeImpl}, not {@code null}
+     * @param type      {@link Resource}, type, not {@code null}
+     * @param predicate {@link Property} predicate that belongs to the {@code p}
+     * @return {@link ClassMapImpl} (fresh or found)
+     * or {@code null} in case the PropertyBridge has no the given predicate
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    protected static ClassMapImpl generateClassMapWithTypeAndPredicate(PropertyBridgeImpl p,
+                                                                       Resource type,
+                                                                       Property predicate) {
+        String value = p.findString(predicate).orElse(null);
+        if (value == null) return null;
+        DatabaseImpl d = p.getDatabase();
+        if (d == null) return null;
+        MappingImpl m = p.getMapping();
+        ExtendedIterator<ClassMapImpl> res = m.asModel()
+                .listResourcesWithProperty(D2RQ.clazz, type)
+                .filterKeep(r -> r.hasProperty(predicate, value) && r.hasProperty(D2RQ.dataStorage, d.resource))
+                .mapWith(m::asClassMap);
+        try {
+            if (res.hasNext()) return res.next();
+        } finally {
+            res.close();
+        }
+        ClassMapImpl c = m.createClassMap(null);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Generate {} for {}", c, p);
+        }
+        return c.setDatabase(d).addClass(type).setLiteral(predicate, value);
     }
 
     /**

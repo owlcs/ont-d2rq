@@ -80,8 +80,9 @@ class SchemaHelper {
     /**
      * Lists all OWL classes from the given {@link de.fuberlin.wiwiss.d2rq.map.ClassMap ClassMap}.
      * Classes can be attached to the ClassMap directly, i.e {@code @classMap d2rq:class @uri}
-     * or indirectly, through PropertyBridge ({@code @propertyBridge d2rq:property rdf:type; d2rq:constantValue @uri})
-     * or AdditionalProperty.
+     * or indirectly, through {@link de.fuberlin.wiwiss.d2rq.map.PropertyBridge PropertyBridge}
+     * (i.e. {@code @propertyBridge d2rq:property rdf:type; d2rq:constantValue @uri})
+     * or using {@link de.fuberlin.wiwiss.d2rq.map.AdditionalProperty AdditionalProperty}.
      *
      * @param g        {@link Graph}, not {@code null}
      * @param classMap {@link Node}, class-map
@@ -100,8 +101,7 @@ class SchemaHelper {
 
         ExtendedIterator<Node> c = listAdditional(g, classMap, Nodes.D2RQadditionalClassDefinitionProperty, Nodes.symmetricClassAssertions);
         return a.andThen(b).andThen(c)
-                .filterKeep(SchemaHelper::isResource)
-                .filterDrop(Nodes.OWLNamedIndividual::equals);
+                .filterKeep(SchemaHelper::isResource);
     }
 
     public static ExtendedIterator<Node> listAdditional(Graph g, Node subject, Node predicate, Set<Node> allowedProperties) {

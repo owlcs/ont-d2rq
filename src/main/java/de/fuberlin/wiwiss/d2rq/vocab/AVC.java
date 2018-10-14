@@ -13,8 +13,12 @@ public class AVC {
     public static final String BASE_URI = "http://avc.ru/d2rq";
     public static final String NS = BASE_URI + "#";
 
+    public static String getURI() {
+        return BASE_URI + "/";
+    }
+
     /**
-     * To indicate that something in the auto generated mapping is suspicious.
+     * To indicate that something in the auto-generated mapping is suspicious.
      */
     public static final Property warning = property("warning");
 
@@ -31,8 +35,17 @@ public class AVC {
      */
     public static final Property controlOWL = property("controlOWL");
 
-    public static String getURI() {
-        return BASE_URI + "/";
+    /**
+     * Makes a fresh uri-resource with local name {@code Unknown}-{@code suffix},
+     * where {@code suffix} is a specified string.
+     * Used to generate missed classes if the corresponding {@link de.fuberlin.wiwiss.d2rq.map.ClassMap}
+     * is an anonymous resource.
+     *
+     * @param suffix String, not {@code null}
+     * @return {@link Resource}
+     */
+    public static Resource UnknownClass(String suffix) {
+        return resource("Unknown-" + suffix);
     }
 
     protected static Resource resource(String local) {
