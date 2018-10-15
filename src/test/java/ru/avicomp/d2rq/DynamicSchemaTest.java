@@ -1,16 +1,13 @@
 package ru.avicomp.d2rq;
 
+import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
-import de.fuberlin.wiwiss.d2rq.jena.MaskGraph;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.map.MappingTransform;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
-import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDFS;
@@ -25,7 +22,6 @@ import ru.avicomp.ontapi.jena.model.*;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -53,7 +49,7 @@ public class DynamicSchemaTest {
         Assert.assertEquals(2, schema.getID().annotations()
                 .peek(s -> LOGGER.debug("Schema annotation: {}", s)).count());
 
-        MappingHelper.print(schema);
+        D2RQTestHelper.print(schema);
         Assert.assertTrue(schema.contains(null, RDFS.comment, comment));
 
         OntGraphModel mappingAsOWL = OntModelFactory.createModel(mapping.asModel().getGraph());
@@ -91,7 +87,7 @@ public class DynamicSchemaTest {
 //        Assert.assertEquals(8, all.listClasses().peek(x -> LOGGER.debug("SCHEMA CLASS: {}", x)).count());
         all.add(data);
 //        Assert.assertEquals(13, all.listClasses().peek(x -> LOGGER.debug("SCHEMA+DATA CLASS: {}", x)).count());
-        MappingHelper.print(all);
+        D2RQTestHelper.print(all);
 
         Assert.assertEquals(9, all.listClasses().count());
         Assert.assertEquals(totalNumberOfStatements, all.statements().count());
@@ -108,7 +104,7 @@ public class DynamicSchemaTest {
         Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
 
         OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
-        MappingHelper.print(schema);
+        D2RQTestHelper.print(schema);
         commonValidatePredefinedSchema(schema);
 
         Assert.assertEquals(7, schema.listClasses().peek(x -> LOGGER.debug("CLASS: {}", x)).count());
@@ -117,7 +113,7 @@ public class DynamicSchemaTest {
         // require db connection:
         mapping.compiledPropertyBridges();
 
-        MappingHelper.print(schema);
+        D2RQTestHelper.print(schema);
         commonValidatePredefinedSchema(schema);
 
         Assert.assertEquals(8, schema.listClasses().peek(x -> LOGGER.debug("CLASS: {}", x)).count());
@@ -148,7 +144,7 @@ public class DynamicSchemaTest {
         OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
 
         LOGGER.debug("Old: {}, New: {}", oldWay.size(), schema.size());
-        MappingHelper.print(schema);
+        D2RQTestHelper.print(schema);
         Assert.assertEquals(oldWay.listClasses().count(), schema.listClasses().count());
         Assert.assertEquals(oldWay.listObjectProperties().count(), schema.listObjectProperties().count());
         Assert.assertEquals(oldWay.listDataProperties().count(), schema.listDataProperties().count());
@@ -250,32 +246,5 @@ public class DynamicSchemaTest {
             get.apply(p).filter(c::equals).findFirst().orElseThrow(() -> new AssertionError("Property " + p));
         }
     }
-
-
-    @Test
-    public void testMaskGraph() {
-        Model m = MappingFactory.load("/mapping-iswc.mysql.ttl").asModel();
-
-        Graph graph = new MaskGraph(m.getGraph(),
-                ((BiPredicate<Graph, Triple>) (g, t) -> g.contains(t.getSubject(), RDF.type.asNode(), D2RQ.PropertyBridge.asNode()))
-                        .or((g, t) -> g.contains(t.getSubject(), RDF.type.asNode(), D2RQ.ClassMap.asNode())));
-
-        Model x = ModelFactory.createModelForGraph(graph);
-        Resource r = x.createResource("ex", OWL.Class).addProperty(RDFS.comment, "dffdfd");
-
-        MappingHelper.print(x);
-        Assert.assertFalse(x.containsResource(D2RQ.PropertyBridge));
-        Assert.assertTrue(x.containsResource(OWL.Class));
-
-        Assert.assertTrue(m.containsResource(OWL.Class));
-        Assert.assertTrue(m.containsResource(D2RQ.PropertyBridge));
-
-        x.removeAll(r, null, null);
-        MappingHelper.print(x);
-
-        Assert.assertFalse(x.containsResource(OWL.Class));
-        Assert.assertFalse(m.containsResource(OWL.Class));
-    }
-
 
 }

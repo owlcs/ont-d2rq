@@ -1,6 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Model;
@@ -29,7 +30,7 @@ public class MapParserTest {
         Resource op = m.createResource(ns + "op", MapParser.LegacyD2RQ.ObjectPropertyBridge)
                 .addProperty(D2RQ.column, column).addProperty(D2RQ.pattern, pattern);
         Resource dp = m.createResource(ns + "dp", MapParser.LegacyD2RQ.DataPropertyBridge);
-        MappingHelper.print(m);
+        D2RQTestHelper.print(m);
 
         Mapping map = MappingFactory.wrap(m);
         Assert.assertEquals(0, map.listPropertyBridges().count());
@@ -37,7 +38,7 @@ public class MapParserTest {
         long size = m.size();
         MapParser.fixLegacyPropertyBridges(m);
 
-        MappingHelper.print(map.asModel());
+        D2RQTestHelper.print(map.asModel());
         Assert.assertEquals(size, m.size());
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.DataPropertyBridge));
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.ObjectPropertyBridge));
@@ -75,7 +76,7 @@ public class MapParserTest {
                 .addProperty(D2RQ.clazz, m.createResource(schemaNS + "Person"))
                 .addProperty(MapParser.LegacyD2RQ.additionalProperty, a);
 
-        MappingHelper.print(m);
+        D2RQTestHelper.print(m);
         Mapping map = MappingFactory.wrap(m);
         Assert.assertEquals(1, map.listClassMaps().count());
         Assert.assertEquals(1, map.listAdditionalProperties().count());
@@ -86,7 +87,7 @@ public class MapParserTest {
 
         Assert.assertEquals(size + 3, m.size());
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.additionalProperty));
-        MappingHelper.print(m);
+        D2RQTestHelper.print(m);
         Assert.assertEquals(1, map.listClassMaps().count());
         Assert.assertEquals(1, map.listAdditionalProperties().count());
         Assert.assertEquals(1, map.listPropertyBridges().count());
@@ -121,7 +122,7 @@ public class MapParserTest {
         Resource sp = m.createResource(schemaNS + "SomeProperty", OWL.DatatypeProperty)
                 .addProperty(MapParser.LegacyD2RQ.propertyBridge, mp);
 
-        MappingHelper.print(m);
+        D2RQTestHelper.print(m);
 
         Mapping map = MappingFactory.wrap(m);
         ClassMap cm = MappingHelper.findClassMap(map, mc);
@@ -137,7 +138,7 @@ public class MapParserTest {
         Assert.assertEquals(size, m.size());
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.classMap));
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.propertyBridge));
-        MappingHelper.print(m);
+        D2RQTestHelper.print(m);
 
         Assert.assertEquals(1, map.listClassMaps().count());
         Assert.assertEquals(1, map.listPropertyBridges().count());

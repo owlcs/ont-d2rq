@@ -4,9 +4,7 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
-import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -80,10 +78,7 @@ public class MappingHelper {
     }
 
     public static void print(Mapping m) {
-        print(m.asModel());
+        D2RQTestHelper.print(m.asModel());
     }
 
-    public static void print(Model m) {
-        ReadWriteUtils.print(m);
-    }
 }

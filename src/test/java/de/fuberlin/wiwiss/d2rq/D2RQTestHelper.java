@@ -2,6 +2,8 @@ package de.fuberlin.wiwiss.d2rq;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import ru.avicomp.ontapi.OntFormat;
+import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,5 +39,13 @@ public class D2RQTestHelper {
         } catch (URISyntaxException | IOException e) {
             throw new AssertionError(e);
         }
+    }
+
+    public static void print(Model m) {
+        ReadWriteUtils.print(m);
+    }
+
+    public static String toTurtleString(Model m) {
+        return ReadWriteUtils.toString(m, OntFormat.TURTLE);
     }
 }
