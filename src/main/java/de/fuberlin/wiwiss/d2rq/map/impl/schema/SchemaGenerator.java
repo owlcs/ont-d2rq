@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
+import org.apache.jena.util.iterator.WrappedIterator;
 import ru.avicomp.ontapi.jena.utils.BuiltIn;
 import ru.avicomp.ontapi.jena.utils.Graphs;
 import ru.avicomp.ontapi.jena.utils.Iter;
@@ -60,12 +61,21 @@ public class SchemaGenerator {
         Graph res = new Union(new MaskGraph(base, toHide), new DynamicGraph(base, toShow)) {
 
             @Override
+            protected ExtendedIterator<Triple> _graphBaseFind(final Triple t) {
+                // the duplicate checking is not needed in our case:
+                return L.find(t).andThen(R.find(t));
+            }
+
+            @Override
             public void performDelete(Triple t) {
+                // both the right and the left graphs reflect the same base graph,
+                // so there is no need to perform deletion also on the right graph
                 L.delete(t);
             }
 
             @Override
             public String toString() {
+                // do not allow to print all data content
                 return "MagicGraph@" + Integer.toHexString(hashCode());
             }
         };
@@ -110,7 +120,7 @@ public class SchemaGenerator {
     }
 
     private static ExtendedIterator<Triple> distinctMatch(ExtendedIterator<Triple> triples, Triple m) {
-        return Iter.distinct(triples.filterKeep(m::matches));
+        return WrappedIterator.create(triples.filterKeep(m::matches).toSet().iterator());
     }
 
     public static BiPredicate<Graph, Triple> buildMaskGraph() {
@@ -316,7 +326,8 @@ public class SchemaGenerator {
                 .andThen(rangeAssertions())
                 .andThen(additionalAssertions())
                 .andThen(labels())
-                .andThen(comments());
+                .andThen(comments())
+                ;
     }
 
 }

@@ -24,7 +24,8 @@ import java.util.function.BiPredicate;
 class SchemaHelper {
 
     public static ExtendedIterator<Node> listJdbsNodes(Graph g) {
-        return Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQDatabase).mapWith(Triple::getSubject), n -> g.find(n, Nodes.D2RQjdbcDSN, Node.ANY))
+        return Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQDatabase).mapWith(Triple::getSubject),
+                n -> g.find(n, Nodes.D2RQjdbcDSN, Node.ANY))
                 .mapWith(Triple::getObject).filterKeep(Node::isLiteral);
     }
 
@@ -33,7 +34,8 @@ class SchemaHelper {
     }
 
     public static boolean isDataProperty(Graph g, Node propertyBridge) {
-        return hasFirst(Iter.flatMap(Iter.of(Nodes.D2RQcolumn, Nodes.D2RQpattern, Nodes.D2RQsqlExpression), p -> g.find(propertyBridge, p, Node.ANY)));
+        return hasFirst(Iter.flatMap(Iter.of(Nodes.D2RQcolumn, Nodes.D2RQpattern, Nodes.D2RQsqlExpression),
+                p -> g.find(propertyBridge, p, Node.ANY)));
     }
 
     public static boolean isAnnotationProperty(Graph g, Node propertyBridge) {
@@ -74,7 +76,8 @@ class SchemaHelper {
      */
     public static ExtendedIterator<Node> listProperties(Graph g, Node propertyBridge) {
         return g.find(propertyBridge, Nodes.D2RQproperty, Node.ANY).mapWith(Triple::getObject)
-                .andThen(listAdditional(g, propertyBridge, Nodes.D2RQadditionalPropertyDefinitionProperty, Nodes.symmetricPropertyAssertions));
+                .andThen(listAdditional(g, propertyBridge,
+                        Nodes.D2RQadditionalPropertyDefinitionProperty, Nodes.symmetricPropertyAssertions));
     }
 
     /**
