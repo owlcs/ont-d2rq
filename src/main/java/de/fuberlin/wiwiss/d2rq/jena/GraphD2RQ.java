@@ -85,7 +85,7 @@ public class GraphD2RQ extends GraphBase implements Graph {
      */
     public GraphD2RQ(Mapping mapping) throws D2RQException {
         this.mapping = mapping;
-        // prefixes snapshot:
+        // todo: currently it is a snapshot:
         getPrefixMapping().setNsPrefixes(mapping.getSchema().getPrefixMapping());
     }
 
@@ -103,7 +103,7 @@ public class GraphD2RQ extends GraphBase implements Graph {
     public ExtendedIterator<Triple> graphBaseFind(Triple triplePattern) {
         checkOpen();
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Find: {}", PrettyPrinter.toString(triplePattern, getPrefixMapping()));
+            LOGGER.debug("Find pattern: {}", PrettyPrinter.toString(triplePattern, getPrefixMapping()));
         }
         FindQuery query = new FindQuery(triplePattern, mapping.compiledPropertyBridges(), null);
         ExtendedIterator<Triple> result = TripleQueryIter.create(query.iterator());

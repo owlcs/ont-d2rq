@@ -7,6 +7,7 @@ import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.map.MappingTransform;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.compose.Union;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -70,27 +71,42 @@ public class DynamicSchemaTest {
 
     @Test
     public void testConnectedPredefinedISWC() {
-        int totalNumberOfStatements = 452;
+        int totalNumberOfStatements = 441;
         Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
+
         mapping.getConfiguration().setServeVocabulary(false).setControlOWL(true);
 
         Assert.assertFalse(mapping.getConfiguration().getServeVocabulary());
         Assert.assertTrue(mapping.getConfiguration().getControlOWL());
 
         Model data = mapping.getDataModel();
+        //data.write(System.err, "ttl");
+
         int compiledTriples = mapping.compiledPropertyBridges().size();
 
-        Model schema = mapping.getVocabularyModel();
+        OntGraphModel inMemory = OntModelFactory.createModel();
+        inMemory.add(mapping.getVocabularyModel());
+        Assert.assertEquals(8, inMemory.listClasses().peek(x -> LOGGER.debug("Schema: {}", x)).count());
+        inMemory.add(data);
+        Assert.assertEquals(13, inMemory.listClasses().peek(x -> LOGGER.debug("Schema+Data: {}", x)).count());
+        D2RQTestHelper.print(inMemory);
+        Assert.assertEquals(totalNumberOfStatements, inMemory.size());
 
-        OntGraphModel all = OntModelFactory.createModel();
-        all.add(schema);
-//        Assert.assertEquals(8, all.listClasses().peek(x -> LOGGER.debug("SCHEMA CLASS: {}", x)).count());
-        all.add(data);
-//        Assert.assertEquals(13, all.listClasses().peek(x -> LOGGER.debug("SCHEMA+DATA CLASS: {}", x)).count());
-        D2RQTestHelper.print(all);
+        mapping.getConfiguration().setServeVocabulary(true);
 
-        Assert.assertEquals(9, all.listClasses().count());
-        Assert.assertEquals(totalNumberOfStatements, all.statements().count());
+        OntGraphModel dynamic = OntModelFactory.createModel(new Union(mapping.getSchema(), mapping.getData()));
+
+        // add new class
+        OntClass additional = dynamic.createOntEntity(OntClass.class, inMemory.expandPrefix("iswc:OneMoreClass"));
+        additional.addAnnotation(inMemory.getRDFSLabel(), "OneMoreClass");
+
+        Assert.assertEquals(14, dynamic.listClasses().peek(x -> LOGGER.debug("1) DYNAMIC CLASS: {}", x)).count());
+
+        Assert.assertEquals(totalNumberOfStatements + 2, dynamic.statements().count());
+
+        // remove new class
+        mapping.asModel().removeAll(additional, null, null);
+        Assert.assertEquals(13, dynamic.listClasses().peek(x -> LOGGER.debug("2) DYNAMIC CLASS: {}", x)).count());
 
         mapping.getConfiguration().setServeVocabulary(true);
         Assert.assertTrue(mapping.getConfiguration().getServeVocabulary());

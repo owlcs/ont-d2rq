@@ -1,8 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.jena;
 
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
+import org.apache.jena.graph.*;
 import org.apache.jena.graph.impl.WrappedGraph;
 
 import java.util.Objects;
@@ -61,8 +59,9 @@ public class ControlledGraph extends WrappedGraph {
 
     @Override
     public void remove(Node s, Node p, Node o) {
-        control.accept(Triple.create(s, p, o), Event.REMOVE);
-        super.remove(s, p, o);
+        // redirect to #delete method
+        GraphUtil.remove(this, s, p, o);
+        getEventManager().notifyEvent(this, GraphEvents.remove(s, p, o));
     }
 
     @Override
@@ -80,7 +79,6 @@ public class ControlledGraph extends WrappedGraph {
     public enum Event {
         ADD,
         DELETE,
-        REMOVE,
         CLEAR,
     }
 }

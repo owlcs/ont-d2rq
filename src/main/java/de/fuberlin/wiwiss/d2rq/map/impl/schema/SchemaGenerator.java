@@ -56,9 +56,9 @@ public class SchemaGenerator {
      * @return {@link Graph}, virtual graph, containing only the OWL2 assertions
      */
     public Graph createMagicGraph(Graph base) {
-        BiPredicate<Graph, Triple> toHide = buildMaskGraph();
-        DynamicTriples toShow = buildDynamicGraph();
-        Graph res = new Union(new MaskGraph(base, toHide), new DynamicGraph(base, toShow)) {
+        Graph left = new MaskGraph(base, buildMaskGraph());
+        Graph right = new DynamicGraph(base, buildDynamicGraph());
+        Graph res = new Union(left, right) {
 
             @Override
             protected ExtendedIterator<Triple> _graphBaseFind(final Triple t) {
@@ -93,8 +93,7 @@ public class SchemaGenerator {
     }
 
     private static DynamicTriples propertyDeclarations(Node type,
-                                                       Function<Graph,
-                                                               ExtendedIterator<Node>> extractor) {
+                                                       Function<Graph, ExtendedIterator<Node>> get) {
         return new DynamicTriples() {
 
             @Override
@@ -104,7 +103,7 @@ public class SchemaGenerator {
 
             @Override
             public ExtendedIterator<Triple> list(Graph g, Triple m) {
-                return distinctMatch(extractor.apply(g)
+                return distinctMatch(get.apply(g)
                         .mapWith(s -> Triple.create(s, Nodes.RDFtype, type)), m);
             }
         };
@@ -113,10 +112,9 @@ public class SchemaGenerator {
     private static ExtendedIterator<Triple> listLiteralAnnotations(Graph g,
                                                                    Node desiredPredicate,
                                                                    Node mappingPredicate,
-                                                                   BiFunction<Graph, Node,
-                                                                           ExtendedIterator<Node>> extractor) {
+                                                                   BiFunction<Graph, Node, ExtendedIterator<Node>> get) {
         return Iter.flatMap(g.find(Node.ANY, mappingPredicate, Node.ANY).filterKeep(t -> t.getObject().isLiteral()),
-                t -> extractor.apply(g, t.getSubject()).mapWith(s -> Triple.create(s, desiredPredicate, t.getObject())));
+                t -> get.apply(g, t.getSubject()).mapWith(s -> Triple.create(s, desiredPredicate, t.getObject())));
     }
 
     private static ExtendedIterator<Triple> distinctMatch(ExtendedIterator<Triple> triples, Triple m) {
@@ -182,7 +180,6 @@ public class SchemaGenerator {
 
     protected DynamicTriples domainAssertions() {
         return new DynamicTriples() {
-
             @Override
             public boolean test(Triple m) {
                 return m.getPredicate().matches(Nodes.RDFSdomain);

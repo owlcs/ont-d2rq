@@ -16,10 +16,16 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.ontapi.jena.OntModelFactory;
+import ru.avicomp.ontapi.jena.model.OntClass;
+import ru.avicomp.ontapi.jena.model.OntDT;
+import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
+import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 
 /**
  * Created by @ssz on 15.10.2018.
@@ -72,6 +78,26 @@ public class GraphsTest {
             Assert.assertTrue(ttl.split("\n").length > 100);
 
             Assert.assertFalse(u.listStatements().toList().isEmpty());
+        }
+    }
+
+    @Test
+    public void testOntGraphModelModifyAndFindAll() {
+        try (Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl")) {
+            mapping.getConfiguration().setControlOWL(true);
+            Graph left = mapping.getSchema();
+            // connection:
+            Graph right = mapping.getDataModel().getGraph();
+
+            OntGraphModel u = OntModelFactory.createModel(new Union(left, right));
+
+            u.createOntEntity(OntDT.class, u.expandPrefix("iswc:string"));
+
+            List<OntClass> classes = u.listClasses().collect(Collectors.toList());
+
+            classes.forEach(x -> LOGGER.debug("{}", x));
+
+            Assert.assertFalse(classes.isEmpty());
         }
     }
 }
