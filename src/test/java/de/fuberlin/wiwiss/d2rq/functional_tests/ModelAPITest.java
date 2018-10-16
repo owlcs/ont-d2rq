@@ -5,6 +5,7 @@ import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.DC;
+import org.apache.jena.vocabulary.SKOS;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,27 +24,33 @@ import ru.avicomp.ontapi.jena.utils.Iter;
  */
 public class ModelAPITest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelAPITest.class);
-    private Model model;
+    private Model data;
 
     @Before
     public void setUp() {
-        this.model = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"),
-                "TURTLE", "http://test/").getDataModel();
+        this.data = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "TURTLE", "http://test/")
+                .getConfiguration().setServeVocabulary(false).getMapping().getDataModel();
     }
 
     @After
     public void tearDown() {
-        this.model.close();
+        this.data.close();
     }
 
     @Test
     public void testListStatements() {
-        Assert.assertEquals(358, Iter.asStream(this.model.listStatements())
+        Assert.assertEquals(283, Iter.asStream(this.data.listStatements())
                 .peek(s -> LOGGER.debug("S={}", PrettyPrinter.toString(s))).count());
     }
 
     @Test
-    public void testHasProperty() {
-        Assert.assertTrue(this.model.getResource("http://test/papers/1").hasProperty(DC.creator));
+    public void testHasProperty1() {
+        Assert.assertTrue(this.data.getResource("http://test/papers/1").hasProperty(DC.creator));
+    }
+
+    @Test
+    public void testHasProperty2() {
+        Assert.assertTrue(this.data.getResource("http://test/topics/11")
+                .hasProperty(SKOS.broader, data.createResource("http://test/topics/5")));
     }
 }

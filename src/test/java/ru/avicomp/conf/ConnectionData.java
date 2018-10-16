@@ -243,4 +243,10 @@ public enum ConnectionData {
                 .setUsername(getUser())
                 .setPassword(getPwd());
     }
+
+    public void insert(Mapping mapping) {
+        mapping.listDatabases()
+                .filter(s -> s.getJDBCDSN().startsWith(getJdbcBaseIRI().getIRIString()))
+                .forEach(d -> d.setUsername(getUser()).setPassword(getPwd()));
+    }
 }

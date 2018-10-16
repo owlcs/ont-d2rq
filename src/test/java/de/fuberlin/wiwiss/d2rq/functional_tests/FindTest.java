@@ -6,28 +6,32 @@ import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
 import org.apache.jena.JenaRuntime;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.AnonId;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
-import org.apache.jena.vocabulary.*;
+import org.apache.jena.vocabulary.DC;
+import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.VCARD;
+import org.junit.Ignore;
 import org.junit.Test;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 /**
  * Functional tests for the find(spo) operation of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ}.
  * From AllTests:
- * Functional test suite for D2RQ. These are functional tests (as opposed to
- * unit tests). The suite runs different find queries against the ISWC database, using the
- * example map provided with the D2RQ manual. To run the test, you must have either the MySQL
- * or the MS Access version accessible. Maybe you must adapt the connection information at the
- * beginning of the map file to fit your database server.
-
+ * Functional test suite for D2RQ.
+ * These are functional tests (as opposed to unit tests).
+ * The suite runs different find queries against the ISWC database,
+ * using the example map provided with the D2RQ manual.
+ * To run the test, you must have either the MySQL or the MS Access version accessible.
+ * Maybe you must adapt the connection information at the beginning of the map file to fit your database server.
+ *
  * <p>
  * Each test method runs one or more find queries and automatically compares the actual
- * results to the expected results. For some tests, only the number of returned triples
- * is checked. For others, the returned triples are compared against expected triples.
- * <p>
- * If a test fails, the dump() method can be handy. It shows the actual triples returned
- * by a query on System.out.
- * <p>
- * To see debug information, uncomment the enableDebug() call in the setUp() method.
+ * results to the expected results.
+ * For some tests, only the number of returned triples is checked.
+ * For others, the returned triples are compared against expected triples.
+ * TODO: test postgers also
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -36,20 +40,20 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testListTypeStatements() {
         find(null, RDF.type, null);
-//		dump();
         assertStatement(resource("papers/1"), RDF.type, ISWC.InProceedings);
         // Paper6 is filtered by d2rq:condition
         assertNoStatement(resource("papers/6"), RDF.type, ISWC.InProceedings);
         assertStatement(resource("conferences/23541"), RDF.type, ISWC.Conference);
         assertStatement(resource("topics/15"), RDF.type, SKOS.Concept);
-        assertStatementCount(89);
-        //assertStatementCount(95);
+        // schema is turned off:
+        assertNoStatement(FOAF.name, RDF.type, OWL.DatatypeProperty);
+
+        assertStatementCount(62);
     }
 
     @Test
     public void testListTopicInstances() {
         find(null, RDF.type, SKOS.Concept);
-//		dump();
         assertStatement(resource("topics/1"), RDF.type, SKOS.Concept);
         assertStatement(resource("topics/15"), RDF.type, SKOS.Concept);
         assertStatementCount(15);
@@ -58,7 +62,6 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testListTopicNames() {
         find(null, SKOS.prefLabel, null);
-//		dump();
         assertStatement(resource("topics/1"), SKOS.prefLabel, m.createTypedLiteral(
                 "Knowledge Representation Languages"));
         assertStatement(resource("topics/15"), SKOS.prefLabel, m.createTypedLiteral(
@@ -69,7 +72,6 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testListAuthors() {
         find(null, DC.creator, null);
-//		dump();
         assertStatement(resource("papers/1"), DC.creator, resource("persons/1"));
         assertStatement(resource("papers/1"), DC.creator, resource("persons/2"));
         assertStatementCount(8);
@@ -78,7 +80,6 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testDatatypeFindByYear() {
         find(null, DC.date, m.createTypedLiteral("2003", XSDDatatype.XSDgYear));
-//		dump();
         assertStatement(resource("papers/4"), DC.date, m.createTypedLiteral("2003", XSDDatatype.XSDgYear));
         assertStatementCount(1);
     }
@@ -86,7 +87,6 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testDatatypeFindByString() {
         find(null, SKOS.prefLabel, m.createTypedLiteral("E-Business", XSDDatatype.XSDstring));
-//		dump();
         assertStatement(resource("topics/13"), SKOS.prefLabel, m.createTypedLiteral("E-Business", XSDDatatype.XSDstring));
         assertStatementCount(1);
     }
@@ -96,14 +96,12 @@ public class FindTest extends FindTestFramework {
         // in RDF 1.1 plain it is the same
         if (JenaRuntime.isRDF11) return;
         find(null, SKOS.prefLabel, m.createLiteral("E-Business"));
-//		dump();
         assertStatementCount(0);
     }
 
     @Test
     public void testDatatypeFindYear() {
         find(resource("papers/2"), DC.date, null);
-//		dump();
         assertStatement(resource("papers/2"), DC.date, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
         assertStatementCount(1);
     }
@@ -111,7 +109,6 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testDatatypeYearContains() {
         find(resource("papers/2"), DC.date, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
-//		dump();
         assertStatement(resource("papers/2"), DC.date, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
         assertStatementCount(1);
         assertStatementCount(1);
@@ -120,7 +117,6 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testLiteralLanguage() {
         find(null, DC.title, m.createLiteral("Trusting Information Sources One Citizen at a Time", "en"));
-//		dump();
         assertStatement(resource("papers/1"), DC.title, m.createLiteral("Trusting Information Sources One Citizen at a Time", "en"));
         assertStatementCount(1);
     }
@@ -128,7 +124,6 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testFindSubjectWhereObjectURIColumn() {
         find(null, DC.creator, resource("persons/4"));
-//		dump();
         assertStatement(resource("papers/2"), DC.creator, resource("persons/4"));
         assertStatementCount(1);
     }
@@ -137,14 +132,12 @@ public class FindTest extends FindTestFramework {
     public void testFindSubjectWithConditionalObject() {
         // The paper is not published, therefore no result triples
         find(null, DC.creator, resource("persons/5"));
-//		dump();
         assertStatementCount(0);
     }
 
     @Test
     public void testFindSubjectWhereObjectURIPattern() {
         find(null, FOAF.mbox, m.createResource("mailto:andy.seaborne@hpl.hp.com"));
-//		dump();
         assertStatement(resource("persons/6"), FOAF.mbox, m.createResource("mailto:andy.seaborne@hpl.hp.com"));
         assertStatementCount(1);
     }
@@ -152,7 +145,6 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testFindAnonymousNode() {
         find(null, VCARD.Pcode, m.createLiteral("BS34 8QZ"));
-//		dump();
         assertStatement(
                 m.createResource(new AnonId("map:PostalAddresses@@7")),
                 VCARD.Pcode, m.createLiteral("BS34 8QZ"));
@@ -161,24 +153,18 @@ public class FindTest extends FindTestFramework {
 
     @Test
     public void testMatchAnonymousSubject() {
-        find(
-                m.createResource(new AnonId("map:PostalAddresses@@7")),
-                VCARD.Pcode, null);
-//		dump();
-        assertStatement(
-                m.createResource(new AnonId("map:PostalAddresses@@7")),
+        find(m.createResource(new AnonId("map:PostalAddresses@@7")), VCARD.Pcode, null);
+
+        assertStatement(m.createResource(new AnonId("map:PostalAddresses@@7")),
                 VCARD.Pcode, m.createLiteral("BS34 8QZ"));
         assertStatementCount(1);
     }
 
     @Test
     public void testMatchAnonymousObject() {
-        find(
-                null, VCARD.ADR,
-                m.createResource(new AnonId("map:PostalAddresses@@7")));
-//		dump();
-        assertStatement(
-                resource("organizations/7"), VCARD.ADR,
+        find(null, VCARD.ADR, m.createResource(new AnonId("map:PostalAddresses@@7")));
+
+        assertStatement(resource("organizations/7"), VCARD.ADR,
                 m.createResource(new AnonId("map:PostalAddresses@@7")));
         assertStatementCount(1);
     }
@@ -186,15 +172,13 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testDump() {
         find(null, null, null);
-//		dump();
-        assertStatementCount(358);
-        //assertStatementCount(322);
+        // no schema:
+        assertStatementCount(283);
     }
 
     @Test
     public void testFindPredicate() {
         find(resource("papers/2"), null, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
-//		dump();
         assertStatement(resource("papers/2"), DC.date, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
         assertStatementCount(1);
     }
@@ -202,27 +186,29 @@ public class FindTest extends FindTestFramework {
     @Test
     public void testReverseFetchWithDatatype() {
         find(null, null, m.createTypedLiteral("2002", XSDDatatype.XSDgYear));
-//		dump();
         assertStatementCount(3);
     }
 
     @Test
     public void testReverseFetchWithURI() {
         find(null, null, resource("topics/11"));
-//		dump();
         assertStatementCount(2);
     }
 
     @Test
     public void testFindAliasedPropertyBridge() {
         find(null, SKOS.broader, null);
-//		dump();
         assertStatement(resource("topics/1"), SKOS.broader, resource("topics/3"));
         assertStatementCount(10);
     }
 
+    /**
+     * @see ru.avicomp.d2rq.DynamicSchemaTest
+     */
+    @Ignore // schema part are excluded from the graph, there is now separated test for it
     @Test
     public void testDefinitions() {
+        ModelFactory.createModelForGraph(graph).write(System.err, "ttl");
         find(ISWC.Conference, null, null);
         assertStatement(ISWC.Conference, RDF.type, OWL.Class);
         assertStatement(ISWC.Conference, RDFS.label, m.createLiteral("conference"));

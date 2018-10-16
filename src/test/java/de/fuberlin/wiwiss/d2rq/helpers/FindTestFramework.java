@@ -1,6 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.helpers;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Graph;
@@ -10,10 +11,12 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.util.iterator.ExtendedIterator;
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.avicomp.conf.ConnectionData;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,8 +24,10 @@ import java.util.Set;
 /**
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class FindTestFramework {
-    protected static final Logger LOGGER = Logger.getLogger(FindTestFramework.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(FindTestFramework.class);
+
     protected static final Model m = ModelFactory.createDefaultModel();
 
     protected Graph graph;
@@ -31,7 +36,11 @@ public abstract class FindTestFramework {
     @Before
     public void setUp() {
         LOGGER.debug("SET UP");
-        this.graph = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "TURTLE", "http://test/").getData();
+        Mapping mapping = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "ttl", "http://test/");
+        ConnectionData.MYSQL.insert(mapping);
+        // no schema (schema validation tests are separated now)
+        mapping.getConfiguration().setServeVocabulary(false);
+        this.graph = mapping.getData();
     }
 
     @After
@@ -52,26 +61,23 @@ public abstract class FindTestFramework {
     }
 
     protected void dump() {
-        int count = 0;
-        for (Triple t : resultTriples) {
-            count++;
-            System.out.println("Result Triple " + count + ": " +
-                    PrettyPrinter.toString(t, this.graph.getPrefixMapping()));
-        }
-        System.out.println(count + " triples.");
-        System.out.println();
+        resultTriples.forEach(x -> LOGGER.debug("S={}", PrettyPrinter.toString(x)));
     }
 
     protected void assertStatementCount(int count) {
-        Assert.assertEquals("Found " + resultTriples, count, resultTriples.size());
+        dump();
+        Assert.assertEquals("Found " + resultTriples.size() + " triples", count, resultTriples.size());
     }
 
     protected void assertStatement(RDFNode s, RDFNode p, RDFNode o) {
-        Assert.assertTrue(this.resultTriples.contains(new Triple(toNode(s), toNode(p), toNode(o))));
+        dump();
+        Triple t = new Triple(toNode(s), toNode(p), toNode(o));
+        Assert.assertTrue("Not found " + PrettyPrinter.toString(t), this.resultTriples.contains(t));
     }
 
     protected void assertNoStatement(RDFNode s, RDFNode p, RDFNode o) {
-        Assert.assertFalse(this.resultTriples.contains(new Triple(toNode(s), toNode(p), toNode(o))));
+        Triple t = new Triple(toNode(s), toNode(p), toNode(o));
+        Assert.assertFalse("Found " + PrettyPrinter.toString(t), this.resultTriples.contains(t));
     }
 
     private Node toNode(RDFNode n) {
