@@ -21,7 +21,7 @@ import java.util.function.BiPredicate;
  * Created by @ssz on 10.10.2018.
  */
 @SuppressWarnings("WeakerAccess")
-class SchemaHelper {
+public class SchemaHelper {
 
     public static ExtendedIterator<Node> listJdbsNodes(Graph g) {
         return Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQDatabase).mapWith(Triple::getSubject),
