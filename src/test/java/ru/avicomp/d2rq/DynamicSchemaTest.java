@@ -24,6 +24,7 @@ import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -71,7 +72,7 @@ public class DynamicSchemaTest {
 
     @Test
     public void testConnectedPredefinedISWCSchemaAndData() {
-        int totalNumberOfStatements = 441;
+        int totalNumberOfStatements = 443;
         Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
 
         mapping.getConfiguration().setServeVocabulary(false).setControlOWL(true);
@@ -184,10 +185,10 @@ public class DynamicSchemaTest {
         Resource qYear = XSD.gYear;
 
         OntClass iswcInProceedingClass = findEntity(m, OntClass.class, "iswc:InProceedings");
-        findEntity(m, OntClass.class, "iswc:Event");
+        OntClass iswcEventClass = findEntity(m, OntClass.class, "iswc:Event");
         OntClass iswcConferenceClass = findEntity(m, OntClass.class, "iswc:Conference");
         OntClass iswcOrganizationClass = findEntity(m, OntClass.class, "iswc:Organization");
-        findEntity(m, OntClass.class, "foaf:Document");
+        OntClass foafDocumentClass = findEntity(m, OntClass.class, "foaf:Document");
         OntClass foafPersonClass = findEntity(m, OntClass.class, "foaf:Person");
         OntClass skosConceptClass = findEntity(m, OntClass.class, "skos:Concept");
 
@@ -250,6 +251,18 @@ public class DynamicSchemaTest {
         OntNDP iswcLocation = findEntity(m, OntNDP.class, "iswc:location");
         checkHasDomains(iswcLocation, iswcConferenceClass);
         checkHasRanges(iswcLocation, xstring);
+
+        // skos:primarySubject owl:equivalentProperty skos:subject
+        Assert.assertEquals(1, m.statements(null, OWL.equivalentProperty, null).count());
+        Assert.assertTrue(skosPrimarySubject.equivalentProperty().collect(Collectors.toSet()).contains(skosSubject));
+
+        // iswc:InProceedings owl:equivalentClass foaf:Document
+        Assert.assertEquals(1, m.statements(null, OWL.equivalentClass, null).count());
+        Assert.assertTrue(iswcInProceedingClass.equivalentClass().collect(Collectors.toSet()).contains(foafDocumentClass));
+
+        // iswc:Conference rdfs:subClassOf iswc:Event
+        Assert.assertEquals(1, m.statements(null, RDFS.subClassOf, null).count());
+        Assert.assertTrue(iswcConferenceClass.subClassOf().collect(Collectors.toSet()).contains(iswcEventClass));
 
         Assert.assertFalse(m.contains(RDFS.label, RDF.type, (RDFNode) null));
     }

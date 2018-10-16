@@ -28,7 +28,6 @@ import org.apache.jena.rdf.model.impl.ModelCom;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.jena.utils.BuiltIn;
 import ru.avicomp.ontapi.jena.utils.Iter;
 import ru.avicomp.ontapi.jena.utils.Models;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
@@ -58,7 +57,7 @@ public class MappingImpl implements Mapping {
     private static final Set<Node> D2RQ_PREDICATES = new VocabularySummarizer(D2RQ.class).getAllProperties()
             .stream().map(FrontsNode::asNode).collect(Iter.toUnmodifiableSet());
 
-    private static SchemaGenerator schemaGenerator = new SchemaGenerator(BuiltIn.OWL_VOCABULARY);
+    private static SchemaGenerator schemaGenerator = SchemaGenerator.getInstance();
 
     // caches, that are reset in case of any change in the underlying graph:
     protected final Map<Node, ConnectedDB> connections = new HashMap<>();

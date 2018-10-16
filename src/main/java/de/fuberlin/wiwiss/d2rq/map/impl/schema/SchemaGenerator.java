@@ -25,7 +25,6 @@ import static de.fuberlin.wiwiss.d2rq.map.impl.schema.SchemaHelper.*;
 
 /**
  * Created by @ssz on 22.09.2018.
- * todo: handle multiple classes and properties as equivalent ?
  *
  * @see MaskGraph
  * @see DynamicGraph
@@ -34,11 +33,17 @@ import static de.fuberlin.wiwiss.d2rq.map.impl.schema.SchemaHelper.*;
 public class SchemaGenerator {
 
     private final Set<Node> reservedProperties, classes;
+    private final boolean withEquivalent;
 
-    public SchemaGenerator(BuiltIn.Vocabulary vocabulary) {
+    public SchemaGenerator(BuiltIn.Vocabulary vocabulary, boolean withEquivalent) {
         Objects.requireNonNull(vocabulary);
         this.reservedProperties = asSet(vocabulary.reservedProperties());
         this.classes = asSet(vocabulary.classes());
+        this.withEquivalent = withEquivalent;
+    }
+
+    public static SchemaGenerator getInstance() {
+        return new SchemaGenerator(BuiltIn.OWL_VOCABULARY, true);
     }
 
     private static Set<Node> asSet(Collection<? extends Resource> from) {
@@ -171,11 +176,73 @@ public class SchemaGenerator {
 
             @Override
             public ExtendedIterator<Triple> list(Graph g, Triple m) {
-                return distinctMatch(Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQClassMap),
-                        t -> listClasses(g, t.getSubject()))
+                return distinctMatch(listClasses(g)
                         .mapWith(c -> Triple.create(c, Nodes.RDFtype, Nodes.OWLClass)), m);
             }
         };
+    }
+
+    protected DynamicTriples equivalentClasses() {
+        if (!withEquivalent) return DynamicTriples.EMPTY;
+        return new DynamicTriples() {
+            @Override
+            public boolean test(Triple m) {
+                return m.getPredicate().matches(Nodes.OWLequivalentClass);
+            }
+
+            @Override
+            public ExtendedIterator<Triple> list(Graph g, Triple m) {
+                return distinctMatch(Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQClassMap),
+                        t -> listEquivalentClasses(g, t.getSubject())), m);
+            }
+        };
+    }
+
+    protected DynamicTriples equivalentProperties() {
+        if (!withEquivalent) return DynamicTriples.EMPTY;
+        return new DynamicTriples() {
+            @Override
+            public boolean test(Triple m) {
+                return m.getPredicate().matches(Nodes.OWLequivalentProperty);
+            }
+
+            @Override
+            public ExtendedIterator<Triple> list(Graph g, Triple m) {
+                return distinctMatch(Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQPropertyBridge)
+                                .filterDrop(t -> isAnnotationProperty(g, t.getSubject())),
+                        t -> listEquivalentProperties(g, t.getSubject())), m);
+            }
+        };
+    }
+
+    private ExtendedIterator<Triple> listEquivalentClasses(Graph g, Node classMap) {
+        ExtendedIterator<Node> additional = g.find(classMap, Nodes.D2RQadditionalClassDefinitionProperty, Node.ANY)
+                .mapWith(Triple::getObject);
+        Set<Node> exclude = Iter.flatMap(additional.filterKeep(a -> g.contains(a, Nodes.D2RQpropertyName, Nodes.RDFSsubClassOf)
+                        || g.contains(a, Nodes.D2RQpropertyName, Nodes.OWLequivalentClass)),
+                a -> g.find(a, Nodes.D2RQpropertyValue, Node.ANY).mapWith(Triple::getObject)).toSet();
+        return listEquivalent(listClasses(g, classMap), exclude, Nodes.OWLequivalentClass);
+    }
+
+    private ExtendedIterator<Triple> listEquivalentProperties(Graph g, Node propertyBridge) {
+        ExtendedIterator<Node> additional = g.find(propertyBridge, Nodes.D2RQadditionalPropertyDefinitionProperty, Node.ANY)
+                .mapWith(Triple::getObject);
+        Set<Node> exclude = Iter.flatMap(additional.filterKeep(a -> g.contains(a, Nodes.D2RQpropertyName, Nodes.RDFSsubPropertyOf)
+                        || g.contains(a, Nodes.D2RQpropertyName, Nodes.OWLequivalentProperty)),
+                a -> g.find(a, Nodes.D2RQpropertyValue, Node.ANY).mapWith(Triple::getObject)).toSet();
+        return listEquivalent(listProperties(g, propertyBridge), exclude, Nodes.OWLequivalentProperty);
+    }
+
+    private static ExtendedIterator<Triple> listEquivalent(ExtendedIterator<Node> nodes, Set<Node> exclude, Node predicate) {
+        List<Node> list = nodes.toList();
+        if (list.isEmpty() || list.size() == 1) return NullIterator.instance();
+        sort(list);
+        Node primary = list.get(0);
+        Set<Node> rest = new HashSet<>(list);
+        rest.remove(primary);
+        rest.removeAll(exclude);
+        if (rest.isEmpty()) return NullIterator.instance();
+        return WrappedIterator.create(rest.iterator()).mapWith(r -> Triple.create(primary, predicate, r));
     }
 
     protected DynamicTriples domainAssertions() {
@@ -229,17 +296,21 @@ public class SchemaGenerator {
             Node a = t.getSubject();
             Set<Node> objects = g.find(a, Nodes.D2RQpropertyValue, m.getObject()).mapWith(Triple::getObject).toSet();
             if (objects.isEmpty()) return NullIterator.instance();
-            Set<Node> predicates = g.find(a, Nodes.D2RQpropertyName, m.getObject()).mapWith(Triple::getObject).toSet();
+            Set<Node> predicates = g.find(a, Nodes.D2RQpropertyName, m.getPredicate()).mapWith(Triple::getObject).toSet();
             if (predicates.isEmpty()) return NullIterator.instance();
             Node o = objects.iterator().next();
             Node p = predicates.iterator().next();
-            return g.find(Node.ANY, Nodes.D2RQadditionalClassDefinitionProperty, a)
-                    .mapWith(x -> findFirstClass(g, x.getSubject()).orElse(null))
-                    .andThen(g.find(Node.ANY, Nodes.D2RQadditionalClassDefinitionProperty, a)
-                            .mapWith(x -> findFirstProperty(g, x.getSubject()).orElse(null)))
-                    .filterDrop(Objects::isNull)
-                    .mapWith(s -> Triple.create(s, p, o));
+            return listAdditionalAssertions(g, a, p, o);
         }), m);
+    }
+
+    private ExtendedIterator<Triple> listAdditionalAssertions(Graph g, Node a, Node p, Node o) {
+        return g.find(Node.ANY, Nodes.D2RQadditionalClassDefinitionProperty, a)
+                .mapWith(x -> findFirstClass(g, x.getSubject()).orElse(null))
+                .andThen(g.find(Node.ANY, Nodes.D2RQadditionalPropertyDefinitionProperty, a)
+                        .mapWith(x -> findFirstProperty(g, x.getSubject()).orElse(null)))
+                .filterDrop(Objects::isNull)
+                .mapWith(s -> Triple.create(s, p, o));
     }
 
     private DynamicTriples annotations(Node desiredPredicate,
@@ -285,6 +356,11 @@ public class SchemaGenerator {
         return annotations(Nodes.RDFScomment, Nodes.D2RQclassDefinitionComment, Nodes.D2RQpropertyDefinitionComment);
     }
 
+
+    protected ExtendedIterator<Node> listClasses(Graph g) {
+        return Iter.flatMap(g.find(Node.ANY, Nodes.RDFtype, Nodes.D2RQClassMap), t -> listClasses(g, t.getSubject()));
+    }
+
     public ExtendedIterator<Resource> listClasses(Model m, Resource classMap) {
         return listClasses(m.getGraph(), classMap.asNode()).mapWith(n -> m.getRDFNode(n).asResource());
     }
@@ -316,9 +392,11 @@ public class SchemaGenerator {
     public DynamicTriples buildDynamicGraph() {
         return ontologyID()
                 .andThen(classDeclarations())
+                .andThen(equivalentClasses())
                 .andThen(objectPropertyDeclarations())
                 .andThen(dataPropertyDeclarations())
                 .andThen(annotationPropertyDeclarations())
+                .andThen(equivalentProperties())
                 .andThen(domainAssertions())
                 .andThen(rangeAssertions())
                 .andThen(additionalAssertions())

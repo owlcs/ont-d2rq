@@ -120,8 +120,12 @@ class SchemaHelper {
 
     static Optional<Node> findFirst(List<Node> list) {
         if (list.isEmpty()) return Optional.empty();
-        list.sort(NodeUtils::compareRDFTerms);
+        sort(list);
         return Optional.of(list.get(0));
+    }
+
+    static void sort(List<Node> list) {
+        list.sort(NodeUtils::compareRDFTerms);
     }
 
     static boolean isResource(Node n) {
