@@ -1,7 +1,7 @@
 package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.jena.MaskGraph;
+import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -37,12 +37,12 @@ public class GraphsTest {
     public void testMaskGraph() {
         Model m = MappingFactory.load("/mapping-iswc.mysql.ttl").asModel();
 
-        Graph graph = new MaskGraph(m.getGraph(),
+        Graph graph = VirtualGraph.createMaskGraph(m.getGraph(),
                 ((BiPredicate<Graph, Triple>) (g, t) -> g.contains(t.getSubject(), RDF.type.asNode(), D2RQ.PropertyBridge.asNode()))
                         .or((g, t) -> g.contains(t.getSubject(), RDF.type.asNode(), D2RQ.ClassMap.asNode())));
 
         Model x = ModelFactory.createModelForGraph(graph);
-        Resource r = x.createResource("ex", OWL.Class).addProperty(RDFS.comment, "xxxx");
+        Resource r = m.createResource("ex", OWL.Class).addProperty(RDFS.comment, "xxxx");
 
         D2RQTestHelper.print(x);
         Assert.assertFalse(x.containsResource(D2RQ.PropertyBridge));
@@ -51,7 +51,7 @@ public class GraphsTest {
         Assert.assertTrue(m.containsResource(OWL.Class));
         Assert.assertTrue(m.containsResource(D2RQ.PropertyBridge));
 
-        x.removeAll(r, null, null);
+        m.removeAll(r, null, null);
         D2RQTestHelper.print(x);
 
         Assert.assertFalse(x.containsResource(OWL.Class));

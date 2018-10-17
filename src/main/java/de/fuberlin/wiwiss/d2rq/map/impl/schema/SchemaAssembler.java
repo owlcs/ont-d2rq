@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map.impl.schema;
 
-import de.fuberlin.wiwiss.d2rq.jena.DynamicTriples;
+import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -32,9 +32,9 @@ public class SchemaAssembler {
         this.withEquivalent = withEquivalent;
     }
 
-    private static DynamicTriples propertyDeclarations(Node type,
-                                                       Function<Graph, ExtendedIterator<Node>> get) {
-        return new DynamicTriples() {
+    private static VirtualGraph.DynamicTriples propertyDeclarations(Node type,
+                                                                    Function<Graph, ExtendedIterator<Node>> get) {
+        return new VirtualGraph.DynamicTriples() {
 
             @Override
             public boolean test(Triple m) {
@@ -68,12 +68,13 @@ public class SchemaAssembler {
         Node primary = list.get(0);
         Set<Node> rest = new HashSet<>(list);
         rest.remove(primary);
+        if (rest.isEmpty()) return NullIterator.instance();
         rest.removeAll(exclude);
         if (rest.isEmpty()) return NullIterator.instance();
         return WrappedIterator.create(rest.iterator()).mapWith(r -> Triple.create(primary, predicate, r));
     }
 
-    protected DynamicTriples ontologyID() {
+    protected VirtualGraph.DynamicTriples ontologyID() {
         return (g, m) -> {
             Node ms = m.getSubject();
             Node mp = m.getPredicate();
@@ -92,8 +93,8 @@ public class SchemaAssembler {
         };
     }
 
-    protected DynamicTriples classDeclarations() {
-        return new DynamicTriples() {
+    protected VirtualGraph.DynamicTriples classDeclarations() {
+        return new VirtualGraph.DynamicTriples() {
             @Override
             public boolean test(Triple m) {
                 return m.getObject().matches(Nodes.OWLClass) && m.getPredicate().matches(Nodes.RDFtype);
@@ -107,9 +108,9 @@ public class SchemaAssembler {
         };
     }
 
-    protected DynamicTriples equivalentClasses() {
-        if (!withEquivalent) return DynamicTriples.EMPTY;
-        return new DynamicTriples() {
+    protected VirtualGraph.DynamicTriples equivalentClasses() {
+        if (!withEquivalent) return VirtualGraph.DynamicTriples.EMPTY;
+        return new VirtualGraph.DynamicTriples() {
             @Override
             public boolean test(Triple m) {
                 return m.getPredicate().matches(Nodes.OWLequivalentClass);
@@ -123,9 +124,9 @@ public class SchemaAssembler {
         };
     }
 
-    protected DynamicTriples equivalentProperties() {
-        if (!withEquivalent) return DynamicTriples.EMPTY;
-        return new DynamicTriples() {
+    protected VirtualGraph.DynamicTriples equivalentProperties() {
+        if (!withEquivalent) return VirtualGraph.DynamicTriples.EMPTY;
+        return new VirtualGraph.DynamicTriples() {
             @Override
             public boolean test(Triple m) {
                 return m.getPredicate().matches(Nodes.OWLequivalentProperty);
@@ -158,8 +159,8 @@ public class SchemaAssembler {
         return listEquivalent(listProperties(g, propertyBridge), exclude, Nodes.OWLequivalentProperty);
     }
 
-    protected DynamicTriples domainAssertions() {
-        return new DynamicTriples() {
+    protected VirtualGraph.DynamicTriples domainAssertions() {
+        return new VirtualGraph.DynamicTriples() {
             @Override
             public boolean test(Triple m) {
                 return m.getPredicate().matches(Nodes.RDFSdomain);
@@ -176,8 +177,8 @@ public class SchemaAssembler {
         };
     }
 
-    protected DynamicTriples rangeAssertions() {
-        return new DynamicTriples() {
+    protected VirtualGraph.DynamicTriples rangeAssertions() {
+        return new VirtualGraph.DynamicTriples() {
             @Override
             public boolean test(Triple m) {
                 return m.getPredicate().matches(Nodes.RDFSrange);
@@ -204,7 +205,7 @@ public class SchemaAssembler {
         return findFirst(listProperties(g, propertyBridge).toList());
     }
 
-    protected DynamicTriples additionalAssertions() {
+    protected VirtualGraph.DynamicTriples additionalAssertions() {
         return (g, m) -> distinctMatch(Iter.flatMap(g.find(Node.ANY, Nodes.D2RQpropertyName, m.getPredicate()), t -> {
             Node a = t.getSubject();
             Set<Node> objects = g.find(a, Nodes.D2RQpropertyValue, m.getObject()).mapWith(Triple::getObject).toSet();
@@ -226,10 +227,10 @@ public class SchemaAssembler {
                 .mapWith(s -> Triple.create(s, p, o));
     }
 
-    private DynamicTriples annotations(Node desiredPredicate,
-                                       Node mappingClassPredicate,
-                                       Node mappingPropertyPredicate) {
-        return new DynamicTriples() {
+    private VirtualGraph.DynamicTriples annotations(Node desiredPredicate,
+                                                    Node mappingClassPredicate,
+                                                    Node mappingPropertyPredicate) {
+        return new VirtualGraph.DynamicTriples() {
             @Override
             public boolean test(Triple m) {
                 return m.getPredicate().matches(desiredPredicate);
@@ -246,26 +247,26 @@ public class SchemaAssembler {
         };
     }
 
-    protected DynamicTriples objectPropertyDeclarations() {
+    protected VirtualGraph.DynamicTriples objectPropertyDeclarations() {
         return propertyDeclarations(Nodes.OWLObjectProperty,
                 g -> listObjectProperties(g).filterDrop(reservedProperties::contains));
     }
 
-    protected DynamicTriples dataPropertyDeclarations() {
+    protected VirtualGraph.DynamicTriples dataPropertyDeclarations() {
         return propertyDeclarations(Nodes.OWLDataProperty,
                 g -> listDataProperties(g).filterDrop(reservedProperties::contains));
     }
 
-    protected DynamicTriples annotationPropertyDeclarations() {
+    protected VirtualGraph.DynamicTriples annotationPropertyDeclarations() {
         return propertyDeclarations(Nodes.OWLAnnotationProperty,
                 g -> listAnnotationProperties(g).filterDrop(reservedProperties::contains));
     }
 
-    protected DynamicTriples labels() {
+    protected VirtualGraph.DynamicTriples labels() {
         return annotations(Nodes.RDFSlabel, Nodes.D2RQclassDefinitionLabel, Nodes.D2RQpropertyDefinitionLabel);
     }
 
-    protected DynamicTriples comments() {
+    protected VirtualGraph.DynamicTriples comments() {
         return annotations(Nodes.RDFScomment, Nodes.D2RQclassDefinitionComment, Nodes.D2RQpropertyDefinitionComment);
     }
 
@@ -298,7 +299,7 @@ public class SchemaAssembler {
         return SchemaHelper.listProperties(g, propertyBridge).filterDrop(reservedProperties::contains);
     }
 
-    public DynamicTriples buildDynamicGraph() {
+    public VirtualGraph.DynamicTriples buildDynamicGraph() {
         return ontologyID()
                 .andThen(classDeclarations())
                 .andThen(equivalentClasses())

@@ -1,7 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map.impl.schema;
 
-import de.fuberlin.wiwiss.d2rq.jena.DynamicGraph;
-import de.fuberlin.wiwiss.d2rq.jena.MaskGraph;
+import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.graph.FrontsNode;
 import org.apache.jena.graph.Graph;
@@ -23,10 +22,8 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 
 /**
+ * A factory to provide Dynamic Schema Graph.
  * Created by @ssz on 22.09.2018.
- *
- * @see MaskGraph
- * @see DynamicGraph
  */
 @SuppressWarnings("WeakerAccess")
 public class SchemaGenerator {
@@ -71,34 +68,40 @@ public class SchemaGenerator {
     /**
      * Creates a virtual schema graph that reflects the given mapping graph.
      * The return graph is an {@link Union Union Graph} which consist of two parts:
-     * the left is a {@link MaskGraph MaskGraph}, which hides everything related to D2RQ language,
-     * and the right is a {@link DynamicGraph DynamicGraph}, which maps D2RQ instructions to the OWL2 assertions.
+     * the left is a {@code MaskGraph}, which hides everything related to D2RQ language,
+     * and the right is a {@code DynamicGraph}, which maps D2RQ instructions to the OWL2 assertions.
      * The adding and removing are performed transitively on the base (specified) graph.
      *
      * @param base {@link Graph}, not {@code null}, containing D2RQ instructions
      * @return {@link Graph}, virtual graph, containing only the OWL2 assertions
+     * @see VirtualGraph#createMaskGraph(Graph, BiPredicate)
+     * @see VirtualGraph#createDynamicGraph(Graph, VirtualGraph.DynamicTriples)
      */
     public Graph createMagicGraph(Graph base) {
-        Graph left = new MaskGraph(base, buildMaskGraph());
-        Graph right = new DynamicGraph(base, assembler.buildDynamicGraph());
+        Objects.requireNonNull(base, "Null base");
+        Graph left = VirtualGraph.createMaskGraph(base, buildMaskGraph());
+        Graph right = VirtualGraph.createDynamicGraph(base, assembler.buildDynamicGraph());
         Graph res = new Union(left, right) {
 
             @Override
             protected ExtendedIterator<Triple> _graphBaseFind(final Triple t) {
-                // the duplicate checking is not needed in our case:
+                // the duplicate checking is not needed in this case
                 return L.find(t).andThen(R.find(t));
             }
 
             @Override
+            public void performAdd(Triple t) {
+                base.add(t);
+            }
+
+            @Override
             public void performDelete(Triple t) {
-                // both the right and the left graphs reflect the same base graph,
-                // so there is no need to perform deletion also on the right graph
-                L.delete(t);
+                base.delete(t);
             }
 
             @Override
             public String toString() {
-                // do not allow to print all data content
+                // do not allow printing of all data content
                 return "MagicGraph@" + Integer.toHexString(hashCode());
             }
         };
