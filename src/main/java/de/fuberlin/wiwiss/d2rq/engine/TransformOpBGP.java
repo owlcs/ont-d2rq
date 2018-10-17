@@ -2,7 +2,7 @@ package de.fuberlin.wiwiss.d2rq.engine;
 
 import de.fuberlin.wiwiss.d2rq.algebra.NodeRelation;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.ConnectingMapping;
 import de.fuberlin.wiwiss.d2rq.optimizer.expr.TransformExprToSQLApplyer;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.TransformCopy;
@@ -28,14 +28,14 @@ import java.util.List;
 public class TransformOpBGP extends TransformCopy {
     private final static Logger LOGGER = LoggerFactory.getLogger(TransformOpBGP.class);
 
-    private final Mapping mapping;
+    private final ConnectingMapping mapping;
     private final boolean useAllOptimizations;
     private final boolean transformFilters;
 
-    public TransformOpBGP(Mapping mapping, boolean transformFilters) {
+    public TransformOpBGP(ConnectingMapping mapping, boolean transformFilters) {
         this.mapping = mapping;
         this.transformFilters = transformFilters;
-        this.useAllOptimizations = mapping.getConfiguration().getUseAllOptimizations();
+        this.useAllOptimizations = mapping.withAllOptimizations();
     }
 
     @Override

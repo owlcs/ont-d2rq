@@ -28,6 +28,7 @@ import org.apache.jena.rdf.model.Resource;
  *
  * @author RichardCyganiak
  */
+@SuppressWarnings("WeakerAccess")
 public class DownloadMapImpl extends ResourceMap implements DownloadMap {
 
     public DownloadMapImpl(Resource resource, MappingImpl mapping) {
@@ -172,7 +173,6 @@ public class DownloadMapImpl extends ResourceMap implements DownloadMap {
         return pattern;
     }
 
-    @Override
     public Attribute getContentDownloadColumnAttribute() {
         String column = getContentDownloadColumn();
         return column == null ? null : SQL.parseAttribute(column);

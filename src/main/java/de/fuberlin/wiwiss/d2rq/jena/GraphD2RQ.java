@@ -4,7 +4,7 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
 import de.fuberlin.wiwiss.d2rq.find.FindQuery;
 import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.ConnectingMapping;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Capabilities;
 import org.apache.jena.graph.Graph;
@@ -75,15 +75,15 @@ public class GraphD2RQ extends GraphBase implements Graph {
         QueryEngineD2RQ.register();
     }
 
-    private final Mapping mapping;
+    private final ConnectingMapping mapping;
 
     /**
-     * Creates a new D2RQ graph from a previously prepared {@link Mapping} instance.
+     * Creates a new D2RQ graph from a previously prepared {@link ConnectingMapping} instance.
      *
      * @param mapping A D2RQ mapping
      * @throws D2RQException If the mapping is invalid
      */
-    public GraphD2RQ(Mapping mapping) throws D2RQException {
+    public GraphD2RQ(ConnectingMapping mapping) throws D2RQException {
         this.mapping = mapping;
         // todo: currently it is a snapshot:
         getPrefixMapping().setNsPrefixes(mapping.getSchema().getPrefixMapping());
@@ -107,7 +107,7 @@ public class GraphD2RQ extends GraphBase implements Graph {
         }
         FindQuery query = new FindQuery(triplePattern, mapping.compiledPropertyBridges(), null);
         ExtendedIterator<Triple> result = TripleQueryIter.create(query.iterator());
-        if (mapping.getConfiguration().getServeVocabulary()) {
+        if (mapping.withSchema()) {
             result = result.andThen(mapping.getSchema().find(triplePattern));
         }
         return result;
@@ -119,9 +119,9 @@ public class GraphD2RQ extends GraphBase implements Graph {
     }
 
     /**
-     * @return The {@link Mapping} this graph is based on
+     * @return The {@link ConnectingMapping} this graph is based on
      */
-    public Mapping getMapping() {
+    public ConnectingMapping getMapping() {
         return mapping;
     }
 

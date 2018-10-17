@@ -12,7 +12,6 @@ import ru.avicomp.ontapi.jena.utils.Iter;
 import java.sql.Driver;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -181,16 +180,6 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
     public ConnectedDB toConnectionDB() {
         return new ConnectedDB(getJDBCDSN(), getUsername(), getPassword(),
                 getColumns(), getResultSizeLimit(), getFetchSize(), getConnectionProperties());
-    }
-
-    @Override
-    public ConnectedDB connectedDB() {
-        return mapping.getConnectedDB(this);
-    }
-
-    @Override
-    public void useConnectedDB(ConnectedDB cdb) {
-        mapping.registerConnectedDB(this, Objects.requireNonNull(cdb));
     }
 
     @Override

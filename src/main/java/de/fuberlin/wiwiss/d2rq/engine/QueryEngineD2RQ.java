@@ -1,7 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.ConnectingMapping;
 import org.apache.jena.atlas.io.PrintUtils;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.algebra.Op;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class QueryEngineD2RQ extends QueryEngineMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(QueryEngineD2RQ.class);
 
-    private final Mapping mapping;
+    private final ConnectingMapping mapping;
     private final Binding inputBinding;
 
     public QueryEngineD2RQ(GraphD2RQ graph, Query query) {

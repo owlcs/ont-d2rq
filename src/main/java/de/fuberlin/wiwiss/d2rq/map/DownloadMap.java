@@ -1,10 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
-import de.fuberlin.wiwiss.d2rq.algebra.Relation;
-import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
-import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
-
 /**
  * Representation of a {@code d2rq:DownloadMap} in the mapping graph.
  *
@@ -13,18 +8,6 @@ import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
  * @see <a href='http://d2rq.org/d2rq-language#download-map'>8. Enabling HTTP access to CLOBs/BLOBs (d2rq:DownloadMap)</a>
  */
 public interface DownloadMap extends MapObject, HasDatabase<DownloadMap>, HasURI<DownloadMap>, HasSQL<DownloadMap> {
-
-    // todo: remove from this interface
-    Attribute getContentDownloadColumnAttribute();
-
-    // todo: remove from this interface
-    ValueMaker getMediaTypeValueMaker();
-
-    // todo: hide or move to another interface
-    NodeMaker nodeMaker();
-
-    // todo: hide or move to another interface
-    Relation getRelation();
 
     /**
      * Sets {@link ClassMap} for the {@code d2rq:belongsToClassMap} predicate.

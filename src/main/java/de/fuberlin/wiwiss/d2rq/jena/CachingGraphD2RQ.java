@@ -1,15 +1,14 @@
 package de.fuberlin.wiwiss.d2rq.jena;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
+import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.map.ConnectingMapping;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.WrappedIterator;
 
-import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -36,7 +35,7 @@ public class CachingGraphD2RQ extends GraphD2RQ {
                 }
             };
 
-    public CachingGraphD2RQ(Mapping mapping) throws D2RQException {
+    public CachingGraphD2RQ(ConnectingMapping mapping) throws D2RQException {
         super(mapping);
     }
 

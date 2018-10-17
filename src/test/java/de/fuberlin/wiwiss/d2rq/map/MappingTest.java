@@ -191,7 +191,7 @@ public class MappingTest {
             Database db = m.listDatabases().findFirst().orElseThrow(AssertionError::new);
             db.addConnectionProperty("a", "b");
 
-            m.connect();
+            Mappings.asConnectingMapping(m).connect();
             try {
                 db.addConnectionProperty("c", "d");
             } catch (D2RQException e) {
@@ -206,13 +206,13 @@ public class MappingTest {
         String file = MappingTest.class.getResource("/mapping-iswc.mysql.ttl").toString();
         try (Mapping m = MappingFactory.load(file, "ttl", "http://x#")) {
             Assert.assertEquals(35, m.listPropertyBridges().count());
-            Assert.assertEquals(42, m.compiledPropertyBridges().size());
+            Assert.assertEquals(42, Mappings.asConnectingMapping(m).compiledPropertyBridges().size());
             Assert.assertEquals(40, m.listPropertyBridges().count());
 
             PropertyBridge b = MappingHelper.findPropertyBridge(m, "organizations_Type_U");
             m.asModel().removeAll(b.asResource(), null, null);
             Assert.assertEquals(39, m.listPropertyBridges().count());
-            Assert.assertEquals(41, m.compiledPropertyBridges().size());
+            Assert.assertEquals(41, Mappings.asConnectingMapping(m).compiledPropertyBridges().size());
 
             // return back:
             ClassMap c = MappingHelper.findClassMap(m, "Organizations");
@@ -222,7 +222,7 @@ public class MappingTest {
                     .addCondition("organizations.Type = 'U'");
 
             MappingHelper.print(m);
-            Assert.assertEquals(42, m.compiledPropertyBridges().size());
+            Assert.assertEquals(42, Mappings.asConnectingMapping(m).compiledPropertyBridges().size());
             Assert.assertEquals(40, m.listPropertyBridges().count());
 
         }

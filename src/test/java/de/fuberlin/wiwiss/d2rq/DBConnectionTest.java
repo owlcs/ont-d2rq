@@ -2,6 +2,7 @@ package de.fuberlin.wiwiss.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.map.Mappings;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -55,7 +56,7 @@ public class DBConnectionTest {
     @Test
     public void testConnections() throws SQLException {
         for (Database db : databases) {
-            cdb = db.connectedDB();
+            cdb = Mappings.getConnectedDB(db);
             Connection c = cdb.connection();
             String result = performQuery(c, simplestQuery); //
             Assert.assertEquals(result, "1");
@@ -121,7 +122,7 @@ public class DBConnectionTest {
     public void testDistinct() throws SQLException {
         // there seems to be a problem with MSAccess databases
         // when using the DISTINCT keyword, Strings are truncated to 256 chars
-        cdb = firstDatabase.connectedDB();
+        cdb = Mappings.getConnectedDB(firstDatabase);
         Connection c = cdb.connection();
         //Connection c=manuallyConfiguredConnection();
         String nonDistinct = "SELECT T0_Papers.Abstract FROM papers AS T0_Papers WHERE T0_Papers.PaperID=1 AND T0_Papers.Publish = 1;";
@@ -136,7 +137,7 @@ public class DBConnectionTest {
     // succeeds with revision 1.5
     @Test
     public void testMedium() throws SQLException {
-        cdb = firstDatabase.connectedDB();
+        cdb = Mappings.getConnectedDB(firstDatabase);
         Connection c = cdb.connection();
         //Connection c=manuallyConfiguredConnection(); // 2 is ok, 1 fails
         String query = mediumQuery;
@@ -148,7 +149,7 @@ public class DBConnectionTest {
     // fails with MSAccess
     @Test
     public void testLongComplexSQLQuery() {
-        cdb = firstDatabase.connectedDB();
+        cdb = Mappings.getConnectedDB(firstDatabase);
         //Connection c=manuallyConfiguredConnection(); // 2 is ok, 1 fails
         String query = complexQuery;
         try (Connection c = cdb.connection()) {

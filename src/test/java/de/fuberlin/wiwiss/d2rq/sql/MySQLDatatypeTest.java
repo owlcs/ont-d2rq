@@ -72,8 +72,8 @@ public class MySQLDatatypeTest {
         Graph graph = mapping.getData();
         Assert.assertNotNull(graph);
 
-        DatabaseSchemaInspector inspector = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new)
-                .connectedDB().schemaInspector();
+        Database db = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new);
+        DatabaseSchemaInspector inspector = Mappings.getConnectedDB(db).schemaInspector();
         Assert.assertNotNull(inspector);
 
         assertMappedType(inspector, data.name(), data.getDataType());
@@ -108,9 +108,7 @@ public class MySQLDatatypeTest {
 
     private static Mapping createMapping(String datatype) {
         Mapping mapping = generateMapping(datatype);
-        mapping.getConfiguration().setServeVocabulary(false);
-        mapping.getConfiguration().setUseAllOptimizations(true);
-        mapping.connect();
+        mapping.getConfiguration().setServeVocabulary(false).setUseAllOptimizations(true);
         return mapping;
     }
 

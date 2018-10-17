@@ -2,8 +2,13 @@ package de.fuberlin.wiwiss.d2rq.helpers;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
+import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
+import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.map.impl.DownloadMapImpl;
+import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.sql.DummyDB;
+import de.fuberlin.wiwiss.d2rq.values.ValueMaker;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.Objects;
@@ -11,15 +16,14 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * Test helper for creating {@link Mapping}s.
+ * Test helper for creating and managing {@link Mapping}s.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class MappingHelper {
 
     /**
-     * Parses a D2RQ mapping from a file located relative to
-     * the {@link D2RQTestHelper} directory.
+     * Parses a D2RQ mapping from a file located relative to the {@link D2RQTestHelper} directory.
      *
      * @param testFileName Filename, relative to {@link D2RQTestHelper}'s location
      * @return A mapping
@@ -30,7 +34,7 @@ public class MappingHelper {
     }
 
     public static void connectToDummyDBs(Mapping m) {
-        m.listDatabases().forEach(d -> d.useConnectedDB(DummyDB.create(d)));
+        m.listDatabases().map(DummyDB::create).forEach(c -> Mappings.useConnectedDB(m, c));
     }
 
     public static TranslationTable.Entry findTranslation(TranslationTable table) {
@@ -81,4 +85,19 @@ public class MappingHelper {
         D2RQTestHelper.print(m.asModel());
     }
 
+    public static Attribute getContentDownloadColumnAttribute(DownloadMap downloadMap) {
+        return ((DownloadMapImpl) downloadMap).getContentDownloadColumnAttribute();
+    }
+
+    public static ValueMaker getMediaTypeValueMaker(DownloadMap downloadMap) {
+        return ((DownloadMapImpl) downloadMap).getMediaTypeValueMaker();
+    }
+
+    public static Relation getRelation(DownloadMap downloadMap) throws D2RQException {
+        return ((DownloadMapImpl) downloadMap).getRelation();
+    }
+
+    public static NodeMaker getNodeMaker(DownloadMap downloadMap) throws D2RQException {
+        return ((DownloadMapImpl) downloadMap).nodeMaker();
+    }
 }

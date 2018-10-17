@@ -50,7 +50,7 @@ import java.util.stream.Stream;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 @SuppressWarnings("WeakerAccess")
-public class MappingImpl implements Mapping {
+public class MappingImpl implements Mapping, ConnectingMapping {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingImpl.class);
 
@@ -64,7 +64,6 @@ public class MappingImpl implements Mapping {
     protected Collection<TripleRelation> compiledPropertyBridges;
     // no need to be volatile, since the instance should not be shared between threads:
     private boolean connected = false;
-
 
     protected final Model model;
 
@@ -100,6 +99,16 @@ public class MappingImpl implements Mapping {
         return new GraphD2RQ(this);
     }
 
+    @Override
+    public boolean withSchema() {
+        return getConfiguration().getServeVocabulary();
+    }
+
+    @Override
+    public boolean withAllOptimizations() {
+        return getConfiguration().getUseAllOptimizations();
+    }
+
     /**
      * Has been moved from {@link de.fuberlin.wiwiss.d2rq.SystemLoader}
      * TODO: it seems we don't need it at all, remove.
@@ -116,7 +125,7 @@ public class MappingImpl implements Mapping {
         return connections.computeIfAbsent(db.asResource().asNode(), n -> createConnectionDB(db));
     }
 
-    void registerConnectedDB(DatabaseImpl db, ConnectedDB c) {
+    public void registerConnectedDB(DatabaseImpl db, ConnectedDB c) {
         connections.put(db.asResource().asNode(), c);
     }
 

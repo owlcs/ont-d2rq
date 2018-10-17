@@ -5,6 +5,7 @@ import de.fuberlin.wiwiss.d2rq.helpers.HSQLDatabase;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.Mappings;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -48,7 +49,7 @@ public class DownloadContentQueryTest {
 
     @Test
     public void testNullForNonDownloadURI() {
-        q = new DownloadContentQuery(downloadCLOB, "http://not-in-the-mapping");
+        q = Mappings.getDownloadContentQuery(downloadCLOB, "http://not-in-the-mapping");
         Assert.assertFalse(q.hasContent());
         Assert.assertNull(q.getContentStream());
     }
@@ -56,28 +57,28 @@ public class DownloadContentQueryTest {
     @Test
     public void testNullForNonExistingRecord() {
         // There is no People.ID=42 in the table
-        q = new DownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/42");
+        q = Mappings.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/42");
         Assert.assertFalse(q.hasContent());
         Assert.assertNull(q.getContentStream());
     }
 
     @Test
     public void testReturnCLOBContentForExistingRecord() throws IOException {
-        q = new DownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/1");
+        q = Mappings.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/1");
         Assert.assertTrue(q.hasContent());
         Assert.assertEquals("Hello World!", inputStreamToString(q.getContentStream()));
     }
 
     @Test
     public void testNULLContent() {
-        q = new DownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/2");
+        q = Mappings.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/2");
         Assert.assertFalse(q.hasContent());
         Assert.assertNull(q.getContentStream());
     }
 
     @Test
     public void testReturnBLOBContentForExistingRecord() throws IOException {
-        q = new DownloadContentQuery(downloadBLOB, "http://example.org/downloads/blob/2");
+        q = Mappings.getDownloadContentQuery(downloadBLOB, "http://example.org/downloads/blob/2");
         Assert.assertTrue(q.hasContent());
         Assert.assertEquals("@@@", inputStreamToString(q.getContentStream()));
     }

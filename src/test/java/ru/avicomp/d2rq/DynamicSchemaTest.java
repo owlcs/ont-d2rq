@@ -4,6 +4,7 @@ import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.map.Mappings;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.compose.Union;
@@ -108,7 +109,7 @@ public class DynamicSchemaTest {
 
         Model data = mapping.getDataModel();
 
-        int compiledTriples = mapping.compiledPropertyBridges().size();
+        int compiledTriples = Mappings.asConnectingMapping(mapping).compiledPropertyBridges().size();
 
         OntGraphModel inMemory = OntModelFactory.createModel();
         inMemory.add(mapping.getVocabularyModel());
@@ -144,7 +145,7 @@ public class DynamicSchemaTest {
 
         mapping.getConfiguration().setServeVocabulary(true);
         Assert.assertTrue(mapping.getConfiguration().getServeVocabulary());
-        Assert.assertEquals(compiledTriples, mapping.compiledPropertyBridges().size());
+        Assert.assertEquals(compiledTriples, Mappings.asConnectingMapping(mapping).compiledPropertyBridges().size());
 
         Assert.assertEquals(totalNumberOfStatements, mapping.getDataModel().listStatements().toList().size());
 
@@ -162,8 +163,8 @@ public class DynamicSchemaTest {
         Assert.assertEquals(7, schema.listClasses().peek(x -> LOGGER.debug("CLASS: {}", x)).count());
 
         mapping.getConfiguration().setControlOWL(true);
-        // require db connection:
-        mapping.compiledPropertyBridges();
+        // require db connection to populate missed OWL2 stuff:
+        Mappings.asConnectingMapping(mapping).compiledPropertyBridges();
 
         D2RQTestHelper.print(schema);
         validateInferredOWLForPredefinedMapping(schema);

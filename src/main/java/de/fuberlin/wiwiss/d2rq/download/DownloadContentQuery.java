@@ -1,10 +1,12 @@
 package de.fuberlin.wiwiss.d2rq.download;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.MutableRelation;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
+import de.fuberlin.wiwiss.d2rq.map.impl.DownloadMapImpl;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeMaker;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.ResultRowMap;
@@ -19,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -33,10 +36,11 @@ import java.util.Set;
  *
  * @author RichardCyganiak
  */
-public class DownloadContentQuery {
+@SuppressWarnings("WeakerAccess")
+public class DownloadContentQuery implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DownloadContentQuery.class);
 
-    private final DownloadMap downloadMap;
+    private final DownloadMapImpl downloadMap;
     private final ValueMaker mediaTypeValueMaker;
     private final String uri;
     private Statement statement = null;
@@ -49,10 +53,10 @@ public class DownloadContentQuery {
      * @param downloadMap The download map to be queried
      * @param uri         The URI whose content is desired
      */
-    public DownloadContentQuery(DownloadMap downloadMap, String uri) {
-        this.downloadMap = downloadMap;
+    public DownloadContentQuery(DownloadMapImpl downloadMap, String uri) {
+        this.downloadMap = Objects.requireNonNull(downloadMap);
         this.mediaTypeValueMaker = downloadMap.getMediaTypeValueMaker();
-        this.uri = uri;
+        this.uri = Objects.requireNonNull(uri);
         execute();
     }
 
@@ -68,6 +72,7 @@ public class DownloadContentQuery {
         return mediaType;
     }
 
+    @Override
     public void close() {
         try {
             if (this.db != null) {
@@ -91,18 +96,19 @@ public class DownloadContentQuery {
 
     private void execute() {
         MutableRelation newRelation = new MutableRelation(downloadMap.getRelation());
+        Attribute contentDownloadColumn = downloadMap.getContentDownloadColumnAttribute();
         NodeMaker x = downloadMap.nodeMaker().selectNode(NodeFactory.createURI(uri), newRelation);
         // URI didn't fit the node maker
         if (x.equals(NodeMaker.EMPTY)) return;
         Set<ProjectionSpec> requiredProjections = new HashSet<>();
-        requiredProjections.add(downloadMap.getContentDownloadColumnAttribute());
+        requiredProjections.add(contentDownloadColumn);
         requiredProjections.addAll(mediaTypeValueMaker.projectionSpecs());
         newRelation.project(requiredProjections);
         newRelation.limit(1);
         Relation filteredRelation = newRelation.immutableSnapshot();
         SelectStatementBuilder builder = new SelectStatementBuilder(filteredRelation);
         String sql = builder.getSQLStatement();
-        int contentColumn = builder.getColumnSpecs().indexOf(downloadMap.getContentDownloadColumnAttribute()) + 1;
+        int contentColumn = builder.getColumnSpecs().indexOf(contentDownloadColumn) + 1;
         db = filteredRelation.database();
         Connection conn = db.connection();
         try {

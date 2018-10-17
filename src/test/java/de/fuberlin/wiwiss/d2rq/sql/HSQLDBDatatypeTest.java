@@ -310,6 +310,7 @@ public class HSQLDBDatatypeTest extends DatatypeTestBase {
             createMapping("OTHER");
             Assert.fail("Should fail due to DATATYPE_UNMAPPABLE");
         } catch (D2RQException ex) {
+            LOGGER.debug("Exception: {}", ex.getMessage());
             Assert.assertEquals(D2RQException.DATATYPE_UNMAPPABLE, ex.errorCode());
         }
     }

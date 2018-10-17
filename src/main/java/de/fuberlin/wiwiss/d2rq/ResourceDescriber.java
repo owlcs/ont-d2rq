@@ -4,7 +4,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.find.FindQuery;
 import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.ConnectingMapping;
 import org.apache.jena.atlas.lib.Alarm;
 import org.apache.jena.atlas.lib.AlarmClock;
 import org.apache.jena.graph.Graph;
@@ -18,7 +18,7 @@ import org.apache.jena.sparql.engine.iterator.QueryIterConcat;
 import java.util.Collection;
 
 public class ResourceDescriber {
-    private final Mapping mapping;
+    private final ConnectingMapping mapping;
     private final Node node;
     private final boolean onlyOutgoing;
     private final int limit;
@@ -27,11 +27,11 @@ public class ResourceDescriber {
     private final ExecutionContext context;
     private boolean executed = false;
 
-    public ResourceDescriber(Mapping mapping, Node resource) {
+    public ResourceDescriber(ConnectingMapping mapping, Node resource) {
         this(mapping, resource, false, Relation.NO_LIMIT, -1);
     }
 
-    public ResourceDescriber(Mapping mapping, Node resource, boolean onlyOutgoing, int limit, long timeout) {
+    public ResourceDescriber(ConnectingMapping mapping, Node resource, boolean onlyOutgoing, int limit, long timeout) {
         this.mapping = mapping;
         this.node = resource;
         this.onlyOutgoing = onlyOutgoing;

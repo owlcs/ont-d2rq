@@ -1,6 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
-import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Property;
 
@@ -21,19 +20,6 @@ public interface Database extends MapObject {
     // todo: use Integer and null to indicate no field assigned
     int NO_LIMIT = -1;
     int NO_FETCH_SIZE = -1;
-
-    // todo: move to the Mapping utils
-    ConnectedDB connectedDB();
-
-    /**
-     * Original comment:
-     * This is a hack where we can pass a pre-existing ConnectedDB that
-     * will be used by this Database, so we avoid that the Database opens another connection to the same DB.
-     * todo: move to the Mapping utils
-     *
-     * @param db {@link ConnectedDB}, not {@code null}
-     */
-    void useConnectedDB(ConnectedDB db);
 
     /**
      * Adds the JDBC database URL as literal.
@@ -190,7 +176,7 @@ public interface Database extends MapObject {
     /**
      * Sets a column property as plain literal into the statement with the {@link Column#getPredicate()} predicate.
      *
-     * @param type {@link Column}, not {@code null}
+     * @param type  {@link Column}, not {@code null}
      * @param value String, not {@code null}
      * @return this instance to allow cascading calls
      * @see Column description
@@ -199,6 +185,7 @@ public interface Database extends MapObject {
 
     /**
      * Lists all column literals parsed from the statements with the {@link Column#getPredicate()} predicate.
+     *
      * @param type {@link Column}, not {@code null}
      * @return Stream of Strings
      * @see Column description

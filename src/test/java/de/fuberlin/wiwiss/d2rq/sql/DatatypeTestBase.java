@@ -2,10 +2,7 @@ package de.fuberlin.wiwiss.d2rq.sql;
 
 import de.fuberlin.wiwiss.d2rq.algebra.RelationName;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
-import de.fuberlin.wiwiss.d2rq.map.ClassMap;
-import de.fuberlin.wiwiss.d2rq.map.Database;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.map.*;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -13,6 +10,8 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.junit.After;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -20,6 +19,8 @@ import java.sql.Statement;
 import java.util.*;
 
 public abstract class DatatypeTestBase {
+    static final Logger LOGGER = LoggerFactory.getLogger(DatatypeTestBase.class);
+
     private final static String EX = "http://example.com/";
     private final static String dbURI = EX + "db";
     private final static String classMapURI = EX + "classmap";
@@ -75,11 +76,11 @@ public abstract class DatatypeTestBase {
     protected void createMapping(String datatype) {
         this.datatype = datatype;
         Mapping mapping = generateMapping();
-        mapping.getConfiguration().setServeVocabulary(false);
-        mapping.getConfiguration().setUseAllOptimizations(true);
-        mapping.connect();
+        mapping.getConfiguration().setUseAllOptimizations(true).setServeVocabulary(false);
+        mapping.validate();
         graph = mapping.getData();
-        inspector = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new).connectedDB().schemaInspector();
+        Database db = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new);
+        inspector = Mappings.getConnectedDB(db).schemaInspector();
     }
 
     protected void assertMappedType(String rdfType) {

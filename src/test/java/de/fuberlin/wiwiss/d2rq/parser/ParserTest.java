@@ -1,14 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.parser;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
-import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
-import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.algebra.*;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
-import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
+import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -72,10 +67,10 @@ public class ParserTest {
 
     @Test
     public void testParseAlias() {
-        Mapping mapping = MappingHelper.readFromTestFile("/parser/alias.ttl");
-        MappingHelper.connectToDummyDBs(mapping);
-        Assert.assertEquals(1, mapping.compiledPropertyBridges().size());
-        TripleRelation bridge = mapping.compiledPropertyBridges().iterator().next();
+        Mapping m = MappingHelper.readFromTestFile("/parser/alias.ttl");
+        MappingHelper.connectToDummyDBs(m);
+        Assert.assertEquals(1, Mappings.asConnectingMapping(m).compiledPropertyBridges().size());
+        TripleRelation bridge = Mappings.asConnectingMapping(m).compiledPropertyBridges().iterator().next();
         Assert.assertTrue(bridge.baseRelation().condition().isTrue());
         AliasMap aliases = bridge.baseRelation().aliases();
         AliasMap expected = new AliasMap(Collections.singleton(SQL.parseAlias("People AS Bosses")));
@@ -128,17 +123,20 @@ public class ParserTest {
         Mapping m = MappingHelper.readFromTestFile("/parser/download-map.ttl");
         MappingHelper.connectToDummyDBs(m);
         DownloadMap d = MappingHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/dm"));
-        Assert.assertEquals("image/png", d.getMediaTypeValueMaker().makeValue(column -> null));
-        Assert.assertEquals("People.pic", d.getContentDownloadColumnAttribute().qualifiedName());
-        Assert.assertEquals("URI(Pattern(http://example.org/downloads/@@People.ID@@))", d.nodeMaker().toString());
+        Assert.assertEquals("image/png", MappingHelper.getMediaTypeValueMaker(d).makeValue(column -> null));
+        Attribute a = MappingHelper.getContentDownloadColumnAttribute(d);
+        Assert.assertNotNull(a);
+        Assert.assertEquals("People.pic", a.qualifiedName());
+        Assert.assertEquals("URI(Pattern(http://example.org/downloads/@@People.ID@@))", MappingHelper.getNodeMaker(d).toString());
+        Relation r = MappingHelper.getRelation(d);
         Assert.assertEquals(new HashSet<ProjectionSpec>() {{
                                 add(SQL.parseAttribute("People.ID"));
                                 add(SQL.parseAttribute("People.pic"));
                             }},
-                d.getRelation().projections());
-        Assert.assertTrue(d.getRelation().isUnique());
-        Assert.assertTrue(d.getRelation().condition().isTrue());
-        Assert.assertTrue(d.getRelation().joinConditions().isEmpty());
+                r.projections());
+        Assert.assertTrue(r.isUnique());
+        Assert.assertTrue(r.condition().isTrue());
+        Assert.assertTrue(r.joinConditions().isEmpty());
     }
 
     private static Resource addTranslationTableResource(Model model) {

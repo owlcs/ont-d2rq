@@ -1,12 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 
-import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -14,6 +12,9 @@ import java.util.stream.Stream;
 /**
  * A D2RQ mapping.
  * Consists of {@link ClassMap}s, {@link PropertyBridge}s, and several other {@link MapObject Map Object}s.
+ * To get an instance of this class use {@link MappingFactory}.
+ * Some useful operations, which cannot be in the model interface due to architecture reasons,
+ * are located in the {@link Mappings Mappings Utils} class.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  * Created by @ssz on 25.09.2018.
@@ -21,12 +22,13 @@ import java.util.stream.Stream;
  */
 public interface Mapping extends AutoCloseable {
 
-    // todo: hide from this interface
-    Collection<TripleRelation> compiledPropertyBridges();
-
-    // todo: hide from the interface or remove at all
-    void connect();
-
+    /**
+     * Closes any existing connections.
+     * Further use of the mapping, for example, iterating over {@link #getData()} triples,
+     * will restore required db-connections automatically.
+     * Please note: if there is a {@link Database#getStartupSQLScript() database startup script} inside the mapping,
+     * reconnection will cause rerunning that script.
+     */
     void close();
 
     /**
@@ -60,7 +62,8 @@ public interface Mapping extends AutoCloseable {
     /**
      * Returns a dynamic RDF view of the referenced relational database structure.
      * The returning graph is read only.
-     * Method will throw {@link D2RQException} in case {@link #validate() validation} is failed.
+     * In case {@link #validate() validation} is failed
+     * any attempt to retrieve data through this graph will result {@link D2RQException}.
      *
      * @return virtual D2RQ {@link Graph Graph}, not {@code null}
      */

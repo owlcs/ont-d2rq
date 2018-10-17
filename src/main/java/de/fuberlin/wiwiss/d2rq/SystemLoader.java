@@ -1,9 +1,6 @@
 package de.fuberlin.wiwiss.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.map.Database;
-import de.fuberlin.wiwiss.d2rq.map.MapParser;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.mapgen.Filter;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import de.fuberlin.wiwiss.d2rq.mapgen.W3CMappingGenerator;
@@ -231,9 +228,7 @@ public class SystemLoader implements AutoCloseable {
             // make it use the existing ConnectedDB that we already have opened.
             // Otherwise we get problems where D2RQ is trying to import a SQL
             // script twice on startup.
-            res.listDatabases()
-                    .filter(d -> Objects.equals(d.getJDBCDSN(), connectedDB.getJdbcURL()))
-                    .forEach(d -> d.useConnectedDB(connectedDB));
+            Mappings.useConnectedDB(res, connectedDB);
         }
         return res;
     }
