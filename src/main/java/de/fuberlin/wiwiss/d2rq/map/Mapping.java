@@ -39,6 +39,22 @@ public interface Mapping extends AutoCloseable {
      */
     Model asModel();
 
+    /**
+     * Returns an OWL2 schema part of this mapping.
+     * It is a dynamic virtual graph which is partially backed by the mapping graph.
+     * This means that it responses axioms which are either contained in the base mapping graph
+     * or inferred from the D2RQ instructions.
+     * This graph is transitive: any changes are redirected to the mapping graph.
+     * But if the adding triple does not answer OWL2 specification, it will be unseen in the schema view.
+     * The {@link org.apache.jena.shared.PrefixMapping} attached to the schema graph
+     * is also reflected by the mapping graph prefixes and vice verse.
+     * Adding or removing a prefix pair to or from the schema will be reflected in the mapping graph.
+     *
+     * @return {@link Graph}, an OWL2 schema
+     * @see ru.avicomp.ontapi.jena.model.OntGraphModel
+     * @see ru.avicomp.ontapi.OntologyModel
+     * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>
+     */
     Graph getSchema();
 
     /**

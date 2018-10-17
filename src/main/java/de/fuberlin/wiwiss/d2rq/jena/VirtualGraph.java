@@ -6,6 +6,7 @@ import org.apache.jena.shared.AccessDeniedException;
 import org.apache.jena.shared.AddDeniedException;
 import org.apache.jena.shared.DeleteDeniedException;
 import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.shared.impl.PrefixMappingImpl;
 import org.apache.jena.util.iterator.ClosableIterator;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
@@ -21,6 +22,7 @@ import java.util.function.BiPredicate;
  * throw {@code JenaException}.
  * Also, the methods {@link #isEmpty()} and {@link #size()} of this implementation do not return the actual values,
  * and the method {@link #close()} has no-op behaviour.
+ * Encapsulated {@link PrefixMapping} is not inherited from the base graph and is initially empty.
  * <p>
  * Created by @ssz on 10.10.2018.
  */
@@ -28,9 +30,15 @@ import java.util.function.BiPredicate;
 public abstract class VirtualGraph implements Graph {
 
     protected final Graph graph;
+    protected final PrefixMapping pm;
 
     public VirtualGraph(Graph g) {
+        this(g, new PrefixMappingImpl());
+    }
+
+    protected VirtualGraph(Graph g, PrefixMapping pm) {
         this.graph = Objects.requireNonNull(g, "Null base graph.");
+        this.pm = Objects.requireNonNull(pm, "Null prefix mapping.");
     }
 
     /**
@@ -115,7 +123,7 @@ public abstract class VirtualGraph implements Graph {
 
     @Override
     public PrefixMapping getPrefixMapping() {
-        return graph.getPrefixMapping();
+        return pm;
     }
 
     @Override

@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.sparql.graph.PrefixMappingMem;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import ru.avicomp.ontapi.jena.utils.BuiltIn;
 import ru.avicomp.ontapi.jena.utils.Iter;
@@ -84,6 +85,24 @@ public class SchemaGenerator {
         Graph res = new Union(left, right) {
 
             @Override
+            protected PrefixMapping createPrefixMapping() {
+                PrefixMapping pm = base.getPrefixMapping();
+                return new PrefixMappingMem() {
+                    @Override
+                    protected void add(String prefix, String uri) {
+                        super.add(prefix, uri);
+                        pm.setNsPrefix(prefix, uri);
+                    }
+
+                    @Override
+                    protected void remove(String prefix) {
+                        super.remove(prefix);
+                        pm.removeNsPrefix(prefix);
+                    }
+                };
+            }
+
+            @Override
             protected ExtendedIterator<Triple> _graphBaseFind(final Triple t) {
                 // the duplicate checking is not needed in this case
                 return L.find(t).andThen(R.find(t));
@@ -105,7 +124,7 @@ public class SchemaGenerator {
                 return "MagicGraph@" + Integer.toHexString(hashCode());
             }
         };
-        res.getPrefixMapping().clearNsPrefixMap().setNsPrefixes(createSchemaPrefixes(base));
+        res.getPrefixMapping().setNsPrefixes(createSchemaPrefixes(base));
         return res;
     }
 

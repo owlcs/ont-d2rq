@@ -71,6 +71,32 @@ public class DynamicSchemaTest {
     }
 
     @Test
+    public void testPrefixes() {
+        Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
+        PrefixMapping pm = mapping.getSchema().getPrefixMapping();
+        pm.getNsPrefixMap().forEach((p, u) -> LOGGER.debug("Schema {} => {}", p, u));
+        mapping.asModel().getNsPrefixMap().forEach((p, u) -> LOGGER.debug("Mapping {} => {}", p, u));
+        Assert.assertNull(pm.getNsPrefixURI(MappingFactory.MAP_PREFIX));
+        Assert.assertNull(pm.getNsPrefixURI(MappingFactory.D2RQ_PREFIX));
+        Assert.assertNull(pm.getNsPrefixURI(MappingFactory.JDBC_PREFIX));
+        Assert.assertEquals(11, mapping.getVocabularyModel().numPrefixes());
+        Assert.assertEquals(14, mapping.asModel().numPrefixes());
+
+        String p = "test";
+        String u = "http://test.com#";
+        mapping.getVocabularyModel().setNsPrefix(p, u);
+        Assert.assertEquals(u, mapping.asModel().getNsPrefixURI(p));
+        Assert.assertEquals(p, mapping.getVocabularyModel().getNsURIPrefix(u));
+        Assert.assertEquals(12, mapping.getVocabularyModel().numPrefixes());
+        Assert.assertEquals(15, mapping.asModel().numPrefixes());
+
+        mapping.asModel().removeNsPrefix(p);
+        //Assert.assertEquals(11, pm.numPrefixes());
+        Assert.assertEquals(14, mapping.asModel().numPrefixes());
+        Assert.assertEquals(11, mapping.getSchema().getPrefixMapping().numPrefixes());
+    }
+
+    @Test
     public void testConnectedPredefinedISWCSchemaAndData() {
         int totalNumberOfStatements = 443;
         Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
