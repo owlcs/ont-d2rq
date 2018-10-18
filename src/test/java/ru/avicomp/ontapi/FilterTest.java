@@ -13,7 +13,6 @@ import org.semanticweb.owlapi.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.conf.ConnectionData;
-import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntOPE;
@@ -111,7 +110,7 @@ public class FilterTest {
         Assume.assumeNotNull(res);
         res.forEach((schema, expectedCount) -> {
             LOGGER.info("Test data for ontology {}", schema.getOntologyID());
-            OntGraphModel data = D2RQGraphs.reassembly(schema.asGraphModel(), D2RQModelConfig.D2RQ_PERSONALITY);
+            OntGraphModel data = D2RQGraphs.reassembly(schema.asGraphModel());
             Assert.assertEquals("Ontology IDs don't match", schema.asGraphModel().getID(), data.getID());
 
             Set<OntIndividual> individuals = data.ontObjects(OntIndividual.class).collect(Collectors.toSet());

@@ -54,6 +54,7 @@ public class SystemLoader implements AutoCloseable {
     private String resourceStem = "";
     private Filter filter;
     private boolean fastMode;
+    private boolean useOWLControl;
 
     private ConnectedDB connectedDB;
 
@@ -122,6 +123,11 @@ public class SystemLoader implements AutoCloseable {
                     D2RQException.STARTUP_BASE_URI_NOT_ABSOLUTE);
         }
         this.baseURI = baseURI;
+        return this;
+    }
+
+    public SystemLoader setControlOWL(boolean flag) {
+        this.useOWLControl = flag;
         return this;
     }
 
@@ -216,7 +222,7 @@ public class SystemLoader implements AutoCloseable {
 
     public Mapping build() {
         Mapping res = fetchMapping();
-        res.getConfiguration().setUseAllOptimizations(fastMode);
+        res.getConfiguration().setControlOWL(useOWLControl).setUseAllOptimizations(fastMode);
         if (fetchSize != Database.NO_FETCH_SIZE || resultSizeLimit != Database.NO_LIMIT) {
             res.listDatabases()
                     .filter(d -> Objects.equals(d.getJDBCDSN(), jdbcURL))

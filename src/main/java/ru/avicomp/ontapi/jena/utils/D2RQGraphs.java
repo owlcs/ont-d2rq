@@ -23,10 +23,18 @@ import java.util.Objects;
  * @see UnionGraph
  * @see OntGraphModel
  */
+@SuppressWarnings("WeakerAccess")
 public class D2RQGraphs {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(D2RQGraphs.class);
 
+    /**
+     * Re-assemblies the model.
+     *
+     * @param model {@link OntGraphModel}
+     * @return {@link OntGraphModel}
+     * @see #reassembly(OntGraphModel, OntPersonality)
+     */
     public static OntGraphModel reassembly(OntGraphModel model) {
         OntPersonality personality;
         if (model instanceof OntGraphModelImpl) {
@@ -37,6 +45,16 @@ public class D2RQGraphs {
         return reassembly(model, personality);
     }
 
+    /**
+     * Re-assemblies the model.
+     * If it contains a {@link HybridGraph} graph with {@link GraphD2RQ} as shadow inside,
+     * the method extracts that D2RQ graph and wraps it as fresh {@link OntGraphModel}.
+     * Otherwise returns an equivalent model with the same hierarchy structure.
+     *
+     * @param model       {@link OntGraphModel}
+     * @param personality {@link OntPersonality}
+     * @return {@link OntGraphModel}
+     */
     public static OntGraphModel reassembly(OntGraphModel model, OntPersonality personality) {
         return OntModelFactory.createModel(reassembly((UnionGraph) model.getGraph()), personality);
     }
@@ -75,7 +93,8 @@ public class D2RQGraphs {
      * @return {@link UnionGraph}
      */
     public static UnionGraph reassembly(UnionGraph graph) {
-        UnionGraph res = new UnionGraph(graph.getBaseGraph() instanceof HybridGraph ? extractD2RQ(graph.getBaseGraph()) : graph.getBaseGraph());
+        UnionGraph res = new UnionGraph(graph.getBaseGraph() instanceof HybridGraph ?
+                extractD2RQ(graph.getBaseGraph()) : graph.getBaseGraph());
         graph.getUnderlying().graphs()
                 .map(g -> g instanceof HybridGraph ? extractD2RQ(g) : g)
                 .forEach(g -> res.addGraph(g instanceof UnionGraph ? reassembly((UnionGraph) g) : g));

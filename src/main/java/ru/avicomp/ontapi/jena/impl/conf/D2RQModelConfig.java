@@ -18,9 +18,12 @@ import java.util.Optional;
 
 /**
  * Personalities holder.
+ * Note: if the {@link de.fuberlin.wiwiss.d2rq.map.Configuration#getControlOWL()} is specified
+ * in the working {@link de.fuberlin.wiwiss.d2rq.map.Mapping}, there is no need in this {@link OntPersonality} version.
  * <p>
  * Created by @szuev on 29.03.2018.
  */
+@SuppressWarnings("WeakerAccess")
 public class D2RQModelConfig {
     public static final Configurable.Mode D2RQ_NAMED_INDIVIDUAL_FACTORY_KEY = new Configurable.Mode() {
         @Override

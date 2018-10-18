@@ -137,11 +137,15 @@ public enum ConnectionData {
     }
 
     public ConnectedDB toConnectedDB() {
-        return new ConnectedDB(getJdbcBaseIRI().getIRIString(), getUser(), getPwd());
+        return createConnectedDB(getJdbcBaseIRI().getIRIString());
     }
 
     public ConnectedDB toConnectedDB(String dbName) {
-        return new ConnectedDB(getJdbcIRI(dbName).getIRIString(), getUser(), getPwd());
+        return createConnectedDB(getJdbcIRI(dbName).getIRIString());
+    }
+
+    private ConnectedDB createConnectedDB(String uri) {
+        return new ConnectedDB(uri, getUser(), getPwd());
     }
 
     /**

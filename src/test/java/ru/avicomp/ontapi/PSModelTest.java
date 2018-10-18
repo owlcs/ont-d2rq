@@ -13,10 +13,8 @@ import org.semanticweb.owlapi.model.parameters.Imports;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.conf.ConnectionData;
-import ru.avicomp.ontapi.config.OntLoaderConfiguration;
 import ru.avicomp.ontapi.internal.AxiomParserProvider;
 import ru.avicomp.ontapi.internal.ONTObject;
-import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntStatement;
 import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
@@ -52,9 +50,7 @@ public class PSModelTest {
     @Test
     public void test01ValidatePSDB() throws OWLOntologyCreationException {
         D2RQGraphDocumentSource src = psConnectionData.toDocumentSource(psIRI, psDbName);
-        OntologyManager m = OntManagers.createONT();
-        m.getOntologyConfigurator().setPerformTransformation(false);
-        OntologyModel o = m.loadOntologyFromOntologyDocument(src);
+        OntologyModel o = OntManagers.createONT().loadOntologyFromOntologyDocument(src);
         LOGGER.debug("Scheme:");
         ReadWriteUtils.print(o);
 
@@ -66,7 +62,7 @@ public class PSModelTest {
                 .map(ONTObject::getObject)
                 .collect(Collectors.toList());
         axioms.forEach(x -> LOGGER.debug("AXIOM:::{}", x));
-        Assert.assertEquals(34, axioms.size());
+        Assert.assertEquals(90, axioms.size());
 
 
         LOGGER.debug("Mapping:");
@@ -74,7 +70,7 @@ public class PSModelTest {
         Assert.assertNotNull(psMapping);
         D2RQTestHelper.print(psMapping.asModel());
 
-        // simple validation of all data in graphs
+        // simple validation of all data in the graphs
         validatePSDatabase(data);
     }
 
@@ -101,10 +97,7 @@ public class PSModelTest {
         o2.asGraphModel().addImport(o1.asGraphModel());
 
         OntologyManager m2 = OntManagers.createONT();
-        OntLoaderConfiguration conf = m2.getOntologyLoaderConfiguration()
-                .setPerformTransformation(false)
-                .setPersonality(D2RQModelConfig.D2RQ_PERSONALITY);
-        OntologyModel o3 = m2.addOntology(D2RQGraphs.reassembly(o2.asGraphModel()).getGraph(), conf);
+        OntologyModel o3 = m2.addOntology(D2RQGraphs.reassembly(o2.asGraphModel()).getGraph());
 
         Assert.assertEquals(2, m2.ontologies().count());
 

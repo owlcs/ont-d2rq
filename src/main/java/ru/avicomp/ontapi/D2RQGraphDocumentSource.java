@@ -1,7 +1,7 @@
 package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
-import de.fuberlin.wiwiss.d2rq.map.Database;
+import de.fuberlin.wiwiss.d2rq.map.Configuration;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.vocab.AVC;
@@ -10,18 +10,14 @@ import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
 import ru.avicomp.ontapi.jena.HybridGraph;
 
-import java.net.URI;
-import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
- * This is an extended {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource document source}
- * for loading graph from database in form of {@link org.semanticweb.owlapi.model.OWLOntology OWL2 ontology}.
- * The graph is provided in the hybrid form (see {@link ru.avicomp.ontapi.jena.HybridGraph})
- * and includes DB-schema as primary {@link org.apache.jena.mem.GraphMem} and
- * DB-data (with schema attached also) as virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ graph}.
+ * This is an extended {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI Document Source}
+ * for loading a graph from a database in the form of {@link OntologyModel OWL2 ontology}.
+ * A graph is provided in the hybrid form (see {@link ru.avicomp.ontapi.jena.HybridGraph})
+ * and includes DB-schema as primary graph and
+ * DB-data (also with the schema inside) as virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ graph}.
  * <p>
  * Created by @szuev on 24.02.2017.
  * @see <a href='https://www.w3.org/TR/rdb-direct-mapping/'>Direct Mapping</a>
@@ -31,7 +27,6 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     public static final IRI DEFAULT_BASE_IRI = IRI.create(AVC.getURI());
 
     protected final Mapping mapping;
-    protected final URI doc;
 
     /**
      * The main constructor.
@@ -41,41 +36,11 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      */
     protected D2RQGraphDocumentSource(Mapping mapping) throws OntApiException {
         this.mapping = Objects.requireNonNull(mapping, "Null mapping");
-        // todo: document iri should not reflect d2rq:jdbcDSN since everything in the mapping graph are editable
-        // todo: and therefore these connection strings may changed
-        this.doc = calculateURI(mapping, () -> D2RQGraphDocumentSource.super.getDocumentIRI().toURI());
     }
 
     /**
-     * Calculates document URI from the given mapping.
-     * there are only two restrictions on document iri:
-     * 1) it must be unique within the ontology manager
-     * 2) it is desirable that it will be also a valid URI (some systems, such as Protege, requires that)
-     *
-     * @param mapping   {@link Mapping}, not {@code null}
-     * @param orDefault to get default value in case the valid uri can not be built from mappings settings, not {@code null}
-     * @return {@link URI}, not {@code null}
-     * @throws OntApiException if something is wrong with mapping
-     */
-    protected static URI calculateURI(Mapping mapping, Supplier<URI> orDefault) throws OntApiException {
-        List<String> dbs = OntApiException.notNull(mapping, "Null mapping").listDatabases()
-                .map(Database::getJDBCDSN)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-        if (dbs.isEmpty()) {
-            throw new OntApiException("No jdbc connection string inside mapping");
-        }
-        try {
-            return URI.create("d2rq://" + String.join(";", dbs));
-        } catch (IllegalArgumentException i) {
-            // just in case
-            return orDefault.get();
-        }
-    }
-
-    /**
-     * Creates a {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI document source} from a {@link Mapping mapping}.
+     * Creates a {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI document source} from
+     * the given {@link Mapping mapping}.
      *
      * @param mapping {@link Mapping}
      * @return {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}
@@ -85,23 +50,37 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
         return new D2RQGraphDocumentSource(mapping);
     }
 
+    /**
+     * Creates an OWL Document Source using the given connection settings.
+     *
+     * @param jdbcURI {@link IRI} jdbc-connection string, not {@code null}
+     * @param user    the connection user login
+     * @param pwd     the connection user password
+     * @return {@link D2RQGraphDocumentSource}
+     * @see #create(IRI, IRI, String, String)
+     */
     public static D2RQGraphDocumentSource create(IRI jdbcURI, String user, String pwd) {
         return create(DEFAULT_BASE_IRI, jdbcURI, user, pwd);
     }
 
     /**
-     * Creates an {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} from parameters.
+     * Creates an {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} using the specified connection parameters.
+     * The Mapping is generated automatically.
+     * Note: the parameter {@link Configuration#getControlOWL()} is set to {@code true} in the resulting {@link Mapping}.
+     * This means that every retrieved individual will have class-type and {@code owl:NamedIndividual}
+     * declaration (if it is named).
      *
      * @param baseIRI {@link IRI} the base iri to build owl-entity iris
-     * @param jdbcIRI {@link IRI} jdbc-connection string
+     * @param jdbcIRI {@link IRI} jdbc-connection string, not {@code null}
      * @param user    the connection user login
      * @param pwd     the connection user password
      * @return {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}
      * @throws OntApiException if something is wrong
+     * @see de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator
      */
     public static D2RQGraphDocumentSource create(IRI baseIRI, IRI jdbcIRI, String user, String pwd) {
         SystemLoader loader = new SystemLoader();
-        loader.setJdbcURL(OntApiException.notNull(jdbcIRI, "Null JDBC uri.").getIRIString());
+        loader.setJdbcURL(OntApiException.notNull(jdbcIRI, "Null JDBC IRI.").getIRIString()).setControlOWL(true);
         if (baseIRI != null) {
             loader.setSystemBaseURI(baseIRI.getIRIString());
         }
@@ -115,9 +94,12 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Makes a new {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} with restrictions from {@link MappingFilter}
+     * Makes a new {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} from this one using
+     * restrictions provided by the specified {@link MappingFilter}.
+     * It is useful to narrow the schema and data,
+     * since the default auto-generated direct mapping contains everything for the specified database.
      *
-     * @param filter {@link MappingFilter}, can be {@code null}
+     * @param filter {@link MappingFilter}
      * @return {@link D2RQGraphDocumentSource}
      */
     public D2RQGraphDocumentSource filter(MappingFilter filter) {
@@ -129,7 +111,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Returns mapping. The main D2RQ interface to work with DB.
+     * Returns the mapping, that is the main D2RQ interface to control RDF representation of database.
      *
      * @return {@link Mapping}
      */
@@ -138,18 +120,23 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Returns hybrid graph which consists of two graphs:
+     * Returns a hybrid graph which consists of two graphs:
      * <ul>
-     * <li>the default (primary) {@link org.apache.jena.mem.GraphMem} with the schema inside (editable)</li>
-     * <li>the virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ} with the schema and data inside (immutable)</li>
+     * <li>The primary {@code Graph}, that contains OWL2 declarations and reflects database schema.
+     * This graph is editable</li>
+     * <li>The virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ}, that contains both database schema and data.
+     * This graph is unmodifiable.</li>
      * </ul>
-     * Please note:
+     * Notes:
      * <ul>
-     * <li>Any changes in primary graph affects schema-part of D2RQ graph</li>
-     * <li>The D2RQ virtual graph is not distinct: it can contain duplicate triples reflecting duplicated tuples from a db table</li>
+     * <li>Any changes in the primary graph affects schema-part of D2RQ graph</li>
+     * <li>The D2RQ virtual graph is not distinct:
+     * it can contain duplicate triples reflecting duplicated tuples from a db table</li>
      * </ul>
      *
      * @return {@link Graph}
+     * @see Mapping#getSchema()
+     * @see Mapping#getData()
      */
     @Override
     public Graph getGraph() {
@@ -168,19 +155,19 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Returns an IRI with JDBC connection details.
+     * {@inheritDoc}
      *
      * @return {@link IRI}
      * @throws OntApiException in case there is no jdbc uri in mapping.
      */
     @Override
     public IRI getDocumentIRI() {
-        return IRI.create(doc);
+        return IRI.create("Mapping:" + toString(getMapping()));
     }
 
     /**
      * Closes mapping.
-     * Note: it will be reopened on demand if you continue work with the result ontology virtual data graph.
+     * Note: it will be reopened on demand if continue to use the resulting ontology data graph.
      */
     @Override
     public void close() {

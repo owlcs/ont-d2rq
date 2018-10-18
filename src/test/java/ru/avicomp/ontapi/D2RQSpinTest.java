@@ -77,6 +77,8 @@ public class D2RQSpinTest extends SpinMappingTest {
         LOGGER.info("Create source model based on " + data.getJdbcIRI("iswc"));
         MappingFilter filter = prepareDataFilter();
         D2RQGraphDocumentSource source = data.toDocumentSource("iswc").filter(filter);
+        //MappingTestHelper.print(source.getMapping());
+
         OntologyModel res;
         try {
             res = manager.loadOntologyFromOntologyDocument(source);
