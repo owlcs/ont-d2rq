@@ -7,7 +7,6 @@ import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.compose.Union;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -19,6 +18,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.conf.ISWCData;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.*;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
@@ -38,8 +38,9 @@ public class DynamicSchemaTest {
     public void testInsertOntologyID() {
         String uri1 = "http://test.x";
         String uri2 = "http://test.y";
+        String ver = "http://test.y/ver1";
         String comment = "xxxx";
-        Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
+        Mapping mapping = ISWCData.MYSQL.loadMapping();
 
         Graph g = mapping.getSchema();
 
@@ -63,17 +64,31 @@ public class DynamicSchemaTest {
         Assert.assertEquals(uri1, schema.getID().getURI());
         Assert.assertEquals(uri1, mappingAsOWL.getID().getURI());
 
+        // change iri, set version iri
         Assert.assertTrue(schema.contains(null, RDFS.comment, comment));
-        schema.setID(uri2);
+        schema.setID(uri2).setVersionIRI(ver);
         Assert.assertEquals(uri2, schema.getID().getURI());
         Assert.assertEquals(uri2, mappingAsOWL.getID().getURI());
+        Assert.assertEquals(ver, schema.getID().getVersionIRI());
+        Assert.assertEquals(ver, mappingAsOWL.getID().getVersionIRI());
         Assert.assertFalse(schema.contains(schema.getResource(uri1), RDFS.comment, comment));
         Assert.assertTrue(schema.contains(schema.getResource(uri2), RDFS.comment, comment));
+
+        // reload mapping
+        String res = D2RQTestHelper.toTurtleString(mapping.asModel());
+        Model m = D2RQTestHelper.loadFromString(res);
+        Assert.assertEquals(uri2, OntModelFactory.createModel(m.getGraph()).getID().getURI());
+        OntGraphModel schema2 = OntModelFactory.createModel(MappingFactory.wrap(m).getSchema());
+        Assert.assertEquals(uri2, schema2.getID().getURI());
+        Assert.assertEquals(ver, schema2.getID().getVersionIRI());
+        OntStatement commentStatement = schema2.getID().annotations()
+                .filter(s -> RDFS.comment.equals(s.getPredicate())).findFirst().orElseThrow(AssertionError::new);
+        Assert.assertEquals(comment, commentStatement.getString());
     }
 
     @Test
     public void testPrefixes() {
-        Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
+        Mapping mapping = ISWCData.MYSQL.loadMapping();
         PrefixMapping pm = mapping.getSchema().getPrefixMapping();
         pm.getNsPrefixMap().forEach((p, u) -> LOGGER.debug("Schema {} => {}", p, u));
         mapping.asModel().getNsPrefixMap().forEach((p, u) -> LOGGER.debug("Mapping {} => {}", p, u));
@@ -98,63 +113,8 @@ public class DynamicSchemaTest {
     }
 
     @Test
-    public void testConnectedPredefinedISWCSchemaAndData() {
-        int totalNumberOfStatements = 443;
-        Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
-
-        mapping.getConfiguration().setServeVocabulary(false).setControlOWL(true);
-
-        Assert.assertFalse(mapping.getConfiguration().getServeVocabulary());
-        Assert.assertTrue(mapping.getConfiguration().getControlOWL());
-
-        Model data = mapping.getDataModel();
-
-        int compiledTriples = MappingHelper.asConnectingMapping(mapping).compiledPropertyBridges().size();
-
-        OntGraphModel inMemory = OntModelFactory.createModel();
-        inMemory.add(mapping.getVocabularyModel());
-        // + PostalAddresses:
-        Assert.assertEquals(8, inMemory.listClasses().peek(x -> LOGGER.debug("Schema: {}", x)).count());
-        inMemory.add(data);
-        validateInferredOWLForPredefinedMapping(inMemory);
-        Assert.assertEquals(13, inMemory.listClasses().peek(x -> LOGGER.debug("Schema+Data: {}", x)).count());
-        D2RQTestHelper.print(inMemory);
-        validateInferredOWLForPredefinedMapping(inMemory);
-        validateMappedOWLDataForPredefinedMapping(inMemory);
-
-
-        Assert.assertEquals(totalNumberOfStatements, inMemory.size());
-        mapping.getConfiguration().setServeVocabulary(true);
-
-        OntGraphModel dynamic = OntModelFactory.createModel(new Union(mapping.getSchema(), mapping.getData()));
-
-        validateInferredOWLForPredefinedMapping(dynamic);
-        validateMappedOWLDataForPredefinedMapping(dynamic);
-
-        // add new class
-        OntClass additional = dynamic.createOntEntity(OntClass.class, inMemory.expandPrefix("iswc:OneMoreClass"));
-        additional.addAnnotation(inMemory.getRDFSLabel(), "OneMoreClass");
-
-        Assert.assertEquals(14, dynamic.listClasses().peek(x -> LOGGER.debug("1) DYNAMIC CLASS: {}", x)).count());
-
-        Assert.assertEquals(totalNumberOfStatements + 2, dynamic.statements().count());
-
-        // remove new class
-        mapping.asModel().removeAll(additional, null, null);
-        Assert.assertEquals(13, dynamic.listClasses().peek(x -> LOGGER.debug("2) DYNAMIC CLASS: {}", x)).count());
-
-        mapping.getConfiguration().setServeVocabulary(true);
-        Assert.assertTrue(mapping.getConfiguration().getServeVocabulary());
-        Assert.assertEquals(compiledTriples, MappingHelper.asConnectingMapping(mapping).compiledPropertyBridges().size());
-
-        Assert.assertEquals(totalNumberOfStatements, mapping.getDataModel().listStatements().toList().size());
-
-        mapping.close();
-    }
-
-    @Test
     public void testValidatePredefinedISWCSchema() {
-        Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl");
+        Mapping mapping = ISWCData.MYSQL.loadMapping();
 
         OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
         D2RQTestHelper.print(schema);
@@ -207,75 +167,75 @@ public class DynamicSchemaTest {
         }
     }
 
-    private static void validateInferredOWLForPredefinedMapping(OntGraphModel m) {
+    static void validateInferredOWLForPredefinedMapping(OntGraphModel m) {
         Resource xstring = XSD.xstring;
         Resource qYear = XSD.gYear;
 
-        OntClass iswcInProceedingClass = findEntity(m, OntClass.class, "iswc:InProceedings");
-        OntClass iswcEventClass = findEntity(m, OntClass.class, "iswc:Event");
-        OntClass iswcConferenceClass = findEntity(m, OntClass.class, "iswc:Conference");
-        OntClass iswcOrganizationClass = findEntity(m, OntClass.class, "iswc:Organization");
-        OntClass foafDocumentClass = findEntity(m, OntClass.class, "foaf:Document");
-        OntClass foafPersonClass = findEntity(m, OntClass.class, "foaf:Person");
-        OntClass skosConceptClass = findEntity(m, OntClass.class, "skos:Concept");
+        OntClass iswcInProceedingClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:InProceedings");
+        OntClass iswcEventClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Event");
+        OntClass iswcConferenceClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Conference");
+        OntClass iswcOrganizationClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Organization");
+        OntClass foafDocumentClass = D2RQTestHelper.findEntity(m, OntClass.class, "foaf:Document");
+        OntClass foafPersonClass = D2RQTestHelper.findEntity(m, OntClass.class, "foaf:Person");
+        OntClass skosConceptClass = D2RQTestHelper.findEntity(m, OntClass.class, "skos:Concept");
 
-        OntNDP dcAbstract = findEntity(m, OntNDP.class, "dcterms:abstract");
+        OntNDP dcAbstract = D2RQTestHelper.findEntity(m, OntNDP.class, "dcterms:abstract");
         checkHasDomains(dcAbstract, iswcInProceedingClass);
         checkHasRanges(dcAbstract, xstring);
 
-        OntNDP dcTitle = findEntity(m, OntNDP.class, "dc:title");
+        OntNDP dcTitle = D2RQTestHelper.findEntity(m, OntNDP.class, "dc:title");
         checkHasRanges(dcTitle, xstring);
         checkHasDomains(dcTitle, iswcInProceedingClass);
 
-        OntNOP dcCreator = findEntity(m, OntNOP.class, "dc:creator");
+        OntNOP dcCreator = D2RQTestHelper.findEntity(m, OntNOP.class, "dc:creator");
         checkHasDomains(dcCreator, iswcInProceedingClass);
         checkHasRanges(dcCreator, foafPersonClass);
 
-        OntNDP dcDate = findEntity(m, OntNDP.class, "dc:date");
+        OntNDP dcDate = D2RQTestHelper.findEntity(m, OntNDP.class, "dc:date");
         checkHasDomains(dcDate, iswcConferenceClass, iswcInProceedingClass);
         checkHasRanges(dcDate, qYear, xstring);
 
-        OntNOP skosSubject = findEntity(m, OntNOP.class, "skos:subject");
+        OntNOP skosSubject = D2RQTestHelper.findEntity(m, OntNOP.class, "skos:subject");
         checkHasDomains(skosSubject, iswcInProceedingClass);
         checkHasRanges(skosSubject, skosConceptClass);
 
-        OntNOP skosBroader = findEntity(m, OntNOP.class, "skos:broader");
+        OntNOP skosBroader = D2RQTestHelper.findEntity(m, OntNOP.class, "skos:broader");
         checkHasRanges(skosBroader, skosConceptClass);
         checkHasDomains(skosBroader, skosConceptClass);
 
-        OntNOP skosPrimarySubject = findEntity(m, OntNOP.class, "skos:primarySubject");
+        OntNOP skosPrimarySubject = D2RQTestHelper.findEntity(m, OntNOP.class, "skos:primarySubject");
         checkHasDomains(skosPrimarySubject, iswcInProceedingClass);
         checkHasRanges(skosPrimarySubject, skosConceptClass);
 
-        OntNDP skosPrefLabel = findEntity(m, OntNDP.class, "skos:prefLabel");
+        OntNDP skosPrefLabel = D2RQTestHelper.findEntity(m, OntNDP.class, "skos:prefLabel");
         checkHasDomains(skosPrefLabel, skosConceptClass);
         checkHasRanges(skosPrefLabel, xstring);
 
-        OntNAP foafMbox = findEntity(m, OntNAP.class, "foaf:mbox");
+        OntNAP foafMbox = D2RQTestHelper.findEntity(m, OntNAP.class, "foaf:mbox");
         checkHasRanges(foafMbox);
         checkHasDomains(foafMbox, foafPersonClass);
 
-        OntNDP foafName = findEntity(m, OntNDP.class, "foaf:name");
+        OntNDP foafName = D2RQTestHelper.findEntity(m, OntNDP.class, "foaf:name");
         checkHasDomains(foafName, foafPersonClass);
         checkHasRanges(foafName, xstring);
 
-        OntNAP foafHomepage = findEntity(m, OntNAP.class, "foaf:homepage");
+        OntNAP foafHomepage = D2RQTestHelper.findEntity(m, OntNAP.class, "foaf:homepage");
         checkHasDomains(foafHomepage, foafPersonClass, iswcOrganizationClass);
         checkHasRanges(foafHomepage);
 
-        OntNAP foafDepiction = findEntity(m, OntNAP.class, "foaf:depiction");
+        OntNAP foafDepiction = D2RQTestHelper.findEntity(m, OntNAP.class, "foaf:depiction");
         checkHasRanges(foafDepiction);
         checkHasDomains(foafDepiction, foafPersonClass);
 
-        OntNOP iswcResearchInterests = findEntity(m, OntNOP.class, "iswc:research_interests");
+        OntNOP iswcResearchInterests = D2RQTestHelper.findEntity(m, OntNOP.class, "iswc:research_interests");
         checkHasDomains(iswcResearchInterests, foafPersonClass);
         checkHasRanges(iswcResearchInterests, skosConceptClass);
 
-        OntNOP iswcConference = findEntity(m, OntNOP.class, "iswc:conference");
+        OntNOP iswcConference = D2RQTestHelper.findEntity(m, OntNOP.class, "iswc:conference");
         checkHasRanges(iswcConference, iswcConferenceClass);
         checkHasDomains(iswcConference, iswcInProceedingClass);
 
-        OntNDP iswcLocation = findEntity(m, OntNDP.class, "iswc:location");
+        OntNDP iswcLocation = D2RQTestHelper.findEntity(m, OntNDP.class, "iswc:location");
         checkHasDomains(iswcLocation, iswcConferenceClass);
         checkHasRanges(iswcLocation, xstring);
 
@@ -294,46 +254,7 @@ public class DynamicSchemaTest {
         Assert.assertFalse(m.contains(RDFS.label, RDF.type, (RDFNode) null));
     }
 
-    private static void validateMappedOWLDataForPredefinedMapping(OntGraphModel m) {
-        Resource xstring = XSD.xstring;
-        OntClass iswcFull_Professor = findEntity(m, OntClass.class, "iswc:Full_Professor");
-        OntClass iswcDepartment = findEntity(m, OntClass.class, "iswc:Department");
-        OntClass iswcInstitute = findEntity(m, OntClass.class, "iswc:Institute");
-        OntClass iswcUniversity = findEntity(m, OntClass.class, "iswc:University");
-        OntClass iswcResearcher = findEntity(m, OntClass.class, "iswc:Researcher");
-        OntClass postalAddresses = m.listClasses().filter(x -> "PostalAddresses".equals(x.getLocalName()))
-                .findFirst().orElseThrow(AssertionError::new);
-        OntClass iswcOrganizationClass = findEntity(m, OntClass.class, "iswc:Organization");
-
-        checkIndividual(iswcResearcher, 5, false);
-        checkIndividual(iswcInstitute, 2, false);
-        checkIndividual(iswcUniversity, 3, false);
-        checkIndividual(iswcDepartment, 2, false);
-        checkIndividual(iswcFull_Professor, 2, false);
-        checkIndividual(postalAddresses, 9, true);
-
-        OntNOP vcardADR = findEntity(m, OntNOP.class, "vcard:ADR");
-        OntNDP vcardPcode = findEntity(m, OntNDP.class, "vcard:Pcode");
-        OntNDP vcardCountry = findEntity(m, OntNDP.class, "vcard:Country");
-        OntNDP vcardLocality = findEntity(m, OntNDP.class, "vcard:Locality");
-        OntNDP vcardStreet = findEntity(m, OntNDP.class, "vcard:Street");
-
-        checkHasDomains(vcardADR, iswcOrganizationClass);
-        checkHasRanges(vcardADR, postalAddresses);
-
-        checkHasRanges(vcardPcode, xstring);
-        checkHasRanges(vcardCountry, xstring);
-        checkHasRanges(vcardLocality, xstring);
-        checkHasRanges(vcardStreet, xstring);
-
-        checkHasDomains(vcardPcode, postalAddresses);
-        checkHasDomains(vcardCountry, postalAddresses);
-        checkHasDomains(vcardLocality, postalAddresses);
-        checkHasDomains(vcardStreet, postalAddresses);
-        // todo:
-    }
-
-    private static void checkIndividual(OntClass owner, int count, boolean anon) {
+    static void checkIndividual(OntClass owner, int count, boolean anon) {
         PrefixMapping pm = owner.getModel();
         Assert.assertEquals(count, owner.individuals().peek(i -> {
             LOGGER.debug("{} individual: {}", pm.shortForm(owner.getURI()), i);
@@ -342,17 +263,11 @@ public class DynamicSchemaTest {
         }).count());
     }
 
-    private static <X extends OntEntity> X findEntity(OntGraphModel m, Class<X> type, String shortForm) {
-        X res = m.getOntEntity(type, m.expandPrefix(shortForm));
-        Assert.assertNotNull("Can't find " + type.getSimpleName() + " " + shortForm, res);
-        return res;
-    }
-
-    private static void checkHasRanges(OntPE p, Resource... ranges) {
+    static void checkHasRanges(OntPE p, Resource... ranges) {
         checkHas(p, OntPE::range, ranges);
     }
 
-    private static void checkHasDomains(OntPE p, Resource... domains) {
+    static void checkHasDomains(OntPE p, Resource... domains) {
         checkHas(p, OntPE::domain, domains);
     }
 

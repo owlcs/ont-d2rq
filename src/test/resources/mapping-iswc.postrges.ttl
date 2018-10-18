@@ -57,7 +57,7 @@ map:conferences_datum a d2rq:PropertyBridge;
 	d2rq:property vocab:startDate;
 	d2rq:column "conferences.datum";
 	d2rq:datatype xsd:dateTime;
-	d2rq:condition "conferences.datum != '0000'";
+	d2rq:condition "conferences.datum is not null";
 	.
 
 # Table organizations

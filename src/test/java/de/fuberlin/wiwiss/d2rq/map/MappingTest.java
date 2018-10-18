@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.conf.ISWCData;
 
 import java.util.Collections;
 import java.util.Properties;
@@ -185,8 +186,7 @@ public class MappingTest {
 
     @Test
     public void testConnectionWhileModification() {
-        String file = MappingTest.class.getResource("/mapping-iswc.mysql.ttl").toString();
-        try (Mapping m = MappingFactory.load(file, "ttl", "http://x#")) {
+        try (Mapping m = ISWCData.MYSQL.loadMapping("http://x#")) {
             Assert.assertEquals(1, m.listDatabases().count());
             Database db = m.listDatabases().findFirst().orElseThrow(AssertionError::new);
             db.addConnectionProperty("a", "b");
@@ -203,8 +203,7 @@ public class MappingTest {
 
     @Test
     public void testModifyCompiledPropertyBridges() {
-        String file = MappingTest.class.getResource("/mapping-iswc.mysql.ttl").toString();
-        try (Mapping m = MappingFactory.load(file, "ttl", "http://x#")) {
+        try (Mapping m = ISWCData.MYSQL.loadMapping("http://x#")) {
             Assert.assertEquals(35, m.listPropertyBridges().count());
             Assert.assertEquals(42, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
             Assert.assertEquals(40, m.listPropertyBridges().count());

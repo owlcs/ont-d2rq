@@ -1,7 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.DC;
@@ -12,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.conf.ISWCData;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
 /**
@@ -28,7 +27,7 @@ public class ModelAPITest {
 
     @Before
     public void setUp() {
-        this.data = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "TURTLE", "http://test/")
+        this.data = ISWCData.MYSQL.loadMapping("http://test/")
                 .getConfiguration().setServeVocabulary(false).getMapping().getDataModel();
     }
 

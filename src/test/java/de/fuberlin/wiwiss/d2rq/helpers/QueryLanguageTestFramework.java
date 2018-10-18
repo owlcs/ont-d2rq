@@ -1,6 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.helpers;
 
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.BeanCounter;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
@@ -14,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import ru.avicomp.conf.ISWCData;
 
 import java.util.*;
 
@@ -110,12 +110,11 @@ public abstract class QueryLanguageTestFramework {
         setUpShowWarnings();
     }
 
-    protected abstract String mapURL();
-
+    protected abstract ISWCData data();
 
     @Before
     public void setUp() {
-        this.model = MappingFactory.load(mapURL(), "TURTLE", "http://test/").getDataModel();
+        this.model = data().loadMapping("http://test/").getDataModel();
 //		this.model.enableDebug();
         setUpShowErrors(); // should be activated all the time
 //	    setUpShowPerformance(); // activate (only) to test performance (only)

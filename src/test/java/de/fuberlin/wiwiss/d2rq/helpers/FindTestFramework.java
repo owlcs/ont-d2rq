@@ -1,8 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.helpers;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
@@ -16,7 +14,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.conf.ISWCData;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -36,8 +34,7 @@ public abstract class FindTestFramework {
     @Before
     public void setUp() {
         LOGGER.debug("SET UP");
-        Mapping mapping = MappingFactory.load(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "ttl", "http://test/");
-        ConnectionData.MYSQL.insert(mapping);
+        Mapping mapping = ISWCData.MYSQL.loadMapping("http://test/");
         // no schema (schema validation tests are separated now)
         mapping.getConfiguration().setServeVocabulary(false);
         this.graph = mapping.getData();

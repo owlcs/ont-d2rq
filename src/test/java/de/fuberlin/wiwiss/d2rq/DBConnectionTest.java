@@ -5,13 +5,13 @@ import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.conf.ISWCData;
 
 import java.sql.*;
 import java.util.Collection;
@@ -36,8 +36,7 @@ public class DBConnectionTest {
 
     @Before
     public void setUp() {
-        mapModel = ModelFactory.createDefaultModel();
-        mapModel.read(D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl"), "http://test/", "TURTLE");
+        mapModel = ISWCData.MYSQL.loadMapping("http://test.").asModel();
         databases = MappingFactory.create(mapModel, null).listDatabases().collect(Collectors.toList());
         firstDatabase = databases.iterator().next();
         simplestQuery = "SELECT 1;";

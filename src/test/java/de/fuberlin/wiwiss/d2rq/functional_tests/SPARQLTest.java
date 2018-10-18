@@ -1,6 +1,5 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.helpers.QueryLanguageTestFramework;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
@@ -8,6 +7,7 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.vocabulary.DC;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.Test;
+import ru.avicomp.conf.ISWCData;
 
 
 /**
@@ -27,8 +27,9 @@ import org.junit.Test;
  */
 public class SPARQLTest extends QueryLanguageTestFramework {
 
-    protected String mapURL() {
-        return D2RQTestHelper.getResourceURI("/mapping-iswc.mysql.ttl");
+    @Override
+    protected ISWCData data() {
+        return ISWCData.MYSQL;
     }
 
     @Test

@@ -3,7 +3,6 @@ package ru.avicomp.d2rq;
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
@@ -16,6 +15,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.conf.ISWCData;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntDT;
@@ -35,7 +35,7 @@ public class GraphsTest {
 
     @Test
     public void testMaskGraph() {
-        Model m = MappingFactory.load("/mapping-iswc.mysql.ttl").asModel();
+        Model m = ISWCData.MYSQL.loadMapping().asModel();
 
         Graph graph = VirtualGraph.createMaskGraph(m.getGraph(),
                 ((BiPredicate<Graph, Triple>) (g, t) -> g.contains(t.getSubject(), RDF.type.asNode(), D2RQ.PropertyBridge.asNode()))
@@ -61,7 +61,7 @@ public class GraphsTest {
 
     @Test
     public void testUnionModelFindAll() {
-        try (Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl")) {
+        try (Mapping mapping = ISWCData.MYSQL.loadMapping()) {
             mapping.getConfiguration().setServeVocabulary(false);
             Graph left = mapping.getSchema();
             // connection:
@@ -83,7 +83,7 @@ public class GraphsTest {
 
     @Test
     public void testOntGraphModelModifyAndFindAll() {
-        try (Mapping mapping = MappingFactory.load("/mapping-iswc.mysql.ttl")) {
+        try (Mapping mapping = ISWCData.MYSQL.loadMapping()) {
             mapping.getConfiguration().setControlOWL(true);
             Graph left = mapping.getSchema();
             // connection:

@@ -2,6 +2,7 @@ package ru.avicomp.conf;
 
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.map.impl.MapObjectImpl;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
@@ -24,6 +25,8 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by @szuev on 29.03.2018.
@@ -66,12 +69,13 @@ public enum ConnectionData {
         protected String fixIRI(String iri) {
             return iri.toLowerCase();
         }
+
     },
     ;
 
     public static final IRI DEFAULT_BASE_IRI = IRI.create("http://d2rq.avc.ru/test/");
 
-    private static final Properties PROPERTIES = load("/db.properties");
+    private static final Properties PROPERTIES = loadProperties("/db.properties");
     private IRI base;
 
     public IRI getJdbcBaseIRI() {
@@ -146,7 +150,7 @@ public enum ConnectionData {
      * @param fileResource path
      * @return {@link Properties}
      */
-    public static Properties load(String fileResource) {
+    public static Properties loadProperties(String fileResource) {
         Properties fromFile = new Properties();
         try (InputStream in = ConnectionData.class.getResourceAsStream(fileResource)) {
             fromFile.load(in);
@@ -244,9 +248,17 @@ public enum ConnectionData {
                 .setPassword(getPwd());
     }
 
-    public void insert(Mapping mapping) {
-        mapping.listDatabases()
-                .filter(s -> s.getJDBCDSN().startsWith(getJdbcBaseIRI().getIRIString()))
-                .forEach(d -> d.setUsername(getUser()).setPassword(getPwd()));
+    public Mapping loadMapping(String resource, String format, String baseURI) {
+        Mapping res = MappingFactory.load(resource, format, baseURI);
+        insert(res);
+        return res;
     }
+
+    public void insert(Mapping mapping) {
+        Set<Database> dbs = mapping.listDatabases()
+                .filter(s -> s.getJDBCDSN().startsWith(getJdbcBaseIRI().getIRIString())).collect(Collectors.toSet());
+        if (dbs.isEmpty()) throw new IllegalArgumentException("Can't find db " + getJdbcBaseIRI());
+        dbs.forEach(d -> d.setUsername(getUser()).setPassword(getPwd()));
+    }
+
 }

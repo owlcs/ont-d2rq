@@ -140,7 +140,9 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
             return;
         }
         this.queryExecuted = true;
-        LOGGER.info(sql);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(sql);
+        }
         BeanCounter.totalNumberOfExecutedSQLQueries++;
         try {
             Connection con = this.database.connection();
