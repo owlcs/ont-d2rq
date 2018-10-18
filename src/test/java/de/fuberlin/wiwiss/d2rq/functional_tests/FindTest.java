@@ -13,6 +13,7 @@ import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.VCARD;
 import org.junit.Ignore;
 import org.junit.Test;
+import ru.avicomp.conf.ISWCData;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
@@ -36,6 +37,10 @@ import ru.avicomp.ontapi.jena.vocabulary.RDF;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class FindTest extends FindTestFramework {
+
+    public FindTest(ISWCData data) {
+        super(data);
+    }
 
     @Test
     public void testListTypeStatements() {
@@ -144,29 +149,34 @@ public class FindTest extends FindTestFramework {
 
     @Test
     public void testFindAnonymousNode() {
+        AnonId id = getMapPostalAddressesAnonID();
         find(null, VCARD.Pcode, m.createLiteral("BS34 8QZ"));
-        assertStatement(
-                m.createResource(new AnonId("map:PostalAddresses@@7")),
-                VCARD.Pcode, m.createLiteral("BS34 8QZ"));
+        assertStatement(m.createResource(id), VCARD.Pcode, m.createLiteral("BS34 8QZ"));
         assertStatementCount(1);
     }
 
     @Test
     public void testMatchAnonymousSubject() {
-        find(m.createResource(new AnonId("map:PostalAddresses@@7")), VCARD.Pcode, null);
-
-        assertStatement(m.createResource(new AnonId("map:PostalAddresses@@7")),
-                VCARD.Pcode, m.createLiteral("BS34 8QZ"));
+        AnonId id = getMapPostalAddressesAnonID();
+        find(m.createResource(id), VCARD.Pcode, null);
+        assertStatement(m.createResource(id), VCARD.Pcode, m.createLiteral("BS34 8QZ"));
         assertStatementCount(1);
     }
 
     @Test
     public void testMatchAnonymousObject() {
-        find(null, VCARD.ADR, m.createResource(new AnonId("map:PostalAddresses@@7")));
-
-        assertStatement(resource("organizations/7"), VCARD.ADR,
-                m.createResource(new AnonId("map:PostalAddresses@@7")));
+        AnonId id = getMapPostalAddressesAnonID();
+        find(null, VCARD.ADR, m.createResource(id));
+        assertStatement(resource("organizations/7"), VCARD.ADR, m.createResource(id));
         assertStatementCount(1);
+    }
+
+    private AnonId getMapPostalAddressesAnonID() {
+        String label = "map:PostalAddresses@@7";
+        if (ISWCData.POSTGRES.equals(data)) {
+            label = label.toLowerCase();
+        }
+        return new AnonId(label);
     }
 
     @Test
@@ -204,6 +214,7 @@ public class FindTest extends FindTestFramework {
 
     /**
      * @see ru.avicomp.d2rq.DynamicSchemaTest
+     * @see ru.avicomp.d2rq.ModelDataTest
      */
     @Ignore // schema part are excluded from the graph, there is now separated test for it
     @Test

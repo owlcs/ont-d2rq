@@ -12,6 +12,8 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.conf.ISWCData;
@@ -23,8 +25,20 @@ import java.util.Set;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 @SuppressWarnings("WeakerAccess")
+@RunWith(Parameterized.class)
 public abstract class FindTestFramework {
     protected static final Logger LOGGER = LoggerFactory.getLogger(FindTestFramework.class);
+
+    protected final ISWCData data;
+
+    public FindTestFramework(ISWCData data) {
+        this.data = data;
+    }
+
+    @Parameterized.Parameters(name = "{0}")
+    public static ISWCData[] getData() {
+        return ISWCData.values();
+    }
 
     protected static final Model m = ModelFactory.createDefaultModel();
 
@@ -34,7 +48,7 @@ public abstract class FindTestFramework {
     @Before
     public void setUp() {
         LOGGER.debug("SET UP");
-        Mapping mapping = ISWCData.MYSQL.loadMapping("http://test/");
+        Mapping mapping = data.loadMapping("http://test/");
         // no schema (schema validation tests are separated now)
         mapping.getConfiguration().setServeVocabulary(false);
         this.graph = mapping.getData();
