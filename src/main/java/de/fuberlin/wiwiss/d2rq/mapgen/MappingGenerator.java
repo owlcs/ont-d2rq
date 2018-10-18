@@ -51,6 +51,7 @@ public class MappingGenerator {
     protected boolean handleLinkTables = true;
     protected boolean serveVocabulary = true;
     protected boolean skipForeignKeyTargetColumns = true;
+    protected boolean requirePrimaryKey = true;
 
     protected URI startupSQLScript;
 
@@ -131,6 +132,21 @@ public class MappingGenerator {
         skipForeignKeyTargetColumns = flag;
     }
 
+    /**
+     * Switches {@code requirePrimaryKey} flag to desired state.
+     * This flag regulates behaviour with tables that do not have primary key.
+     * If it is {@code true}, then a {@link AVC#warning warning} is added to the mapping
+     * and for that table only single named individual with merged assertions is expected.
+     * Otherwise the parameter {@link D2RQ#bNodeIdColumns} will be used,
+     * in that case the number of individuals will correspond to the number of unique rows in the table.
+     * All these individuals will be anonymous.
+     *
+     * @param flag boolean
+     */
+    public void setRequirePrimaryKey(boolean flag) {
+        requirePrimaryKey = flag;
+    }
+
     public void copy(MappingGenerator other) {
         setVocabNamespaceURI(other.vocabNamespaceURI.toString());
         setInstanceNamespaceURI(other.instanceNamespaceURI.toString());
@@ -144,6 +160,7 @@ public class MappingGenerator {
         setHandleLinkTables(other.handleLinkTables);
         setServeVocabulary(other.serveVocabulary);
         setSkipForeignKeyTargetColumns(other.skipForeignKeyTargetColumns);
+        setRequirePrimaryKey(other.requirePrimaryKey);
     }
 
     /**
@@ -151,6 +168,7 @@ public class MappingGenerator {
      *
      * @param baseURI Base URI for resolving relative URIs in the mapping, e.g., map namespace
      * @return In-memory Jena model containing the D2RQ mapping
+     * @see MappingFactory
      */
     public Model mappingModel(String baseURI) {
         if (baseURI == null || baseURI.isEmpty()) {
@@ -164,8 +182,8 @@ public class MappingGenerator {
             LOGGER.warn("There are no relative URIs. The base URI <" + base + "> is ignored.");
             return createMappingModel();
         }
-        LOGGER.info("The base URI is <" + base + ">.");
-        MappingGenerator copy = new MappingGenerator(database);
+        LOGGER.info("The base URI is <{}>.", base);
+        MappingGenerator copy = createNewInstance(database);
         copy.copy(this);
         if (!copy.mapNamespaceURI.isAbsolute()) {
             copy.setMapNamespaceURI(composeURI(base, copy.mapNamespaceURI).toString());
@@ -179,6 +197,10 @@ public class MappingGenerator {
         return copy.createMappingModel();
     }
 
+    protected MappingGenerator createNewInstance(ConnectedDB d) {
+        return new MappingGenerator(d);
+    }
+
     private static URI composeURI(URI base, URI part) {
         String res = trimEndSymbol(base.toString()) + "/" + trimEndSymbol(part.toString());
         return URI.create(trimEndSymbol(res) + '#');
@@ -190,10 +212,10 @@ public class MappingGenerator {
 
     protected Model createMappingModel() {
         try {
-            Model res = ModelFactory.createDefaultModel();
-            res.setNsPrefixes(MappingFactory.MAPPING);
-            res.setNsPrefix(MappingFactory.MAP_PREFIX, mapNamespaceURI.toString());
-            res.setNsPrefix(MappingFactory.VOCAB_PREFIX, vocabNamespaceURI.toString());
+            Model res = ModelFactory.createDefaultModel()
+                    .setNsPrefixes(MappingFactory.MAPPING)
+                    .setNsPrefix(MappingFactory.MAP_PREFIX, mapNamespaceURI.toString())
+                    .setNsPrefix(MappingFactory.VOCAB_PREFIX, vocabNamespaceURI.toString());
             if (!serveVocabulary) {
                 addConfiguration(res);
             }
@@ -201,12 +223,12 @@ public class MappingGenerator {
             List<RelationName> tableNames = new ArrayList<>();
             for (RelationName tableName : database.schemaInspector().listTableNames(filter.getSingleSchema())) {
                 if (!filter.matches(tableName)) {
-                    LOGGER.info("Skipping table <" + tableName + ">");
+                    LOGGER.info("Skipping table <{}>", tableName);
                     continue;
                 }
                 tableNames.add(tableName);
             }
-            LOGGER.info("Filter '" + filter + "' matches " + tableNames.size() + " total tables");
+            LOGGER.info("Filter '{}' matches {} total tables", filter, tableNames.size());
             for (RelationName tableName : tableNames) {
                 if (handleLinkTables && isLinkTable(tableName)) {
                     addLinkTable(res, tableName);
@@ -251,7 +273,7 @@ public class MappingGenerator {
     }
 
     protected Resource addTable(Model model, Resource databaseResource, RelationName tableName) {
-        LOGGER.info("Generating d2rq:ClassMap instance for table " + tableName.qualifiedName());
+        LOGGER.info("Generating d2rq:ClassMap instance for table {}", tableName.qualifiedName());
         Resource res = model.createResource(classMapIRITurtle(tableName), D2RQ.ClassMap);
         res.addProperty(D2RQ.dataStorage, databaseResource);
 
@@ -272,13 +294,17 @@ public class MappingGenerator {
             addLabelBridge(res, tableName, identifierColumns);
         }
         List<Join> foreignKeys = database.schemaInspector().foreignKeys(tableName, DatabaseSchemaInspector.KEYS_IMPORTED);
-        for (Attribute column : filter(res, database.schemaInspector().listColumns(tableName), false, "property bridge")) {
+        for (Attribute column : filter(res, database.schemaInspector().listColumns(tableName),
+                false, "property bridge")) {
             if (skipForeignKeyTargetColumns && isInForeignKey(column, foreignKeys)) continue;
             addColumn(res, column);
         }
         for (Join fk : foreignKeys) {
-            if (!filter.matches(fk.table1()) || !filter.matches(fk.table2()) || !filter.matchesAll(fk.attributes1()) || !filter.matchesAll(fk.attributes2())) {
-                LOGGER.info("Skipping foreign key: " + fk);
+            if (!filter.matches(fk.table1())
+                    || !filter.matches(fk.table2())
+                    || !filter.matchesAll(fk.attributes1())
+                    || !filter.matchesAll(fk.attributes2())) {
+                LOGGER.info("Skipping foreign key: {}", fk);
                 continue;
             }
             addForeignKey(model, fk);
@@ -294,14 +320,14 @@ public class MappingGenerator {
                 !filter.matchesAll(join1.attributes1()) || !filter.matchesAll(join1.attributes2()) ||
                 !filter.matches(join2.table1()) || !filter.matches(join2.table2()) ||
                 !filter.matchesAll(join2.attributes1()) || !filter.matchesAll(join2.attributes2())) {
-            LOGGER.info("Skipping link table " + linkTableName);
+            LOGGER.info("Skipping link table {}", linkTableName);
             return null;
         }
-        LOGGER.info("Generating d2rq:PropertyBridge instance for table " + linkTableName.qualifiedName());
+        LOGGER.info("Generating d2rq:PropertyBridge instance for table {}", linkTableName.qualifiedName());
         RelationName table1 = database.schemaInspector().getCorrectCapitalization(join1.table2());
         RelationName table2 = database.schemaInspector().getCorrectCapitalization(join2.table2());
         boolean isSelfJoin = table1.equals(table2);
-        LOGGER.debug("# Table " + linkTableName + (isSelfJoin ? " (n:m self-join)" : " (n:m)"));
+        LOGGER.debug("# Table {} {}", linkTableName, isSelfJoin ? " (n:m self-join)" : " (n:m)");
         Resource res = model.createResource(propertyBridgeIRITurtle(linkTableName, "link"), D2RQ.PropertyBridge);
         res.addProperty(D2RQ.belongsToClassMap, model.getResource(classMapIRITurtle(table1)));
         res.addProperty(D2RQ.property, model.getResource(vocabularyIRITurtle(linkTableName)));
@@ -347,10 +373,17 @@ public class MappingGenerator {
     }
 
     protected void writePseudoEntityIdentifier(Resource table, RelationName tableName) {
-        writeWarning(table, "Sorry, I don't know which columns to put into the uriPattern" +
-                "\n\tfor \"" + tableName + "\" because the table doesn't have a primary key." +
-                "\n\tPlease specify it manually.");
-        writeEntityIdentifier(table, tableName, Collections.emptyList());
+        if (requirePrimaryKey) {
+            writeWarning(table, "Sorry, I don't know which columns to put into the uriPattern" +
+                    "\n\tfor \"" + tableName + "\" because the table doesn't have a primary key." +
+                    "\n\tPlease specify it manually.");
+            writeEntityIdentifier(table, tableName, Collections.emptyList());
+        } else {
+            List<Attribute> usedColumns = filter(table, database.schemaInspector().listColumns(tableName),
+                    true, "pseudo identifier column");
+            String msg = usedColumns.stream().map(Attribute::qualifiedName).collect(Collectors.joining(","));
+            table.addLiteral(D2RQ.bNodeIdColumns, msg);
+        }
     }
 
     protected Resource addLabelBridge(Resource table, RelationName tableName, List<Attribute> labelColumns) {
@@ -430,7 +463,7 @@ public class MappingGenerator {
         List<Attribute> result = new ArrayList<>(columns.size());
         for (Attribute column : columns) {
             if (!filter.matches(column)) {
-                LOGGER.info("Skipping filtered column " + column + " as " + reason);
+                LOGGER.info("Skipping filtered column {} as {}", column, reason);
                 continue;
             }
             DataType type = database.schemaInspector().columnType(column);
@@ -561,6 +594,7 @@ public class MappingGenerator {
      * foreign key constraints, and the constraints reference other
      * tables (not T), and the constraints cover all columns of T,
      * and there are no foreign keys from other tables pointing to this table
+     *
      * @param tableName {@link RelationName}
      * @return boolean
      */

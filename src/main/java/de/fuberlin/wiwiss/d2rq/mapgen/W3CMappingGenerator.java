@@ -8,7 +8,6 @@ import org.apache.jena.rdf.model.Resource;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Generates a D2RQ mapping compatible with W3C's Direct Mapping by introspecting a database schema.
@@ -26,6 +25,11 @@ public class W3CMappingGenerator extends MappingGenerator {
         setGenerateDefinitionLabels(false);
         setServeVocabulary(false);
         setSkipForeignKeyTargetColumns(false);
+        setRequirePrimaryKey(false);
+    }
+
+    protected W3CMappingGenerator createNewInstance(ConnectedDB d) {
+        return new W3CMappingGenerator(d);
     }
 
     @Override
@@ -44,14 +48,6 @@ public class W3CMappingGenerator extends MappingGenerator {
             uriPattern.append("@@");
         }
         table.addLiteral(D2RQ.uriPattern, uriPattern.toString());
-    }
-
-    @Override
-    protected void writePseudoEntityIdentifier(Resource table, RelationName tableName) {
-        List<Attribute> usedColumns = filter(table, database.schemaInspector().listColumns(tableName), true, "pseudo identifier column");
-        String msg = String.valueOf(usedColumns.stream().map(Attribute::qualifiedName).collect(Collectors.toList()))
-                .replaceAll("^\\[", "").replaceAll("]$", "");
-        table.addLiteral(D2RQ.bNodeIdColumns, msg);
     }
 
     @Override
