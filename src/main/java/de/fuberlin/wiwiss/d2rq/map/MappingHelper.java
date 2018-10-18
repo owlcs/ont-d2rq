@@ -13,7 +13,7 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
  * @see MappingFactory
  * @see MapParser
  */
-public class Mappings {
+public class MappingHelper {
 
     /**
      * Represents the given {@link Mapping Mapping Model} as a {@link ConnectingMapping}.

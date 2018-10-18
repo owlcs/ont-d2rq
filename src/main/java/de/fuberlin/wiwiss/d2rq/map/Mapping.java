@@ -14,7 +14,7 @@ import java.util.stream.Stream;
  * Consists of {@link ClassMap}s, {@link PropertyBridge}s, and several other {@link MapObject Map Object}s.
  * To get an instance of this class use {@link MappingFactory}.
  * Some useful operations, which cannot be in the model interface due to architecture reasons,
- * are located in the {@link Mappings Mappings Utils} class.
+ * are located in the {@link MappingHelper Mappings Utils} class.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  * Created by @ssz on 25.09.2018.
@@ -64,8 +64,11 @@ public interface Mapping extends AutoCloseable {
      * The returning graph is read only.
      * In case {@link #validate() validation} is failed
      * any attempt to retrieve data through this graph will result {@link D2RQException}.
+     * If {@link Configuration#getServeVocabulary()} is {@code true},
+     * the returning graph will also include {@link #getSchema()} triples.
      *
      * @return virtual D2RQ {@link Graph Graph}, not {@code null}
+     * @see #getConfiguration()
      */
     Graph getData();
 

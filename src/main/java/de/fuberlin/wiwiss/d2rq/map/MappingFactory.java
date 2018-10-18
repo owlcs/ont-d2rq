@@ -32,7 +32,7 @@ import java.util.Objects;
  * A factory to create and load {@link Mapping D2RQ Mapping}s.
  * <p>
  * Created by szuev on 22.02.2017.
- * @see Mappings
+ * @see MappingHelper
  */
 @SuppressWarnings("WeakerAccess")
 public class MappingFactory {

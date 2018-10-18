@@ -3,7 +3,7 @@ package de.fuberlin.wiwiss.d2rq.examples;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.Mappings;
+import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
@@ -31,7 +31,7 @@ public class SystemLoaderExample {
 
         // Print some internal stuff that shows how D2RQ maps the
         // database to RDF triples
-        for (TripleRelation internal : Mappings.asConnectingMapping(mapping).compiledPropertyBridges()) {
+        for (TripleRelation internal : MappingHelper.asConnectingMapping(mapping).compiledPropertyBridges()) {
             System.out.println(internal);
         }
 

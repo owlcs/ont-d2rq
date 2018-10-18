@@ -2,7 +2,7 @@ package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -43,8 +43,8 @@ public class MapParserTest {
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.DataPropertyBridge));
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.ObjectPropertyBridge));
         Assert.assertEquals(2, map.listPropertyBridges().count());
-        PropertyBridge opb = MappingHelper.findPropertyBridge(map, op);
-        PropertyBridge dpb = MappingHelper.findPropertyBridge(map, dp);
+        PropertyBridge opb = MappingTestHelper.findPropertyBridge(map, op);
+        PropertyBridge dpb = MappingTestHelper.findPropertyBridge(map, dp);
         Assert.assertNull(opb.getPattern());
         Assert.assertNull(opb.getColumn());
         Assert.assertNull(dpb.getPattern());
@@ -92,7 +92,7 @@ public class MapParserTest {
         Assert.assertEquals(1, map.listAdditionalProperties().count());
         Assert.assertEquals(1, map.listPropertyBridges().count());
 
-        ClassMap cm = MappingHelper.findClassMap(map, c);
+        ClassMap cm = MappingTestHelper.findClassMap(map, c);
         Assert.assertEquals(1, cm.listPropertyBridges().count());
 
         PropertyBridge p = map.listPropertyBridges().findFirst().orElseThrow(AssertionError::new);
@@ -125,8 +125,8 @@ public class MapParserTest {
         D2RQTestHelper.print(m);
 
         Mapping map = MappingFactory.wrap(m);
-        ClassMap cm = MappingHelper.findClassMap(map, mc);
-        PropertyBridge pb = MappingHelper.findPropertyBridge(map, mp);
+        ClassMap cm = MappingTestHelper.findClassMap(map, mc);
+        PropertyBridge pb = MappingTestHelper.findPropertyBridge(map, mp);
         Assert.assertEquals(1, map.listClassMaps().count());
         Assert.assertEquals(1, map.listPropertyBridges().count());
         Assert.assertEquals(0, cm.listClasses().count());

@@ -1,10 +1,10 @@
 package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.map.Mappings;
+import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.compose.Union;
@@ -109,7 +109,7 @@ public class DynamicSchemaTest {
 
         Model data = mapping.getDataModel();
 
-        int compiledTriples = Mappings.asConnectingMapping(mapping).compiledPropertyBridges().size();
+        int compiledTriples = MappingHelper.asConnectingMapping(mapping).compiledPropertyBridges().size();
 
         OntGraphModel inMemory = OntModelFactory.createModel();
         inMemory.add(mapping.getVocabularyModel());
@@ -145,7 +145,7 @@ public class DynamicSchemaTest {
 
         mapping.getConfiguration().setServeVocabulary(true);
         Assert.assertTrue(mapping.getConfiguration().getServeVocabulary());
-        Assert.assertEquals(compiledTriples, Mappings.asConnectingMapping(mapping).compiledPropertyBridges().size());
+        Assert.assertEquals(compiledTriples, MappingHelper.asConnectingMapping(mapping).compiledPropertyBridges().size());
 
         Assert.assertEquals(totalNumberOfStatements, mapping.getDataModel().listStatements().toList().size());
 
@@ -164,7 +164,7 @@ public class DynamicSchemaTest {
 
         mapping.getConfiguration().setControlOWL(true);
         // require db connection to populate missed OWL2 stuff:
-        Mappings.asConnectingMapping(mapping).compiledPropertyBridges();
+        MappingHelper.asConnectingMapping(mapping).compiledPropertyBridges();
 
         D2RQTestHelper.print(schema);
         validateInferredOWLForPredefinedMapping(schema);
@@ -190,7 +190,7 @@ public class DynamicSchemaTest {
         // connection:
         try (Mapping mapping = ConnectionData.MYSQL.toDocumentSource("iswc").getMapping()) {
 
-            MappingHelper.print(mapping);
+            MappingTestHelper.print(mapping);
 
             OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
 

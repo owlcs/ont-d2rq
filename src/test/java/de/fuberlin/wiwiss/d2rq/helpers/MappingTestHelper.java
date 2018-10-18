@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class MappingHelper {
+public class MappingTestHelper {
 
     /**
      * Parses a D2RQ mapping from a file located relative to the {@link D2RQTestHelper} directory.
@@ -34,7 +34,7 @@ public class MappingHelper {
     }
 
     public static void connectToDummyDBs(Mapping m) {
-        m.listDatabases().map(DummyDB::create).forEach(c -> Mappings.useConnectedDB(m, c));
+        m.listDatabases().map(DummyDB::create).forEach(c -> MappingHelper.useConnectedDB(m, c));
     }
 
     public static TranslationTable.Entry findTranslation(TranslationTable table) {

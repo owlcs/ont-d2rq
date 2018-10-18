@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * A set of simple tests that apply various parts of D2RQ to
  * an HSQL database, exercising our test helpers like
- * {@link HSQLDatabase} and {@link MappingHelper}.
+ * {@link HSQLDatabase} and {@link MappingTestHelper}.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -90,7 +90,7 @@ public class HSQLSimpleTest {
 
     @Test
     public void testGenerateEmptyGraphFromSimpleD2RQMapping() {
-        Mapping m = MappingHelper.readFromTestFile("/helpers/simple.ttl");
+        Mapping m = MappingTestHelper.readFromTestFile("/helpers/simple.ttl");
         m.getConfiguration().setServeVocabulary(false);
         Graph g = m.getData();
         Assert.assertTrue(g.isEmpty());
@@ -98,9 +98,9 @@ public class HSQLSimpleTest {
 
     @Test
     public void testGenerateTripleFromSimpleD2RQMapping() {
-        Mapping m = MappingHelper.readFromTestFile("/helpers/simple.ttl");
+        Mapping m = MappingTestHelper.readFromTestFile("/helpers/simple.ttl");
         m.getConfiguration().setServeVocabulary(false);
-        MappingHelper.print(m);
+        MappingTestHelper.print(m);
 
         db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
 

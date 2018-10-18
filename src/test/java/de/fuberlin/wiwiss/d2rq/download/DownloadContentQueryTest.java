@@ -2,10 +2,10 @@ package de.fuberlin.wiwiss.d2rq.download;
 
 
 import de.fuberlin.wiwiss.d2rq.helpers.HSQLDatabase;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
-import de.fuberlin.wiwiss.d2rq.map.Mappings;
+import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -30,9 +30,9 @@ public class DownloadContentQueryTest {
         db.executeSQL("CREATE TABLE People (ID INT NOT NULL PRIMARY KEY, PIC_CLOB CLOB NULL, PIC_BLOB BLOB NULL)");
         db.executeSQL("INSERT INTO People VALUES (1, 'Hello World!', NULL)");
         db.executeSQL("INSERT INTO People VALUES (2, NULL, HEXTORAW('404040'))");
-        Mapping m = MappingHelper.readFromTestFile("/download/download-map.ttl");
-        downloadCLOB = MappingHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/downloadCLOB"));
-        downloadBLOB = MappingHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/downloadBLOB"));
+        Mapping m = MappingTestHelper.readFromTestFile("/download/download-map.ttl");
+        downloadCLOB = MappingTestHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/downloadCLOB"));
+        downloadBLOB = MappingTestHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/downloadBLOB"));
     }
 
     @After
@@ -49,7 +49,7 @@ public class DownloadContentQueryTest {
 
     @Test
     public void testNullForNonDownloadURI() {
-        q = Mappings.getDownloadContentQuery(downloadCLOB, "http://not-in-the-mapping");
+        q = MappingHelper.getDownloadContentQuery(downloadCLOB, "http://not-in-the-mapping");
         Assert.assertFalse(q.hasContent());
         Assert.assertNull(q.getContentStream());
     }
@@ -57,28 +57,28 @@ public class DownloadContentQueryTest {
     @Test
     public void testNullForNonExistingRecord() {
         // There is no People.ID=42 in the table
-        q = Mappings.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/42");
+        q = MappingHelper.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/42");
         Assert.assertFalse(q.hasContent());
         Assert.assertNull(q.getContentStream());
     }
 
     @Test
     public void testReturnCLOBContentForExistingRecord() throws IOException {
-        q = Mappings.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/1");
+        q = MappingHelper.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/1");
         Assert.assertTrue(q.hasContent());
         Assert.assertEquals("Hello World!", inputStreamToString(q.getContentStream()));
     }
 
     @Test
     public void testNULLContent() {
-        q = Mappings.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/2");
+        q = MappingHelper.getDownloadContentQuery(downloadCLOB, "http://example.org/downloads/clob/2");
         Assert.assertFalse(q.hasContent());
         Assert.assertNull(q.getContentStream());
     }
 
     @Test
     public void testReturnBLOBContentForExistingRecord() throws IOException {
-        q = Mappings.getDownloadContentQuery(downloadBLOB, "http://example.org/downloads/blob/2");
+        q = MappingHelper.getDownloadContentQuery(downloadBLOB, "http://example.org/downloads/blob/2");
         Assert.assertTrue(q.hasContent());
         Assert.assertEquals("@@@", inputStreamToString(q.getContentStream()));
     }

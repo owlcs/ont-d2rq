@@ -228,7 +228,7 @@ public class SystemLoader implements AutoCloseable {
             // make it use the existing ConnectedDB that we already have opened.
             // Otherwise we get problems where D2RQ is trying to import a SQL
             // script twice on startup.
-            Mappings.useConnectedDB(res, connectedDB);
+            MappingHelper.useConnectedDB(res, connectedDB);
         }
         return res;
     }

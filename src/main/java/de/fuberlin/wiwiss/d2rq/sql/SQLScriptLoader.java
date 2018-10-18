@@ -150,10 +150,7 @@ public class SQLScriptLoader implements AutoCloseable {
             throw res;
         }
         if (res.getSuppressed().length == 1) {
-            Throwable t = res.getSuppressed()[0];
-            if (t instanceof IOException)
-                throw (IOException) t;
-            throw (SQLException) t;
+            throw (Exception) res.getSuppressed()[0];
         }
     }
 

@@ -80,7 +80,7 @@ public abstract class DatatypeTestBase {
         mapping.validate();
         graph = mapping.getData();
         Database db = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new);
-        inspector = Mappings.getConnectedDB(db).schemaInspector();
+        inspector = MappingHelper.getConnectedDB(db).schemaInspector();
     }
 
     protected void assertMappedType(String rdfType) {

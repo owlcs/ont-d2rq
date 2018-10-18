@@ -1,7 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingHelper;
+import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -191,7 +191,7 @@ public class MappingTest {
             Database db = m.listDatabases().findFirst().orElseThrow(AssertionError::new);
             db.addConnectionProperty("a", "b");
 
-            Mappings.asConnectingMapping(m).connect();
+            MappingHelper.asConnectingMapping(m).connect();
             try {
                 db.addConnectionProperty("c", "d");
             } catch (D2RQException e) {
@@ -206,23 +206,23 @@ public class MappingTest {
         String file = MappingTest.class.getResource("/mapping-iswc.mysql.ttl").toString();
         try (Mapping m = MappingFactory.load(file, "ttl", "http://x#")) {
             Assert.assertEquals(35, m.listPropertyBridges().count());
-            Assert.assertEquals(42, Mappings.asConnectingMapping(m).compiledPropertyBridges().size());
+            Assert.assertEquals(42, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
             Assert.assertEquals(40, m.listPropertyBridges().count());
 
-            PropertyBridge b = MappingHelper.findPropertyBridge(m, "organizations_Type_U");
+            PropertyBridge b = MappingTestHelper.findPropertyBridge(m, "organizations_Type_U");
             m.asModel().removeAll(b.asResource(), null, null);
             Assert.assertEquals(39, m.listPropertyBridges().count());
-            Assert.assertEquals(41, Mappings.asConnectingMapping(m).compiledPropertyBridges().size());
+            Assert.assertEquals(41, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
 
             // return back:
-            ClassMap c = MappingHelper.findClassMap(m, "Organizations");
+            ClassMap c = MappingTestHelper.findClassMap(m, "Organizations");
             m.createPropertyBridge(m.asModel().expandPrefix("map:organizations_Type_U"))
                     .setBelongsToClassMap(c).addProperty(RDF.type)
                     .setURIPattern("http://annotation.semanticweb.org/iswc/iswc.daml#University")
                     .addCondition("organizations.Type = 'U'");
 
-            MappingHelper.print(m);
-            Assert.assertEquals(42, Mappings.asConnectingMapping(m).compiledPropertyBridges().size());
+            MappingTestHelper.print(m);
+            Assert.assertEquals(42, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
             Assert.assertEquals(40, m.listPropertyBridges().count());
 
         }
