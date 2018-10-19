@@ -28,6 +28,7 @@ public class W3CMappingGenerator extends MappingGenerator {
         setRequirePrimaryKey(false);
     }
 
+    @Override
     protected W3CMappingGenerator createNewInstance(ConnectedDB d) {
         return new W3CMappingGenerator(d);
     }

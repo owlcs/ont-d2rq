@@ -147,7 +147,7 @@ public class MappingGenerator {
         requirePrimaryKey = flag;
     }
 
-    public void copy(MappingGenerator other) {
+    protected void copy(MappingGenerator other) {
         setVocabNamespaceURI(other.vocabNamespaceURI.toString());
         setInstanceNamespaceURI(other.instanceNamespaceURI.toString());
         setMapNamespaceURI(other.mapNamespaceURI.toString());
@@ -164,10 +164,10 @@ public class MappingGenerator {
     }
 
     /**
-     * Returns an in-memory Jena model containing the D2RQ mapping.
+     * Creates a Jena model containing the D2RQ mapping.
      *
-     * @param baseURI Base URI for resolving relative URIs in the mapping, e.g., map namespace
-     * @return In-memory Jena model containing the D2RQ mapping
+     * @param baseURI base URI for resolving relative URIs in the mapping, e.g., map namespace
+     * @return In-memory Jena model containing the D2RQ mappings
      * @see MappingFactory
      */
     public Model mappingModel(String baseURI) {
@@ -245,16 +245,15 @@ public class MappingGenerator {
 
     protected Resource addConfiguration(Model model) {
         LOGGER.info("Generating d2rq:Configuration instance");
-        Resource res = model.createResource(mapNamespaceURI + "Configuration", D2RQ.Configuration);
-        res.addProperty(D2RQ.serveVocabulary, ResourceFactory.createTypedLiteral(false));
-        return res;
+        return model.createResource(mapNamespaceURI + "Configuration", D2RQ.Configuration)
+                .addProperty(D2RQ.serveVocabulary, ResourceFactory.createTypedLiteral(false));
     }
 
     protected Resource addDatabase(Model model) {
         LOGGER.info("Generating d2rq:Database instance");
-        Resource res = model.createResource(mapNamespaceURI + "database", D2RQ.Database);
-        res.addLiteral(D2RQ.jdbcDriver, driverClass);
-        res.addLiteral(D2RQ.jdbcDSN, database.getJdbcURL());
+        Resource res = model.createResource(mapNamespaceURI + "database", D2RQ.Database)
+                .addLiteral(D2RQ.jdbcDriver, driverClass)
+                .addLiteral(D2RQ.jdbcDSN, database.getJdbcURL());
         if (database.getUsername() != null) {
             res.addLiteral(D2RQ.username, database.getUsername());
         }
@@ -274,8 +273,8 @@ public class MappingGenerator {
 
     protected Resource addTable(Model model, Resource databaseResource, RelationName tableName) {
         LOGGER.info("Generating d2rq:ClassMap instance for table {}", tableName.qualifiedName());
-        Resource res = model.createResource(classMapIRITurtle(tableName), D2RQ.ClassMap);
-        res.addProperty(D2RQ.dataStorage, databaseResource);
+        Resource res = model.createResource(classMapIRITurtle(tableName), D2RQ.ClassMap)
+                .addProperty(D2RQ.dataStorage, databaseResource);
 
         List<Attribute> identifierColumns = identifierColumns(res, tableName);
         if (identifierColumns.isEmpty()) {
@@ -381,8 +380,8 @@ public class MappingGenerator {
         } else {
             List<Attribute> usedColumns = filter(table, database.schemaInspector().listColumns(tableName),
                     true, "pseudo identifier column");
-            String msg = usedColumns.stream().map(Attribute::qualifiedName).collect(Collectors.joining(","));
-            table.addLiteral(D2RQ.bNodeIdColumns, msg);
+            String columns = usedColumns.stream().map(Attribute::qualifiedName).collect(Collectors.joining(","));
+            table.addLiteral(D2RQ.bNodeIdColumns, columns);
         }
     }
 
@@ -396,9 +395,9 @@ public class MappingGenerator {
 
     protected Resource addColumn(Resource table, Attribute column) {
         Model m = table.getModel();
-        Resource res = m.createResource(propertyBridgeIRITurtle(column), D2RQ.PropertyBridge);
-        res.addProperty(D2RQ.belongsToClassMap, table);
-        res.addProperty(D2RQ.property, ResourceFactory.createProperty(vocabularyIRITurtle(column)));
+        Resource res = m.createResource(propertyBridgeIRITurtle(column), D2RQ.PropertyBridge)
+                .addProperty(D2RQ.belongsToClassMap, table)
+                .addProperty(D2RQ.property, ResourceFactory.createProperty(vocabularyIRITurtle(column)));
         if (generateDefinitionLabels) {
             res.addLiteral(D2RQ.propertyDefinitionLabel, toLabel(column));
         }

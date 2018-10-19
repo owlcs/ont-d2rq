@@ -55,6 +55,7 @@ public class SystemLoader implements AutoCloseable {
     private Filter filter;
     private boolean fastMode;
     private boolean useOWLControl;
+    private boolean withAnonymousIndividuals;
 
     private ConnectedDB connectedDB;
 
@@ -90,6 +91,19 @@ public class SystemLoader implements AutoCloseable {
 
     public SystemLoader setGenerateW3CDirectMapping(boolean flag) {
         this.generateDirectMapping = flag;
+        return this;
+    }
+
+    /**
+     * Enables/disables generating anonymous individuals.
+     * Makes sense only if {@link #generateDirectMapping} is {@code false} and {@link #mappingFile} is {@code null}.
+     *
+     * @param b boolean, {@code true} to enable anonymous individuals
+     * @return this instance
+     * @see MappingGenerator#setRequirePrimaryKey(boolean)
+     */
+    public SystemLoader withAnonymousIndividuals(boolean b) {
+        this.withAnonymousIndividuals = b;
         return this;
     }
 
@@ -208,6 +222,7 @@ public class SystemLoader implements AutoCloseable {
             // If there's a startup SQL script, copy its name into the generated mapping
             res.setStartupSQLScript(Paths.get(sqlScript).toUri());
         }
+        res.setRequirePrimaryKey(!withAnonymousIndividuals);
         return res;
     }
 
