@@ -110,6 +110,10 @@ public class SchemaGenerator {
 
             @Override
             public void performAdd(Triple t) {
+                if (R.contains(t)) {
+                    // do not add inferred triples
+                    return;
+                }
                 base.add(t);
             }
 

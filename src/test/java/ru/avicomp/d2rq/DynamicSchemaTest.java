@@ -52,7 +52,7 @@ public class DynamicSchemaTest {
 
         Assert.assertEquals(uri1, schema.getID().getURI());
         Assert.assertEquals(2, schema.getID().annotations()
-                .peek(s -> LOGGER.debug("Schema annotation: {}", s)).count());
+                .peek(s -> LOGGER.debug("1) Schema annotation: {}", s)).count());
 
         D2RQTestHelper.print(schema);
         Assert.assertTrue(schema.contains(null, RDFS.comment, comment));
@@ -61,13 +61,15 @@ public class DynamicSchemaTest {
         Assert.assertEquals(1, mappingAsOWL.getID()
                 .annotations().peek(s -> LOGGER.debug("Mapping annotation: {}", s)).count());
         Assert.assertEquals(2, schema.getID().annotations()
-                .peek(s -> LOGGER.debug("Schema annotation: {}", PrettyPrinter.toString(s))).count());
+                .peek(s -> LOGGER.debug("2) Schema annotation: {}", PrettyPrinter.toString(s))).count());
         Assert.assertEquals(uri1, schema.getID().getURI());
         Assert.assertEquals(uri1, mappingAsOWL.getID().getURI());
 
         // change iri, set version iri
         Assert.assertTrue(schema.contains(null, RDFS.comment, comment));
         schema.setID(uri2).setVersionIRI(ver);
+        Assert.assertEquals(2, schema.getID().annotations()
+                .peek(s -> LOGGER.debug("3) Schema annotation: {}", s)).count());
         Assert.assertEquals(uri2, schema.getID().getURI());
         Assert.assertEquals(uri2, mappingAsOWL.getID().getURI());
         Assert.assertEquals(ver, schema.getID().getVersionIRI());
@@ -80,6 +82,8 @@ public class DynamicSchemaTest {
         Model m = D2RQTestHelper.loadFromString(res);
         Assert.assertEquals(uri2, OntModelFactory.createModel(m.getGraph()).getID().getURI());
         OntGraphModel schema2 = OntModelFactory.createModel(MappingFactory.wrap(m).getSchema());
+        Assert.assertEquals(2, schema2.getID().annotations()
+                .peek(s -> LOGGER.debug("4) Schema annotation: {}", s)).count());
         Assert.assertEquals(uri2, schema2.getID().getURI());
         Assert.assertEquals(ver, schema2.getID().getVersionIRI());
         OntStatement commentStatement = schema2.getID().annotations()
