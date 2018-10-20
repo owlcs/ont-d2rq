@@ -23,6 +23,7 @@ import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.*;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
+import ru.avicomp.utils.OWLUtils;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -171,71 +172,71 @@ public class DynamicSchemaTest {
         Resource xstring = XSD.xstring;
         Resource qYear = XSD.gYear;
 
-        OntClass iswcInProceedingClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:InProceedings");
-        OntClass iswcEventClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Event");
-        OntClass iswcConferenceClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Conference");
-        OntClass iswcOrganizationClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Organization");
-        OntClass foafDocumentClass = D2RQTestHelper.findEntity(m, OntClass.class, "foaf:Document");
-        OntClass foafPersonClass = D2RQTestHelper.findEntity(m, OntClass.class, "foaf:Person");
-        OntClass skosConceptClass = D2RQTestHelper.findEntity(m, OntClass.class, "skos:Concept");
+        OntClass iswcInProceedingClass = OWLUtils.findEntity(m, OntClass.class, "iswc:InProceedings");
+        OntClass iswcEventClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Event");
+        OntClass iswcConferenceClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Conference");
+        OntClass iswcOrganizationClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Organization");
+        OntClass foafDocumentClass = OWLUtils.findEntity(m, OntClass.class, "foaf:Document");
+        OntClass foafPersonClass = OWLUtils.findEntity(m, OntClass.class, "foaf:Person");
+        OntClass skosConceptClass = OWLUtils.findEntity(m, OntClass.class, "skos:Concept");
 
-        OntNDP dcAbstract = D2RQTestHelper.findEntity(m, OntNDP.class, "dcterms:abstract");
+        OntNDP dcAbstract = OWLUtils.findEntity(m, OntNDP.class, "dcterms:abstract");
         checkHasDomains(dcAbstract, iswcInProceedingClass);
         checkHasRanges(dcAbstract, xstring);
 
-        OntNDP dcTitle = D2RQTestHelper.findEntity(m, OntNDP.class, "dc:title");
+        OntNDP dcTitle = OWLUtils.findEntity(m, OntNDP.class, "dc:title");
         checkHasRanges(dcTitle, xstring);
         checkHasDomains(dcTitle, iswcInProceedingClass);
 
-        OntNOP dcCreator = D2RQTestHelper.findEntity(m, OntNOP.class, "dc:creator");
+        OntNOP dcCreator = OWLUtils.findEntity(m, OntNOP.class, "dc:creator");
         checkHasDomains(dcCreator, iswcInProceedingClass);
         checkHasRanges(dcCreator, foafPersonClass);
 
-        OntNDP dcDate = D2RQTestHelper.findEntity(m, OntNDP.class, "dc:date");
+        OntNDP dcDate = OWLUtils.findEntity(m, OntNDP.class, "dc:date");
         checkHasDomains(dcDate, iswcConferenceClass, iswcInProceedingClass);
         checkHasRanges(dcDate, qYear, xstring);
 
-        OntNOP skosSubject = D2RQTestHelper.findEntity(m, OntNOP.class, "skos:subject");
+        OntNOP skosSubject = OWLUtils.findEntity(m, OntNOP.class, "skos:subject");
         checkHasDomains(skosSubject, iswcInProceedingClass);
         checkHasRanges(skosSubject, skosConceptClass);
 
-        OntNOP skosBroader = D2RQTestHelper.findEntity(m, OntNOP.class, "skos:broader");
+        OntNOP skosBroader = OWLUtils.findEntity(m, OntNOP.class, "skos:broader");
         checkHasRanges(skosBroader, skosConceptClass);
         checkHasDomains(skosBroader, skosConceptClass);
 
-        OntNOP skosPrimarySubject = D2RQTestHelper.findEntity(m, OntNOP.class, "skos:primarySubject");
+        OntNOP skosPrimarySubject = OWLUtils.findEntity(m, OntNOP.class, "skos:primarySubject");
         checkHasDomains(skosPrimarySubject, iswcInProceedingClass);
         checkHasRanges(skosPrimarySubject, skosConceptClass);
 
-        OntNDP skosPrefLabel = D2RQTestHelper.findEntity(m, OntNDP.class, "skos:prefLabel");
+        OntNDP skosPrefLabel = OWLUtils.findEntity(m, OntNDP.class, "skos:prefLabel");
         checkHasDomains(skosPrefLabel, skosConceptClass);
         checkHasRanges(skosPrefLabel, xstring);
 
-        OntNAP foafMbox = D2RQTestHelper.findEntity(m, OntNAP.class, "foaf:mbox");
+        OntNAP foafMbox = OWLUtils.findEntity(m, OntNAP.class, "foaf:mbox");
         checkHasRanges(foafMbox);
         checkHasDomains(foafMbox, foafPersonClass);
 
-        OntNDP foafName = D2RQTestHelper.findEntity(m, OntNDP.class, "foaf:name");
+        OntNDP foafName = OWLUtils.findEntity(m, OntNDP.class, "foaf:name");
         checkHasDomains(foafName, foafPersonClass);
         checkHasRanges(foafName, xstring);
 
-        OntNAP foafHomepage = D2RQTestHelper.findEntity(m, OntNAP.class, "foaf:homepage");
+        OntNAP foafHomepage = OWLUtils.findEntity(m, OntNAP.class, "foaf:homepage");
         checkHasDomains(foafHomepage, foafPersonClass, iswcOrganizationClass);
         checkHasRanges(foafHomepage);
 
-        OntNAP foafDepiction = D2RQTestHelper.findEntity(m, OntNAP.class, "foaf:depiction");
+        OntNAP foafDepiction = OWLUtils.findEntity(m, OntNAP.class, "foaf:depiction");
         checkHasRanges(foafDepiction);
         checkHasDomains(foafDepiction, foafPersonClass);
 
-        OntNOP iswcResearchInterests = D2RQTestHelper.findEntity(m, OntNOP.class, "iswc:research_interests");
+        OntNOP iswcResearchInterests = OWLUtils.findEntity(m, OntNOP.class, "iswc:research_interests");
         checkHasDomains(iswcResearchInterests, foafPersonClass);
         checkHasRanges(iswcResearchInterests, skosConceptClass);
 
-        OntNOP iswcConference = D2RQTestHelper.findEntity(m, OntNOP.class, "iswc:conference");
+        OntNOP iswcConference = OWLUtils.findEntity(m, OntNOP.class, "iswc:conference");
         checkHasRanges(iswcConference, iswcConferenceClass);
         checkHasDomains(iswcConference, iswcInProceedingClass);
 
-        OntNDP iswcLocation = D2RQTestHelper.findEntity(m, OntNDP.class, "iswc:location");
+        OntNDP iswcLocation = OWLUtils.findEntity(m, OntNDP.class, "iswc:location");
         checkHasDomains(iswcLocation, iswcConferenceClass);
         checkHasRanges(iswcLocation, xstring);
 

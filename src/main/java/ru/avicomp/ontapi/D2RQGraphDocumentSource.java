@@ -20,6 +20,7 @@ import java.util.Objects;
  * DB-data (also with the schema inside) as virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ graph}.
  * <p>
  * Created by @szuev on 24.02.2017.
+ *
  * @see <a href='https://www.w3.org/TR/rdb-direct-mapping/'>Direct Mapping</a>
  */
 @SuppressWarnings("WeakerAccess")
@@ -39,18 +40,6 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Creates a {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI document source} from
-     * the given {@link Mapping mapping}.
-     *
-     * @param mapping {@link Mapping}
-     * @return {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}
-     * @throws OntApiException in case argument is wrong
-     */
-    public static D2RQGraphDocumentSource create(Mapping mapping) {
-        return new D2RQGraphDocumentSource(mapping);
-    }
-
-    /**
      * Creates an OWL Document Source using the given connection settings.
      *
      * @param jdbcURI {@link IRI} jdbc-connection string, not {@code null}
@@ -64,33 +53,51 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Creates an {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource} using the specified connection parameters.
-     * The Mapping is generated automatically.
-     * Note: the parameter {@link Configuration#getControlOWL()} is set to {@code true} in the resulting {@link Mapping}.
-     * This means that every retrieved individual will have class-type and {@code owl:NamedIndividual}
-     * declaration (if it is named).
+     * Creates an {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWL Document Source}
+     * using the specified connection parameters.
+     * <p>
+     * The resulting graph document source encapsulates the {@link Mapping D2RQ Mapping},
+     * which is slightly different from what can be generated with help of the
+     * {@link de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator Default Mapping Generator} or
+     * {@link de.fuberlin.wiwiss.d2rq.mapgen.W3CMappingGenerator Direct Mapping Generator}.
+     * Like a {@code W3CMappingGenerator} it produces anonymous individuals
+     * for each tuple from the table without primary key.
+     * Each of these individuals will be equipped with the same label.
+     * All other {@link de.fuberlin.wiwiss.d2rq.map.PropertyBridge PropertyBridge}s will be the same
+     * as {@code MappingGenerator} would created.
+     * Also note that the parameter {@link Configuration#getControlOWL()} is set to {@code true}
+     * in the resulting {@link Mapping},
+     * and therefore each retrieved individual will have class-type and,
+     * if it is named, a {@code owl:NamedIndividual} declaration,
      *
-     * @param baseIRI {@link IRI} the base iri to build owl-entity iris
+     * @param baseIRI {@link IRI} the base iri to build owl-entity iris (see {@code d2rq:uriPattern})
      * @param jdbcIRI {@link IRI} jdbc-connection string, not {@code null}
      * @param user    the connection user login
      * @param pwd     the connection user password
      * @return {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}
-     * @throws OntApiException if something is wrong
      * @see de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator
      */
     public static D2RQGraphDocumentSource create(IRI baseIRI, IRI jdbcIRI, String user, String pwd) {
-        SystemLoader loader = new SystemLoader();
-        loader.setJdbcURL(OntApiException.notNull(jdbcIRI, "Null JDBC IRI.").getIRIString()).setControlOWL(true);
-        if (baseIRI != null) {
-            loader.setSystemBaseURI(baseIRI.getIRIString());
-        }
-        if (user != null) {
-            loader.setUsername(user);
-        }
-        if (pwd != null) {
-            loader.setPassword(pwd);
-        }
-        return create(loader.build());
+        return create(new SystemLoader()
+                .setJdbcURL(Objects.requireNonNull(jdbcIRI, "Null JDBC IRI.").getIRIString())
+                .withAnonymousIndividuals(true)
+                .setControlOWL(true)
+                .setUsername(user)
+                .setPassword(pwd)
+                .setSystemBaseURI(baseIRI == null ? null : baseIRI.getIRIString())
+                .build());
+    }
+
+    /**
+     * Creates a {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI document source} from
+     * the given {@link Mapping mapping}.
+     *
+     * @param mapping {@link Mapping}
+     * @return {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource}
+     * @throws OntApiException in case argument is wrong
+     */
+    public static D2RQGraphDocumentSource create(Mapping mapping) {
+        return new D2RQGraphDocumentSource(mapping);
     }
 
     /**

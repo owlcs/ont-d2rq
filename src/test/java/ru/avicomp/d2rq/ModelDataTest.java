@@ -19,6 +19,7 @@ import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntNDP;
 import ru.avicomp.ontapi.jena.model.OntNOP;
+import ru.avicomp.utils.OWLUtils;
 
 /**
  * Created by @szz on 18.10.2018.
@@ -39,14 +40,14 @@ public class ModelDataTest {
 
     private static void validateMappedOWLDataForPredefinedMapping(OntGraphModel m) {
         Resource xstring = XSD.xstring;
-        OntClass iswcFull_Professor = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Full_Professor");
-        OntClass iswcDepartment = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Department");
-        OntClass iswcInstitute = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Institute");
-        OntClass iswcUniversity = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:University");
-        OntClass iswcResearcher = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Researcher");
+        OntClass iswcFull_Professor = OWLUtils.findEntity(m, OntClass.class, "iswc:Full_Professor");
+        OntClass iswcDepartment = OWLUtils.findEntity(m, OntClass.class, "iswc:Department");
+        OntClass iswcInstitute = OWLUtils.findEntity(m, OntClass.class, "iswc:Institute");
+        OntClass iswcUniversity = OWLUtils.findEntity(m, OntClass.class, "iswc:University");
+        OntClass iswcResearcher = OWLUtils.findEntity(m, OntClass.class, "iswc:Researcher");
         OntClass postalAddresses = m.listClasses().filter(x -> "PostalAddresses".equalsIgnoreCase(x.getLocalName()))
                 .findFirst().orElseThrow(AssertionError::new);
-        OntClass iswcOrganizationClass = D2RQTestHelper.findEntity(m, OntClass.class, "iswc:Organization");
+        OntClass iswcOrganizationClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Organization");
 
         DynamicSchemaTest.checkIndividual(iswcResearcher, 5, false);
         DynamicSchemaTest.checkIndividual(iswcInstitute, 2, false);
@@ -55,11 +56,11 @@ public class ModelDataTest {
         DynamicSchemaTest.checkIndividual(iswcFull_Professor, 2, false);
         DynamicSchemaTest.checkIndividual(postalAddresses, 9, true);
 
-        OntNOP vcardADR = D2RQTestHelper.findEntity(m, OntNOP.class, "vcard:ADR");
-        OntNDP vcardPcode = D2RQTestHelper.findEntity(m, OntNDP.class, "vcard:Pcode");
-        OntNDP vcardCountry = D2RQTestHelper.findEntity(m, OntNDP.class, "vcard:Country");
-        OntNDP vcardLocality = D2RQTestHelper.findEntity(m, OntNDP.class, "vcard:Locality");
-        OntNDP vcardStreet = D2RQTestHelper.findEntity(m, OntNDP.class, "vcard:Street");
+        OntNOP vcardADR = OWLUtils.findEntity(m, OntNOP.class, "vcard:ADR");
+        OntNDP vcardPcode = OWLUtils.findEntity(m, OntNDP.class, "vcard:Pcode");
+        OntNDP vcardCountry = OWLUtils.findEntity(m, OntNDP.class, "vcard:Country");
+        OntNDP vcardLocality = OWLUtils.findEntity(m, OntNDP.class, "vcard:Locality");
+        OntNDP vcardStreet = OWLUtils.findEntity(m, OntNDP.class, "vcard:Street");
 
         DynamicSchemaTest.checkHasDomains(vcardADR, iswcOrganizationClass);
         DynamicSchemaTest.checkHasRanges(vcardADR, postalAddresses);

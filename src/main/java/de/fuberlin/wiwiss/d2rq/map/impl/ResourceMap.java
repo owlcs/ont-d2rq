@@ -412,9 +412,9 @@ abstract class ResourceMap extends MapObjectImpl {
         return TypeMapper.getInstance().getSafeTypeByName(datatypeURI);
     }
 
-    private static List<Attribute> parseColumnList(String commaSeperated) {
+    private static List<Attribute> parseColumnList(String commaSeparated) {
         List<Attribute> result = new ArrayList<>();
-        for (String attr : commaSeperated.split(",")) {
+        for (String attr : commaSeparated.split(",")) {
             result.add(SQL.parseAttribute(attr));
         }
         return result;

@@ -289,9 +289,13 @@ public class MappingGenerator {
                 res.addLiteral(D2RQ.classDefinitionLabel, tableName.qualifiedName());
             }
         }
-        if (generateLabelBridges && !identifierColumns.isEmpty()) {
-            addLabelBridge(res, tableName, identifierColumns);
+        if (generateLabelBridges) {
+            if (!identifierColumns.isEmpty() || !requirePrimaryKey) {
+                // to match the original behaviour do not generate labels in case #requirePrimaryKey is false
+                addLabelBridge(res, tableName, identifierColumns);
+            }
         }
+
         List<Join> foreignKeys = database.schemaInspector().foreignKeys(tableName, DatabaseSchemaInspector.KEYS_IMPORTED);
         for (Attribute column : filter(res, database.schemaInspector().listColumns(tableName),
                 false, "property bridge")) {
@@ -386,10 +390,16 @@ public class MappingGenerator {
     }
 
     protected Resource addLabelBridge(Resource table, RelationName tableName, List<Attribute> labelColumns) {
-        Resource res = table.getModel().createResource(propertyBridgeIRITurtle(tableName, "label"), D2RQ.PropertyBridge);
-        res.addProperty(D2RQ.belongsToClassMap, table);
-        res.addProperty(D2RQ.property, RDFS.label);
-        res.addLiteral(D2RQ.pattern, labelPattern(tableName.tableName(), labelColumns));
+        Resource res = table.getModel()
+                .createResource(propertyBridgeIRITurtle(tableName, "label"), D2RQ.PropertyBridge)
+                .addProperty(D2RQ.belongsToClassMap, table)
+                .addProperty(D2RQ.property, RDFS.label);
+        if (!labelColumns.isEmpty()) {
+            res.addLiteral(D2RQ.pattern, labelPattern(tableName.tableName(), labelColumns));
+        } else {
+            // each anonymous individual will be equipped with the same label
+            res.addLiteral(D2RQ.constantValue, tableName.tableName());
+        }
         return res;
     }
 
@@ -577,15 +587,15 @@ public class MappingGenerator {
     }
 
     private String labelPattern(String name, List<Attribute> labelColumns) {
-        StringBuilder result = new StringBuilder(name + " #");
+        StringBuilder res = new StringBuilder(name + " #");
         Iterator<Attribute> it = labelColumns.iterator();
         while (it.hasNext()) {
-            result.append("@@").append(it.next().qualifiedName()).append("@@");
+            res.append("@@").append(it.next().qualifiedName()).append("@@");
             if (it.hasNext()) {
-                result.append("/");
+                res.append("/");
             }
         }
-        return result.toString();
+        return res.toString();
     }
 
     /**

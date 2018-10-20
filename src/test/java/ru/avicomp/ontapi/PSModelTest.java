@@ -1,6 +1,7 @@
 package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
+import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import org.apache.jena.rdf.model.Property;
@@ -31,27 +32,49 @@ import java.util.stream.Collectors;
 public class PSModelTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PSModelTest.class);
 
-    private static ConnectionData psConnectionData = ConnectionData.POSTGRES;
-    private static String psDbName = PSModelTest.class.getSimpleName().toLowerCase() + "_" + System.currentTimeMillis();
+    private static ConnectionData psConnectedDB = ConnectionData.POSTGRES;
+
+    private static String psDatabaseName = PSModelTest.class.getSimpleName().toLowerCase() + "_" + System.currentTimeMillis();
+    private static IRI psBaseIRI = IRI.create("d2rq://no-pk.test/");
 
     @BeforeClass
-    public static void prepareData() throws Exception {
-        psConnectionData.createDatabase("/no_pk.sql", psDbName);
+    public static void createDatabase() throws Exception {
+        psConnectedDB.createDatabase("/no_pk.sql", psDatabaseName);
     }
 
     @AfterClass
-    public static void clear() throws Exception {
-        psConnectionData.dropDatabase(psDbName);
+    public static void dropDatabase() throws Exception {
+        psConnectedDB.dropDatabase(psDatabaseName);
     }
 
-    private static IRI psIRI = IRI.create("d2rq://no-pk.test/");
-    private static Mapping psMapping;
+    private D2RQGraphDocumentSource psDataSource;
+
+    @Before
+    public void before() {
+        psDataSource = D2RQGraphDocumentSource.create(createMapping(psConnectedDB, psBaseIRI, psDatabaseName));
+    }
+
+    private static Mapping createMapping(ConnectionData data, IRI base, String dbName) {
+        return new SystemLoader()
+                .setJdbcURL(data.getJdbcIRI(dbName).getIRIString())
+                .setSystemBaseURI(base.getIRIString())
+                .setControlOWL(true)
+                .setUsername(data.getUser())
+                .setPassword(data.getPwd())
+                .build();
+    }
+
+    @After
+    public void after() {
+        Assume.assumeNotNull(psDataSource);
+        LOGGER.info("Close mapping");
+        psDataSource.close();
+    }
 
     @Test
     public void test01ValidatePSDB() throws OWLOntologyCreationException {
-        D2RQGraphDocumentSource src = psConnectionData.toDocumentSource(psIRI, psDbName);
-        OntologyModel o = OntManagers.createONT().loadOntologyFromOntologyDocument(src);
-        LOGGER.debug("Scheme:");
+        OntologyModel o = OntManagers.createONT().loadOntologyFromOntologyDocument(psDataSource);
+        LOGGER.debug("Schema:");
         ReadWriteUtils.print(o);
 
         OntGraphModel data = D2RQGraphs.reassembly(o.asGraphModel());
@@ -66,9 +89,8 @@ public class PSModelTest {
 
 
         LOGGER.debug("Mapping:");
-        psMapping = src.getMapping();
-        Assert.assertNotNull(psMapping);
-        D2RQTestHelper.print(psMapping.asModel());
+        Assert.assertNotNull(psDataSource.getMapping());
+        D2RQTestHelper.print(psDataSource.getMapping().asModel());
 
         // simple validation of all data in the graphs
         validatePSDatabase(data);
@@ -76,9 +98,9 @@ public class PSModelTest {
 
     @Test
     public void test02ReloadPSOntByMapping() {
-        Assume.assumeNotNull(psMapping);
+        Mapping m = psDataSource.getMapping();
         // reload using mapping only
-        OntologyModel o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.create(psMapping).getGraph());
+        OntologyModel o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.create(m).getGraph());
         OntGraphModel data = D2RQGraphs.reassembly(o.asGraphModel());
         LOGGER.debug("Scheme+Data:");
         D2RQTestHelper.print(data);
@@ -87,17 +109,16 @@ public class PSModelTest {
 
     @Test
     public void test03CombineDifferentSources() throws OWLOntologyCreationException {
-        D2RQGraphDocumentSource src1 = psConnectionData.toDocumentSource(psIRI, psDbName);
-        D2RQGraphDocumentSource src2 = ConnectionData.MYSQL.toDocumentSource("iswc");
-        OntologyManager m1 = OntManagers.createONT();
-        OntologyModel o1 = m1.loadOntologyFromOntologyDocument(src1);
-        OntologyModel o2 = m1.loadOntologyFromOntologyDocument(src2);
-        String iri1 = psIRI + "postgres";
-        o1.asGraphModel().setID(iri1);
-        o2.asGraphModel().addImport(o1.asGraphModel());
+        OntologyManager m = OntManagers.createONT();
+        OntologyModel ps = m.loadOntologyFromOntologyDocument(psDataSource);
+        OntologyModel iswc = m.loadOntologyFromOntologyDocument(ConnectionData.MYSQL.toDocumentSource("iswc"));
+
+        String iri1 = psBaseIRI + "postgres";
+        ps.asGraphModel().setID(iri1);
+        iswc.asGraphModel().addImport(ps.asGraphModel());
 
         OntologyManager m2 = OntManagers.createONT();
-        OntologyModel o3 = m2.addOntology(D2RQGraphs.reassembly(o2.asGraphModel()).getGraph());
+        OntologyModel o3 = m2.addOntology(D2RQGraphs.reassembly(iswc.asGraphModel()).getGraph());
 
         Assert.assertEquals(2, m2.ontologies().count());
 
@@ -109,19 +130,12 @@ public class PSModelTest {
         D2RQGraphs.close(o3.asGraphModel());
     }
 
-    @After
-    public void close() {
-        Assume.assumeNotNull(psMapping);
-        LOGGER.info("Close mapping");
-        psMapping.close();
-    }
-
     private void validatePSDatabase(OntGraphModel model) {
         LOGGER.info("Validate data from pk_table");
         List<String> pkTableColumns = Arrays.asList("id", "numeric_column", "text_column");
         for (String col : pkTableColumns) {
 
-            Property predicate = ResourceFactory.createProperty(psIRI + MappingFactory.VOCAB_PREFIX + "#pk_table_" + col);
+            Property predicate = ResourceFactory.createProperty(psBaseIRI + MappingFactory.VOCAB_PREFIX + "#pk_table_" + col);
             List<OntStatement> statements = model.statements(null, predicate, null).collect(Collectors.toList());
             Assert.assertEquals("Statements for " + predicate, 6, statements.size());
             Assert.assertEquals("Individuals for " + predicate, 6, statements.stream().map(OntStatement::getSubject)
@@ -132,7 +146,7 @@ public class PSModelTest {
         LOGGER.info("Validate data from no_k_table (WARNING: only single individual since table has no primary key)");
         List<String> noPkTableColumns = Arrays.asList("value", "number", "parameter");
         for (String col : noPkTableColumns) {
-            Property predicate = ResourceFactory.createProperty(psIRI + MappingFactory.VOCAB_PREFIX + "#no_pk_table_" + col);
+            Property predicate = ResourceFactory.createProperty(psBaseIRI + MappingFactory.VOCAB_PREFIX + "#no_pk_table_" + col);
             List<OntStatement> statements = model.statements(null, predicate, null).collect(Collectors.toList());
             Assert.assertEquals("Statements for " + predicate, 8, statements.size());
             Assert.assertEquals("Distinct statements for " + predicate, 7, statements.stream().distinct().count());
