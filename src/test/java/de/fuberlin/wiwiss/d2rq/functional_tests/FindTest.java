@@ -149,7 +149,7 @@ public class FindTest extends FindTestFramework {
 
     @Test
     public void testFindAnonymousNode() {
-        AnonId id = getMapPostalAddressesAnonID();
+        AnonId id = new AnonId("map:PostalAddresses@@7");
         find(null, VCARD.Pcode, m.createLiteral("BS34 8QZ"));
         assertStatement(m.createResource(id), VCARD.Pcode, m.createLiteral("BS34 8QZ"));
         assertStatementCount(1);
@@ -157,7 +157,7 @@ public class FindTest extends FindTestFramework {
 
     @Test
     public void testMatchAnonymousSubject() {
-        AnonId id = getMapPostalAddressesAnonID();
+        AnonId id = new AnonId("map:PostalAddresses@@7");
         find(m.createResource(id), VCARD.Pcode, null);
         assertStatement(m.createResource(id), VCARD.Pcode, m.createLiteral("BS34 8QZ"));
         assertStatementCount(1);
@@ -165,18 +165,10 @@ public class FindTest extends FindTestFramework {
 
     @Test
     public void testMatchAnonymousObject() {
-        AnonId id = getMapPostalAddressesAnonID();
+        AnonId id = new AnonId("map:PostalAddresses@@7");
         find(null, VCARD.ADR, m.createResource(id));
         assertStatement(resource("organizations/7"), VCARD.ADR, m.createResource(id));
         assertStatementCount(1);
-    }
-
-    private AnonId getMapPostalAddressesAnonID() {
-        String label = "map:PostalAddresses@@7";
-        if (ISWCData.POSTGRES.equals(data)) {
-            label = label.toLowerCase();
-        }
-        return new AnonId(label);
     }
 
     @Test

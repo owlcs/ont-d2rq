@@ -125,7 +125,7 @@ public class DynamicSchemaTest {
         D2RQTestHelper.print(schema);
         validateInferredOWLForPredefinedMapping(schema);
 
-        Assert.assertEquals(7, schema.listClasses().peek(x -> LOGGER.debug("CLASS: {}", x)).count());
+        Assert.assertEquals(7, schema.listClasses().peek(x -> LOGGER.debug("1) CLASS: {}", x)).count());
 
         mapping.getConfiguration().setControlOWL(true);
         // require db connection to populate missed OWL2 stuff:
@@ -133,7 +133,7 @@ public class DynamicSchemaTest {
 
         D2RQTestHelper.print(schema);
         validateInferredOWLForPredefinedMapping(schema);
-        Assert.assertEquals(8, schema.listClasses().peek(x -> LOGGER.debug("CLASS: {}", x)).count());
+        Assert.assertEquals(8, schema.listClasses().peek(x -> LOGGER.debug("2) CLASS: {}", x)).count());
         schema.createOntEntity(OntClass.class, "OneMore");
 
         Assert.assertEquals(9, schema.listClasses().count());
