@@ -21,6 +21,11 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <licenses>
@@ -260,9 +265,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.topbraid</groupId>
-            <artifactId>shacl</artifactId>
-            <version>1.0.1</version>
+            <groupId>com.github.avicomp</groupId>
+            <artifactId>ont-map</artifactId>
+            <version>1.0.0-SNAPSHOT-1</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

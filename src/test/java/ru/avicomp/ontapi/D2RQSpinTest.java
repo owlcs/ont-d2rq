@@ -1,6 +1,7 @@
 package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
+import org.apache.jena.enhanced.BuiltinPersonalities;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -13,6 +14,7 @@ import org.semanticweb.owlapi.model.SetOntologyID;
 import org.topbraid.spin.inference.SPINInferences;
 import org.topbraid.spin.system.SPINModuleRegistry;
 import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.map.spin.SpinModelConfig;
 import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
@@ -33,6 +35,11 @@ import ru.avicomp.ontapi.utils.ReadWriteUtils;
  */
 @RunWith(Parameterized.class)
 public class D2RQSpinTest extends SpinMappingTest {
+
+    static {
+        // register explicitly due to switching from topbraid-spin to ont-map:
+        SpinModelConfig.init(BuiltinPersonalities.model);
+    }
 
     private ConnectionData data;
 
