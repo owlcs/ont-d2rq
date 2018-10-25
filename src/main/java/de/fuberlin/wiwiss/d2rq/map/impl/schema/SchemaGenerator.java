@@ -2,13 +2,11 @@ package de.fuberlin.wiwiss.d2rq.map.impl.schema;
 
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import org.apache.jena.graph.FrontsNode;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.compose.Union;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.sparql.graph.PrefixMappingMem;
@@ -17,9 +15,7 @@ import ru.avicomp.ontapi.jena.utils.BuiltIn;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiPredicate;
 
 /**
@@ -55,16 +51,11 @@ public class SchemaGenerator {
     }
 
     public static SchemaGenerator createDefault(BuiltIn.Vocabulary vocabulary, boolean withEquivalent) {
-        SchemaAssembler assembler = new SchemaAssembler(asSet(vocabulary.classes()),
-                asSet(vocabulary.reservedProperties()),
+        SchemaAssembler assembler = new SchemaAssembler(Iter.asUnmodifiableNodeSet(vocabulary.classes()),
+                Iter.asUnmodifiableNodeSet(vocabulary.reservedProperties()),
                 withEquivalent);
         return new SchemaGenerator(assembler);
     }
-
-    private static Set<Node> asSet(Collection<? extends RDFNode> from) {
-        return from.stream().map(FrontsNode::asNode).collect(Iter.toUnmodifiableSet());
-    }
-
 
     /**
      * Creates a virtual schema graph that reflects the given mapping graph.

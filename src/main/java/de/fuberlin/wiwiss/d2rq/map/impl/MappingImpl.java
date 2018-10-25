@@ -465,16 +465,12 @@ public class MappingImpl implements Mapping, ConnectingMapping {
      */
     protected static PropertyBridgeImpl generatePropertyBridgeWithConstantType(ClassMapImpl c, Resource type) {
         MappingImpl m = c.getMapping();
-        ExtendedIterator<PropertyBridgeImpl> res = m.asModel()
+        Optional<PropertyBridgeImpl> res = Iter.findFirst(m.asModel()
                 .listResourcesWithProperty(D2RQ.constantValue, type)
                 .filterKeep(r -> r.hasProperty(D2RQ.belongsToClassMap, c.resource)
                         && r.hasProperty(D2RQ.property, RDF.type))
-                .mapWith(m::asPropertyBridge);
-        try {
-            if (res.hasNext()) return res.next();
-        } finally {
-            res.close();
-        }
+                .mapWith(m::asPropertyBridge));
+        if (res.isPresent()) return res.get();
         PropertyBridgeImpl p = m.createPropertyBridge(null);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Generate {} for {}", p, c);
@@ -503,16 +499,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
         DatabaseImpl d = p.getDatabase();
         if (d == null) throw new IllegalStateException("Can't find database for " + p);
         MappingImpl m = p.getMapping();
-        ExtendedIterator<ClassMapImpl> res = m.asModel()
+        Optional<ClassMapImpl> res = Iter.findFirst(m.asModel()
                 .listResourcesWithProperty(D2RQ.clazz, type)
                 .filterKeep(r -> r.hasProperty(predicate, value) && r.hasProperty(D2RQ.dataStorage, d.resource))
-                .mapWith(m::asClassMap);
-        try {
-            if (res.hasNext()) return res.next();
-        } finally {
-            res.close();
-        }
-
+                .mapWith(m::asClassMap));
+        if (res.isPresent()) return res.get();
         ClassMapImpl c = m.createClassMap(null);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Generate {} for {}", c, p);

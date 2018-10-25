@@ -169,7 +169,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      */
     @Override
     public IRI getDocumentIRI() {
-        return IRI.create("Mapping:" + toString(getMapping()));
+        return IRI.create("Mapping:" + OntGraphUtils.toString(getMapping()));
     }
 
     /**

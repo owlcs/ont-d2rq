@@ -133,10 +133,6 @@ public class SchemaHelper {
     }
 
     static boolean hasFirst(ExtendedIterator<?> it) {
-        try {
-            return it.hasNext();
-        } finally {
-            it.close();
-        }
+        return Iter.findFirst(it).isPresent();
     }
 }

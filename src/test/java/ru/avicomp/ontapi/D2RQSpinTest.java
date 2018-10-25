@@ -63,7 +63,7 @@ public class D2RQSpinTest extends SpinMappingTest {
     public void validate(OntGraphModel source, OntGraphModel target) {
         OntGraphModel src = D2RQGraphs.reassembly(source);
         super.validate(src, target);
-        target.listNamedIndividuals().forEach(LOGGER::debug);
+        target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
         OntologyModel o = manager.getOntology(IRI.create(source.getID().getURI()));
         Assert.assertNotNull(o);
@@ -75,13 +75,13 @@ public class D2RQSpinTest extends SpinMappingTest {
         String papersTitleDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Title";
         String papersYearDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Year";
         MappingFilter filter = MappingFilter.create().includeProperty(data.toIRI(papersTitleDataPropertyURI)).includeProperty(data.toIRI(papersYearDataPropertyURI));
-        LOGGER.debug(filter);
+        LOGGER.debug("{}", filter);
         return filter;
     }
 
     @Override
     public OntGraphModel createSourceModel() {
-        LOGGER.info("Create source model based on " + data.getJdbcIRI("iswc"));
+        LOGGER.info("Create source model based on {}", data.getJdbcIRI("iswc"));
         MappingFilter filter = prepareDataFilter();
         D2RQGraphDocumentSource source = data.toDocumentSource("iswc").filter(filter);
         //MappingTestHelper.print(source.getMapping());
