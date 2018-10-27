@@ -15,6 +15,7 @@ import org.topbraid.spin.inference.SPINInferences;
 import org.topbraid.spin.system.SPINModuleRegistry;
 import ru.avicomp.conf.ConnectionData;
 import ru.avicomp.map.spin.SpinModelConfig;
+import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
@@ -37,6 +38,7 @@ import ru.avicomp.ontapi.utils.ReadWriteUtils;
 public class D2RQSpinTest extends SpinMappingTest {
 
     static {
+        OntModelFactory.init();
         // register explicitly due to switching from topbraid-spin to ont-map:
         SpinModelConfig.init(BuiltinPersonalities.model);
     }
@@ -71,10 +73,14 @@ public class D2RQSpinTest extends SpinMappingTest {
         D2RQGraphs.close((UnionGraph) source.getGraph());
     }
 
-    public MappingFilter prepareDataFilter() {
-        String papersTitleDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Title";
-        String papersYearDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI + MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Year";
-        MappingFilter filter = MappingFilter.create().includeProperty(data.toIRI(papersTitleDataPropertyURI)).includeProperty(data.toIRI(papersYearDataPropertyURI));
+    static MappingFilter prepareDataFilter(ConnectionData data) {
+        String papersTitleDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI +
+                MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Title";
+        String papersYearDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI +
+                MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Year";
+        MappingFilter filter = MappingFilter.create()
+                .includeProperty(data.toIRI(papersTitleDataPropertyURI))
+                .includeProperty(data.toIRI(papersYearDataPropertyURI));
         LOGGER.debug("{}", filter);
         return filter;
     }
@@ -82,7 +88,7 @@ public class D2RQSpinTest extends SpinMappingTest {
     @Override
     public OntGraphModel createSourceModel() {
         LOGGER.info("Create source model based on {}", data.getJdbcIRI("iswc"));
-        MappingFilter filter = prepareDataFilter();
+        MappingFilter filter = prepareDataFilter(data);
         D2RQGraphDocumentSource source = data.toDocumentSource("iswc").filter(filter);
         //MappingTestHelper.print(source.getMapping());
 

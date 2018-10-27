@@ -27,15 +27,19 @@ import ru.avicomp.utils.OWLUtils;
 import java.util.function.Supplier;
 
 /**
+ * Test collecting all addresses (skipping incomplete)
+ * using ont-mapping with {@link AVC#UUID avc:UUID} as target function and {@code sp:concat{} as property function.
+ * Database: postgres.
+ *
  * Created by @ssz on 20.10.2018.
  */
 @RunWith(Parameterized.class)
-public class OntMapTest {
+public class OntMapWholeTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OntMapTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OntMapWholeTest.class);
     private final TestData test;
 
-    public OntMapTest(TestData test) {
+    public OntMapWholeTest(TestData test) {
         this.test = test;
     }
 
@@ -219,10 +223,10 @@ public class OntMapTest {
     }
 
     enum TestData {
-        PREDEFINED(SchemaEntities.PREDEFINED, OntMapTest::makePredefinedSource, false),
-        DEFAULT(SchemaEntities.DEFAULT, OntMapTest::makeDefaultSource, false),
-        PREDEFINED_WITH_CACHE(SchemaEntities.PREDEFINED, OntMapTest::makePredefinedSource, true),
-        DEFAULT_WITH_CACHE(SchemaEntities.DEFAULT, OntMapTest::makeDefaultSource, true),
+        PREDEFINED(SchemaEntities.PREDEFINED, OntMapWholeTest::makePredefinedSource, false),
+        DEFAULT(SchemaEntities.DEFAULT, OntMapWholeTest::makeDefaultSource, false),
+        PREDEFINED_WITH_CACHE(SchemaEntities.PREDEFINED, OntMapWholeTest::makePredefinedSource, true),
+        DEFAULT_WITH_CACHE(SchemaEntities.DEFAULT, OntMapWholeTest::makeDefaultSource, true),
         ;
         private final SchemaEntities vocabulary;
         private final Supplier<D2RQGraphDocumentSource> sourceFactory;
