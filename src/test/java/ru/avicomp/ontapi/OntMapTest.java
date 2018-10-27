@@ -1,7 +1,9 @@
 package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
+import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import org.apache.jena.graph.Graph;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,10 +33,10 @@ import java.util.function.Supplier;
 public class OntMapTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OntMapTest.class);
-    private final TestData data;
+    private final TestData test;
 
-    public OntMapTest(TestData data) {
-        this.data = data;
+    public OntMapTest(TestData test) {
+        this.test = test;
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -44,7 +46,7 @@ public class OntMapTest {
 
     @Test
     public void testCollectAddresses() throws OWLOntologyCreationException {
-        D2RQGraphDocumentSource source = data.makeSource();
+        D2RQGraphDocumentSource source = test.makeSource();
         Mapping d2rq = source.getMapping();
 
         OWLMapManager manager = Managers.createOWLMapManager();
@@ -52,10 +54,11 @@ public class OntMapTest {
 
         OntGraphModel dst = assembleTarget(manager);
 
-        MapModel spin = assembleSpinMapping(manager, src, dst, data.getVocabulary());
+        MapModel spin = assembleSpinMapping(manager, src, dst, test.getVocabulary());
 
         LOGGER.debug("Run inference.");
-        manager.getInferenceEngine().run(spin, d2rq.getData(), dst.getBaseGraph());
+        Graph data = test.withCache() ? new CachingGraph(d2rq.getData()) : d2rq.getData();
+        manager.getInferenceEngine().run(spin, data, dst.getBaseGraph());
         LOGGER.debug("Done.");
 
         Assert.assertEquals(1, dst.listNamedIndividuals().count());
@@ -216,15 +219,19 @@ public class OntMapTest {
     }
 
     enum TestData {
-        PREDEFINED(SchemaEntities.PREDEFINED, OntMapTest::makePredefinedSource),
-        DEFAULT(SchemaEntities.DEFAULT, OntMapTest::makeDefaultSource),
+        PREDEFINED(SchemaEntities.PREDEFINED, OntMapTest::makePredefinedSource, false),
+        DEFAULT(SchemaEntities.DEFAULT, OntMapTest::makeDefaultSource, false),
+        PREDEFINED_WITH_CACHE(SchemaEntities.PREDEFINED, OntMapTest::makePredefinedSource, true),
+        DEFAULT_WITH_CACHE(SchemaEntities.DEFAULT, OntMapTest::makeDefaultSource, true),
         ;
         private final SchemaEntities vocabulary;
         private final Supplier<D2RQGraphDocumentSource> sourceFactory;
+        private final boolean withCache;
 
-        TestData(SchemaEntities vocabulary, Supplier<D2RQGraphDocumentSource> sourceFactory) {
+        TestData(SchemaEntities vocabulary, Supplier<D2RQGraphDocumentSource> sourceFactory, boolean useCache) {
             this.vocabulary = vocabulary;
             this.sourceFactory = sourceFactory;
+            this.withCache = useCache;
         }
 
         SchemaEntities getVocabulary() {
@@ -233,6 +240,10 @@ public class OntMapTest {
 
         D2RQGraphDocumentSource makeSource() {
             return sourceFactory.get();
+        }
+
+        boolean withCache() {
+            return withCache;
         }
 
     }
