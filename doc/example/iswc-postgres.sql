@@ -140,7 +140,7 @@ CREATE TABLE rel_paper_topic (
   PRIMARY KEY  (PaperID,TopicID)
 ) ;
 
-CREATE INDEX TopicID ON rel_paper_topic (TopicID);
+CREATE INDEX PaperTopicID ON rel_paper_topic (TopicID);
 
 --
 -- Dumping data for table rel_paper_topic
@@ -232,7 +232,7 @@ CREATE TABLE rel_person_topic (
   PRIMARY KEY  (PersonID,TopicID)
 ) ;
 
-CREATE INDEX TopicID ON rel_person_topic (TopicID);
+CREATE INDEX PersonTopicID ON rel_person_topic (TopicID);
 
 --
 -- Dumping data for table rel_person_topic
