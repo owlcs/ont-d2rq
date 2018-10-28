@@ -183,8 +183,13 @@ public enum ConnectionData {
      * @throws Exception Can't read, load or process SQL script
      */
     public void createDatabase(String scriptResource, String databaseName) throws Exception {
+        createDatabase(Paths.get(ConnectionData.class
+                .getResource(Objects.requireNonNull(scriptResource, "Null script")).toURI()), databaseName);
+    }
+
+    public void createDatabase(Path script, String databaseName) throws Exception {
         Objects.requireNonNull(databaseName, "Null database name");
-        Path script = Paths.get(ConnectionData.class.getResource(Objects.requireNonNull(scriptResource, "Null script")).toURI());
+        if (!Files.exists(script)) throw new IllegalArgumentException("Can't find script " + script);
         try (ConnectedDB db = toConnectedDB();
              Connection conn = db.connection()) {
             conn.setAutoCommit(true);
@@ -204,7 +209,6 @@ public enum ConnectionData {
         }
         LOGGER.info("The database '{}' has been created.", databaseName);
     }
-
     /**
      * Deletes the given database.
      *

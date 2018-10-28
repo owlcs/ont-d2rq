@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
  * <p>
  * Created by @ssz on 27.10.2018.
  */
+@SuppressWarnings("WeakerAccess")
 @RunWith(Parameterized.class)
 public class OntMapSimpleTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OntMapSimpleTest.class);
@@ -72,10 +73,8 @@ public class OntMapSimpleTest {
         D2RQGraphs.close((UnionGraph) source.getGraph());
     }
 
-    private OntGraphModel createSourceModel(OntologyManager manager) {
-        LOGGER.info("Create source model based on {}", data.getJdbcIRI("iswc"));
-        MappingFilter filter = D2RQSpinTest.prepareDataFilter(data);
-        D2RQGraphDocumentSource source = data.toDocumentSource("iswc").filter(filter);
+    public static OntGraphModel createSourceModel(OntologyManager manager) {
+        D2RQGraphDocumentSource source = D2RQSpinTest.createSource(data, "iswc");
         OntologyModel res;
         try {
             res = manager.loadOntologyFromOntologyDocument(source);
@@ -86,7 +85,7 @@ public class OntMapSimpleTest {
         return res.asGraphModel();
     }
 
-    private OntGraphModel createTargetModel(OntologyManager manager) {
+    public static OntGraphModel createTargetModel(OntologyManager manager) {
         LOGGER.debug("Create the target model.");
         String uri = "http://target.avicomp.ru";
         String ns = uri + "#";
@@ -101,7 +100,7 @@ public class OntMapSimpleTest {
         return res;
     }
 
-    private MapModel composeMapping(MapManager manager, OntGraphModel source, OntGraphModel target) {
+    public static MapModel composeMapping(MapManager manager, OntGraphModel source, OntGraphModel target) {
         LOGGER.debug("Compose the (spin) mapping.");
         OntClass sourceClass = source.listClasses().findFirst().orElseThrow(AssertionError::new);
         OntClass targetClass = target.listClasses().findFirst().orElseThrow(AssertionError::new);

@@ -34,6 +34,7 @@ import ru.avicomp.ontapi.utils.ReadWriteUtils;
  * <p>
  * Created by @szuev on 25.02.2017.
  */
+@SuppressWarnings("WeakerAccess")
 @RunWith(Parameterized.class)
 public class D2RQSpinTest extends SpinMappingTest {
 
@@ -73,7 +74,7 @@ public class D2RQSpinTest extends SpinMappingTest {
         D2RQGraphs.close((UnionGraph) source.getGraph());
     }
 
-    static MappingFilter prepareDataFilter(ConnectionData data) {
+    public static MappingFilter prepareDataFilter(ConnectionData data) {
         String papersTitleDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI +
                 MappingGenerator.DEFAULT_SCHEMA_NS.replaceAll("/$", "") + "#papers_Title";
         String papersYearDataPropertyURI = ConnectionData.DEFAULT_BASE_IRI +
@@ -85,13 +86,15 @@ public class D2RQSpinTest extends SpinMappingTest {
         return filter;
     }
 
+    public static D2RQGraphDocumentSource createSource(ConnectionData data, String name) {
+        LOGGER.info("Create source model based on {}", data.getJdbcIRI(name));
+        MappingFilter filter = prepareDataFilter(data);
+        return data.toDocumentSource(name).filter(filter);
+    }
+
     @Override
     public OntGraphModel createSourceModel() {
-        LOGGER.info("Create source model based on {}", data.getJdbcIRI("iswc"));
-        MappingFilter filter = prepareDataFilter(data);
-        D2RQGraphDocumentSource source = data.toDocumentSource("iswc").filter(filter);
-        //MappingTestHelper.print(source.getMapping());
-
+        D2RQGraphDocumentSource source = createSource(data, "iswc");
         OntologyModel res;
         try {
             res = manager.loadOntologyFromOntologyDocument(source);
