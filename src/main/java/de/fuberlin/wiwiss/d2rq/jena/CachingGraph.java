@@ -21,10 +21,15 @@ import java.util.Objects;
 @SuppressWarnings("WeakerAccess")
 public class CachingGraph extends WrappedGraph {
 
-    protected Cache<Triple, List<Triple>> triples = CacheFactory.createCache(100);
+    protected final Cache<Triple, List<Triple>> triples;
 
     public CachingGraph(Graph base) {
+        this(Objects.requireNonNull(base), 10_000);
+    }
+
+    public CachingGraph(Graph base, int maxSize) {
         super(Objects.requireNonNull(base));
+        triples = CacheFactory.createCache(maxSize);
     }
 
     @Override
