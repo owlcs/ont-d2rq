@@ -1,6 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.jena;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
+import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
 import de.fuberlin.wiwiss.d2rq.find.FindQuery;
 import de.fuberlin.wiwiss.d2rq.find.TripleQueryIter;
@@ -13,6 +14,8 @@ import org.apache.jena.graph.impl.GraphBase;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 
 /**
  * A D2RQ virtual read-only Jena graph backed by a non-RDF database.
@@ -105,12 +108,17 @@ public class GraphD2RQ extends GraphBase implements Graph {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Find pattern: {}", PrettyPrinter.toString(triplePattern, getPrefixMapping()));
         }
-        FindQuery query = new FindQuery(triplePattern, mapping.compiledPropertyBridges(), null);
-        ExtendedIterator<Triple> result = TripleQueryIter.create(query.iterator());
+        Collection<TripleRelation> relations = mapping.compiledPropertyBridges();
+        ExtendedIterator<Triple> schema = null;
         if (mapping.withSchema()) {
-            result = result.andThen(mapping.getSchema().find(triplePattern));
+            schema = mapping.getSchema().find(triplePattern);
         }
-        return result;
+        FindQuery query = new FindQuery(triplePattern, relations, null);
+        ExtendedIterator<Triple> data = TripleQueryIter.create(query.iterator());
+        if (schema != null) {
+            return schema.andThen(data);
+        }
+        return data;
     }
 
     @Override

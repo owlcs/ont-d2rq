@@ -23,6 +23,7 @@ import java.sql.Statement;
 
 /**
  * A tester (not a test) for checking inference performance.
+ * For investigating and found an optimal way to inference D2RQ graph using ONT-MAP.
  * <p>
  * Execution stats:
  * no cache:
@@ -31,7 +32,7 @@ import java.sql.Statement;
  * 3000 ~ 52s
  * 5000 ~ 2m23s
  * 7000 ~ 2m17s
- * 10_000 ~ 2m18s
+ * 10_000 ~ 2m18s, 1m36s
  * 20_000 ~ 4m21s, 3m36s
  * 50_000 ~ 9m24s
  * <p>
@@ -76,7 +77,7 @@ public class InfrPerfTester {
     private final boolean withCache;
 
     public InfrPerfTester() {
-        this(50_000, true);
+        this(50_000, false);
     }
 
     protected InfrPerfTester(int numberRowsToInsert, boolean useCache) {
