@@ -14,7 +14,7 @@ import java.util.Objects;
 
 /**
  * A GraphD2RQ that caches the results of the most recently performed queries on an LRU basis.
- *
+ * TODO: handle contains, implement caching iterator
  * @author Holger Knublauch (holger@topquadrant.com)
  * Created by @ssz on 27.10.2018.
  */

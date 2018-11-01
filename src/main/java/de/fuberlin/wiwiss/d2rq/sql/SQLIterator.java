@@ -21,18 +21,20 @@ import java.util.NoSuchElementException;
  * @author Chris Bizer chris@bizer.de
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public class SQLIterator implements ClosableIterator<ResultRow> {
     private final static Logger LOGGER = LoggerFactory.getLogger(SQLIterator.class);
-    private String sql;
-    private List<ProjectionSpec> columns;
-    private ConnectedDB database;
-    private volatile Statement statement;
-    private ResultSet resultSet;
-    private ResultRow prefetchedRow;
-    private int numCols;
-    private boolean queryExecuted;
-    private boolean explicitlyClosed;
-    private volatile boolean cancelled;
+
+    protected final String sql;
+    protected final List<ProjectionSpec> columns;
+    protected final ConnectedDB database;
+    protected volatile Statement statement;
+    protected ResultSet resultSet;
+    protected ResultRow prefetchedRow;
+    //private int numCols;
+    protected boolean queryExecuted;
+    protected boolean explicitlyClosed;
+    protected volatile boolean cancelled;
 
     public SQLIterator(String sql, List<ProjectionSpec> columns, ConnectedDB db) {
         this.sql = sql;
@@ -80,8 +82,8 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
                 this.prefetchedRow = null;
                 return;
             }
-            BeanCounter.totalNumberOfReturnedRows++;
-            BeanCounter.totalNumberOfReturnedFields += this.numCols;
+            //BeanCounter.totalNumberOfReturnedRows++;
+            //BeanCounter.totalNumberOfReturnedFields += this.numCols;
             prefetchedRow = ResultRowMap.fromResultSet(resultSet, columns, database);
         } catch (SQLException ex) {
             throw new D2RQException(ex);
@@ -143,7 +145,7 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(sql);
         }
-        BeanCounter.totalNumberOfExecutedSQLQueries++;
+        //BeanCounter.totalNumberOfExecutedSQLQueries++;
         try {
             Connection con = this.database.connection();
             this.statement = con.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -159,7 +161,7 @@ public class SQLIterator implements ClosableIterator<ResultRow> {
             database.vendor().afterQuery(database.connection());
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("SQL result set created");
-            this.numCols = this.resultSet.getMetaData().getColumnCount();
+            //this.numCols = this.resultSet.getMetaData().getColumnCount();
         } catch (SQLException ex) {
             if (cancelled) {
                 if (LOGGER.isDebugEnabled())

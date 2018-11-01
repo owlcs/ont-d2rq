@@ -55,6 +55,7 @@ public class SystemLoader implements AutoCloseable {
     private Filter filter;
     private boolean fastMode;
     private boolean useOWLControl;
+    private boolean withSchema = true;
     private boolean withAnonymousIndividuals;
 
     private ConnectedDB connectedDB;
@@ -150,6 +151,11 @@ public class SystemLoader implements AutoCloseable {
         return this;
     }
 
+    public SystemLoader setServeVocabulary(boolean b) {
+        this.withSchema = b;
+        return this;
+    }
+
     public SystemLoader setMappingURL(String mappingURL) {
         this.mappingFile = mappingURL;
         return this;
@@ -237,7 +243,10 @@ public class SystemLoader implements AutoCloseable {
 
     public Mapping build() {
         Mapping res = fetchMapping();
-        res.getConfiguration().setControlOWL(useOWLControl).setUseAllOptimizations(fastMode);
+        res.getConfiguration()
+                .setControlOWL(useOWLControl)
+                .setUseAllOptimizations(fastMode)
+                .setServeVocabulary(withSchema);
         if (fetchSize != Database.NO_FETCH_SIZE || resultSizeLimit != Database.NO_LIMIT) {
             res.listDatabases()
                     .filter(d -> Objects.equals(d.getJDBCDSN(), jdbcURL))
