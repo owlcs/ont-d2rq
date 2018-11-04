@@ -1,17 +1,17 @@
 package ru.avicomp.ontapi;
 
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.avicomp.conf.ConnectionData;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
-import ru.avicomp.ontapi.jena.vocabulary.OWL;
+import ru.avicomp.utils.OWLUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  */
 @RunWith(Parameterized.class)
 public class IndividualsTest {
-    private static final Logger LOGGER = Logger.getLogger(IndividualsTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndividualsTest.class);
     private ConnectionData data;
 
     public IndividualsTest(ConnectionData data) {
@@ -41,38 +41,35 @@ public class IndividualsTest {
 
         LOGGER.info("Load full db schema from " + data);
         D2RQGraphDocumentSource source = data.toDocumentSource("iswc");
-        LOGGER.info("Source: " + source);
+        LOGGER.info("Source: {}", source);
 
         OntologyModel schema = m.loadOntologyFromOntologyDocument(source);
-        schema.axioms().forEach(LOGGER::debug);
+        schema.axioms().forEach(x -> LOGGER.debug("{}", x));
 
         int expectedNumberOfIndividuals = 56;
 
         LOGGER.info("Test schema+data ontology.");
-        OntGraphModel data = D2RQGraphs.reassembly(schema.asGraphModel());
-        testIndividuals(data, expectedNumberOfIndividuals);
+        OntGraphModel virtual = OWLUtils.toVirtual(schema.asGraphModel());
+        testIndividuals(virtual, expectedNumberOfIndividuals);
 
         LOGGER.info("Test there is no individuals inside schema ontology.");
         testIndividuals(schema.asGraphModel(), 0);
 
         // pass all data from DB to memory
         OntologyModel inMemory = m.createOntology();
-        inMemory.asGraphModel().add(data);
-        // add owl:NamedIndividual declarations
-        data.listNamedIndividuals().forEach(i -> inMemory.asGraphModel().createResource(i.getURI(), OWL.NamedIndividual));
-        inMemory.asGraphModel().write(System.out, "ttl");
+        inMemory.asGraphModel().add(virtual);
 
         List<OWLAxiom> axioms = inMemory.axioms(AxiomType.CLASS_ASSERTION).collect(Collectors.toList());
-        axioms.forEach(LOGGER::debug);
+        axioms.forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of class-assertion axioms", expectedNumberOfIndividuals, axioms.size());
 
-        D2RQGraphs.close(data);
+        OWLUtils.closeConnections(schema);
     }
 
     private void testIndividuals(OntGraphModel model, int expected) {
         List<OntIndividual.Named> individuals = model.listNamedIndividuals().collect(Collectors.toList());
         LOGGER.debug("Number of individuals " + individuals.size());
-        individuals.forEach(LOGGER::debug);
+        individuals.forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of (named)individuals", expected, individuals.size());
         Assert.assertEquals("Incorrect number of (all)individuals", expected, model.ontObjects(OntIndividual.class).count());
     }

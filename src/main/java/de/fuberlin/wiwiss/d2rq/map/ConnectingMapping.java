@@ -39,17 +39,4 @@ public interface ConnectingMapping {
      */
     boolean withAllOptimizations();
 
-    /**
-     * Answers whether to serve inferred and user-supplied vocabulary data ({@code true} by default).
-     *
-     * @return boolean
-     */
-    boolean withSchema();
-
-    /**
-     * Returns the vocabulary data.
-     *
-     * @return {@link Graph}
-     */
-    Graph getSchema();
 }

@@ -18,8 +18,7 @@ import ru.avicomp.ontapi.internal.AxiomParserProvider;
 import ru.avicomp.ontapi.internal.ONTObject;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntStatement;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
-import ru.avicomp.ontapi.utils.ReadWriteUtils;
+import ru.avicomp.utils.OWLUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -57,6 +56,7 @@ public class PSModelTest {
     private static Mapping createMapping(ConnectionData data, IRI base, String dbName) {
         return new SystemLoader()
                 .setJdbcURL(data.getJdbcIRI(dbName).getIRIString())
+                .setServeVocabulary(false)
                 .setSystemBaseURI(base.getIRIString())
                 .setControlOWL(true)
                 .setUsername(data.getUser())
@@ -73,11 +73,13 @@ public class PSModelTest {
 
     @Test
     public void test01ValidatePSDB() throws OWLOntologyCreationException {
+        Assert.assertNotNull(psDataSource.getMapping());
         OntologyModel o = OntManagers.createONT().loadOntologyFromOntologyDocument(psDataSource);
         LOGGER.debug("Schema:");
-        ReadWriteUtils.print(o);
+        D2RQTestHelper.print(o.asGraphModel());
 
-        OntGraphModel data = D2RQGraphs.reassembly(o.asGraphModel());
+        // in memory, no duplicates:
+        OntGraphModel data = OWLUtils.toMemory(o.asGraphModel());
         // axioms:
         List<OWLAxiom> axioms = AxiomType.AXIOM_TYPES.stream()
                 .map(AxiomParserProvider::get)
@@ -85,11 +87,9 @@ public class PSModelTest {
                 .map(ONTObject::getObject)
                 .collect(Collectors.toList());
         axioms.forEach(x -> LOGGER.debug("AXIOM:::{}", x));
-        Assert.assertEquals(90, axioms.size());
-
+        Assert.assertEquals(87, axioms.size());
 
         LOGGER.debug("Mapping:");
-        Assert.assertNotNull(psDataSource.getMapping());
         D2RQTestHelper.print(psDataSource.getMapping().asModel());
 
         // simple validation of all data in the graphs
@@ -101,7 +101,7 @@ public class PSModelTest {
         Mapping m = psDataSource.getMapping();
         // reload using mapping only
         OntologyModel o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.create(m).getGraph());
-        OntGraphModel data = D2RQGraphs.reassembly(o.asGraphModel());
+        OntGraphModel data = OWLUtils.toVirtual(o.asGraphModel());
         LOGGER.debug("Scheme+Data:");
         D2RQTestHelper.print(data);
         validatePSDatabase(data);
@@ -118,20 +118,21 @@ public class PSModelTest {
         iswc.asGraphModel().addImport(ps.asGraphModel());
 
         OntologyManager m2 = OntManagers.createONT();
-        OntologyModel o3 = m2.addOntology(D2RQGraphs.reassembly(iswc.asGraphModel()).getGraph());
+        OntologyModel reloaded = m2.addOntology(OWLUtils.toVirtual(iswc.asGraphModel()).getGraph());
 
         Assert.assertEquals(2, m2.ontologies().count());
 
-        List<OWLNamedIndividual> individuals = o3.individualsInSignature(Imports.INCLUDED).collect(Collectors.toList());
+        List<OWLNamedIndividual> individuals = reloaded.individualsInSignature(Imports.INCLUDED).collect(Collectors.toList());
         individuals.forEach(i -> LOGGER.debug("Individual: {}", i));
         // 56 from iswc + 7 from no_pk (6 from pk_table, 1 from no_pk_table)
         Assert.assertEquals(63, individuals.size());
 
-        D2RQGraphs.close(o3.asGraphModel());
+        OWLUtils.closeConnections(reloaded);
     }
 
     private void validatePSDatabase(OntGraphModel model) {
-        LOGGER.info("Validate data from pk_table");
+        boolean isInMemory = OWLUtils.isInMemory(model.getGraph());
+        LOGGER.info("Validate data from pk_table ({})", isInMemory ? "InMemory" : "Virtual");
         List<String> pkTableColumns = Arrays.asList("id", "numeric_column", "text_column");
         for (String col : pkTableColumns) {
 
@@ -148,11 +149,12 @@ public class PSModelTest {
         for (String col : noPkTableColumns) {
             Property predicate = ResourceFactory.createProperty(psBaseIRI + MappingFactory.VOCAB_PREFIX + "#no_pk_table_" + col);
             List<OntStatement> statements = model.statements(null, predicate, null).collect(Collectors.toList());
-            Assert.assertEquals("Statements for " + predicate, 8, statements.size());
+            Assert.assertEquals("Statements for " + predicate, isInMemory ? 7 : 8, statements.size());
             Assert.assertEquals("Distinct statements for " + predicate, 7, statements.stream().distinct().count());
             Assert.assertEquals("Individuals for " + predicate, 1, statements.stream().map(OntStatement::getSubject)
                     .filter(RDFNode::isURIResource).distinct().count());
-            Assert.assertEquals("Literals for " + predicate, 8, statements.stream().map(OntStatement::getObject).filter(RDFNode::isLiteral).count());
+            Assert.assertEquals("Literals for " + predicate, isInMemory ? 7 : 8, statements.stream()
+                    .map(OntStatement::getObject).filter(RDFNode::isLiteral).count());
         }
     }
 }

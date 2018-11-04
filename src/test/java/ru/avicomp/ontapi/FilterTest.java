@@ -17,7 +17,7 @@ import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntOPE;
 import ru.avicomp.ontapi.jena.model.OntPE;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
+import ru.avicomp.utils.OWLUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,7 +46,7 @@ public class FilterTest {
 
     @Test
     public void test01FilterSchema() throws Exception {
-        LOGGER.info("Load full db schema from " + data);
+        LOGGER.info("Load full db schema from {}", data);
         D2RQGraphDocumentSource source1 = data.toDocumentSource("iswc");
         OntologyManager manager = OntManagers.createONT();
         OntologyModel full = manager.loadOntologyFromOntologyDocument(source1);
@@ -55,8 +55,10 @@ public class FilterTest {
 
         // creates a filter:
         LOGGER.info("Load the restricted model from db (property constraints)");
-        OWLDataProperty dp = full.dataPropertiesInSignature().sorted().findFirst().orElseThrow(() -> new AssertionError("Can't find any data property."));
-        OWLObjectProperty op = full.objectPropertiesInSignature().sorted().findFirst().orElseThrow(() -> new AssertionError("Can't find any object property."));
+        OWLDataProperty dp = full.dataPropertiesInSignature().sorted().findFirst()
+                .orElseThrow(() -> new AssertionError("Can't find any data property."));
+        OWLObjectProperty op = full.objectPropertiesInSignature().sorted().findFirst()
+                .orElseThrow(() -> new AssertionError("Can't find any object property."));
         MappingFilter filter1 = MappingFilter.create(dp, op);
         LOGGER.debug("Constraint properties: " + filter1.properties().collect(Collectors.toList()));
 
@@ -65,7 +67,7 @@ public class FilterTest {
         // load a model:
         OntologyModel filteredByProperties = manager.loadOntologyFromOntologyDocument(source2);
         // set iri"
-        OWLOntologyID id2 = new OWLOntologyID(IRI.create("http://d2rq.example.com"), IRI.create("http://d2rq.example.com/version/1.0"));
+        OWLOntologyID id2 = OntologyID.create("http://d2rq.example.com", "http://d2rq.example.com/version/1.0");
         filteredByProperties.applyChange(new SetOntologyID(filteredByProperties, id2));
         D2RQTestHelper.print(filteredByProperties.asGraphModel());
         // validate:
@@ -82,14 +84,16 @@ public class FilterTest {
         LOGGER.info("Load the restricted model from db (class constraints)");
         OntOPE p = full.asGraphModel().listObjectProperties().min(Comparator.comparing(Resource::getURI))
                 .orElseThrow(() -> new AssertionError("Can't find any ont object property."));
-        IRI class1 = p.range().map(Resource::getURI).map(IRI::create).sorted().findFirst().orElseThrow(() -> new AssertionError("Can't find range for " + p));
-        IRI class2 = p.domain().map(Resource::getURI).map(IRI::create).sorted().findFirst().orElseThrow(() -> new AssertionError("Can't find domain for " + p));
+        IRI class1 = p.range().map(Resource::getURI).map(IRI::create).sorted().findFirst()
+                .orElseThrow(() -> new AssertionError("Can't find range for " + p));
+        IRI class2 = p.domain().map(Resource::getURI).map(IRI::create).sorted().findFirst()
+                .orElseThrow(() -> new AssertionError("Can't find domain for " + p));
         MappingFilter filter2 = MappingFilter.create().includeClass(class1).includeClass(class2);
         LOGGER.debug("Constraint classes: " + filter2.classes().collect(Collectors.toList()));
 
         D2RQGraphDocumentSource source3 = source1.filter(filter2);
         OntologyModel filteredByClasses = manager.loadOntologyFromOntologyDocument(source3);
-        OWLOntologyID id3 = new OWLOntologyID(IRI.create("http://d2rq.example.com"), IRI.create("http://d2rq.example.com/version/2.0"));
+        OWLOntologyID id3 = OntologyID.create("http://d2rq.example.com", "http://d2rq.example.com/version/2.0");
         filteredByClasses.applyChange(new SetOntologyID(filteredByClasses, id3));
         D2RQTestHelper.print(filteredByClasses.asGraphModel());
         // validate:
@@ -101,7 +105,6 @@ public class FilterTest {
         Assert.assertFalse("No properties:", props.isEmpty());
         source3.close();
         testResult.computeIfAbsent(data, d -> new HashMap<>()).put(filteredByClasses, 9);
-
     }
 
     @Test
@@ -110,13 +113,13 @@ public class FilterTest {
         Assume.assumeNotNull(res);
         res.forEach((schema, expectedCount) -> {
             LOGGER.info("Test data for ontology {}", schema.getOntologyID());
-            OntGraphModel data = D2RQGraphs.reassembly(schema.asGraphModel());
-            Assert.assertEquals("Ontology IDs don't match", schema.asGraphModel().getID(), data.getID());
+            OntGraphModel withData = OWLUtils.toMemory(schema.asGraphModel());
+            Assert.assertEquals("Ontology IDs don't match", schema.asGraphModel().getID(), withData.getID());
 
-            Set<OntIndividual> individuals = data.ontObjects(OntIndividual.class).collect(Collectors.toSet());
+            Set<OntIndividual> individuals = withData.ontObjects(OntIndividual.class).collect(Collectors.toSet());
             individuals.forEach(x -> LOGGER.debug("{}", x));
             Assert.assertEquals("Wrong individuals count", expectedCount.intValue(), individuals.size());
-            D2RQGraphs.close(data);
+            OWLUtils.closeConnections(schema);
         });
 
     }

@@ -1,15 +1,15 @@
 package de.fuberlin.wiwiss.d2rq.values;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import de.fuberlin.wiwiss.d2rq.algebra.ColumnRenamer;
 import de.fuberlin.wiwiss.d2rq.algebra.OrderSpec;
 import de.fuberlin.wiwiss.d2rq.algebra.ProjectionSpec;
 import de.fuberlin.wiwiss.d2rq.expr.Expression;
 import de.fuberlin.wiwiss.d2rq.nodes.NodeSetFilter;
 import de.fuberlin.wiwiss.d2rq.sql.ResultRow;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Dummy implementation of {@link ValueMaker}

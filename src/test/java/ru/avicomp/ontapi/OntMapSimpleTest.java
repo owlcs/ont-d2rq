@@ -15,15 +15,14 @@ import org.slf4j.LoggerFactory;
 import ru.avicomp.conf.ConnectionData;
 import ru.avicomp.map.*;
 import ru.avicomp.ontapi.jena.OntModelFactory;
-import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntDT;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntNDP;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
 import ru.avicomp.ontapi.jena.vocabulary.XSD;
 import ru.avicomp.ontapi.utils.SP;
 import ru.avicomp.ontapi.utils.SPINMAPL;
+import ru.avicomp.utils.OWLUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -60,7 +59,7 @@ public class OntMapSimpleTest {
         D2RQTestHelper.print(spin.asGraphModel());
 
         LOGGER.debug("Run inference.");
-        Graph data = D2RQGraphs.reassembly(source).getGraph();
+        Graph data = OWLUtils.getDataGraph(source);
         if (TestData.CACHE.equals(test)) {
             data = new CachingGraph(data);
         }
@@ -70,7 +69,7 @@ public class OntMapSimpleTest {
         target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
         D2RQTestHelper.print(target);
-        D2RQGraphs.close((UnionGraph) source.getGraph());
+        OWLUtils.closeConnections(source);
     }
 
     public static OntGraphModel createSourceModel(OntologyManager manager) {

@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Properties;
 
 /**
  * Builder for MappingGenerators, ModelD2RQs and the like.
@@ -46,6 +47,7 @@ public class SystemLoader implements AutoCloseable {
     private String jdbcDriverClass;
     private int resultSizeLimit = Database.NO_LIMIT;
     private int fetchSize = Database.NO_FETCH_SIZE;
+    private Properties properties;
     private String sqlScript;
     private boolean generateDirectMapping;
     private String jdbcURL;
@@ -171,6 +173,11 @@ public class SystemLoader implements AutoCloseable {
         return this;
     }
 
+    public SystemLoader setConnectionProperties(Properties properties) {
+        this.properties = properties;
+        return this;
+    }
+
     /**
      * @return Base URI where the server is assumed to run
      */
@@ -192,7 +199,7 @@ public class SystemLoader implements AutoCloseable {
 
     private ConnectedDB createConnectedDB() {
         ConnectedDB res = new ConnectedDB(jdbcURL, username, password,
-                Collections.emptyMap(), resultSizeLimit, fetchSize, null);
+                Collections.emptyMap(), resultSizeLimit, fetchSize, properties);
         if (sqlScript != null) {
             try {
                 SQLScriptLoader.loadFile(Paths.get(sqlScript), res.connection());
@@ -247,10 +254,13 @@ public class SystemLoader implements AutoCloseable {
                 .setControlOWL(useOWLControl)
                 .setUseAllOptimizations(fastMode)
                 .setServeVocabulary(withSchema);
-        if (fetchSize != Database.NO_FETCH_SIZE || resultSizeLimit != Database.NO_LIMIT) {
-            res.listDatabases()
-                    .filter(d -> Objects.equals(d.getJDBCDSN(), jdbcURL))
-                    .forEach(d -> d.setResultSizeLimit(resultSizeLimit).setFetchSize(fetchSize));
+        if (fetchSize != Database.NO_FETCH_SIZE || resultSizeLimit != Database.NO_LIMIT || properties != null) {
+            res.findDatabase(jdbcURL).ifPresent(d -> {
+                if (properties != null) {
+                    d.addConnectionProperties(properties);
+                }
+                d.setResultSizeLimit(resultSizeLimit).setFetchSize(fetchSize);
+            });
         }
         if (connectedDB != null) {
             // Hack! We don't want the Database to open another ConnectedDB,

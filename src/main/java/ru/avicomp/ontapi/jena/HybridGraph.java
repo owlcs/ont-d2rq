@@ -14,7 +14,8 @@ import java.util.stream.Stream;
  * This is a "hybrid" graph,
  * that is simply a wrapper for the primary base graph with a reference to the collection of hidden graphs.
  * The idea is to have all references in one place,
- * which can be useful if the schema and data are of different nature and need to be controlled separately.
+ * which can be useful, for example, if there are a schema and data of different nature
+ * and it is need to be control them separately, having always at hand.
  * <p>
  * Created by @szuev on 24.02.2017.
  */
@@ -33,6 +34,15 @@ public class HybridGraph extends WrappedGraph implements Graph {
     }
 
     /**
+     * Lists all graphs from this container.
+     *
+     * @return Stream of {@link Graph}s
+     */
+    public Stream<Graph> graphs() {
+        return Stream.concat(Stream.of(getWrapped()), hidden());
+    }
+
+    /**
      * Lists all hidden graphs.
      *
      * @return Stream of {@link Graph}s
@@ -42,12 +52,14 @@ public class HybridGraph extends WrappedGraph implements Graph {
     }
 
     /**
-     * Lists all graphs from this container.
+     * Lists all hidden graphs of the given type.
      *
-     * @return Stream of {@link Graph}s
+     * @param type class-type
+     * @param <G>  subtype of {@link Graph}
+     * @return Stream of {@link G}s
      */
-    public Stream<Graph> graphs() {
-        return Stream.concat(Stream.of(getWrapped()), hidden());
+    public <G extends Graph> Stream<G> hidden(Class<G> type) {
+        return hidden().filter(type::isInstance).map(type::cast);
     }
 
 }

@@ -4,7 +4,6 @@ import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
-import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
@@ -123,13 +122,13 @@ public class DynamicSchemaTest {
 
         OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
         D2RQTestHelper.print(schema);
+        Assert.assertFalse(mapping.getConfiguration().getControlOWL());
         validateInferredOWLForPredefinedMapping(schema);
 
         Assert.assertEquals(7, schema.listClasses().peek(x -> LOGGER.debug("1) CLASS: {}", x)).count());
 
         mapping.getConfiguration().setControlOWL(true);
-        // require db connection to populate missed OWL2 stuff:
-        MappingHelper.asConnectingMapping(mapping).compiledPropertyBridges();
+        Assert.assertTrue(mapping.getConfiguration().getControlOWL());
 
         D2RQTestHelper.print(schema);
         validateInferredOWLForPredefinedMapping(schema);

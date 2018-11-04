@@ -1,7 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.map.impl.schema;
 
+import de.fuberlin.wiwiss.d2rq.jena.MappingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -64,16 +66,16 @@ public class SchemaGenerator {
      * and the right is a {@code DynamicGraph}, which maps D2RQ instructions to the OWL2 assertions.
      * The adding and removing are performed transitively on the base (specified) graph.
      *
-     * @param base {@link Graph}, not {@code null}, containing D2RQ instructions
+     * @param mapping {@link MappingImpl}, not {@code null}, containing D2RQ instructions
      * @return {@link Graph}, virtual graph, containing only the OWL2 assertions
      * @see VirtualGraph#createMaskGraph(Graph, BiPredicate)
      * @see VirtualGraph#createDynamicGraph(Graph, VirtualGraph.DynamicTriples)
      */
-    public Graph createMagicGraph(Graph base) {
-        Objects.requireNonNull(base, "Null base");
+    public Graph createMagicGraph(MappingImpl mapping) {
+        Graph base = Objects.requireNonNull(mapping, "Null mappign").asModel().getGraph();
         Graph left = VirtualGraph.createMaskGraph(base, buildMaskGraph());
         Graph right = VirtualGraph.createDynamicGraph(base, assembler.buildDynamicGraph());
-        Graph res = new Union(left, right) {
+        Graph res = new MappingGraph(mapping) {
 
             @Override
             protected PrefixMapping createPrefixMapping() {
@@ -94,14 +96,16 @@ public class SchemaGenerator {
             }
 
             @Override
-            protected ExtendedIterator<Triple> _graphBaseFind(final Triple t) {
+            protected ExtendedIterator<Triple> graphBaseFind(Triple m) {
+                // to avoid java.util.ConcurrentModificationException:
+                mapping.compiledPropertyBridges();
                 // the duplicate checking is not needed in this case
-                return L.find(t).andThen(R.find(t));
+                return left.find(m).andThen(right.find(m));
             }
 
             @Override
             public void performAdd(Triple t) {
-                if (R.contains(t)) {
+                if (right.contains(t)) {
                     // do not add inferred triples
                     return;
                 }
@@ -116,7 +120,7 @@ public class SchemaGenerator {
             @Override
             public String toString() {
                 // do not allow printing of all data content
-                return "MagicGraph@" + Integer.toHexString(hashCode());
+                return String.format("Schema[%s]", mapping);
             }
         };
         res.getPrefixMapping().setNsPrefixes(createSchemaPrefixes(base));

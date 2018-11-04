@@ -20,9 +20,10 @@ import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphs;
+import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
 import ru.avicomp.ontapi.tests.SpinMappingTest;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
+import ru.avicomp.utils.OWLUtils;
 
 /**
  * To test SPIN + D2RQ + ONT-API.
@@ -64,14 +65,14 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Override
     public void validate(OntGraphModel source, OntGraphModel target) {
-        OntGraphModel src = D2RQGraphs.reassembly(source);
+        OntGraphModel src = OWLUtils.toMemory(source);
         super.validate(src, target);
         target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
         OntologyModel o = manager.getOntology(IRI.create(source.getID().getURI()));
         Assert.assertNotNull(o);
         ReadWriteUtils.print(o);
-        D2RQGraphs.close((UnionGraph) source.getGraph());
+        OWLUtils.closeConnections(source);
     }
 
     public static MappingFilter prepareDataFilter(ConnectionData data) {
@@ -107,7 +108,9 @@ public class D2RQSpinTest extends SpinMappingTest {
 
     @Override
     public void runInferences(OntologyModel mapping, Model target) {
-        Graph graph = D2RQGraphs.reassembly((UnionGraph) mapping.asGraphModel().getGraph());
+        // make a Virtual UnionGraph with no repetitions:
+        Graph graph = OWLUtils.build(OWLUtils.getUnionGraph(mapping.asGraphModel()),
+                UnionGraph::new, D2RQGraphUtils::toVirtual);
         Model source = ModelFactory.createModelForGraph(graph);
         LOGGER.info("Run Inferences");
         SPINModuleRegistry.get().init();

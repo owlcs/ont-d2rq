@@ -10,7 +10,7 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.graph.Capabilities;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.graph.impl.GraphBase;
+import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ import java.util.Collection;
  * @author Chris Bizer chris@bizer.de
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class GraphD2RQ extends GraphBase implements Graph {
+public class GraphD2RQ extends MappingGraph implements Graph {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphD2RQ.class);
 
     @SuppressWarnings("deprecated")
@@ -78,23 +78,21 @@ public class GraphD2RQ extends GraphBase implements Graph {
         QueryEngineD2RQ.register();
     }
 
-    private final ConnectingMapping mapping;
+    protected final Graph schema;
 
     /**
      * Creates a new D2RQ graph from a previously prepared {@link ConnectingMapping} instance.
      *
-     * @param mapping A D2RQ mapping
-     * @throws D2RQException If the mapping is invalid
+     * @param mapping  {@link ConnectingMapping}, a D2RQ mapping, not {@code null}
+     * @param prefixes {@link PrefixMapping} to use, can be {@code null}
+     * @param schema   {@link Graph}, Vocabulary Graph, can be {@code null}
      */
-    public GraphD2RQ(ConnectingMapping mapping) throws D2RQException {
-        this.mapping = mapping;
-        // todo: currently it is a snapshot:
-        getPrefixMapping().setNsPrefixes(mapping.getSchema().getPrefixMapping());
-    }
-
-    @Override
-    public void close() {
-        mapping.close();
+    public GraphD2RQ(ConnectingMapping mapping, PrefixMapping prefixes, Graph schema) {
+        super(mapping);
+        this.schema = schema;
+        if (prefixes != null) {
+            getPrefixMapping().setNsPrefixes(prefixes);
+        }
     }
 
     @Override
@@ -102,44 +100,32 @@ public class GraphD2RQ extends GraphBase implements Graph {
         return READ_ONLY_CAPABILITIES;
     }
 
+    public boolean containsSchema() {
+        return schema != null;
+    }
+
     @Override
-    public ExtendedIterator<Triple> graphBaseFind(Triple triplePattern) {
+    public ExtendedIterator<Triple> graphBaseFind(Triple triplePattern) throws D2RQException {
         checkOpen();
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Find pattern: {}", PrettyPrinter.toString(triplePattern, getPrefixMapping()));
         }
         Collection<TripleRelation> relations = mapping.compiledPropertyBridges();
-        ExtendedIterator<Triple> schema = null;
-        if (mapping.withSchema()) {
-            schema = mapping.getSchema().find(triplePattern);
-        }
         FindQuery query = new FindQuery(triplePattern, relations, null);
         ExtendedIterator<Triple> data = TripleQueryIter.create(query.iterator());
         if (schema != null) {
-            return schema.andThen(data);
+            return schema.find(triplePattern).andThen(data);
         }
         return data;
     }
 
-    @Override
-    protected void checkOpen() {
-        mapping.connect();
-    }
-
     /**
-     * @return The {@link ConnectingMapping} this graph is based on
-     */
-    public ConnectingMapping getMapping() {
-        return mapping;
-    }
-
-    /**
-     * Do not allow database excursion
+     * Do not allow database excursion.
      *
      * @return String
      */
     @Override
     public String toString() {
-        return getClass().getName() + "@" + Integer.toHexString(hashCode());
+        return String.format("Data[%s]", mapping);
     }
 }

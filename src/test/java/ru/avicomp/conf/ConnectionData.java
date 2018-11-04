@@ -113,7 +113,7 @@ public enum ConnectionData {
     }
 
     public D2RQGraphDocumentSource toDocumentSource(IRI base, String dbName) {
-        return D2RQGraphDocumentSource.create(base, getJdbcIRI(dbName), getUser(), getPwd());
+        return D2RQGraphDocumentSource.create(base, getJdbcIRI(dbName), getUser(), getPwd(), null);
     }
 
     /**

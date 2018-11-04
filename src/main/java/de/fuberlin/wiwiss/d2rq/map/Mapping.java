@@ -51,6 +51,11 @@ public interface Mapping extends AutoCloseable {
      * The {@link org.apache.jena.shared.PrefixMapping} attached to the schema graph
      * is also reflected by the mapping graph prefixes and vice verse.
      * Adding or removing a prefix pair to or from the schema will be reflected in the mapping graph.
+     * Please note: currently, like a {@link #getData() Data Graph}, iterating over this graph requires db connection.
+     * Also note:
+     * this graph depends on the {@link de.fuberlin.wiwiss.d2rq.vocab.AVC#controlOWL avc:controlOWL} setting.
+     * If this setting is turn on, it is guaranteed, that both the schema and the data is fully corresponds OWL2,
+     * but this also means some dynamic changes in the mapping.
      *
      * @return {@link Graph}, an OWL2 schema
      * @see ru.avicomp.ontapi.jena.model.OntGraphModel

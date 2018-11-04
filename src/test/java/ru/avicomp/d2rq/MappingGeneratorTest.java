@@ -22,6 +22,7 @@ import ru.avicomp.ontapi.D2RQGraphDocumentSource;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.impl.conf.OntModelConfig;
 import ru.avicomp.ontapi.jena.model.*;
+import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
 import ru.avicomp.utils.OWLUtils;
 
 import java.util.List;
@@ -109,12 +110,13 @@ public class MappingGeneratorTest {
     public void testDefaultDocumentSource() {
         String uri = "http://test.ex/ogds";
         D2RQGraphDocumentSource source = D2RQGraphDocumentSource.create(IRI.create(uri),
-                IRI.create(db.getJdbcURL()), db.getUsername(), db.getPassword());
+                IRI.create(db.getJdbcURL()), db.getUsername(), db.getPassword(), null);
         MappingHelper.useConnectedDB(source.getMapping(), db);
         Mapping m = source.getMapping();
         MappingTestHelper.print(m);
 
-        OntGraphModel all = OntModelFactory.createModel(m.getData(), OntModelConfig.ONT_PERSONALITY_LAX);
+        OntGraphModel all = OntModelFactory.createModel(D2RQGraphUtils.toVirtual(source.getGraph()),
+                OntModelConfig.ONT_PERSONALITY_LAX);
         D2RQTestHelper.print(all);
         OWLUtils.validateOWLEntities(all, 2, 0, 6, 0, 6, 7);
 
