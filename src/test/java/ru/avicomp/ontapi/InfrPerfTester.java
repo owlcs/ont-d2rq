@@ -22,39 +22,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * A tester (not a test) for checking inference performance.
- * For investigating and found an optimal way to inference D2RQ graph using ONT-MAP.
- * <p>
- * Execution stats:
- * no cache:
- * 1000 ~ 23s
- * 2000 ~ 33s
- * 3000 ~ 52s
- * 5000 ~ 2m23s
- * 7000 ~ 2m17s
- * 10_000 ~ 2m18s, 1m36s
- * 20_000 ~ 4m21s, 3m36s
- * 50_000 ~ 9m24s
- * <p>
- * cache (jena-guava, 100):
- * 1000 ~ 34s
- * 5000 ~ 2m50s
- * <p>
- * cache (jena-guava, 10_000):
- * 1000 ~ 21s
- * 5000 ~ 54s
- * 7000 ~ 1m29s
- * 10_000 ~ 2m11s
- * 20_000 ~ 4m33s, 3m29s
- * 50_000 ~ 9m36s, 7m52s, 7m29s
- * <p>
- * cache (original, 10_000):
- * 1000 ~ 22s
- * 5000 ~ 1m
- * 7000 ~ 1m24s
- * 10_000 ~ 2m22s
- * 20_000 ~ 7m49s ?? 4m35s
- * 50_000 ~ 8m18s
+ * A tester (not a test) for checking inference performance,
+ * for investigation and finding the optimal way to infer D2RQ graph using ONT-MAP.
  * <p>
  * Created by @ssz on 28.10.2018.
  */
@@ -77,7 +46,7 @@ public class InfrPerfTester {
     private final boolean withCache;
 
     public InfrPerfTester() {
-        this(50_000, false);
+        this(100_000, false);
     }
 
     protected InfrPerfTester(int numberRowsToInsert, boolean useCache) {

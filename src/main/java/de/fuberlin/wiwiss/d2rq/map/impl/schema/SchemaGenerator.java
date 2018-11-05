@@ -71,7 +71,7 @@ public class SchemaGenerator {
      * @see VirtualGraph#createMaskGraph(Graph, BiPredicate)
      * @see VirtualGraph#createDynamicGraph(Graph, VirtualGraph.DynamicTriples)
      */
-    public Graph createMagicGraph(MappingImpl mapping) {
+    public Graph createDynamicGraph(MappingImpl mapping) {
         Graph base = Objects.requireNonNull(mapping, "Null mappign").asModel().getGraph();
         Graph left = VirtualGraph.createMaskGraph(base, buildMaskGraph());
         Graph right = VirtualGraph.createDynamicGraph(base, assembler.buildDynamicGraph());

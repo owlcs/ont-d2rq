@@ -51,4 +51,10 @@ public abstract class MappingGraph extends GraphBase {
         GraphUtil.addInto(res, this);
         return res;
     }
+
+    @Override
+    public String toString() {
+        return String.format("[%s][%s]", getClass().getSimpleName(), mapping);
+    }
+
 }
