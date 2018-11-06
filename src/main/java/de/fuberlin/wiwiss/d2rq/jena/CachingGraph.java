@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * A {@code CachingGraph} that caches the results of the most recently performed queries on an LRU basis.
@@ -24,14 +25,16 @@ import java.util.Objects;
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class CachingGraph extends GraphBase {
 
-    protected static final List<Triple> TOO_BIG = new ArrayList<>();
+    protected static final List<Triple> OUT_OF_SPACE = new ArrayList<>();
 
     protected final Cache<Triple, List<Triple>> triples;
     protected final Graph base;
     protected final int maxCacheSize;
     protected final long maxLength;
     protected final int bucketCapacity;
-    protected long count;
+    // atomic, since the concurrent guava cache is used,
+    // which, in turn, was chosen since it used by jena (i.e. org.apache.jena.enhanced.EnhGraph)
+    protected final LongAdder size;
 
     /**
      * Creates a caching graph with default settings.
@@ -70,7 +73,9 @@ public class CachingGraph extends GraphBase {
         this.maxCacheSize = requireNonNegative(cacheSize, "Negative cache size");
         this.maxLength = requireNonNegative(maxLength, "Negative max length");
         this.bucketCapacity = requireNonNegative(bucketCapacity, "Negative default bucket size");
+        this.size = new LongAdder();
         this.triples = CacheFactory.createCache(cacheSize);
+        this.triples.setDropHandler((k, v) -> size.add(-v.size()));
     }
 
     private static <N extends Number> N requireNonNegative(N n, String msg) {
@@ -83,7 +88,7 @@ public class CachingGraph extends GraphBase {
     @Override
     public ExtendedIterator<Triple> graphBaseFind(Triple m) {
         List<Triple> res = triples.getIfPresent(m);
-        if (TOO_BIG == res) {
+        if (OUT_OF_SPACE == res) {
             return base.find(m);
         } else if (res != null) {
             return WrappedIterator.create(res.iterator());
@@ -94,12 +99,12 @@ public class CachingGraph extends GraphBase {
         while (bucket.hasNext()) res.add(bucket.next());
         ((ArrayList<Triple>) res).trimToSize();
         long current = bucket.getLength();
-        if (count + current < maxLength) {
+        if (size.longValue() + current < maxLength) {
             triples.put(m, res);
-            count += current;
+            size.add(current);
         } else {
             // not enough space in the cache
-            triples.put(m, TOO_BIG);
+            triples.put(m, OUT_OF_SPACE);
         }
         return WrappedIterator.create(res.iterator());
     }
@@ -115,7 +120,7 @@ public class CachingGraph extends GraphBase {
     /**
      * A {@link WrappedIterator} that calculates its length while iterating,
      * assuming that "length" of a {@link Triple} is equal (or proportional)
-     * the number of characters in its string representation.
+     * the number of characters in its String representation.
      * Language tag for literal nodes is not taken into account.
      * This iterator doesn't permit removing.
      */

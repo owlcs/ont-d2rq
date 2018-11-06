@@ -20,7 +20,6 @@ import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
-import tmp.Tmp_Caching;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +47,7 @@ public class CachingGraphTest {
             }
         };
         Model base = ModelFactory.createModelForGraph(g);
-        try (InputStream in = Tmp_Caching.class.getResourceAsStream("/pizza.ttl")) {
+        try (InputStream in = CachingGraphTest.class.getResourceAsStream("/pizza.ttl")) {
             base.read(in, null, "ttl");
         }
         long size = base.size();
@@ -113,7 +112,7 @@ public class CachingGraphTest {
         cache.keys().forEachRemaining(x -> Assert.assertTrue(cache.getOrFill(x, () -> {
             throw new AssertionError("No value");
         }).isEmpty()));
-        Assert.assertSame(CachingGraph.TOO_BIG, cache.getIfPresent(i.getRoot().asTriple()));
-        Assert.assertSame(CachingGraph.TOO_BIG, cache.getIfPresent(c.getRoot().asTriple()));
+        Assert.assertSame(CachingGraph.OUT_OF_SPACE, cache.getIfPresent(i.getRoot().asTriple()));
+        Assert.assertSame(CachingGraph.OUT_OF_SPACE, cache.getIfPresent(c.getRoot().asTriple()));
     }
 }
