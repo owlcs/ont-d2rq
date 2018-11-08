@@ -106,6 +106,15 @@ public class CachingGraph extends GraphBase {
         return base.getPrefixMapping();
     }
 
+    /**
+     * Returns the wrapped graph.
+     *
+     * @return {@link Graph}
+     */
+    public Graph getBase() {
+        return base;
+    }
+
     @Override
     public ExtendedIterator<Triple> graphBaseFind(Triple m) {
         List<Triple> res = triples.getIfPresent(m);
@@ -114,12 +123,12 @@ public class CachingGraph extends GraphBase {
         } else if (res != null) {
             return WrappedIterator.create(res.iterator());
         }
-        // do caching:
+        // prepare data for caching:
         Bucket list = new Bucket();
         Iterator<Triple> it = base.find(m);
         while (it.hasNext()) list.add(it.next());
         list.trimToSize();
-
+        // put into cache:
         long current = list.getLength();
         if (size.longValue() + current < maxLength) {
             triples.put(m, list);

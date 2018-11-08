@@ -213,7 +213,7 @@ public class OntMapWholeTest {
         OntGraphModel src = OntModelFactory.createModel(d2rq.getSchema());
         src.setID("http://test.ex/predefined");
         src.setNsPrefix("x", "file:///Users/richard/D2RQ/workspace/D2RQ/doc/example/mapping-iswc.ttl#");
-        return D2RQGraphDocumentSource.create(d2rq);
+        return D2RQGraphDocumentSource.wrap(d2rq);
     }
 
     private static D2RQGraphDocumentSource makeDefaultSource() {

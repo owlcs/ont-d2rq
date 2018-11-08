@@ -50,7 +50,7 @@ public class PSModelTest {
 
     @Before
     public void before() {
-        psDataSource = D2RQGraphDocumentSource.create(createMapping(psConnectedDB, psBaseIRI, psDatabaseName));
+        psDataSource = D2RQGraphDocumentSource.wrap(createMapping(psConnectedDB, psBaseIRI, psDatabaseName));
     }
 
     private static Mapping createMapping(ConnectionData data, IRI base, String dbName) {
@@ -100,7 +100,7 @@ public class PSModelTest {
     public void test02ReloadPSOntByMapping() {
         Mapping m = psDataSource.getMapping();
         // reload using mapping only
-        OntologyModel o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.create(m).getGraph());
+        OntologyModel o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.wrap(m).getGraph());
         OntGraphModel data = OWLUtils.toVirtual(o.asGraphModel());
         LOGGER.debug("Scheme+Data:");
         D2RQTestHelper.print(data);

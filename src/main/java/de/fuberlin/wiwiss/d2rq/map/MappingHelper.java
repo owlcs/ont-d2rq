@@ -7,7 +7,7 @@ import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 
 /**
- * Various utility methods to work with {@link Mapping} and with some its components.
+ * Various utility methods to work with {@link Mapping D2RQ Mapping Model} and with some its components.
  * Created by @ssz on 17.10.2018.
  *
  * @see MappingFactory
@@ -16,13 +16,27 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 public class MappingHelper {
 
     /**
-     * Represents the given {@link Mapping Mapping Model} as a {@link ConnectingMapping}.
+     * Represents the given {@link Mapping D2RQ Mapping Model} as a {@link ConnectingMapping}.
      *
      * @param m {@link Mapping}, not {@code null}
      * @return {@link ConnectingMapping}, not {@code null}
+     * @throws ClassCastException if wrong instance
+     * @see #asMapping(ConnectingMapping)
      */
     public static ConnectingMapping asConnectingMapping(Mapping m) {
         return (ConnectingMapping) m;
+    }
+
+    /**
+     * Represents the given {@link ConnectingMapping} as a {@link Mapping D2RQ Mapping Model}.
+     *
+     * @param m {@link ConnectingMapping}, not {@code null}
+     * @return {@link Mapping}, not {@code null}
+     * @throws ClassCastException if wrong instance
+     * @see #asConnectingMapping(Mapping)
+     */
+    public static Mapping asMapping(ConnectingMapping m) {
+        return (Mapping) m;
     }
 
     /**

@@ -6,7 +6,6 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.OntologyModel;
-import ru.avicomp.ontapi.jena.HybridGraph;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.impl.OntGraphModelImpl;
@@ -59,46 +58,46 @@ public class OWLUtils {
     }
 
     public static OntGraphModel toMemory(OntGraphModel m) {
-        Assert.assertTrue(D2RQGraphUtils.isD2RQHybrid(m.getBaseGraph()));
+        Assert.assertTrue(D2RQGraphUtils.isMappingGraph(m.getBaseGraph()));
         UnionGraph res = build(getUnionGraph(m), D2RQGraphUtils::toMemory);
         return OntModelFactory.createModel(res, getPersonality(m));
     }
 
     public static OntGraphModel toVirtual(OntGraphModel m) {
-        Assert.assertTrue(D2RQGraphUtils.isD2RQHybrid(m.getBaseGraph()));
+        Assert.assertTrue(D2RQGraphUtils.isMappingGraph(m.getBaseGraph()));
         UnionGraph res = build(getUnionGraph(m), D2RQGraphUtils::toVirtual);
         return OntModelFactory.createModel(res, getPersonality(m));
     }
 
     public static Graph getDataGraph(OntGraphModel m) {
-        Assert.assertTrue(D2RQGraphUtils.isD2RQHybrid(m.getBaseGraph()));
-        return D2RQGraphUtils.getDataGraph((HybridGraph) m.getBaseGraph());
+        Assert.assertTrue(D2RQGraphUtils.isMappingGraph(m.getBaseGraph()));
+        return D2RQGraphUtils.getDataGraph(m.getBaseGraph());
     }
 
-    public static UnionGraph build(UnionGraph graph, Function<HybridGraph, Graph> baseGraphMapper) {
+    public static UnionGraph build(UnionGraph graph, Function<Graph, Graph> baseGraphMapper) {
         return build(graph, D2RQGraphUtils::createUnionGraph, baseGraphMapper);
     }
 
     /**
      * Assembles a new {@link UnionGraph Union Graph} from the given {@code hierarchyGraph}
      * preserving the hierarchy structure and using the {@code unionGraphFactory}
-     * to produce new instances and {@code hybridGraphHandler} to convert {@link HybridGraph} into the desired from.
+     * to produce new instances and {@code hybridGraphHandler} to convert {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph} into the desired from.
      *
      * @param hierarchyGraph     {@link UnionGraph}, the original graph
      * @param unionGraphFactory  {@code Function}, a factory to create fresh {@link UnionGraph} instance
-     * @param hybridGraphHandler {@code Function}, a factory to handle {@link HybridGraph} if it is present in the structure
+     * @param mappingGraphHandler {@code Function}, a factory to handle {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph} if it is present in the structure
      * @return {@link UnionGraph}
      */
     public static UnionGraph build(UnionGraph hierarchyGraph,
                                    Function<Graph, UnionGraph> unionGraphFactory,
-                                   Function<HybridGraph, Graph> hybridGraphHandler) {
+                                   Function<Graph, Graph> mappingGraphHandler) {
         Graph base = hierarchyGraph.getBaseGraph();
-        if (D2RQGraphUtils.isD2RQHybrid(base)) {
-            base = hybridGraphHandler.apply((HybridGraph) base);
+        if (D2RQGraphUtils.isMappingGraph(base)) {
+            base = mappingGraphHandler.apply(base);
         }
         UnionGraph res = unionGraphFactory.apply(base);
         hierarchyGraph.getUnderlying()
-                .graphs().map(x -> x instanceof UnionGraph ? build((UnionGraph) x, hybridGraphHandler) : x)
+                .graphs().map(x -> x instanceof UnionGraph ? build((UnionGraph) x, mappingGraphHandler) : x)
                 .forEach(res::addGraph);
         return res;
     }

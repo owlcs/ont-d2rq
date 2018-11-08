@@ -5,24 +5,30 @@ import de.fuberlin.wiwiss.d2rq.map.Configuration;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.vocab.AVC;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
-import ru.avicomp.ontapi.jena.HybridGraph;
 
 import java.util.Objects;
 import java.util.Properties;
 
 /**
  * This is an extended {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI Document Source}
- * for loading a graph from a database in the form of {@link OntologyModel OWL2 ontology}.
- * A graph is provided in the hybrid form (see {@link HybridGraph})
- * and includes DB-schema as primary graph and
- * DB-data (which may also be supplied with the schema)
- * as a virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ Data Graph}.
+ * for loading a graph from a database in the form of {@link OntologyModel OWL2 Ontology}.
+ * <p>
+ * A graph, that is returned by the method {@link OntGraphDocumentSource#getGraph()}, reflects a Database Schema only,
+ * but it is also a {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph D2RQ Mapping Graph} and, therefore,
+ * has a reference to a {@link Mapping D2RQ Mapping}
+ * (which is also provided by the method {@link D2RQGraphDocumentSource#getMapping()},
+ * with a possibility to get a raw
+ * (in case a default method {@link #create(IRI, IRI, String, String, Properties) #create(...)}
+ * to get a instance of this OGDS is used)
+ * database data in the form of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ Data Graph}.
  * <p>
  * Created by @szuev on 24.02.2017.
  *
  * @see <a href='https://www.w3.org/TR/rdb-direct-mapping/'>Direct Mapping</a>
+ * @see ru.avicomp.ontapi.jena.utils.D2RQGraphUtils
  */
 @SuppressWarnings("WeakerAccess")
 public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements AutoCloseable {
@@ -57,7 +63,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * using the specified connection parameters.
      * This is a generic method to create a mapping and document source.
      * <p>
-     * The return graph document source (i.e. OGDS) encapsulates the {@link Mapping D2RQ Mapping},
+     * The returning graph document source (i.e. OGDS) encapsulates the {@link Mapping D2RQ Mapping},
      * which is slightly different from what can be generated with help of the
      * {@link de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator Default Mapping Generator} or
      * {@link de.fuberlin.wiwiss.d2rq.mapgen.W3CMappingGenerator Direct Mapping Generator}.
@@ -74,11 +80,11 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * The second setting means that a data part from the {@link #getGraph() Hybrid Graph} does not served with a schema,
      * it comes as primary (wrapped) part.
      *
-     * @param baseIRI    {@link IRI} the base iri to build owl-entity iris (see {@code d2rq:uriPattern})
-     * @param jdbcIRI    {@link IRI} jdbc-connection string, not {@code null}
-     * @param user       String, the connection user login or {@code null}
-     * @param pwd        String, the connection user password or {@code null}
-     * @param props {@link Properties}, the JDBC connection properties or {@code null}
+     * @param baseIRI {@link IRI} the base iri to build owl-entity iris (see {@code d2rq:uriPattern})
+     * @param jdbcIRI {@link IRI} jdbc-connection string, not {@code null}
+     * @param user    String, the connection user login or {@code null}
+     * @param pwd     String, the connection user password or {@code null}
+     * @param props   {@link Properties}, the JDBC connection properties or {@code null}
      * @return {@link D2RQGraphDocumentSource D2RQ OGDS}
      * @see de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator
      */
@@ -87,7 +93,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
                                                  String user,
                                                  String pwd,
                                                  Properties props) {
-        return create(new SystemLoader()
+        return wrap(new SystemLoader()
                 .setJdbcURL(Objects.requireNonNull(jdbcIRI, "Null JDBC IRI.").getIRIString())
                 .withAnonymousIndividuals(true)
                 .setServeVocabulary(false)
@@ -106,7 +112,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * @return {@link D2RQGraphDocumentSource D2RQ OGDS}
      * @throws OntApiException in case argument is wrong
      */
-    public static D2RQGraphDocumentSource create(Mapping mapping) {
+    public static D2RQGraphDocumentSource wrap(Mapping mapping) {
         return new D2RQGraphDocumentSource(mapping);
     }
 
@@ -125,7 +131,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
             return this;
         }
         Model map = filter.build(mapping);
-        return create(MappingFactory.create(map));
+        return wrap(MappingFactory.create(map));
     }
 
     /**
@@ -141,26 +147,25 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     }
 
     /**
-     * Returns a hybrid graph which consists of two graphs:
-     * <ul>
-     * <li>The primary {@code Graph}, that contains OWL2 declarations and reflects database schema.
-     * This graph is virtual, but editable: any changes in it go directly to the mapping.</li>
-     * <li>The virtual {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ}, that refers a database data in the RDF-form.
-     * This graph is unmodifiable.
-     * The D2RQ data graph is not distinct:
+     * Provides a DB schema {@code Graph}, that contains OWL2 declarations
+     * reflecting the concrete database schema according to the {@link #getMapping() D2RQ Mapping} instructions.
+     * This graph is virtual but editable: any changes in it go directly to the mapping {@code Graph}.
+     * It is also a {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph Mapping Graph}, and, therefore,
+     * there is a possibility to get database data from it
+     * (is the form of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ Data Graph}),
+     * see {@link ru.avicomp.ontapi.jena.utils.D2RQGraphUtils#getDataGraph(Graph)}.
+     * <p>
+     * If this OGDS is default, i.e. constructed by the method {@link #create(IRI, IRI, String, String, Properties)},
+     * then a D2RQ data {@code Graph} does not contain a schema.
+     * Also, please note: a D2RQ Data {@code Graph} is unmodifiable and not distinct:
      * it may contain duplicate triples reflecting the duplicated tuples in a db table.
-     * If the Document Source is default,
-     * i.e. provided by the method {@link #create(IRI, IRI, String, String, Properties)},
-     * then this {@code Graph} does not contain a schema</li>
-     * </ul>
      *
-     * @return {@link HybridGraph}
      * @see Mapping#getSchema()
      * @see Mapping#getData()
      */
     @Override
-    public HybridGraph getGraph() {
-        return new HybridGraph(mapping.getSchema(), mapping.getData());
+    public Graph getGraph() {
+        return mapping.getSchema();
     }
 
     /**
