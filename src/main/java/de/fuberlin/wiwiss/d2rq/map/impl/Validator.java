@@ -133,7 +133,7 @@ class Validator {
                 return this;
             }
             throw newException("the found literal for the predicate "
-                    + asString() + " is not of the " + PrettyPrinter.toString(datatypeURI) + " type :" + res, code);
+                    + asString() + " is not of the " + PrettyPrinter.toString(datatypeURI) + " type :" + res.getDatatypeURI(), code);
         }
 
         ForProperty requireContainsOnlyStrings(int code) {

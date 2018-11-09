@@ -174,7 +174,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     }
 
     public PropertyBridgeImpl setLimit(int limit) {
-        return setLiteral(D2RQ.limit, limit);
+        return setInteger(D2RQ.limit, limit);
     }
 
     @Override
@@ -184,7 +184,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
 
     @Override
     public PropertyBridgeImpl setLimitInverse(int limit) {
-        return setLiteral(D2RQ.limitInverse, limit);
+        return setInteger(D2RQ.limitInverse, limit);
     }
 
     @Override

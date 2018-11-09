@@ -136,7 +136,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
 
     @Override
     public Database setResultSizeLimit(int limit) {
-        return setLiteral(D2RQ.resultSizeLimit, limit);
+        return setInteger(D2RQ.resultSizeLimit, limit);
     }
 
     @Override
@@ -146,7 +146,7 @@ public class DatabaseImpl extends MapObjectImpl implements Database {
 
     @Override
     public Database setFetchSize(int fetchSize) {
-        return setLiteral(D2RQ.fetchSize, fetchSize);
+        return setInteger(D2RQ.fetchSize, fetchSize);
     }
 
     @Override

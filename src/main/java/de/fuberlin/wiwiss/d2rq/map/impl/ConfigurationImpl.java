@@ -14,6 +14,7 @@ import java.util.stream.Stream;
  *
  * @author Christian Becker &lt;http://beckr.org#chris&gt;
  */
+@SuppressWarnings("WeakerAccess")
 public class ConfigurationImpl extends MapObjectImpl implements Configuration {
 
     public ConfigurationImpl(Resource resource, MappingImpl mapping) {
@@ -41,13 +42,43 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
     }
 
     @Override
+    public boolean getControlOWL() {
+        return getBoolean(AVC.controlOWL, false);
+    }
+
+    @Override
     public Configuration setControlOWL(boolean controlOWL) {
         return setBoolean(AVC.controlOWL, controlOWL);
     }
 
     @Override
-    public boolean getControlOWL() {
-        return getBoolean(AVC.controlOWL, false);
+    public boolean getWithCache() {
+        return getBoolean(AVC.withCache, false);
+    }
+
+    @Override
+    public ConfigurationImpl setWithCache(boolean useCache) {
+        return setBoolean(AVC.withCache, useCache);
+    }
+
+    @Override
+    public int getCacheMaxSize() {
+        return getInteger(AVC.cacheMaxSize, 10_000);
+    }
+
+    @Override
+    public ConfigurationImpl setCacheMaxSize(int size) {
+        return setInteger(AVC.cacheMaxSize, size);
+    }
+
+    @Override
+    public long getCacheLengthLimit() {
+        return findFirst(AVC.cacheLengthLimit, s -> s.getLiteral().getLong()).orElse(30_000_000L);
+    }
+
+    @Override
+    public ConfigurationImpl setCacheLengthLimit(long length) {
+        return setInteger(AVC.cacheLengthLimit, String.valueOf(length));
     }
 
     @Override
@@ -58,10 +89,16 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
     @Override
     public void validate() throws D2RQException {
         Validator v = new Validator(this);
-        Stream.of(D2RQ.serveVocabulary, D2RQ.useAllOptimizations)
+        Stream.of(D2RQ.serveVocabulary, D2RQ.useAllOptimizations, AVC.controlOWL, AVC.withCache)
                 .map(v::forProperty)
                 .filter(Validator.ForProperty::exists)
                 .forEach(p -> p.requireHasNoDuplicates(D2RQException.UNSPECIFIED)
                         .requireIsBooleanLiteral(D2RQException.UNSPECIFIED));
+        Stream.of(AVC.cacheLengthLimit, AVC.cacheMaxSize)
+                .map(v::forProperty)
+                .filter(Validator.ForProperty::exists)
+                .forEach(p -> p.requireHasNoDuplicates(D2RQException.UNSPECIFIED)
+                        .requireIsIntegerLiteral(D2RQException.UNSPECIFIED));
     }
+
 }

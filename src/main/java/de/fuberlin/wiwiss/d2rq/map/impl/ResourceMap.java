@@ -177,7 +177,7 @@ abstract class ResourceMap extends MapObjectImpl {
     }
 
     public ResourceMap setValueMaxLength(int maxLength) {
-        return setLiteral(D2RQ.valueMaxLength, maxLength);
+        return setInteger(D2RQ.valueMaxLength, maxLength);
     }
 
     public Integer getValueMaxLength() {

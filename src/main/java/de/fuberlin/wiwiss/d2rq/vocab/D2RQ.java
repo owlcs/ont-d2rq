@@ -428,6 +428,8 @@ public class D2RQ {
      *
      * @see D2RQ#serveVocabulary
      * @see D2RQ#useAllOptimizations
+     * @see AVC#controlOWL
+     * @see AVC#withCache
      */
     public static final Resource Configuration = resource("Configuration");
 

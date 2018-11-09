@@ -31,4 +31,5 @@ public interface MapObject {
      * @throws D2RQException in case the object is not complete and cannot be used to build relations
      */
     void validate() throws D2RQException;
+
 }

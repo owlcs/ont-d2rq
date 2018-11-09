@@ -226,4 +226,32 @@ public class MappingTest {
 
         }
     }
+
+    @Test
+    public void testConfiguration() {
+        Mapping m = MappingFactory.create();
+        Configuration c = m.getConfiguration();
+        Assert.assertNotNull(c);
+        c.validate();
+        Assert.assertTrue(c.getServeVocabulary());
+        Assert.assertFalse(c.getUseAllOptimizations());
+        Assert.assertFalse(c.getControlOWL());
+        Assert.assertFalse(c.getWithCache());
+        Assert.assertEquals(10_000, c.getCacheMaxSize());
+        Assert.assertEquals(30_000_000, c.getCacheLengthLimit());
+
+        c.setServeVocabulary(false)
+                .setControlOWL(true)
+                .setUseAllOptimizations(true)
+                .setWithCache(true)
+                .setCacheMaxSize(1)
+                .setCacheLengthLimit(2).validate();
+        Assert.assertFalse(c.getServeVocabulary());
+        Assert.assertTrue(c.getUseAllOptimizations());
+        Assert.assertTrue(c.getControlOWL());
+        Assert.assertTrue(c.getWithCache());
+        Assert.assertEquals(1, c.getCacheMaxSize());
+        Assert.assertEquals(2, c.getCacheLengthLimit());
+        MappingTestHelper.print(m);
+    }
 }

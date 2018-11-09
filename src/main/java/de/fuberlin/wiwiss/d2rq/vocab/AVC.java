@@ -30,10 +30,39 @@ public class AVC {
      * (e.g. for {@link ru.avicomp.ontapi.jena.vocabulary.OWL#NamedIndividual owl:NamedIndividual}).
      *
      * @see D2RQ#Configuration
-     * @see D2RQ#useAllOptimizations
-     * @see D2RQ#serveVocabulary
      */
     public static final Property controlOWL = property("controlOWL");
+
+    /**
+     * An addition configuration property to turn on/off a cache for D2RQ Data Graph.
+     * The right part of the statement with this predicate must be {@code xsd:boolean} literal.
+     * This option is experimental and by default it is absent in a Mapping graph
+     * (which means that there is no caching for data graph).
+     *
+     * @see D2RQ#Configuration
+     */
+    public static final Property withCache = property("withCache");
+
+    /**
+     * A cache additional property to set up max absolute cache length limit expressed in a conventional unit,
+     * that is approximately equaled to the 16 bit (char size).
+     * The right part of the statement with this predicate
+     * must be {@code xsd:integer} literal, with positive int as value.
+     *
+     * @see D2RQ#Configuration
+     * @see de.fuberlin.wiwiss.d2rq.jena.CachingGraph#cacheLengthLimit
+     */
+    public static final Property cacheLengthLimit = property("cacheLengthLimit");
+
+    /**
+     * A cache additional property to set up max cache keys size.
+     * The right part of the statement with this predicate
+     * must be {@code xsd:integer} literal, with positive int as value.
+     *
+     * @see D2RQ#Configuration
+     * @see de.fuberlin.wiwiss.d2rq.jena.CachingGraph#cacheMaxSize
+     */
+    public static final Property cacheMaxSize = property("maxKeysSize");
 
     /**
      * Property-marker to indicate that a related

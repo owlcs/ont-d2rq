@@ -35,8 +35,8 @@ public class CachingGraph extends GraphBase {
     protected final Cache<Triple, List<Triple>> triples;
     protected final Graph base;
     // cache parameters:
-    protected final int maxCacheSize;
-    protected final long maxLength;
+    protected final int cacheMaxSize;
+    protected final long cacheLengthLimit;
     protected final int bucketCapacity;
     protected final ToLongFunction<Triple> lengthCalculator;
     protected final LongAdder size;
@@ -44,9 +44,9 @@ public class CachingGraph extends GraphBase {
     /**
      * Creates a caching graph, that keeps track of its own size.
      * The graph has default settings.
-     * Here the length limit ({@link #maxLength}) is taken equal to {@code 30_000_000} that roughly matches 60mb
+     * Here the length limit ({@link #cacheLengthLimit}) is taken equal to {@code 30_000_000} that roughly matches 60mb
      * (grossly believing that a java(8) String consists only of chars)
-     * and the cached queries limit ({@link #maxCacheSize}) is {@code 10_000}.
+     * and the cached queries limit ({@link #cacheMaxSize}) is {@code 10_000}.
      *
      * @param base {@link Graph} to wrap, not {@code null}
      */
@@ -57,37 +57,37 @@ public class CachingGraph extends GraphBase {
     /**
      * Creates a caching graph, that keeps track of its own size.
      *
-     * @param base      {@link Graph} to wrap, not {@code null}
-     * @param cacheSize int, the cache size
-     * @param maxLength long, max number of chars that this cache can hold
+     * @param base             {@link Graph} to wrap, not {@code null}
+     * @param cacheMaxSize     int, the cache size
+     * @param cacheLengthLimit long, max number of chars that this cache can hold
      */
-    public CachingGraph(Graph base, int cacheSize, long maxLength) {
-        this(base, new TripleLength(),
-                cacheSize, maxLength, maxLength > cacheSize ? (int) (maxLength / cacheSize) : cacheSize);
+    public CachingGraph(Graph base, int cacheMaxSize, long cacheLengthLimit) {
+        this(base, new TripleLength(), cacheMaxSize, cacheLengthLimit,
+                cacheLengthLimit > cacheMaxSize ? (int) (cacheLengthLimit / cacheMaxSize) : cacheMaxSize);
     }
 
     /**
      * Creates a caching graph, that keeps track of its own size.
      * If the queried bunch size is too large to fit in the cache, then an uncached iterator is returned.
      *
-     * @param graph          {@link Graph} to wrap, not {@code null}
-     * @param tripleLength   {@link ToLongFunction} to calculate {@link Triple} "length"
-     * @param cacheSize      int, the cache size
-     * @param maxLength      long, max number of chars that this cache can hold
-     * @param bucketCapacity int, the default initial bucket capacity
+     * @param graph                  {@link Graph} to wrap, not {@code null}
+     * @param tripleLengthCalculator {@link ToLongFunction} to calculate {@link Triple} "length"
+     * @param cacheMaxSize           int, the cache size
+     * @param cacheLengthLimit       long, max number of chars that this cache can hold
+     * @param bucketCapacity         int, the default initial bucket capacity
      */
     protected CachingGraph(Graph graph,
-                           ToLongFunction<Triple> tripleLength,
-                           int cacheSize,
-                           long maxLength,
+                           ToLongFunction<Triple> tripleLengthCalculator,
+                           int cacheMaxSize,
+                           long cacheLengthLimit,
                            int bucketCapacity) {
         this.base = Objects.requireNonNull(graph, "Null graph.");
-        this.lengthCalculator = Objects.requireNonNull(tripleLength, "Null triple length calculator");
-        this.maxCacheSize = requirePositive(cacheSize, "Negative cache size");
-        this.maxLength = requirePositive(maxLength, "Negative max length");
+        this.lengthCalculator = Objects.requireNonNull(tripleLengthCalculator, "Null triple length calculator");
+        this.cacheMaxSize = requirePositive(cacheMaxSize, "Negative cache size");
+        this.cacheLengthLimit = requirePositive(cacheLengthLimit, "Negative max length");
         this.bucketCapacity = requirePositive(bucketCapacity, "Negative default bucket size");
         this.size = new LongAdder();
-        this.triples = CacheFactory.createCache(cacheSize);
+        this.triples = CacheFactory.createCache(cacheMaxSize);
         this.triples.setDropHandler((k, v) -> {
             if (v instanceof Bucket)
                 size.add(-((Bucket) v).getLength());
@@ -130,7 +130,7 @@ public class CachingGraph extends GraphBase {
         list.trimToSize();
         // put into cache:
         long current = list.getLength();
-        if (size.longValue() + current < maxLength) {
+        if (size.longValue() + current < cacheLengthLimit) {
             triples.put(m, list);
             size.add(current);
         } else {

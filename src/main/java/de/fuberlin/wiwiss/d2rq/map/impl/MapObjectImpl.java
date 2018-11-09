@@ -4,6 +4,7 @@ import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import ru.avicomp.ontapi.jena.utils.Iter;
 import ru.avicomp.ontapi.jena.utils.Models;
 import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
@@ -64,8 +65,12 @@ public abstract class MapObjectImpl implements MapObject {
         return setRDFNode(property, res);
     }
 
-    protected <X extends MapObject> X setLiteral(Property property, int literal) {
-        Literal res = getModel().createLiteral(String.valueOf(literal), XSD.integer.getURI());
+    protected <X extends MapObject> X setInteger(Property property, int literal) {
+        return setInteger(property, String.valueOf(literal));
+    }
+
+    protected <X extends MapObject> X setInteger(Property property, String literal) {
+        Literal res = getModel().createTypedLiteral(String.valueOf(literal), XSD.integer.getURI());
         return setRDFNode(property, res);
     }
 
@@ -116,12 +121,7 @@ public abstract class MapObjectImpl implements MapObject {
 
     protected <X> Optional<X> findFirst(Property property,
                                         Function<Statement, X> extract) throws NullPointerException {
-        ExtendedIterator<Statement> res = listStatements(property);
-        try {
-            return !res.hasNext() ? Optional.empty() : Optional.of(res.next()).map(extract);
-        } finally {
-            res.close();
-        }
+        return Iter.findFirst(listStatements(property)).map(extract);
     }
 
     protected ExtendedIterator<Statement> listStatements(Property predicate) {
