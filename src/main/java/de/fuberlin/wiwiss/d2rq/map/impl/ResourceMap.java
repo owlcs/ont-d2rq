@@ -474,7 +474,7 @@ abstract class ResourceMap extends MapObjectImpl {
         if (valueMaxLength.exists()) {
             valueMaxLength
                     .requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_VALUEMAXLENGTH)
-                    .requireIsIntegerLiteral(D2RQException.UNSPECIFIED);
+                    .requireIsPositiveIntegerLiteral(D2RQException.UNSPECIFIED);
         }
 
         Validator.ForProperty translateWith = v.forProperty(D2RQ.translateWith);

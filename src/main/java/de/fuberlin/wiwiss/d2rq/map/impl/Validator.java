@@ -123,8 +123,22 @@ class Validator {
             return requireIsLiteralOfType(XSD.integer, code);
         }
 
+        ForProperty requireIsPositiveIntegerLiteral(int code) {
+            requireIsIntegerLiteral(code);
+            Literal res = getLiteral();
+            if (res.getValue() instanceof Number && res.getLong() > 0) {
+                return this;
+            }
+            throw newException("the found literal for the predicate "
+                    + asString() + " has not positive integer value: " + res, code);
+        }
+
         ForProperty requireIsBooleanLiteral(int code) {
-            return requireIsLiteralOfType(XSD.xboolean, code);
+            requireIsLiteralOfType(XSD.xboolean, code);
+            Literal res = getLiteral();
+            if (res.getValue() instanceof Boolean) return this;
+            throw newException("the found literal for the predicate "
+                    + asString() + " has not boolean value: " + res, code);
         }
 
         ForProperty requireIsLiteralOfType(Resource datatypeURI, int code) {

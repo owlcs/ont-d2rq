@@ -418,7 +418,15 @@ public class MappingImpl implements Mapping, ConnectingMapping {
         } else if (!conf.isEmpty()) {
             throw new D2RQException("Duplicate configurations : " + conf);
         }
-        if (listDatabases().peek(MapObject::validate).count() == 0) { // todo: add check for duplicate jdbcDSNs
+        Set<String> jdbcURIs = new HashSet<>();
+        if (listDatabases()
+                .peek(MapObject::validate)
+                .peek(d -> {
+                    if (jdbcURIs.add(d.getJDBCDSN())) return;
+                    throw new D2RQException("Duplicate d2rq:Database jdbcURI: " + d.getJDBCDSN(),
+                            D2RQException.UNSPECIFIED);
+                })
+                .count() == 0) {
             throw new D2RQException("No d2rq:Database defined in the mapping", D2RQException.MAPPING_NO_DATABASE);
         }
         translationTables().forEachRemaining(MapObject::validate);

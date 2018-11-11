@@ -98,7 +98,7 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
                 .map(v::forProperty)
                 .filter(Validator.ForProperty::exists)
                 .forEach(p -> p.requireHasNoDuplicates(D2RQException.UNSPECIFIED)
-                        .requireIsIntegerLiteral(D2RQException.UNSPECIFIED));
+                        .requireIsPositiveIntegerLiteral(D2RQException.UNSPECIFIED));
     }
 
 }

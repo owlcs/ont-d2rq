@@ -322,12 +322,12 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         Validator.ForProperty limit = v.forProperty(D2RQ.limit);
         if (limit.exists()) {
             limit.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_LIMIT)
-                    .requireIsIntegerLiteral(D2RQException.UNSPECIFIED);
+                    .requireIsPositiveIntegerLiteral(D2RQException.UNSPECIFIED);
         }
         Validator.ForProperty limitInverse = v.forProperty(D2RQ.limitInverse);
         if (limitInverse.exists()) {
             limitInverse.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_LIMITINVERSE)
-                    .requireIsIntegerLiteral(D2RQException.UNSPECIFIED);
+                    .requireIsPositiveIntegerLiteral(D2RQException.UNSPECIFIED);
         }
         v.requireHasNoMoreThanOne(D2RQException.UNSPECIFIED, D2RQ.orderAsc, D2RQ.orderDesc);
         Validator.ForProperty orderDesc = v.forProperty(D2RQ.orderDesc);
