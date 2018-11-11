@@ -3,13 +3,15 @@ package de.fuberlin.wiwiss.d2rq.map;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
-import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.conf.ISWCData;
+import ru.avicomp.ontapi.jena.utils.Iter;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.util.Collections;
 import java.util.Properties;
@@ -253,5 +255,32 @@ public class MappingTest {
         Assert.assertEquals(1, c.getCacheMaxSize());
         Assert.assertEquals(2, c.getCacheLengthLimit());
         MappingTestHelper.print(m);
+    }
+
+    @Test
+    public void testLocking() {
+        Mapping m = MappingFactory.create();
+        Assert.assertFalse(m.isLocked());
+        ClassMap cm = m.createClassMap("cm");
+        m.lock();
+        try {
+            m.createClassMap("cm2");
+            Assert.fail("Possible to add class-map");
+        } catch (D2RQException d) {
+            LOGGER.debug("Expected '{}'", d.getMessage());
+        }
+        Statement s = Iter.findFirst(m.asModel().listStatements(cm.asResource(), RDF.type, D2RQ.ClassMap))
+                .orElseThrow(AssertionError::new);
+        try {
+            m.asModel().remove(s);
+            Assert.fail("Possible to delete class-map");
+        } catch (D2RQException d) {
+            LOGGER.debug("Expected '{}'", d.getMessage());
+        }
+        Assert.assertTrue(m.isLocked());
+        m.unlock();
+        m.createClassMap("cm2");
+        m.asModel().remove(s);
+        Assert.assertFalse(m.isLocked());
     }
 }

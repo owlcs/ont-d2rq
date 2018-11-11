@@ -32,6 +32,34 @@ public interface Mapping extends AutoCloseable {
     void close();
 
     /**
+     * Locks the mapping so that changes can no longer be made to the underlying graph.
+     * No-op in case the mapping is already locked.
+     * The lock and unlock operations refer to changes made through any interface:
+     * this {@link Mapping D2RQ mapping}, {@link #asModel() Jena Model}, {@link #getSchema() Schema},
+     * since all these interfaces reflect the same base graph.
+     *
+     * @see #isLocked()
+     */
+    void lock();
+
+    /**
+     * Unlocks the mapping, allowing it to be modified.
+     * No-op in case the mapping is already unlocked.
+     *
+     * @see #lock()
+     */
+    void unlock();
+
+    /**
+     * Answers {@code true} if this mapping is locked.
+     * A locked mapping is unmodifiable and, therefore, thread-safe.
+     *
+     * @return {@code true} if the mapping model is locked
+     * @see #lock()
+     */
+    boolean isLocked();
+
+    /**
      * Returns a {@link Model} view of this mapping.
      * The model is backed by the mapping, so changes to the mapping are reflected in the model, and vice-versa.
      * Since it is possible to encode any RDF structure through model view,
