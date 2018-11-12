@@ -2,7 +2,12 @@ package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
+import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
+import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
+import de.fuberlin.wiwiss.d2rq.map.impl.DatabaseImpl;
+import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.Assert;
@@ -282,5 +287,45 @@ public class MappingTest {
         m.createClassMap("cm2");
         m.asModel().remove(s);
         Assert.assertFalse(m.isLocked());
+    }
+
+    @Test
+    public void testReConnectionOnImpl() {
+        MappingImpl mapping = (MappingImpl) ISWCData.MYSQL.loadMapping();
+        DatabaseImpl d = Iter.findFirst(mapping.databases()).orElseThrow(AssertionError::new);
+        long size = mapping.getDataModel().size();
+        Assert.assertTrue(mapping.isConnected());
+        Assert.assertTrue(mapping.getConnectedDB(d).isConnected());
+        Assert.assertSame(mapping.getConnectedDB(d), MappingHelper.getConnectedDB(d));
+        mapping.close();
+        Assert.assertFalse(mapping.isConnected());
+        Assert.assertFalse(mapping.getConnectedDB(d).isConnected());
+        Assert.assertEquals(size, mapping.getDataModel().size());
+        Assert.assertTrue(mapping.isConnected());
+        Assert.assertTrue(mapping.getConnectedDB(d).isConnected());
+        mapping.close();
+        Assert.assertFalse(mapping.isConnected());
+        Assert.assertFalse(mapping.getConnectedDB(d).isConnected());
+    }
+
+    @Test
+    public void testCachingD2RQGraph() {
+        Mapping mapping = ISWCData.MYSQL.loadMapping();
+        Graph g;
+        Assert.assertFalse(mapping.getConfiguration().getWithCache());
+        g = mapping.getData();
+        Assert.assertTrue(g instanceof GraphD2RQ);
+        Assert.assertSame(g, mapping.getData());
+
+        mapping.getConfiguration().setWithCache(true);
+        Assert.assertTrue(mapping.getConfiguration().getWithCache());
+        g = mapping.getData();
+        Assert.assertTrue(g instanceof CachingGraph);
+        Assert.assertTrue(((CachingGraph) g).getBase() instanceof GraphD2RQ);
+        Assert.assertSame(g, mapping.getData());
+
+        mapping.getConfiguration().setWithCache(false);
+        Assert.assertFalse(mapping.getConfiguration().getWithCache());
+        Assert.assertTrue(mapping.getData() instanceof GraphD2RQ);
     }
 }

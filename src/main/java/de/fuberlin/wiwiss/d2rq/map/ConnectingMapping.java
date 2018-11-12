@@ -15,12 +15,13 @@ public interface ConnectingMapping {
     /**
      * Gets set of the compiled property bridges.
      *
-     * @return Collection of {@link TripleRelation}s
+     * @return {@code Collection} of {@link TripleRelation}s
      */
     Collection<TripleRelation> compiledPropertyBridges();
 
     /**
-     * Connects all databases. This is done automatically if needed.
+     * Connects all databases.
+     * This is done automatically if needed.
      * The method can be used to test the connections earlier.
      *
      * @throws D2RQException on connection failure

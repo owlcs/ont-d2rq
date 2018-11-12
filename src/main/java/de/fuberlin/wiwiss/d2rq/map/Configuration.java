@@ -115,5 +115,4 @@ public interface Configuration extends MapObject {
      */
     long getCacheLengthLimit();
 
-
 }

@@ -5,6 +5,7 @@ import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
+import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.ControlledGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.jena.MappingGraph;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -52,20 +54,25 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingImpl.class);
 
-    private static final Set<Node> D2RQ_PREDICATES = Stream.of(D2RQ.class, AVC.class).map(VocabularySummarizer::new)
+    protected static final Set<Node> D2RQ_PREDICATES = Stream.of(D2RQ.class, AVC.class).map(VocabularySummarizer::new)
             .map(VocabularySummarizer::getAllProperties).flatMap(Collection::stream)
             .map(FrontsNode::asNode).collect(Iter.toUnmodifiableSet());
 
-    private static SchemaGenerator schemaGenerator = SchemaGenerator.getInstance();
+    protected static SchemaGenerator schemaGenerator = SchemaGenerator.getInstance();
 
-    private volatile boolean locked;
-    // caches, that are reset in case of any change in the underlying (i.e. mapping) graph:
-    protected final Map<Node, ConnectedDB> connections = new HashMap<>();
-    protected Collection<TripleRelation> compiledPropertyBridges;
-    private Graph schemaCache;
-    // it seems it is no need to be volatile - mapping instances are not expected to be shared between threads:
-    private boolean connected = false;
-    // the mapping graph:
+    // a lock object to conduct synchronization:
+    protected final Object lockObject = new Object();
+    // a graph state controller
+    protected volatile boolean isGraphLocked;
+    // cache-collection of connected DBs:
+    protected final Map<Node, ConnectedDB> connections = new ConcurrentHashMap<>();
+    // collection of compiled property bridges, if it is not null, then a physical connection is present:
+    protected volatile Collection<TripleRelation> compiledPropertyBridges;
+    // an in-memory schema cache to optimize dynamic schema calculations
+    protected volatile Graph schemaGraph;
+    // a graph-reference to conduct a possibility to share db RDF data between threads
+    protected volatile Graph dataGraph;
+    // the mapping graph that contains all the physical information:
     protected final Model model;
 
     public MappingImpl(Graph base) {
@@ -79,39 +86,42 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public Graph getSchema() {
-        Graph schema = createSchemaGraph();
+        Graph dynamic = createSchemaGraph();
         return new MappingGraph(MappingImpl.this) {
+
             @Override
             protected ExtendedIterator<Triple> graphBaseFind(Triple m) {
-                if (schemaCache == null) {
-                    GraphMem res = new GraphMem();
-                    GraphUtil.addInto(res, schema);
-                    schemaCache = res;
-                }
-                return schemaCache.find(m);
+                return getCache().find(m);
             }
 
             @Override
             public PrefixMapping getPrefixMapping() {
-                return schema.getPrefixMapping();
+                return dynamic.getPrefixMapping();
             }
 
             @Override
             public void performAdd(Triple t) {
-                schema.add(t);
+                dynamic.add(t);
             }
 
             @Override
             public void performDelete(Triple t) {
-                schema.delete(t);
+                dynamic.delete(t);
             }
 
             @Override
             public Graph toMemory() {
-                if (schemaCache == null) {
-                    return super.toMemory();
+                return getCache();
+            }
+
+            public Graph getCache() {
+                if (schemaGraph != null) return schemaGraph;
+                synchronized (lockObject) {
+                    if (schemaGraph != null) return schemaGraph;
+                    GraphMem res = new GraphMem();
+                    GraphUtil.addInto(res, dynamic);
+                    return schemaGraph = res;
                 }
-                return schemaCache;
             }
 
             @Override
@@ -121,6 +131,36 @@ public class MappingImpl implements Mapping, ConnectingMapping {
         };
     }
 
+    @Override
+    public Graph getData() {
+        if (dataGraph != null) return dataGraph;
+        synchronized (lockObject) {
+            if (dataGraph != null) return dataGraph;
+            return dataGraph = createDataGraph();
+        }
+    }
+
+    /**
+     * Creates a fresh instance of D2RQ Data Graph,
+     * that can be either {@link GraphD2RQ} or {@link CachingGraph} with {@code GraphD2RQ} inside.
+     *
+     * @return new instance of D2RQ Data Graph
+     */
+    public Graph createDataGraph() {
+        ConfigurationImpl conf = getConfiguration();
+        Graph schema = getSchema();
+        Graph res = new GraphD2RQ(this, schema.getPrefixMapping(), conf.getServeVocabulary() ? schema : null);
+        if (conf.getWithCache()) {
+            res = new CachingGraph(res, conf.getCacheMaxSize(), conf.getCacheLengthLimit());
+        }
+        return res;
+    }
+
+    /**
+     * Creates a Schema-{@code Graph} instance that is backed by the mapping graph.
+     *
+     * @return {@link Graph}
+     */
     public Graph createSchemaGraph() {
         return schemaGenerator.createDynamicGraph(this);
     }
@@ -139,19 +179,13 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     @Override
-    public GraphD2RQ getData() {
-        Graph schema = getSchema();
-        return new GraphD2RQ(this, schema.getPrefixMapping(), getConfiguration().getServeVocabulary() ? schema : null);
-    }
-
-    @Override
     public boolean withAllOptimizations() {
         return getConfiguration().getUseAllOptimizations();
     }
 
     /**
      * Has been moved from {@link de.fuberlin.wiwiss.d2rq.SystemLoader}
-     * TODO: it seems we don't need it at all, remove.
+     * TODO: it seems we don't need it at all, going to delete.
      *
      * @return {@link ClassMapLister}
      * @deprecated going to delete
@@ -165,11 +199,26 @@ public class MappingImpl implements Mapping, ConnectingMapping {
         return connections.computeIfAbsent(db.asResource().asNode(), n -> createConnectionDB(db));
     }
 
+    /**
+     * Registers a new pair of {@link DatabaseImpl} and {@link ConnectedDB}.
+     * WARNING: it is for internal usage only!
+     *
+     * @param db {@link DatabaseImpl}, not {@code null}
+     * @param c  {@link ConnectedDB}, not {@code null}
+     */
     public void registerConnectedDB(DatabaseImpl db, ConnectedDB c) {
         connections.put(db.asResource().asNode(), c);
     }
 
-    public ConnectedDB createConnectionDB(DatabaseImpl db) {
+    /**
+     * Creates a fresh {@link ConnectedDB} for the given {@link DatabaseImpl}.
+     * Note: if the database {@code MapObject} has a {@code d2rq:startupSQLScript},
+     * the physical db data might be overwritten.
+     *
+     * @param db {@link DatabaseImpl}, not {@code null}
+     * @return {@link ConnectedDB}, not {@code null}
+     */
+    protected ConnectedDB createConnectionDB(DatabaseImpl db) {
         ConnectedDB res = db.toConnectionDB();
         String script = db.getStartupSQLScript();
         if (script == null) {
@@ -185,40 +234,49 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     /**
-     * Connects all databases. This is done automatically if needed.
-     * The method can be used to test the connections earlier.
-     * TODO: do not see much sense in this method. remove ?
+     * Ensures the mapping is connected.
      *
      * @throws D2RQException on connection failure
      */
     @Override
     public void connect() {
-        if (connected) return;
-        connected = true;
-        validate();
-        databases().mapWith(this::getConnectedDB).forEachRemaining(ConnectedDB::connection);
+        compiledPropertyBridges();
     }
 
     @Override
     public void close() {
-        connections.values().forEach(ConnectedDB::close);
-        connected = false;
-        clearAutoGenerated();
+        if (!isConnected()) return;
+        synchronized (lockObject) {
+            if (!isConnected()) return;
+            connections.values().forEach(ConnectedDB::close);
+            // note: the following instruction also clears connections and compiled property bridges (CacheController)
+            clearAutoGenerated();
+        }
+    }
+
+    /**
+     * Answers {@code true} if the mapping has a connection to the database.
+     *
+     * @return boolean
+     */
+    public boolean isConnected() {
+        return compiledPropertyBridges != null
+                || !connections.isEmpty() && connections.values().stream().anyMatch(ConnectedDB::isConnected);
     }
 
     @Override
     public void lock() {
-        this.locked = true;
+        this.isGraphLocked = true;
     }
 
     @Override
     public void unlock() {
-        this.locked = false;
+        this.isGraphLocked = false;
     }
 
     @Override
     public boolean isLocked() {
-        return this.locked;
+        return this.isGraphLocked;
     }
 
     @Override
@@ -318,9 +376,9 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     @Override
-    public Configuration getConfiguration() {
-        Resource r = Iter.asStream(listConfigurations())
-                .findFirst().orElseGet(() -> model.createResource(D2RQ.Configuration));
+    public ConfigurationImpl getConfiguration() {
+        Resource r = Iter.findFirst(listConfigurations())
+                .orElseGet(() -> model.createResource(D2RQ.Configuration));
         return new ConfigurationImpl(r, this);
     }
 
@@ -377,16 +435,16 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     /**
-     * Notice that this method does not need to be synchronized (as it was before refactoring):
-     * both the mapping and the model graph are not shared between threads,
-     * if any standard {@link MappingFactory} method has been used to get this {@link Mapping} instance.
-     * If you still want to share mapping in multithreading, then take care about synchronization by yourself.
+     * Compiles the mapping.
+     * Please note: this method establishes physical connections to the databases.
      *
      * @return a {@code Collection} of {@link TripleRelation}s corresponding to each of the property bridges.
      */
     @Override
     public Collection<TripleRelation> compiledPropertyBridges() {
-        if (compiledPropertyBridges == null) {
+        if (compiledPropertyBridges != null) return compiledPropertyBridges;
+        synchronized (lockObject) {
+            if (compiledPropertyBridges != null) return compiledPropertyBridges;
             // validate only RDF:
             validate(false);
             // clear auto-generated resources:
@@ -395,15 +453,18 @@ public class MappingImpl implements Mapping, ConnectingMapping {
             if (getConfiguration().getControlOWL()) {
                 compileOWL();
             }
-            // validate all bridges (note: it requires connection):
-            compiledPropertyBridges = Iter.peek(tripleRelations(), MappingImpl::validateRelation).toList();
-            // debug:
+            // compile and validate all bridges (note: it requires connection):
+            List<TripleRelation> res = Iter.peek(tripleRelations(), tr -> {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("TR={}", tr);
+                }
+                validateRelation(tr);
+            }).toList();
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Compiled {} property bridges", compiledPropertyBridges.size());
-                compiledPropertyBridges.forEach(x -> LOGGER.debug("TR={}", x));
+                LOGGER.debug("Compiled {} property bridges", res.size());
             }
+            return compiledPropertyBridges = res;
         }
-        return compiledPropertyBridges;
     }
 
     public ExtendedIterator<TripleRelation> tripleRelations() throws D2RQException {
@@ -513,7 +574,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
                 .filterDrop(p -> p.getURIPattern() == null)
                 .forEachRemaining(p -> generateClassMapWithTypeAndPredicate(p, OWL.Class, D2RQ.uriPattern)
                         .setContainsDuplicates(true));
-        // todo: handle dynamic properties
+        // TODO: handle dynamic properties
     }
 
     /**
@@ -580,20 +641,10 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     public void clearAutoGenerated() {
         model.listResourcesWithProperty(AVC.autoGenerated).toSet().forEach(r -> {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Delete {}", r);
+                LOGGER.debug("Delete auto-generated {}", r);
             }
             Models.deleteAll(r);
         });
-    }
-
-    /**
-     * Answers {@code true}
-     * if the mapping is containing {@link AVC#autoGenerated avc:autoGenerated} predicate in any position.
-     *
-     * @return boolean
-     */
-    public boolean hasAutoGenerated() {
-        return Iter.findFirst(model.listResourcesWithProperty(AVC.autoGenerated)).isPresent();
     }
 
     @Override
@@ -603,7 +654,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     /**
-     * To control caches.
+     * A Mapping Graph Controller to manage caches.
      *
      * @see ControlledGraph
      */
@@ -616,12 +667,16 @@ public class MappingImpl implements Mapping, ConnectingMapping {
                         "Can't perform " + event + " operation for the triple '" +
                         PrettyPrinter.toString(triple, model) + "'");
             }
-            schemaCache = null;
+            // reset the schema cache -> any mapping triple may be related to the schema,
+            // so any change in the mapping graph must invalidate that cache
+            schemaGraph = null;
             Node s = triple.getSubject();
             Node p = triple.getPredicate();
             if (ControlledGraph.Event.CLEAR == event || D2RQ_PREDICATES.contains(p) || connections.containsKey(s)) {
                 compiledPropertyBridges = null;
-                connected = false;
+                // reset the data -> it is possible that change is in the configuration
+                // (anyway if the primary graph is not locked the preserving the same reference has a little sense)
+                dataGraph = null;
             }
             if (!connections.containsKey(s)) {
                 return;

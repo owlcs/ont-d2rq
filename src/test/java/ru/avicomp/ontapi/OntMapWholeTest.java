@@ -2,6 +2,7 @@ package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
+import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import org.apache.jena.graph.Graph;
 import org.junit.Assert;
@@ -52,6 +53,8 @@ public class OntMapWholeTest {
     public void testCollectAddresses() throws OWLOntologyCreationException {
         D2RQGraphDocumentSource source = test.makeSource();
         Mapping d2rq = source.getMapping();
+        d2rq.getConfiguration().setWithCache(test.withCache());
+        Assert.assertEquals(test.withCache(), d2rq.getConfiguration().getWithCache());
 
         OWLMapManager manager = Managers.createOWLMapManager();
         OntGraphModel src = manager.loadOntologyFromOntologyDocument(source).asGraphModel();
@@ -61,7 +64,8 @@ public class OntMapWholeTest {
         MapModel spin = assembleSpinMapping(manager, src, dst, test.getVocabulary());
 
         LOGGER.debug("Run inference.");
-        Graph data = test.withCache() ? new CachingGraph(d2rq.getData()) : d2rq.getData();
+        Graph data = d2rq.getData();
+        Assert.assertTrue(test.getGraphType().isInstance(data));
         manager.getInferenceEngine().run(spin, data, dst.getBaseGraph());
         LOGGER.debug("Done.");
 
@@ -248,6 +252,10 @@ public class OntMapWholeTest {
 
         boolean withCache() {
             return withCache;
+        }
+
+        Class<? extends Graph> getGraphType() {
+            return withCache ? CachingGraph.class : GraphD2RQ.class;
         }
 
     }

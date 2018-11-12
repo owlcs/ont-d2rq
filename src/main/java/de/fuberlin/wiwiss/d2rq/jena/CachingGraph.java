@@ -76,11 +76,11 @@ public class CachingGraph extends GraphBase {
      * @param cacheLengthLimit       long, max number of chars that this cache can hold
      * @param bucketCapacity         int, the default initial bucket capacity
      */
-    protected CachingGraph(Graph graph,
-                           ToLongFunction<Triple> tripleLengthCalculator,
-                           int cacheMaxSize,
-                           long cacheLengthLimit,
-                           int bucketCapacity) {
+    public CachingGraph(Graph graph,
+                        ToLongFunction<Triple> tripleLengthCalculator,
+                        int cacheMaxSize,
+                        long cacheLengthLimit,
+                        int bucketCapacity) {
         this.base = Objects.requireNonNull(graph, "Null graph.");
         this.lengthCalculator = Objects.requireNonNull(tripleLengthCalculator, "Null triple length calculator");
         this.cacheMaxSize = requirePositive(cacheMaxSize, "Negative cache size");

@@ -37,6 +37,7 @@ public interface Mapping extends AutoCloseable {
      * The lock and unlock operations refer to changes made through any interface:
      * this {@link Mapping D2RQ mapping}, {@link #asModel() Jena Model}, {@link #getSchema() Schema},
      * since all these interfaces reflect the same base graph.
+     * Any attempt to modify a locked mapping will cause {@link D2RQException D2RQ exception}.
      *
      * @see #isLocked()
      */
@@ -45,13 +46,14 @@ public interface Mapping extends AutoCloseable {
     /**
      * Unlocks the mapping, allowing it to be modified.
      * No-op in case the mapping is already unlocked.
+     * A unlocked mapping does not provide thread safety guarantees.
      *
      * @see #lock()
      */
     void unlock();
 
     /**
-     * Answers {@code true} if this mapping is locked.
+     * Answers {@code true} if the mapping is locked.
      * A locked mapping is unmodifiable and, therefore, thread-safe.
      *
      * @return {@code true} if the mapping model is locked
@@ -99,6 +101,7 @@ public interface Mapping extends AutoCloseable {
      * any attempt to retrieve data through this graph will result {@link D2RQException}.
      * If {@link Configuration#getServeVocabulary()} is {@code true},
      * the returning graph will also include {@link #getSchema()} triples.
+     * If you plan to share data between threads, please {@link #lock() lock} the mapping.
      *
      * @return virtual D2RQ {@link Graph Graph}, not {@code null}
      * @see #getConfiguration()

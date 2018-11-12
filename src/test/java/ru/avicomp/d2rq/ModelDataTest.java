@@ -74,7 +74,6 @@ public class ModelDataTest {
         DynamicSchemaTest.checkHasDomains(vcardCountry, postalAddresses);
         DynamicSchemaTest.checkHasDomains(vcardLocality, postalAddresses);
         DynamicSchemaTest.checkHasDomains(vcardStreet, postalAddresses);
-        // todo:
     }
 
     @Test
@@ -101,7 +100,6 @@ public class ModelDataTest {
         D2RQTestHelper.print(inMemory);
         DynamicSchemaTest.validateInferredOWLForPredefinedMapping(inMemory);
         validateMappedOWLDataForPredefinedMapping(inMemory);
-
 
         Assert.assertEquals(totalNumberOfStatements, inMemory.size());
         mapping.getConfiguration().setServeVocabulary(true);
@@ -131,4 +129,5 @@ public class ModelDataTest {
 
         mapping.close();
     }
+
 }

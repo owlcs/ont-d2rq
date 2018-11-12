@@ -126,6 +126,6 @@ public class GraphD2RQ extends MappingGraph implements Graph {
      */
     @Override
     public String toString() {
-        return String.format("Data[%s]", mapping);
+        return String.format(containsSchema() ? "Schema+Data[%s]" : "Data[%s]", mapping);
     }
 }

@@ -2,6 +2,7 @@ package ru.avicomp.ontapi;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
+import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import org.apache.jena.graph.Graph;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,16 +54,14 @@ public class OntMapSimpleTest {
     public void testInference() {
         OWLMapManager manager = Managers.createOWLMapManager();
         OntGraphModel target = createTargetModel(manager);
-        OntGraphModel source = createSourceModel(manager);
+        OntGraphModel source = createSourceModel(manager, TestData.CACHE.equals(test));
         D2RQTestHelper.print(source);
         MapModel spin = composeMapping(manager, source, target);
         D2RQTestHelper.print(spin.asGraphModel());
 
         LOGGER.debug("Run inference.");
         Graph data = OWLUtils.getDataGraph(source);
-        if (TestData.CACHE.equals(test)) {
-            data = new CachingGraph(data);
-        }
+        Assert.assertTrue((TestData.CACHE.equals(test) ? CachingGraph.class : GraphD2RQ.class).isInstance(data));
         manager.getInferenceEngine().run(spin, data, target.getBaseGraph());
         LOGGER.debug("Done.");
 
@@ -72,7 +71,7 @@ public class OntMapSimpleTest {
         OWLUtils.closeConnections(source);
     }
 
-    public static OntGraphModel createSourceModel(OntologyManager manager) {
+    public static OntGraphModel createSourceModel(OntologyManager manager, boolean withCache) {
         D2RQGraphDocumentSource source = D2RQSpinTest.createSource(data, "iswc");
         OntologyModel res;
         try {
@@ -81,6 +80,8 @@ public class OntMapSimpleTest {
             throw new AssertionError(e);
         }
         res.applyChange(new SetOntologyID(res, IRI.create("http://source.avicomp.ru")));
+        source.getMapping().getConfiguration().setWithCache(withCache);
+        Assert.assertEquals(withCache, source.getMapping().getConfiguration().getWithCache());
         return res.asGraphModel();
     }
 
@@ -121,5 +122,6 @@ public class OntMapSimpleTest {
     enum TestData {
         CACHE,
         NO_CACHE,
+        ;
     }
 }
