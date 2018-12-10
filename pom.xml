@@ -4,7 +4,7 @@
 
     <groupId>ru.avicomp</groupId>
     <artifactId>ontd2rq</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.4-SNAPSHOT</version>
 
     <name>ont-d2rq</name>
     <description>A Database to OWL Mapper</description>
