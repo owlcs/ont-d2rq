@@ -66,7 +66,7 @@ public class OntMapWholeTest {
         LOGGER.debug("Run inference.");
         Graph data = d2rq.getData();
         Assert.assertTrue(test.getGraphType().isInstance(data));
-        manager.getInferenceEngine().run(spin, data, dst.getBaseGraph());
+        manager.getInferenceEngine(spin).run(data, dst.getBaseGraph());
         LOGGER.debug("Done.");
 
         Assert.assertEquals(1, dst.listNamedIndividuals().count());

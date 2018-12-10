@@ -107,7 +107,7 @@ public class InfrPerfTester {
         MapModel map = OntMapSimpleTest.composeMapping(manager, o.asGraphModel(), target);
 
         Graph data = source.getMapping().getData();
-        manager.getInferenceEngine().run(map, data, target.getBaseGraph());
+        manager.getInferenceEngine(map).run(data, target.getBaseGraph());
         LOGGER.debug("Done.");
 
         target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));

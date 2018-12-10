@@ -62,7 +62,7 @@ public class OntMapSimpleTest {
         LOGGER.debug("Run inference.");
         Graph data = OWLUtils.getDataGraph(source);
         Assert.assertTrue((TestData.CACHE.equals(test) ? CachingGraph.class : GraphD2RQ.class).isInstance(data));
-        manager.getInferenceEngine().run(spin, data, target.getBaseGraph());
+        manager.getInferenceEngine(spin).run(data, target.getBaseGraph());
         LOGGER.debug("Done.");
 
         target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
