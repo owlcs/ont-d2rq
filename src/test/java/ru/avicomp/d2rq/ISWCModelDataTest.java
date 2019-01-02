@@ -22,14 +22,15 @@ import ru.avicomp.ontapi.jena.model.OntNOP;
 import ru.avicomp.utils.OWLUtils;
 
 /**
+ * Validate ISWC mappings data.
  * Created by @szz on 18.10.2018.
  */
 @RunWith(Parameterized.class)
-public class ModelDataTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModelDataTest.class);
+public class ISWCModelDataTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ISWCModelDataTest.class);
     private final ISWCData data;
 
-    public ModelDataTest(ISWCData data) {
+    public ISWCModelDataTest(ISWCData data) {
         this.data = data;
     }
 

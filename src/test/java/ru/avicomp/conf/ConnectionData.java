@@ -63,7 +63,7 @@ public enum ConnectionData {
         }
 
         @Override
-        protected String fixIRI(String iri) {
+        public String fixIRI(String iri) {
             return iri.toLowerCase();
         }
 
@@ -144,7 +144,7 @@ public enum ConnectionData {
      * @param iri String, not {@code null}
      * @return String, not {@code null}
      */
-    protected String fixIRI(String iri) {
+    public String fixIRI(String iri) {
         return iri;
     }
 

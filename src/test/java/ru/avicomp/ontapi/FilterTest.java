@@ -60,7 +60,7 @@ public class FilterTest {
         OWLObjectProperty op = full.objectPropertiesInSignature().sorted().findFirst()
                 .orElseThrow(() -> new AssertionError("Can't find any object property."));
         MappingFilter filter1 = MappingFilter.create(dp, op);
-        LOGGER.debug("Constraint properties: " + filter1.properties().collect(Collectors.toList()));
+        LOGGER.debug("Constraint properties: {}", filter1.properties().collect(Collectors.toList()));
 
         // creates a source with filter by properties:
         D2RQGraphDocumentSource source2 = source1.filter(filter1);
