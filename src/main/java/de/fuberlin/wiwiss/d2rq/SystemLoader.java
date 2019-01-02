@@ -281,7 +281,8 @@ public class SystemLoader implements AutoCloseable {
      */
     private Mapping fetchMapping() throws D2RQException {
         if (jdbcURL != null && mappingFile != null) {
-            throw new D2RQException("conflicting mapping locations " + mappingFile + " and " + jdbcURL + "; specify at most one");
+            throw new D2RQException(String.format("conflicting mapping locations %s and %s; specify at most one",
+                    mappingFile, jdbcURL));
         }
         if (jdbcURL == null && mappingFile == null) {
             throw new D2RQException("no mapping file or JDBC URL specified");

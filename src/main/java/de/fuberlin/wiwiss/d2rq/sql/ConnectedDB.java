@@ -422,11 +422,36 @@ public class ConnectedDB implements AutoCloseable {
         if (!Vendor.MySQL.equals(vendor())) {
             return false;
         }
-        try { // tested on mysql:mysql-connector-java:5.1.46
-            return (Boolean) Class.forName("com.mysql.jdbc.MySQLConnection").getMethod("lowerCaseTableNames").invoke(connection());
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
-            throw new IllegalStateException("Can't invoke com.mysql.jdbc.MySQLConnection#lowerCaseTableNames", e);
+        Class<? extends Connection> impl = getConnectionClass();
+        try {
+            return (Boolean) impl.getMethod("lowerCaseTableNames").invoke(connection());
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new IllegalStateException("Can't invoke " + impl.getName() + "#lowerCaseTableNames", e);
         }
+    }
+
+    /**
+     * Gets the base driver specific {@link Connection} interface.
+     *
+     * @return Class
+     */
+    @SuppressWarnings("unchecked")
+    public Class<? extends Connection> getConnectionClass() {
+        if (!Vendor.MySQL.equals(vendor())) {
+            throw new UnsupportedOperationException();
+        }
+        IllegalStateException error = new IllegalStateException("Can't locate MySQL Connection base interface");
+        for (String name : new String[]{
+                "com.mysql.jdbc.MySQLConnection"        // mysql:mysql-connector-java:5.1.46
+                , "com.mysql.cj.jdbc.JdbcConnection"    // mysql:mysql-connector-java:8.0.13
+        }) {
+            try {
+                return (Class<? extends Connection>) Class.forName(name);
+            } catch (ClassNotFoundException c) {
+                error.addSuppressed(c);
+            }
+        }
+        throw error;
     }
 
     /**

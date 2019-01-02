@@ -5,7 +5,8 @@ import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import org.apache.jena.graph.Graph;
 import org.apache.log4j.Level;
 import org.junit.*;
-import org.junit.runners.MethodSorters;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.conf.ConnectionData;
@@ -26,9 +27,8 @@ import java.sql.Statement;
  * <p>
  * Created by @ssz on 28.10.2018.
  */
-@SuppressWarnings("WeakerAccess")
 @Ignore // not a test - ignore
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@RunWith(Parameterized.class)
 public class InfrPerfTester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InfrPerfTester.class);
@@ -41,23 +41,23 @@ public class InfrPerfTester {
     private static final int INIT_ROW_NUMBER = 7;
     private static final int INIT_PAPER_ID = 8;
 
-    private final int numberRowsToInsert;
-    private final boolean withCache;
+    private static final int NUMBER_ROWS_TO_INSERT = 100_000;
+    private final Data withCache;
 
-    public InfrPerfTester() {
-        this(100_000, false);
+    public InfrPerfTester(Data data) {
+        this.withCache = data;
     }
 
-    protected InfrPerfTester(int numberRowsToInsert, boolean useCache) {
-        this.numberRowsToInsert = numberRowsToInsert;
-        this.withCache = useCache;
+    @Parameterized.Parameters(name = "{0}")
+    public static Data[] getData() {
+        return Data.values();
     }
 
     @BeforeClass
     public static void createDB() throws Exception {
         Path script = Paths.get(DATABASE_SCRIPT).toRealPath();
-        log4jLevel = org.apache.log4j.Logger.getRootLogger().getLevel();
-        org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
+        int step = NUMBER_ROWS_TO_INSERT / 20;
+
         try {
             data.dropDatabase(DATABASE_NAME);
         } catch (SQLException s) {
@@ -68,6 +68,25 @@ public class InfrPerfTester {
         }
         LOGGER.info("Execute script: {}", script);
         data.createDatabase(script, DATABASE_NAME);
+
+        LOGGER.info("Insert {} rows", NUMBER_ROWS_TO_INSERT);
+        try (ConnectedDB db = data.toConnectedDB(DATABASE_NAME);
+             Connection conn = db.connection();
+             Statement st = conn.createStatement()) {
+            conn.setAutoCommit(false);
+            for (int i = 1; i <= NUMBER_ROWS_TO_INSERT; i++) {
+                String sql = String.format("INSERT INTO papers (paperid, title, year) values (%d, '%s', %d)",
+                        INIT_PAPER_ID + i, "test-xxx-#" + i, 1944 + i);
+                if (i % step == 0) {
+                    LOGGER.debug("#{}:::SQL: {}", i, sql);
+                }
+                st.execute(sql);
+            }
+            conn.commit();
+        }
+
+        log4jLevel = org.apache.log4j.Logger.getRootLogger().getLevel();
+        org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
     }
 
     @AfterClass
@@ -77,27 +96,10 @@ public class InfrPerfTester {
     }
 
     @Test
-    public void test01Insert() throws SQLException {
-        LOGGER.info("Insert {} rows", numberRowsToInsert);
-        try (ConnectedDB db = data.toConnectedDB(DATABASE_NAME);
-             Connection conn = db.connection();
-             Statement st = conn.createStatement()) {
-            conn.setAutoCommit(false);
-            for (int i = 1; i <= numberRowsToInsert; i++) {
-                String sql = String.format("INSERT INTO papers (paperid, title, year) values (%d, '%s', %d)",
-                        INIT_PAPER_ID + i, "test-xxx-#" + i, 1944 + i);
-                LOGGER.debug("SQL: {}", sql);
-                st.execute(sql);
-            }
-            conn.commit();
-        }
-    }
-
-    @Test
-    public void test02Inference() throws Exception {
-        LOGGER.info("Test inference (number={}, withCache={})", numberRowsToInsert, withCache);
+    public void tesInference() throws Exception {
+        LOGGER.info("Test inference (number={}, withCache={})", NUMBER_ROWS_TO_INSERT, withCache);
         D2RQGraphDocumentSource source = D2RQSpinTest.createSource(data, DATABASE_NAME);
-        source.getMapping().getConfiguration().setWithCache(withCache);
+        source.getMapping().getConfiguration().setWithCache(Data.WITH_CACHE.equals(withCache));
         MappingTestHelper.print(source.getMapping());
 
         OWLMapManager manager = Managers.createOWLMapManager();
@@ -112,6 +114,12 @@ public class InfrPerfTester {
 
         target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of result individuals.",
-                INIT_ROW_NUMBER + numberRowsToInsert, target.listNamedIndividuals().count());
+                INIT_ROW_NUMBER + NUMBER_ROWS_TO_INSERT, target.listNamedIndividuals().count());
     }
+
+    enum Data {
+        WITH_CACHE,
+        WITHOUT_CACHE,
+    }
+
 }

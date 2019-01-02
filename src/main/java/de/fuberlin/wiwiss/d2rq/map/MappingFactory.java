@@ -34,7 +34,6 @@ import java.util.Objects;
  * Created by szuev on 22.02.2017.
  * @see MappingHelper
  */
-@SuppressWarnings("WeakerAccess")
 public class MappingFactory {
 
     static {

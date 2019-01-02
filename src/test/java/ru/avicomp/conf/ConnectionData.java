@@ -22,10 +22,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -77,6 +74,7 @@ public enum ConnectionData {
 
     private static final Properties PROPERTIES = loadProperties("/db.properties");
     private IRI base;
+    private Properties connectionProperties;
 
     public IRI getJdbcBaseIRI() {
         if (base != null) return base;
@@ -97,6 +95,19 @@ public enum ConnectionData {
         return PROPERTIES.getProperty(prefix() + "password");
     }
 
+    public Properties getConnectionProperties() {
+        return connectionProperties == null ? connectionProperties = parseConnectionProperties() : connectionProperties;
+    }
+
+    private Properties parseConnectionProperties() {
+        String prefix = prefix() + "properties.";
+        Properties res = new Properties();
+        PROPERTIES.stringPropertyNames().stream()
+                .filter(k -> k.startsWith(prefix))
+                .forEach(key -> res.put(key.replace(prefix, ""), PROPERTIES.getProperty(key)));
+        return res;
+    }
+
     public String getDriver() {
         String k = prefix() + "driver";
         return PROPERTIES.containsKey(k) ? PROPERTIES.getProperty(k) : getDefaultDriver();
@@ -113,7 +124,8 @@ public enum ConnectionData {
     }
 
     public D2RQGraphDocumentSource toDocumentSource(IRI base, String dbName) {
-        return D2RQGraphDocumentSource.create(base, getJdbcIRI(dbName), getUser(), getPwd(), null);
+        return D2RQGraphDocumentSource.create(base,
+                getJdbcIRI(dbName), getUser(), getPwd(), getConnectionProperties());
     }
 
     /**
@@ -145,7 +157,10 @@ public enum ConnectionData {
     }
 
     private ConnectedDB createConnectedDB(String uri) {
-        return new ConnectedDB(uri, getUser(), getPwd());
+        return new ConnectedDB(uri, getUser(), getPwd(),
+                Collections.emptyMap(),
+                Database.NO_LIMIT,
+                Database.NO_FETCH_SIZE, getConnectionProperties());
     }
 
     /**
@@ -253,7 +268,8 @@ public enum ConnectionData {
                 .setJDBCDSN(getJdbcIRI(Objects.requireNonNull(name, "Null name")).getIRIString())
                 .setJDBCDriver(getDriver())
                 .setUsername(getUser())
-                .setPassword(getPwd());
+                .setPassword(getPwd())
+                .addConnectionProperties(getConnectionProperties());
     }
 
     public Mapping loadMapping(String resource, String format, String baseURI) {
