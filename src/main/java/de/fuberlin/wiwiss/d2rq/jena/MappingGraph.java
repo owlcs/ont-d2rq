@@ -5,6 +5,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.GraphUtil;
 import org.apache.jena.graph.impl.GraphBase;
 import org.apache.jena.mem.GraphMem;
+import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.Objects;
 
@@ -38,6 +39,11 @@ public abstract class MappingGraph extends GraphBase {
      */
     public ConnectingMapping getMapping() {
         return mapping;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return !Iter.findFirst(find()).isPresent();
     }
 
     /**

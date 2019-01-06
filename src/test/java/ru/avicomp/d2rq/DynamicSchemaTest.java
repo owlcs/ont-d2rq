@@ -1,5 +1,6 @@
 package ru.avicomp.d2rq;
 
+import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -33,6 +34,40 @@ import java.util.stream.Stream;
  */
 public class DynamicSchemaTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSchemaTest.class);
+
+    @Test
+    public void testCreateSchema() {
+        String uri = "http://empty";
+        String ns = uri + "#";
+
+        Mapping mapping = MappingFactory.create();
+        OntGraphModel m = OntModelFactory.createModel(mapping.getSchema());
+        m.setNsPrefix("test", ns);
+        Assert.assertEquals("test", m.getNsURIPrefix(ns));
+        Assert.assertEquals("test", mapping.asModel().getNsURIPrefix(ns));
+
+        Assert.assertTrue(m.isEmpty());
+        m.setID(uri);
+        Assert.assertFalse(m.isEmpty());
+        Assert.assertEquals(uri, m.getID().getURI());
+        m.createOntEntity(OntClass.class, ns + "Clazz");
+        Assert.assertEquals(1, m.listClasses().count());
+        Assert.assertEquals(2, m.size());
+        Assert.assertFalse(m.isEmpty());
+        try {
+            mapping.validate();
+            Assert.fail("No validation error");
+        } catch (D2RQException e) {
+            LOGGER.debug("Expected: '{}'", e.getMessage());
+        }
+        try {
+            mapping.getDataModel().listStatements().forEachRemaining(x -> LOGGER.error("Iter:::{}", x));
+            Assert.fail("No validation error while iterating over data");
+        } catch (D2RQException e) {
+            LOGGER.debug("Expected: '{}'", e.getMessage());
+        }
+        D2RQTestHelper.print(m);
+    }
 
     @Test
     public void testInsertOntologyID() {
@@ -96,10 +131,10 @@ public class DynamicSchemaTest {
         PrefixMapping pm = mapping.getSchema().getPrefixMapping();
         pm.getNsPrefixMap().forEach((p, u) -> LOGGER.debug("Schema {} => {}", p, u));
         mapping.asModel().getNsPrefixMap().forEach((p, u) -> LOGGER.debug("Mapping {} => {}", p, u));
-        Assert.assertNull(pm.getNsPrefixURI(MappingFactory.MAP_PREFIX));
+        //Assert.assertNull(pm.getNsPrefixURI(MappingFactory.MAP_PREFIX));
         Assert.assertNull(pm.getNsPrefixURI(MappingFactory.D2RQ_PREFIX));
         Assert.assertNull(pm.getNsPrefixURI(MappingFactory.JDBC_PREFIX));
-        Assert.assertEquals(11, mapping.getVocabularyModel().numPrefixes());
+        Assert.assertEquals(12, mapping.getVocabularyModel().numPrefixes());
         Assert.assertEquals(14, mapping.asModel().numPrefixes());
 
         String p = "test";
@@ -107,13 +142,13 @@ public class DynamicSchemaTest {
         mapping.getVocabularyModel().setNsPrefix(p, u);
         Assert.assertEquals(u, mapping.asModel().getNsPrefixURI(p));
         Assert.assertEquals(p, mapping.getVocabularyModel().getNsURIPrefix(u));
-        Assert.assertEquals(12, mapping.getVocabularyModel().numPrefixes());
+        Assert.assertEquals(13, mapping.getVocabularyModel().numPrefixes());
         Assert.assertEquals(15, mapping.asModel().numPrefixes());
 
         mapping.asModel().removeNsPrefix(p);
         //Assert.assertEquals(11, pm.numPrefixes());
         Assert.assertEquals(14, mapping.asModel().numPrefixes());
-        Assert.assertEquals(11, mapping.getSchema().getPrefixMapping().numPrefixes());
+        Assert.assertEquals(12, mapping.getSchema().getPrefixMapping().numPrefixes());
     }
 
     @Test

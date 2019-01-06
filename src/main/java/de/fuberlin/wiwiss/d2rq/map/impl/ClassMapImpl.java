@@ -8,6 +8,8 @@ import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.Collection;
@@ -17,6 +19,8 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("WeakerAccess")
 public class ClassMapImpl extends ResourceMap implements ClassMap {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassMapImpl.class);
 
     public ClassMapImpl(Resource resource, MappingImpl mapping) {
         super(resource, mapping);
@@ -195,8 +199,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
 
     public Collection<TripleRelation> toTripleRelations() {
         return propertyBridges()
-                .andThen(classes()
-                        .mapWith(c -> MappingImpl.generatePropertyBridgeWithConstantType(ClassMapImpl.this, c)))
+                .andThen(classes().mapWith(c -> MappingUtils.fetchPropertyBridge(ClassMapImpl.this, c)))
                 .toSet() // no duplicates
                 .stream()
                 .map(PropertyBridgeImpl::toTripleRelations)

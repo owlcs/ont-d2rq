@@ -100,6 +100,7 @@ public class GraphD2RQ extends MappingGraph implements Graph {
         return READ_ONLY_CAPABILITIES;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public boolean containsSchema() {
         return schema != null;
     }

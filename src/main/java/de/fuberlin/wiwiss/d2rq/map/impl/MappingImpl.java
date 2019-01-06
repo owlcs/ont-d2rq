@@ -8,9 +8,7 @@ import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.ControlledGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
-import de.fuberlin.wiwiss.d2rq.jena.MappingGraph;
 import de.fuberlin.wiwiss.d2rq.map.*;
-import de.fuberlin.wiwiss.d2rq.map.impl.schema.SchemaGenerator;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
@@ -22,15 +20,14 @@ import org.apache.jena.graph.*;
 import org.apache.jena.mem.GraphMem;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.impl.ModelCom;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.util.iterator.WrappedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.jena.utils.Iter;
-import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.io.IOException;
@@ -57,7 +54,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
             .map(VocabularySummarizer::getAllProperties).flatMap(Collection::stream)
             .map(FrontsNode::asNode).collect(Iter.toUnmodifiableSet());
 
-    protected static SchemaGenerator schemaGenerator = SchemaGenerator.getInstance();
+    protected static SchemaFactory schemaGenerator = SchemaFactory.getInstance();
 
     // a lock object to conduct synchronization:
     protected final Object lockObject = new Object();
@@ -86,8 +83,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     @Override
     public Graph getSchema() {
         Graph dynamic = createSchemaGraph();
-        return new MappingGraph(MappingImpl.this) {
-
+        return new SchemaGraph(MappingImpl.this) {
             @Override
             protected ExtendedIterator<Triple> graphBaseFind(Triple m) {
                 return getCache().find(m);
@@ -122,11 +118,6 @@ public class MappingImpl implements Mapping, ConnectingMapping {
                     return schemaGraph = res;
                 }
             }
-
-            @Override
-            public String toString() {
-                return String.format("Schema[%s]", mapping);
-            }
         };
     }
 
@@ -146,10 +137,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
      * @return new instance of D2RQ Data Graph
      */
     public Graph createDataGraph() {
-        ConfigurationImpl conf = getConfiguration();
+        ConfigurationImpl conf = findConfiguration().orElse(null);
         Graph schema = getSchema();
-        Graph res = new GraphD2RQ(this, schema.getPrefixMapping(), conf.getServeVocabulary() ? schema : null);
-        if (conf.getWithCache()) {
+        Graph res = new GraphD2RQ(this, schema.getPrefixMapping(),
+                conf == null || conf.getServeVocabulary() ? schema : null);
+        if (conf != null && conf.getWithCache()) {
             res = new CachingGraph(res, conf.getCacheMaxSize(), conf.getCacheLengthLimit());
         }
         return res;
@@ -161,7 +153,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
      * @return {@link Graph}
      */
     public Graph createSchemaGraph() {
-        return schemaGenerator.createDynamicGraph(this);
+        return schemaGenerator.inferSchema(this);
     }
 
     @Override
@@ -179,7 +171,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public boolean withAllOptimizations() {
-        return getConfiguration().getUseAllOptimizations();
+        return findConfiguration().map(ConfigurationImpl::getUseAllOptimizations).orElse(false);
     }
 
     /**
@@ -376,9 +368,12 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public ConfigurationImpl getConfiguration() {
-        Resource r = Iter.findFirst(listConfigurations())
-                .orElseGet(() -> model.createResource(D2RQ.Configuration));
-        return new ConfigurationImpl(r, this);
+        return findConfiguration()
+                .orElseGet(() -> new ConfigurationImpl(model.createResource(D2RQ.Configuration), this));
+    }
+
+    public Optional<ConfigurationImpl> findConfiguration() {
+        return Iter.findFirst(listConfigurations()).map(r -> new ConfigurationImpl(r, this));
     }
 
     protected ExtendedIterator<Resource> listConfigurations() {
@@ -426,7 +421,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     public ExtendedIterator<ClassMapImpl> classMaps() {
-        return model.listResourcesWithProperty(RDF.type, D2RQ.ClassMap).mapWith(this::asClassMap);
+        return classMapResources().mapWith(this::asClassMap);
+    }
+
+    public ExtendedIterator<Resource> classMapResources() {
+        return model.listResourcesWithProperty(RDF.type, D2RQ.ClassMap);
     }
 
     public ClassMapImpl asClassMap(Resource r) {
@@ -450,7 +449,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
             clearAutoGenerated();
             // populate OWL declarations and axioms:
             if (getConfiguration().getControlOWL()) {
-                compileOWL();
+                schemaGenerator.compileSchema(this);
             }
             // compile and validate all bridges (note: it requires connection):
             List<TripleRelation> res = Iter.peek(tripleRelations(), tr -> {
@@ -527,111 +526,16 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     /**
-     * Generates different {@link ClassMap}s and {@link PropertyBridge}s in order to make data satisfy OWL2 requirements.
-     * Currently it handles the following cases:
-     * <ul>
-     * <li>a class type for ClassMaps where it is missed</li>
-     * <li>{@code owl:NamedIndividual} declaration for ClassMaps, if the desired individual is named (has IRI)</li>
-     * <li>{@code owl:sameAs} and {@code owl:differentFrom} for PropertyBridges
-     * (the right parts of these statements should also have it is own declaration)</li>
-     * <li>dynamic class-types for PropertyBridges</li>
-     * </ul>
+     * Answers {@code true} if this mapping contains no D2RQ instructions.
+     * Please note: the empty mapping does not mean that the mapping graph is also empty,
+     * i.e. the expression {@code #asModel().isEmpty()} may return {@code false} for such a mapping.
+     * The graph may contain some OWL or RDFS definitions or whatever else.
      *
-     * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>
+     * @return boolean
      */
-    public void compileOWL() {
-        // owl:NamedIndividual declaration + class type for anonymous individuals:
-        classMaps()
-                .filterDrop(ResourceMap::isAutoGenerated)
-                .forEachRemaining(c -> {
-                    Set<Resource> classes = schemaGenerator.listClasses(model, c.asResource()).toSet();
-                    if (classes.size() == 0) {
-                        Resource clazz = c.asResource();
-                        if (clazz.isAnon()) {
-                            // require all classes to be named:
-                            clazz = AVC.UnknownClass(clazz.getId().toString());
-                        }
-                        generatePropertyBridgeWithConstantType(c, clazz);
-                    }
-                    if (c.getBNodeIdColumns() == null) {
-                        // explicit declaration for named individuals
-                        generatePropertyBridgeWithConstantType(c, OWL.NamedIndividual);
-                    }
-                });
-        // owl:sameAs, owl:differentFrom individual assertions:
-        Set<Property> symmetricIndividualPredicates = Stream.of(OWL.sameAs, OWL.differentFrom)
-                .collect(Collectors.toSet());
-        propertyBridges()
-                .filterDrop(ResourceMap::isAutoGenerated)
-                .filterKeep(p -> p.listProperties().anyMatch(symmetricIndividualPredicates::contains))
-                .filterDrop(p -> p.getURIColumn() == null)
-                .forEachRemaining(p -> generateClassMapWithTypeAndPredicate(p, OWL.NamedIndividual, D2RQ.uriColumn));
-        // rdf:type
-        propertyBridges()
-                .filterDrop(ResourceMap::isAutoGenerated)
-                .filterKeep(p -> p.listProperties().anyMatch(RDF.type::equals))
-                .filterDrop(p -> p.getURIPattern() == null)
-                .forEachRemaining(p -> generateClassMapWithTypeAndPredicate(p, OWL.Class, D2RQ.uriPattern)
-                        .setContainsDuplicates(true));
-        // TODO: handle dynamic properties
-    }
-
-    /**
-     * Finds or creates a PropertyBridge for the given ClassMap and {@code rdf:type}.
-     *
-     * @param c    {@link ClassMapImpl}, not {@code null}
-     * @param type {@link Resource}, type, not {@code null}
-     * @return {@link PropertyBridgeImpl}, fresh or found
-     */
-    protected static PropertyBridgeImpl generatePropertyBridgeWithConstantType(ClassMapImpl c, Resource type) {
-        MappingImpl m = c.getMapping();
-        Optional<PropertyBridgeImpl> res = Iter.findFirst(m.asModel()
-                .listResourcesWithProperty(D2RQ.constantValue, type)
-                .filterKeep(r -> r.hasProperty(D2RQ.belongsToClassMap, c.resource)
-                        && r.hasProperty(D2RQ.property, RDF.type))
-                .mapWith(m::asPropertyBridge));
-        if (res.isPresent()) return res.get();
-        PropertyBridgeImpl p = m.createPropertyBridge(null);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Generate {} for {}", p, c);
-        }
-        return p.setBelongsToClassMap(c)
-                .setAutoGenerated()
-                .addProperty(RDF.type)
-                .setConstantValue(type);
-    }
-
-    /**
-     * Finds or creates a ClassMap for the given PropertyBridge, {@code rdf:type} and predicate {@code p}.
-     *
-     * @param p         {@link PropertyBridgeImpl}, not {@code null}
-     * @param type      {@link Resource}, type, not {@code null}
-     * @param predicate {@link Property} predicate that belongs to the {@code p}
-     * @return {@link ClassMapImpl}, fresh or found
-     * @throws IllegalArgumentException no predicate found
-     * @throws IllegalStateException    no database found
-     */
-    protected static ClassMapImpl generateClassMapWithTypeAndPredicate(PropertyBridgeImpl p,
-                                                                       Resource type,
-                                                                       Property predicate) throws IllegalArgumentException, IllegalStateException {
-        String value = p.findString(predicate)
-                .orElseThrow(() -> new IllegalArgumentException("Can't find " + predicate + " for " + p));
-        DatabaseImpl d = p.getDatabase();
-        if (d == null) throw new IllegalStateException("Can't find database for " + p);
-        MappingImpl m = p.getMapping();
-        Optional<ClassMapImpl> res = Iter.findFirst(m.asModel()
-                .listResourcesWithProperty(D2RQ.clazz, type)
-                .filterKeep(r -> r.hasProperty(predicate, value) && r.hasProperty(D2RQ.dataStorage, d.resource))
-                .mapWith(m::asClassMap));
-        if (res.isPresent()) return res.get();
-        ClassMapImpl c = m.createClassMap(null);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Generate {} for {}", c, p);
-        }
-        return c.setDatabase(d)
-                .setAutoGenerated()
-                .addClass(type)
-                .setLiteral(predicate, value);
+    public boolean isEmpty() {
+        return !Iter.findFirst(Iter.flatMap(WrappedIterator.create(Nodes.D2RQ_TYPES.iterator())
+                .mapWith(model::wrapAsResource), t -> model.listResourcesWithProperty(RDF.type, t))).isPresent();
     }
 
     /**

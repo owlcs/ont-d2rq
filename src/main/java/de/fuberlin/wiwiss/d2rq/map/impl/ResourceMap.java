@@ -27,6 +27,7 @@ import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -145,7 +146,11 @@ abstract class ResourceMap extends MapObjectImpl {
     }
 
     public RDFNode getConstantValue() {
-        return findFirst(D2RQ.constantValue, Statement::getObject).orElse(null);
+        return constantValue().orElse(null);
+    }
+
+    public Optional<RDFNode> constantValue() {
+        return findFirst(D2RQ.constantValue, Statement::getObject);
     }
 
     public ResourceMap setConstantValue(String uri) {
