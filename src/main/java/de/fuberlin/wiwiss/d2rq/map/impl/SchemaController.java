@@ -2,7 +2,6 @@ package de.fuberlin.wiwiss.d2rq.map.impl;
 
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import de.fuberlin.wiwiss.d2rq.map.ClassMap;
-import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.map.PropertyBridge;
 import de.fuberlin.wiwiss.d2rq.vocab.AVC;
@@ -17,22 +16,22 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.sparql.graph.PrefixMappingMem;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.util.iterator.WrappedIterator;
 import ru.avicomp.ontapi.jena.utils.BuiltIn;
 import ru.avicomp.ontapi.jena.utils.Iter;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.*;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 
 /**
- * A factory-jelper to produce {@link SchemaGraph D2RQ Schema Graph}, that is assumed to be a valid OWL2 ontology.
- * It contains two important methods: {@link #inferSchema(MappingImpl)} and {@link #compileSchema(MappingImpl)}.
- * The first one is for reading a mapping graph, and the second one is for writing to a mapping graph.
+ * A factory-helper to conduct and control {@link SchemaGraph Schema Graph},
+ * that is assumed to be a valid OWL2 ontology.
+ * There are two main methods: {@link #inferSchema(MappingImpl)} and {@link #compileSchema(MappingImpl)}.
+ * The first one is for reading a schema from a mapping graph,
+ * and the second one is for writing to a mapping graph to make it complete for inference.
  * Both methods together ensure a valid OWL2 schema,
  * but (in case of dynamic properties) this schema may partially lies not in memory.
  * <p>
@@ -41,38 +40,43 @@ import java.util.function.BiPredicate;
  * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>
  */
 @SuppressWarnings("WeakerAccess")
-public class SchemaFactory {
+public class SchemaController {
 
-    private static SchemaFactory factory = createDefault(BuiltIn.OWL_VOCABULARY, true);
+    private static SchemaController factory = createDefault(BuiltIn.OWL_VOCABULARY, true);
 
     private final VirtualGraph.DynamicTriples virtualGraphBuilder;
     private final BiPredicate<Graph, Triple> maskGraphBuilder;
-    private final BiFunction<Mapping, ClassMap, ExtendedIterator<Resource>> listClasses;
+    private final Function<ClassMap, ExtendedIterator<Resource>> listClassMapsOWLClasses;
+    private final Function<PropertyBridge, ExtendedIterator<Resource>> listPropertyBridgeOWLTypes;
 
     /**
      * Constructs an instance.
      *
-     * @param virtualGraph {@link VirtualGraph.DynamicTriples} - to build the right part of a schema graph,
-     *                     to infer data from a mapping
-     * @param maskGraph    {@link BiPredicate} - to build the left part of a schema graph,
-     *                     to hide data from a mapping
-     * @param listClasses  {@link BiFunction} - a facility to retrieve all OWL-classes from a mapping,
-     *                     it is used while compile schema
+     * @param virtualGraph               {@link VirtualGraph.DynamicTriples} - a facility to build the right part
+     *                                   of a schema graph, to infer data from a mapping
+     * @param maskGraph                  {@link BiPredicate} -  a facility to build the left part of a schema graph,
+     *                                   to hide data from a mapping
+     * @param listClassMapOWLClasses     {@link Function} - a facility to retrieve all OWL-classes
+     *                                   from a given {@code ClassMap}; it is used while compile schema
+     * @param listPropertyBridgeOWLTypes {@link Function} - a facility to retrieve all OWL-types
+     *                                   from a given {@code PropertyBridge}; it is used while compile schema
      */
-    public SchemaFactory(VirtualGraph.DynamicTriples virtualGraph,
-                         BiPredicate<Graph, Triple> maskGraph,
-                         BiFunction<Mapping, ClassMap, ExtendedIterator<Resource>> listClasses) {
+    public SchemaController(VirtualGraph.DynamicTriples virtualGraph,
+                            BiPredicate<Graph, Triple> maskGraph,
+                            Function<ClassMap, ExtendedIterator<Resource>> listClassMapOWLClasses,
+                            Function<PropertyBridge, ExtendedIterator<Resource>> listPropertyBridgeOWLTypes) {
         this.virtualGraphBuilder = Objects.requireNonNull(virtualGraph);
         this.maskGraphBuilder = Objects.requireNonNull(maskGraph);
-        this.listClasses = Objects.requireNonNull(listClasses);
+        this.listClassMapsOWLClasses = Objects.requireNonNull(listClassMapOWLClasses);
+        this.listPropertyBridgeOWLTypes = Objects.requireNonNull(listPropertyBridgeOWLTypes);
     }
 
     /**
      * Returns a global saved factory instance.
      *
-     * @return {@link SchemaFactory}, not {@code null}
+     * @return {@link SchemaController}, not {@code null}
      */
-    public static SchemaFactory getInstance() {
+    public static SchemaController getInstance() {
         return factory;
     }
 
@@ -81,11 +85,11 @@ public class SchemaFactory {
      * Just in case,
      * and in order to leave the ability to change the behavior in a static way.
      *
-     * @param g {@link SchemaFactory} to set, not {@code null}
-     * @return {@link SchemaFactory} the previously associated schema generator factory
+     * @param g {@link SchemaController} to set, not {@code null}
+     * @return {@link SchemaController} the previously associated schema generator factory
      */
-    public static SchemaFactory setInstance(SchemaFactory g) {
-        SchemaFactory prev = factory;
+    public static SchemaController setInstance(SchemaController g) {
+        SchemaController prev = factory;
         factory = Objects.requireNonNull(g);
         return prev;
     }
@@ -95,14 +99,15 @@ public class SchemaFactory {
      *
      * @param vocabulary     {@link BuiltIn.Vocabulary}
      * @param withEquivalent boolean to control {@code owl:equivalentClass} and {@code owl:equivalentProperty}
-     * @return {@link SchemaFactory}, not {@code null}
+     * @return {@link SchemaController}, not {@code null}
      */
-    public static SchemaFactory createDefault(BuiltIn.Vocabulary vocabulary, boolean withEquivalent) {
+    public static SchemaController createDefault(BuiltIn.Vocabulary vocabulary, boolean withEquivalent) {
         SchemaBuilder builder = new SchemaBuilder(vocabulary, withEquivalent);
-        BiFunction<Mapping, ClassMap, ExtendedIterator<Resource>> listClasses = (m, c) -> listClasses(builder, m, c);
+        Function<ClassMap, ExtendedIterator<Resource>> listClasses = c -> listClasses(builder, c);
+        Function<PropertyBridge, ExtendedIterator<Resource>> listPropertyTypes = SchemaController::listPropertyTypes;
         VirtualGraph.DynamicTriples virtualGraph = builder.buildDynamicGraph();
         BiPredicate<Graph, Triple> maskGraph = buildMaskGraph();
-        return new SchemaFactory(virtualGraph, maskGraph, listClasses);
+        return new SchemaController(virtualGraph, maskGraph, listClasses, listPropertyTypes);
     }
 
     /**
@@ -178,7 +183,7 @@ public class SchemaFactory {
      * Compiles the schema for the given mapping.
      * This method generates additional different {@link ClassMap}s and {@link PropertyBridge}s in order
      * to make data satisfy OWL2 requirements.
-     * In contradistinction to the {@link #inferSchema(MappingImpl)} method, it is a write operation.
+     * Unlike the {@link #inferSchema(MappingImpl)} method, it is a write operation.
      * But any changes are annotated with the property {@link AVC#autoGenerated} and can be safely undone.
      * <p>
      * Currently this method handles the following cases:
@@ -192,13 +197,14 @@ public class SchemaFactory {
      * </ul>
      *
      * @param impl {@link MappingImpl}, not {@code null}, a mapping impl containing D2RQ instructions
+     * @see MappingImpl#clearAutoGenerated()
      */
     public void compileSchema(MappingImpl impl) {
         // owl:NamedIndividual declaration + class type for anonymous individuals:
         impl.classMaps()
                 .filterDrop(ResourceMap::isAutoGenerated)
                 .forEachRemaining(c -> {
-                    Set<Resource> classes = listClasses.apply(impl, c).toSet();
+                    Set<Resource> classes = listClassMapsOWLClasses.apply(c).toSet();
                     if (classes.isEmpty()) {
                         Resource clazz = c.asResource();
                         if (clazz.isAnon()) {
@@ -213,40 +219,28 @@ public class SchemaFactory {
                     }
                 });
 
-        // owl:sameAs, owl:differentFrom individual assertions:
         impl.propertyBridges()
                 .filterDrop(ResourceMap::isAutoGenerated)
-                .filterKeep(p -> p.listProperties().map(FrontsNode::asNode)
-                        .anyMatch(Nodes.SYMMETRIC_INDIVIDUAL_PREDICATES::contains))
-                .filterDrop(p -> p.getURIColumn() == null)
-                .forEachRemaining(p -> MappingUtils.fetchClassMap(p, OWL.NamedIndividual, D2RQ.uriColumn));
-
-        // creates dynamic class map for property bridge with rdf:type
-        impl.propertyBridges()
-                .filterDrop(ResourceMap::isAutoGenerated)
-                .filterKeep(p -> p.listProperties().anyMatch(RDF.type::equals))
-                .filterDrop(p -> p.getURIPattern() == null)
-                .forEachRemaining(p -> MappingUtils.fetchClassMap(p, OWL.Class, D2RQ.uriPattern)
-                        .setContainsDuplicates(true));
-
-        // dynamic properties:
-        impl.propertyBridges()
-                .filterKeep(x -> Iter.findFirst(x.dynamicProperties()).isPresent())
                 .forEachRemaining(p -> {
-                    Set<Resource> types = new HashSet<>();
-                    if (isDataProperty(impl, p)) {
-                        types.add(OWL.DatatypeProperty);
+                    // owl:sameAs, owl:differentFrom individual assertions:
+                    if (p.getURIColumn() != null && p.listProperties().map(FrontsNode::asNode)
+                            .anyMatch(Nodes.SYMMETRIC_INDIVIDUAL_PREDICATES::contains)) {
+                        MappingUtils.fetchClassMap(p, OWL.NamedIndividual, D2RQ.uriColumn);
                     }
-                    if (isObjectProperty(impl, p)) {
-                        types.add(OWL.ObjectProperty);
+
+                    // creates dynamic class map for property bridge with rdf:type
+                    if (p.getURIPattern() != null && p.listProperties().anyMatch(RDF.type::equals)) {
+                        MappingUtils.fetchClassMap(p, OWL.Class, D2RQ.uriPattern).setContainsDuplicates(true);
                     }
-                    if (types.isEmpty()) {
-                        types.add(OWL.AnnotationProperty);
+
+                    // dynamic properties:
+                    if (Iter.findFirst(p.dynamicProperties()).isPresent()) {
+                        Set<Resource> types = listPropertyBridgeOWLTypes.apply(p).toSet();
+                        p.dynamicProperties().forEachRemaining(s -> {
+                            ClassMapImpl c = MappingUtils.fetchClassMap(p, s);
+                            types.forEach(c::addClass);
+                        });
                     }
-                    p.dynamicProperties().forEachRemaining(s -> {
-                        ClassMapImpl x = MappingUtils.fetchClassMap(p, s);
-                        types.forEach(x::addClass);
-                    });
                 });
     }
 
@@ -279,17 +273,25 @@ public class SchemaFactory {
         return (g, t) -> g.contains(t.getSubject(), Nodes.RDF_FTYPE, type);
     }
 
-    public static boolean isDataProperty(Mapping m, PropertyBridge propertyBridge) {
-        return SchemaHelper.isDataProperty(m.asModel().getGraph(), propertyBridge.asResource().asNode());
+    private static ExtendedIterator<Resource> listClasses(SchemaBuilder helper, ClassMap c) {
+        Model m = c.getMapping().asModel();
+        return helper.listOWLClasses(m.getGraph(), c.asResource().asNode()).mapWith(m::wrapAsResource);
     }
 
-    public static boolean isObjectProperty(Mapping m, PropertyBridge propertyBridge) {
-        return SchemaHelper.isObjectProperty(m.asModel().getGraph(), propertyBridge.asResource().asNode());
-    }
-
-    private static ExtendedIterator<Resource> listClasses(SchemaBuilder helper, Mapping m, ClassMap c) {
-        Model model = m.asModel();
-        return helper.listOWLClasses(m.asModel().getGraph(), c.asResource().asNode()).mapWith(model::wrapAsResource);
+    private static ExtendedIterator<Resource> listPropertyTypes(PropertyBridge p) {
+        Graph g = p.getMapping().asModel().getGraph();
+        Node n = p.asResource().asNode();
+        List<Resource> res = new ArrayList<>(2);
+        if (SchemaHelper.isDataProperty(g, n)) {
+            res.add(OWL.DatatypeProperty);
+        }
+        if (SchemaHelper.isObjectProperty(g, n)) {
+            res.add(OWL.ObjectProperty);
+        }
+        if (res.isEmpty()) {
+            res.add(OWL.AnnotationProperty);
+        }
+        return WrappedIterator.create(res.iterator());
     }
 
 }
