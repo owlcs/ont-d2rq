@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
@@ -9,10 +9,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.d2rq.conf.ConnectionData;
 import ru.avicomp.map.Managers;
 import ru.avicomp.map.MapModel;
 import ru.avicomp.map.OWLMapManager;
+import ru.avicomp.ontapi.OntologyModel;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 
 import java.nio.file.Path;

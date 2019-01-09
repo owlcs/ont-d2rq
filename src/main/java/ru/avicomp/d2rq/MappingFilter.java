@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
@@ -6,6 +6,7 @@ import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.rdf.model.*;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLProperty;
+import ru.avicomp.ontapi.OntApiException;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 

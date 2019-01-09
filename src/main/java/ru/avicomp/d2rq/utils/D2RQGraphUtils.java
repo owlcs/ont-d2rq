@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi.jena.utils;
+package ru.avicomp.d2rq.utils;
 
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.OntGraphUtils;
 import ru.avicomp.ontapi.jena.UnionGraph;
+import ru.avicomp.ontapi.jena.utils.Graphs;
 
 import java.util.Objects;
 

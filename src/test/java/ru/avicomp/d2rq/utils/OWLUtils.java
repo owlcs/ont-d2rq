@@ -1,4 +1,4 @@
-package ru.avicomp.utils;
+package ru.avicomp.d2rq.utils;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.mem.GraphMem;
@@ -14,7 +14,6 @@ import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntEntity;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
 import ru.avicomp.ontapi.jena.utils.Graphs;
 
 import java.util.function.Function;

@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.d2rq;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,10 +8,13 @@ import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.d2rq.conf.ConnectionData;
+import ru.avicomp.d2rq.utils.OWLUtils;
+import ru.avicomp.ontapi.OntManagers;
+import ru.avicomp.ontapi.OntologyManager;
+import ru.avicomp.ontapi.OntologyModel;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
-import ru.avicomp.utils.OWLUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;

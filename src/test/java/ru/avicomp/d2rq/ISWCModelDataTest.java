@@ -13,13 +13,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ISWCData;
+import ru.avicomp.d2rq.conf.ISWCData;
+import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntNDP;
 import ru.avicomp.ontapi.jena.model.OntNOP;
-import ru.avicomp.utils.OWLUtils;
 
 /**
  * Validate ISWC mappings data.

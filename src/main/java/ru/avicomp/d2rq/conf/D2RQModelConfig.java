@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi.jena.impl.conf;
+package ru.avicomp.d2rq.conf;
 
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.enhanced.EnhGraph;
@@ -7,6 +7,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import ru.avicomp.ontapi.jena.impl.Entities;
 import ru.avicomp.ontapi.jena.impl.OntIndividualImpl;
+import ru.avicomp.ontapi.jena.impl.conf.*;
 import ru.avicomp.ontapi.jena.model.OntCE;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntObject;

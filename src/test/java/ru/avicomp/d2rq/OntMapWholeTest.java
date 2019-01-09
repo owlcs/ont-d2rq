@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
@@ -14,16 +14,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.spin.vocabulary.SP;
 import org.topbraid.spin.vocabulary.SPINMAP;
-import ru.avicomp.conf.ConnectionData;
-import ru.avicomp.conf.ISWCData;
+import ru.avicomp.d2rq.conf.ConnectionData;
+import ru.avicomp.d2rq.conf.ISWCData;
+import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.map.*;
 import ru.avicomp.map.spin.vocabulary.AVC;
+import ru.avicomp.ontapi.OntologyManager;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.model.OntNDP;
-import ru.avicomp.utils.OWLUtils;
 
 import java.util.function.Supplier;
 

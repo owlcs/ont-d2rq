@@ -13,8 +13,8 @@ import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.VCARD;
 import org.junit.Ignore;
 import org.junit.Test;
-import ru.avicomp.conf.ISWCData;
 import ru.avicomp.d2rq.ISWCModelDataTest;
+import ru.avicomp.d2rq.conf.ISWCData;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 

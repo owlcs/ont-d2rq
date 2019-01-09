@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Configuration;
@@ -8,6 +8,11 @@ import de.fuberlin.wiwiss.d2rq.vocab.AVC;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
+import ru.avicomp.d2rq.utils.D2RQGraphUtils;
+import ru.avicomp.ontapi.OntApiException;
+import ru.avicomp.ontapi.OntGraphDocumentSource;
+import ru.avicomp.ontapi.OntGraphUtils;
+import ru.avicomp.ontapi.OntologyModel;
 
 import java.util.Objects;
 import java.util.Properties;
@@ -28,7 +33,7 @@ import java.util.Properties;
  * Created by @szuev on 24.02.2017.
  *
  * @see <a href='https://www.w3.org/TR/rdb-direct-mapping/'>Direct Mapping</a>
- * @see ru.avicomp.ontapi.jena.utils.D2RQGraphUtils
+ * @see D2RQGraphUtils
  */
 @SuppressWarnings("WeakerAccess")
 public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements AutoCloseable {
@@ -153,7 +158,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * It is also a {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph Mapping Graph}, and, therefore,
      * there is a possibility to get database data from it
      * (is the form of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ Data Graph}),
-     * see {@link ru.avicomp.ontapi.jena.utils.D2RQGraphUtils#getDataGraph(Graph)}.
+     * see {@link D2RQGraphUtils#getDataGraph(Graph)}.
      * <p>
      * If this OGDS is default, i.e. constructed by the method {@link #create(IRI, IRI, String, String, Properties)},
      * then a D2RQ data {@code Graph} does not contain a schema.

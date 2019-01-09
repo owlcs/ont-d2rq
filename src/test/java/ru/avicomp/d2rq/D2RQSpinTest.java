@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import org.apache.jena.enhanced.BuiltinPersonalities;
@@ -13,17 +13,19 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.SetOntologyID;
 import org.topbraid.spin.inference.SPINInferences;
 import org.topbraid.spin.system.SPINModuleRegistry;
-import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.d2rq.conf.ConnectionData;
+import ru.avicomp.d2rq.conf.D2RQModelConfig;
+import ru.avicomp.d2rq.utils.D2RQGraphUtils;
+import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.map.spin.SpinModelConfig;
+import ru.avicomp.ontapi.OntologyManager;
+import ru.avicomp.ontapi.OntologyModel;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
-import ru.avicomp.ontapi.jena.impl.conf.D2RQModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
 import ru.avicomp.ontapi.tests.SpinMappingTest;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
-import ru.avicomp.utils.OWLUtils;
 
 /**
  * To test SPIN + D2RQ + ONT-API.

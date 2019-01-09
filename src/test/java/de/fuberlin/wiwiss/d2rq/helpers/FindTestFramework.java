@@ -16,7 +16,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ISWCData;
+import ru.avicomp.d2rq.conf.ISWCData;
 
 import java.util.HashSet;
 import java.util.Set;

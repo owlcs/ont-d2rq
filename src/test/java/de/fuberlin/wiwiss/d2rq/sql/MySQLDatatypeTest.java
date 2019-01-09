@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.d2rq.conf.ConnectionData;
 import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
 import java.util.ArrayList;

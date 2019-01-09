@@ -17,13 +17,13 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ConnectionData;
-import ru.avicomp.conf.ISWCData;
+import ru.avicomp.d2rq.conf.ConnectionData;
+import ru.avicomp.d2rq.conf.ISWCData;
+import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.*;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
-import ru.avicomp.utils.OWLUtils;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;

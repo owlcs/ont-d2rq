@@ -1,4 +1,4 @@
-package ru.avicomp.conf;
+package ru.avicomp.d2rq.conf;
 
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -9,7 +9,7 @@ import de.fuberlin.wiwiss.d2rq.sql.SQLScriptLoader;
 import org.semanticweb.owlapi.model.IRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.D2RQGraphDocumentSource;
+import ru.avicomp.d2rq.D2RQGraphDocumentSource;
 
 import java.io.IOException;
 import java.io.InputStream;

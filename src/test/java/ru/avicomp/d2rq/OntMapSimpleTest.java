@@ -1,4 +1,4 @@
-package ru.avicomp.ontapi;
+package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
@@ -13,8 +13,11 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.SetOntologyID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ConnectionData;
+import ru.avicomp.d2rq.conf.ConnectionData;
+import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.map.*;
+import ru.avicomp.ontapi.OntologyManager;
+import ru.avicomp.ontapi.OntologyModel;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntDT;
@@ -23,7 +26,6 @@ import ru.avicomp.ontapi.jena.model.OntNDP;
 import ru.avicomp.ontapi.jena.vocabulary.XSD;
 import ru.avicomp.ontapi.utils.SP;
 import ru.avicomp.ontapi.utils.SPINMAPL;
-import ru.avicomp.utils.OWLUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -17,13 +17,12 @@ import org.junit.*;
 import org.semanticweb.owlapi.model.IRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.conf.ConnectionData;
-import ru.avicomp.ontapi.D2RQGraphDocumentSource;
+import ru.avicomp.d2rq.conf.ConnectionData;
+import ru.avicomp.d2rq.utils.D2RQGraphUtils;
+import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.impl.conf.OntModelConfig;
 import ru.avicomp.ontapi.jena.model.*;
-import ru.avicomp.ontapi.jena.utils.D2RQGraphUtils;
-import ru.avicomp.utils.OWLUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;

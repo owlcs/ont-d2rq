@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import ru.avicomp.conf.ISWCData;
+import ru.avicomp.d2rq.conf.ISWCData;
 
 import java.util.*;
 
@@ -35,12 +35,12 @@ public abstract class QueryLanguageTestFramework {
     BeanCounter startInst;
     boolean compareQueryHandlers = false;
     int configs;
-    BeanCounter diffInfo[];
-    Set<Map<String, RDFNode>> resultMaps[];
-    String printed[];
-    String handlerDescription[];
-    boolean usingD2RQ[];
-    boolean verbatim[];
+    BeanCounter[] diffInfo;
+    Set<Map<String, RDFNode>>[] resultMaps;
+    String[] printed;
+    String[] handlerDescription;
+    boolean[] usingD2RQ;
+    boolean[] verbatim;
 
 
     @SuppressWarnings("unchecked")
@@ -204,7 +204,7 @@ public abstract class QueryLanguageTestFramework {
     }
 
     private String printCollection(Collection<?> c) {
-        String a[] = new String[c.size()];
+        String[] a = new String[c.size()];
         Iterator<?> it = c.iterator();
         int i = 0;
         while (it.hasNext()) {
@@ -217,7 +217,7 @@ public abstract class QueryLanguageTestFramework {
     }
 
     private String printMap(Map<?, ?> m) {
-        String a[] = new String[m.size()];
+        String[] a = new String[m.size()];
         Iterator<?> it = m.entrySet().iterator();
         int i = 0;
         while (it.hasNext()) {
