@@ -1,5 +1,6 @@
 package d2rq;
 
+import d2rq.utils.LogHelper;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,52 +16,52 @@ public class AppRunner {
 
     public static void main(String... args) {
         LogHelper.turnLoggingOff();
-        PrintStream out = CommandLineTool.CONSOLE;
-        if (args.length == 0 || Stream.of("-h", "--h", "-help", "--help", "/?").anyMatch(h -> h.equalsIgnoreCase(args[0]))) {
+        PrintStream out = System.err;
+        if (args.length == 0 || CommandLineTool.isHelpOption(args[0])) {
             out.println("usage:");
-            Mode.printUsage(out);
+            ToolFactory.printUsage(out);
             System.exit(0);
         }
-        Optional<Mode> c = Mode.commands().filter(k -> k.is(args[0])).findFirst();
+        Optional<ToolFactory> c = ToolFactory.commands().filter(k -> k.is(args[0])).findFirst();
         if (!c.isPresent()) {
             out.println("Missing required command. Must be one of the following:");
-            Mode.printUsage(out);
+            ToolFactory.printUsage(out);
             System.exit(1);
         }
-        CommandLineTool tool = c.get().getTool();
+        CommandLineTool tool = c.get().getTool(out);
         try {
             tool.process(ArrayUtils.remove(args, 0));
-        } catch (CommandLineTool.ExitException exit) {
+        } catch (CommandLineTool.Exit exit) {
             System.exit(exit.getCode());
         }
     }
 
-    private enum Mode {
+    enum ToolFactory {
         QUERY("d2rq-query") {
             @Override
-            public CommandLineTool getTool() {
-                return new QueryTool();
+            public CommandLineTool getTool(PrintStream out) {
+                return new QueryTool(out);
             }
         },
         DUMP("dump-rdf") {
             @Override
-            public CommandLineTool getTool() {
-                return new DumpTool();
+            public CommandLineTool getTool(PrintStream out) {
+                return new DumpTool(out);
             }
         },
         MAPPING("generate-mapping") {
             @Override
-            public CommandLineTool getTool() {
-                return new MappingTool();
+            public CommandLineTool getTool(PrintStream out) {
+                return new MappingTool(out);
             }
         },;
         private final String key;
 
-        Mode(String s) {
+        ToolFactory(String s) {
             key = s;
         }
 
-        public abstract CommandLineTool getTool();
+        public abstract CommandLineTool getTool(PrintStream out);
 
         public boolean is(String str) {
             return str != null && key.equalsIgnoreCase(str.trim());
@@ -70,8 +71,8 @@ public class AppRunner {
             commands().forEach(c -> out.println("\t" + StringUtils.rightPad(c.key, 16) + " [options...]"));
         }
 
-        public static Stream<Mode> commands() {
-            return Arrays.stream(Mode.values());
+        public static Stream<ToolFactory> commands() {
+            return Arrays.stream(ToolFactory.values());
         }
     }
 

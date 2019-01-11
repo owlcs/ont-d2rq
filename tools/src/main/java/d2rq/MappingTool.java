@@ -1,5 +1,7 @@
 package d2rq;
 
+import d2rq.utils.ArgDecl;
+import d2rq.utils.CommandLine;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -23,30 +25,37 @@ import java.io.PrintStream;
 public class MappingTool extends CommandLineTool {
     private final static Logger LOGGER = LoggerFactory.getLogger(MappingTool.class);
 
+    MappingTool(PrintStream console) {
+        super(console);
+    }
+
+    @Override
     public void usage() {
-        CONSOLE.println("usage: generate-mapping [options] jdbcURL");
-        CONSOLE.println();
+        console.println("usage: generate-mapping [options] jdbcURL");
+        console.println();
         printStandardArguments(false);
-        CONSOLE.println("  Options:");
+        console.println("  Options:");
         printConnectionOptions();
-        CONSOLE.println("    -o outfile.ttl  Output file name (default: stdout)");
-        CONSOLE.println("    -v              Generate RDFS+OWL vocabulary instead of mapping file");
-        CONSOLE.println("    -b baseURI      Base URI for RDF output");
-        CONSOLE.println("    --verbose       Print debug information");
-        CONSOLE.println();
-        throw new ExitException(1);
+        console.println("    -o outfile.ttl  Output file name (default: stdout)");
+        console.println("    -v              Generate RDFS+OWL vocabulary instead of mapping file");
+        console.println("    -b baseURI      Base URI for RDF output");
+        console.println("    --verbose       Print debug information");
+        console.println();
+        throw new Exit(1);
     }
 
     private ArgDecl baseArg = new ArgDecl(true, "b", "base");
     private ArgDecl outfileArg = new ArgDecl(true, "o", "out", "outfile");
     private ArgDecl vocabAsOutput = new ArgDecl(false, "v", "vocab");
 
+    @Override
     public void initArgs(CommandLine cmd) {
         cmd.add(baseArg);
         cmd.add(outfileArg);
         cmd.add(vocabAsOutput);
     }
 
+    @Override
     public void run(CommandLine cmd, SystemLoader loader) throws IOException {
         if (cmd.numItems() == 1) {
             loader.setJdbcURL(cmd.getItem(0));

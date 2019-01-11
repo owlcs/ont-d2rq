@@ -1,5 +1,7 @@
 package d2rq;
 
+import d2rq.utils.ArgDecl;
+import d2rq.utils.CommandLine;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
@@ -13,6 +15,8 @@ import org.apache.jena.sparql.util.QueryExecUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintStream;
+
 /**
  * Command line utility for executing SPARQL queries against a D2RQ-mapped database.
  *
@@ -21,31 +25,37 @@ import org.slf4j.LoggerFactory;
 public class QueryTool extends CommandLineTool {
     private static final Logger LOGGER = LoggerFactory.getLogger(QueryTool.class);
 
+    QueryTool(PrintStream console) {
+        super(console);
+    }
+
+    @Override
     public void usage() {
-        CONSOLE.println("usage:");
-        CONSOLE.println("  d2r-query [query-options] mappingFile query");
-        CONSOLE.println("  d2r-query [query-options] [connection-options] jdbcURL query");
-        CONSOLE.println("  d2r-query [query-options] [connection-options] -l script.sql query");
-        CONSOLE.println();
+        console.println("usage:");
+        console.println("  d2r-query [query-options] mappingFile query");
+        console.println("  d2r-query [query-options] [connection-options] jdbcURL query");
+        console.println("  d2r-query [query-options] [connection-options] -l script.sql query");
+        console.println();
         printStandardArguments(true);
-        CONSOLE.println("    query           A SPARQL query, e.g., \"SELECT * {?s rdf:type ?o} LIMIT 10\"");
-        CONSOLE.println("                    A value of @file.sparql reads the query from a file.");
-        CONSOLE.println("  Query options:");
-        CONSOLE.println("    -b baseURI      Base URI for RDF output");
-        CONSOLE.println("    -f format       One of text (default), xml, json, csv, tsv, srb, ttl");
-        CONSOLE.println("    -t timeout      Query timeout in seconds");
-        CONSOLE.println("    --verbose       Print debug information");
-        CONSOLE.println();
-        CONSOLE.println("  Database connection options (only with jdbcURL):");
+        console.println("    query           A SPARQL query, e.g., \"SELECT * {?s rdf:type ?o} LIMIT 10\"");
+        console.println("                    A value of @file.sparql reads the query from a file.");
+        console.println("  Query options:");
+        console.println("    -b baseURI      Base URI for RDF output");
+        console.println("    -f format       One of text (default), xml, json, csv, tsv, srb, ttl");
+        console.println("    -t timeout      Query timeout in seconds");
+        console.println("    --verbose       Print debug information");
+        console.println();
+        console.println("  Database connection options (only with jdbcURL):");
         printConnectionOptions();
-        CONSOLE.println();
-        throw new ExitException(1);
+        console.println();
+        throw new Exit(1);
     }
 
     private ArgDecl baseArg = new ArgDecl(true, "b", "base");
     private ArgDecl formatArg = new ArgDecl(true, "f", "format");
     private ArgDecl timeoutArg = new ArgDecl(true, "t", "timeout");
 
+    @Override
     public void initArgs(CommandLine cmd) {
         cmd.add(baseArg);
         cmd.add(formatArg);
@@ -54,6 +64,7 @@ public class QueryTool extends CommandLineTool {
         setSupportImplicitJdbcURL(true);
     }
 
+    @Override
     public void run(CommandLine cmd, SystemLoader loader) {
         String query = null;
         if (cmd.numItems() == 1) {

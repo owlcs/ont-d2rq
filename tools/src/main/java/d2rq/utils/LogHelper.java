@@ -1,4 +1,4 @@
-package d2rq;
+package d2rq.utils;
 
 import org.apache.jena.atlas.logging.LogCtl;
 
@@ -13,7 +13,6 @@ import java.lang.reflect.Method;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-@SuppressWarnings("WeakerAccess")
 public class LogHelper {
 
     public static void turnLoggingOff() {
@@ -22,7 +21,7 @@ public class LogHelper {
         //org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
         //Does not work, see description of org.apache.log4j.Logger.getRootLogger()
         //LogCtl.disable("root");
-        try {
+        try { // todo: replace with explicit operations
             Class<?> logger = Class.forName("org.apache.log4j.Logger");
             Class<?> level = Class.forName("org.apache.log4j.Level");
             Object rootLogger = logger.getMethod("getRootLogger").invoke(null);
@@ -43,7 +42,7 @@ public class LogHelper {
         org.apache.log4j.Logger.getLogger("org.eclipse.jetty").setLevel(org.apache.log4j.Level.INFO);
         org.apache.log4j.Logger.getLogger("org.joseki").setLevel(org.apache.log4j.Level.INFO);
         */
-        LogCtl.setLevel("d2rq", "INFO");
+        LogCtl.setLevel("ru/avicomp/d2rq", "INFO");
         LogCtl.setLevel("de.fuberlin.wiwiss.d2rq", "INFO");
         LogCtl.setLevel("org.eclipse.jetty", "INFO");
         LogCtl.setLevel("org.joseki", "INFO");
@@ -57,10 +56,10 @@ public class LogHelper {
         org.apache.log4j.Logger.getLogger("org.eclipse.jetty").setLevel(org.apache.log4j.Level.INFO);
         org.apache.log4j.Logger.getLogger("org.joseki").setLevel(org.apache.log4j.Level.INFO);
         */
-        LogCtl.setLevel("d2rq", "ALL");
+        LogCtl.setLevel("ru/avicomp/d2rq", "ALL");
         LogCtl.setLevel("de.fuberlin.wiwiss.d2rq", "ALL");
         LogCtl.setLevel("org.eclipse.jetty", "INFO");
-        LogCtl.setLevel("org.joseki", "INFO");
+        LogCtl.setLevel("org.joseki", "INFO"); // todo: no more joseki
     }
 
     @SuppressWarnings({"unchecked", "JavaReflectionInvocation"})

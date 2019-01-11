@@ -1,5 +1,7 @@
 package d2rq;
 
+import d2rq.utils.ArgDecl;
+import d2rq.utils.CommandLine;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Database;
@@ -26,36 +28,43 @@ public class DumpTool extends CommandLineTool {
 
     private final static int DUMP_DEFAULT_FETCH_SIZE = 500;
 
+    DumpTool(PrintStream console) {
+        super(console);
+    }
+
+    @Override
     public void usage() {
-        CONSOLE.println("usage:");
-        CONSOLE.println("  dump-rdf [output-options] mappingFile");
-        CONSOLE.println("  dump-rdf [output-options] [connection-options] jdbcURL");
-        CONSOLE.println("  dump-rdf [output-options] [connection-options] -l script.sql");
-        CONSOLE.println();
+        console.println("usage:");
+        console.println("  dump-rdf [output-options] mappingFile");
+        console.println("  dump-rdf [output-options] [connection-options] jdbcURL");
+        console.println("  dump-rdf [output-options] [connection-options] -l script.sql");
+        console.println();
         printStandardArguments(true);
-        CONSOLE.println();
-        CONSOLE.println("  RDF output options:");
-        CONSOLE.println("    -b baseURI      Base URI for RDF output");
-        CONSOLE.println("    -f format       One of N-TRIPLE (default), RDF/XML, RDF/XML-ABBREV, TURTLE");
-        CONSOLE.println("    -o outfile      Output file name (default: stdout)");
-        CONSOLE.println("    --verbose       Print debug information");
-        CONSOLE.println();
-        CONSOLE.println("  Database connection options (only with jdbcURL):");
+        console.println();
+        console.println("  RDF output options:");
+        console.println("    -b baseURI      Base URI for RDF output");
+        console.println("    -f format       One of N-TRIPLE (default), RDF/XML, RDF/XML-ABBREV, TURTLE");
+        console.println("    -o outfile      Output file name (default: stdout)");
+        console.println("    --verbose       Print debug information");
+        console.println();
+        console.println("  Database connection options (only with jdbcURL):");
         printConnectionOptions();
-        CONSOLE.println();
-        throw new ExitException(1);
+        console.println();
+        throw new Exit(1);
     }
 
     private ArgDecl baseArg = new ArgDecl(true, "b", "base");
     private ArgDecl formatArg = new ArgDecl(true, "f", "format");
     private ArgDecl outfileArg = new ArgDecl(true, "o", "out", "outfile");
 
+    @Override
     public void initArgs(CommandLine cmd) {
         cmd.add(baseArg);
         cmd.add(formatArg);
         cmd.add(outfileArg);
     }
 
+    @Override
     public void run(CommandLine cmd, SystemLoader loader) throws IOException {
         if (cmd.numItems() == 1) {
             loader.setMappingFileOrJdbcURL(cmd.getItem(0));
@@ -68,7 +77,7 @@ public class DumpTool extends CommandLineTool {
         PrintStream out;
         if (cmd.hasArg(outfileArg)) {
             File f = new File(cmd.getArg(outfileArg).getValue());
-            LOGGER.info("Writing to " + f);
+            LOGGER.info("Writing to {}", f);
             out = new PrintStream(new FileOutputStream(f));
             loader.setSystemBaseURI(MapParser.absolutizeURI(f.toURI().toString() + "#"));
         } else {
