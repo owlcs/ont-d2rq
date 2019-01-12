@@ -5,6 +5,7 @@ import java.util.function.BiConsumer;
 
 /**
  * A command line argument specification.
+ * TODO: see {@link d2rq.utils.CommandLine} notes.
  */
 public class ArgDecl {
     private boolean takesValue;

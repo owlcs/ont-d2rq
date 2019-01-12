@@ -7,7 +7,7 @@ import java.util.function.BiConsumer;
 
 /**
  * A copy-paste from some old Jena.
- * todo: better to replace with commons-cli + this impl is really ugly.
+ * todo: better to replace with commons-cli + this impl is really ugly, cleanup is needed at least.
  * <p>
  * Command line argument processing based on a trigger model.
  * An action is called whenever an argument is encountered. Example:

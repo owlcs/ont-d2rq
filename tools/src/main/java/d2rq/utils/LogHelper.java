@@ -17,21 +17,17 @@ public class LogHelper {
 
     public static void turnLoggingOff() {
         forceDisableExternalLogging();
-        //Original:
-        //org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
-        //Does not work, see description of org.apache.log4j.Logger.getRootLogger()
-        //LogCtl.disable("root");
-        try { // todo: replace with explicit operations
-            Class<?> logger = Class.forName("org.apache.log4j.Logger");
-            Class<?> level = Class.forName("org.apache.log4j.Level");
-            Object rootLogger = logger.getMethod("getRootLogger").invoke(null);
-            Object off = level.getField("OFF").get(null);
-            //noinspection JavaReflectionInvocation
-            logger.getMethod("setLevel", level).invoke(rootLogger, off);
-        } catch (Exception e) {
-            throw new IllegalStateException("Can't turn off logging", e);
-        }
-
+        org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
+//        try {
+//            Class<?> logger = Class.forName("org.apache.log4j.Logger");
+//            Class<?> level = Class.forName("org.apache.log4j.Level");
+//            Object rootLogger = logger.getMethod("getRootLogger").invoke(null);
+//            Object off = level.getField("OFF").get(null);
+//            //noinspection JavaReflectionInvocation
+//            logger.getMethod("setLevel", level).invoke(rootLogger, off);
+//        } catch (Exception e) {
+//            throw new IllegalStateException("Can't turn off logging", e);
+//        }
     }
 
     public static void setVerboseLogging() {
@@ -42,10 +38,8 @@ public class LogHelper {
         org.apache.log4j.Logger.getLogger("org.eclipse.jetty").setLevel(org.apache.log4j.Level.INFO);
         org.apache.log4j.Logger.getLogger("org.joseki").setLevel(org.apache.log4j.Level.INFO);
         */
-        LogCtl.setLevel("ru/avicomp/d2rq", "INFO");
-        LogCtl.setLevel("de.fuberlin.wiwiss.d2rq", "INFO");
-        LogCtl.setLevel("org.eclipse.jetty", "INFO");
-        LogCtl.setLevel("org.joseki", "INFO");
+        setApplicationLogLevelTo("INFO");
+        setSystemLogLevelTo("INFO");
     }
 
     public static void setDebugLogging() {
@@ -56,10 +50,20 @@ public class LogHelper {
         org.apache.log4j.Logger.getLogger("org.eclipse.jetty").setLevel(org.apache.log4j.Level.INFO);
         org.apache.log4j.Logger.getLogger("org.joseki").setLevel(org.apache.log4j.Level.INFO);
         */
-        LogCtl.setLevel("ru/avicomp/d2rq", "ALL");
-        LogCtl.setLevel("de.fuberlin.wiwiss.d2rq", "ALL");
-        LogCtl.setLevel("org.eclipse.jetty", "INFO");
-        LogCtl.setLevel("org.joseki", "INFO"); // todo: no more joseki
+        setApplicationLogLevelTo("ALL");
+        setSystemLogLevelTo("INFO");
+    }
+
+    private static void setApplicationLogLevelTo(String level) {
+        LogCtl.setLevel("d2rq", level);
+        LogCtl.setLevel("ru.avicomp.d2rq", level);
+        LogCtl.setLevel("de.fuberlin.wiwiss.d2rq", level);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static void setSystemLogLevelTo(String level) {
+        LogCtl.setLevel("org.eclipse.jetty", level);
+        LogCtl.setLevel("org.apache.jena.fuseki", level);
     }
 
     @SuppressWarnings({"unchecked", "JavaReflectionInvocation"})

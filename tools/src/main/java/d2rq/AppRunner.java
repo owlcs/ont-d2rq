@@ -54,7 +54,13 @@ public class AppRunner {
             public CommandLineTool getTool(PrintStream out) {
                 return new MappingTool(out);
             }
-        },;
+        },
+        SERVER("d2rq-server") {
+            @Override
+            public CommandLineTool getTool(PrintStream out) {
+                return new ServerTool(out);
+            }
+        };
         private final String key;
 
         ToolFactory(String s) {

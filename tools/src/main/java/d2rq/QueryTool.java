@@ -27,6 +27,8 @@ public class QueryTool extends CommandLineTool {
 
     QueryTool(PrintStream console) {
         super(console);
+        minArguments = 1;
+        maxArguments = 2;
     }
 
     @Override
@@ -60,8 +62,6 @@ public class QueryTool extends CommandLineTool {
         cmd.add(baseArg);
         cmd.add(formatArg);
         cmd.add(timeoutArg);
-        setMinMaxArguments(1, 2);
-        setSupportImplicitJdbcURL(true);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class QueryTool extends CommandLineTool {
             prefixes.append("PREFIX ").append(prefix).append(": <").append(d2rqModel.getNsPrefixURI(prefix)).append(">\n");
         }
         query = prefixes + query;
-        LOGGER.info("Query:\n" + query);
+        LOGGER.info("Query:\n{}", query);
 
         try {
             QueryEngineD2RQ.register();

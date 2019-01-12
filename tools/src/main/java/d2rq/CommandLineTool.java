@@ -51,10 +51,9 @@ public abstract class CommandLineTool {
     private final ArgDecl skipColumnsArg = new ArgDecl(true, "skip-column", "skip-columns");
 
     private final SystemLoader loader = new SystemLoader();
-    private boolean supportImplicitJdbcURL = true;
-
-    private int minArguments = 0;
-    private int maxArguments = 1;
+    protected boolean supportImplicitJdbcURL = true;
+    protected int minArguments = 0;
+    protected int maxArguments = 1;
 
     protected CommandLineTool(PrintStream out) {
         this.console = Objects.requireNonNull(out);
@@ -82,16 +81,10 @@ public abstract class CommandLineTool {
 
     public abstract void run(CommandLine cmd, SystemLoader loader) throws D2RQException, IOException;
 
-    protected void setMinMaxArguments(int min, int max) {
-        minArguments = min;
-        maxArguments = max;
-    }
-
-    protected void setSupportImplicitJdbcURL(boolean flag) {
-        supportImplicitJdbcURL = flag;
-    }
-
     public void process(String[] args) throws Exit {
+        if (args.length == 0 || isHelpOption(args[args.length - 1])) {
+            usage();
+        }
         cmd.add(userArg)
                 .add(passArg)
                 .add(driverArg)
@@ -123,7 +116,7 @@ public abstract class CommandLineTool {
 
         if (cmd.numItems() == minArguments && supportImplicitJdbcURL && cmd.hasArg(sqlFileArg)) {
             loader.setJdbcURL(SystemLoader.DEFAULT_JDBC_URL);
-        } else if (cmd.numItems() == 0 || isHelpOption(args[0])) {
+        } else if (cmd.numItems() == 0) {
             usage();
         }
         if (cmd.numItems() < minArguments) {
