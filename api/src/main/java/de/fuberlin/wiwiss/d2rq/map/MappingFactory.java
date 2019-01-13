@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -137,12 +138,7 @@ public class MappingFactory {
      * @throws UncheckedIOException     if unable to open the document
      */
     private static InputStream open(String location) throws IllegalArgumentException, UncheckedIOException {
-        URI uri;
-        try {
-            uri = new URI(location);
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("Can't get URI from <" + location + ">", e);
-        }
+        URI uri = toURI(location);
         if (!uri.isAbsolute() || "file".equals(uri.getScheme())) {
             Path file = parseLocation(uri);
             if (file == null) {
@@ -160,6 +156,27 @@ public class MappingFactory {
             throw new IllegalArgumentException("Can't get URL from <" + location + ">", e);
         } catch (IOException e) {
             throw new UncheckedIOException("Can't open <" + location + ">", e);
+        }
+    }
+
+    /**
+     * Creates a URI by parsing the given location string.
+     *
+     * @param location String, not {@code null}
+     * @return {@link URI}
+     * @throws NullPointerException     if the given string is {@code null}
+     * @throws IllegalArgumentException in case the given string is unparsable, e.g. it violates RFC&nbsp;2396
+     */
+    private static URI toURI(String location) throws IllegalArgumentException {
+        try {
+            return new URI(Objects.requireNonNull(location, "Null location string"));
+        } catch (URISyntaxException use) {
+            try { // relative path ?
+                return Paths.get(location).toUri();
+            } catch (InvalidPathException ipe) {
+                use.addSuppressed(ipe);
+            }
+            throw new IllegalArgumentException("Can't get URI from <" + location + ">", use);
         }
     }
 

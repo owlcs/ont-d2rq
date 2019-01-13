@@ -9,13 +9,13 @@ public enum ISWCData {
 
     MYSQL(ConnectionData.MYSQL) {
         @Override
-        String getResourcePath() {
+        public String getResourcePath() {
             return "/mapping-iswc.mysql.ttl";
         }
     },
     POSTGRES(ConnectionData.POSTGRES) {
         @Override
-        String getResourcePath() {
+        public String getResourcePath() {
             return "/mapping-iswc.postrges.ttl";
         }
     },
@@ -26,7 +26,7 @@ public enum ISWCData {
         this.data = data;
     }
 
-    abstract String getResourcePath();
+    public abstract String getResourcePath();
 
     public Mapping loadMapping() {
         return loadMapping(null);
