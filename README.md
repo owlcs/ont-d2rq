@@ -6,12 +6,11 @@ There are following major differences with the original:
 * It is a maven project while the original is ant
 * Up-to-date dependencies (java 8, Apache Jena 3.x, etc)
 * Supporting OWL2 DL syntax
-* A Fuseki based D2R Server (which, at the moment, is inferior in functionality to the original, Joseki based, server)
+* A Fuseki based D2RQ Server 
 * [ONT-API](https://github.com/avicomp/ont-api) ([OWL-API](https://github.com/owlcs/owlapi) over [Apache Jena](https://github.com/apache/jena)) in dependencies
 
-
 ## Usage
-* to build command-line tools use `mvn clean package`
+* to build use `mvn clean package`
 * to run tools: `$ java -jar tools\target\d2rq.jar`
 * to include in dependencies [jitpack.io](https://jitpack.io/) can be used
 
@@ -19,7 +18,6 @@ There are following major differences with the original:
 * For integration within ONT-API there is a special kind of `OWLDocumentSource`: `ru.avicomp.d2rq.D2RQGraphDocumentSource` 
 * It is assumed that `ru.avicomp.d2rq.MappingFilter` can used to filter the default database schema
 * to transform db data into a more suitable form [ONT-MAP](https://github.com/avicomp/ont-map) can be used
-
 
 ## Tests
 For running tests please configure postgres and mysql databases. 
