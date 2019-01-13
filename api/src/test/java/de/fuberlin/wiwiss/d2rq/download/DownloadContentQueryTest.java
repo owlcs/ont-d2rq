@@ -2,10 +2,10 @@ package de.fuberlin.wiwiss.d2rq.download;
 
 
 import de.fuberlin.wiwiss.d2rq.helpers.HSQLDatabase;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.DownloadMap;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -30,9 +30,9 @@ public class DownloadContentQueryTest {
         db.executeSQL("CREATE TABLE People (ID INT NOT NULL PRIMARY KEY, PIC_CLOB CLOB NULL, PIC_BLOB BLOB NULL)");
         db.executeSQL("INSERT INTO People VALUES (1, 'Hello World!', NULL)");
         db.executeSQL("INSERT INTO People VALUES (2, NULL, HEXTORAW('404040'))");
-        Mapping m = MappingTestHelper.readFromTestFile("/download/download-map.ttl");
-        downloadCLOB = MappingTestHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/downloadCLOB"));
-        downloadBLOB = MappingTestHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/downloadBLOB"));
+        Mapping m = MappingUtils.readFromTestFile("/download/download-map.ttl");
+        downloadCLOB = MappingUtils.findDownloadMap(m, ResourceFactory.createResource("http://example.org/downloadCLOB"));
+        downloadBLOB = MappingUtils.findDownloadMap(m, ResourceFactory.createResource("http://example.org/downloadBLOB"));
     }
 
     @After

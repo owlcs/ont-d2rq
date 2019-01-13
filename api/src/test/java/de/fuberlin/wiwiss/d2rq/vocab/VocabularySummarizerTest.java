@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.vocab;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -88,28 +88,28 @@ public class VocabularySummarizerTest {
 
     @Test
     public void testNoUndefinedClassesWithoutTypeStatement() {
-        Model m = D2RQTestHelper.loadTurtle("/vocab/no-type.ttl");
+        Model m = JenaModelUtils.loadTurtle("/vocab/no-type.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Assert.assertTrue(vocab.getUndefinedClasses(m).isEmpty());
     }
 
     @Test
     public void testNoUndefinedClassesIfAllClassesDefined() {
-        Model m = D2RQTestHelper.loadTurtle("/vocab/defined-types.ttl");
+        Model m = JenaModelUtils.loadTurtle("/vocab/defined-types.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Assert.assertTrue(vocab.getUndefinedClasses(m).isEmpty());
     }
 
     @Test
     public void testNoUndefinedClassesIfAllInOtherNamespace() {
-        Model m = D2RQTestHelper.loadTurtle("/vocab/other-namespace-types.ttl");
+        Model m = JenaModelUtils.loadTurtle("/vocab/other-namespace-types.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Assert.assertTrue(vocab.getUndefinedClasses(m).isEmpty());
     }
 
     @Test
     public void testFindOneUndefinedClass() {
-        final Model m = D2RQTestHelper.loadTurtle("/vocab/one-undefined-type.ttl");
+        final Model m = JenaModelUtils.loadTurtle("/vocab/one-undefined-type.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Collection<Resource> expected = new HashSet<Resource>() {{
             this.add(m.createResource(D2RQ.NS + "Pint"));
@@ -119,7 +119,7 @@ public class VocabularySummarizerTest {
 
     @Test
     public void testFindTwoUndefinedClasses() {
-        final Model m = D2RQTestHelper.loadTurtle("/vocab/two-undefined-types.ttl");
+        final Model m = JenaModelUtils.loadTurtle("/vocab/two-undefined-types.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Collection<Resource> expected = new HashSet<Resource>() {{
             this.add(m.createResource(D2RQ.NS + "Pint"));
@@ -136,21 +136,21 @@ public class VocabularySummarizerTest {
 
     @Test
     public void testNoUndefinedPropertiesIfAllPropertiesDefined() {
-        Model m = D2RQTestHelper.loadTurtle("/vocab/defined-properties.ttl");
+        Model m = JenaModelUtils.loadTurtle("/vocab/defined-properties.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Assert.assertTrue(vocab.getUndefinedProperties(m).isEmpty());
     }
 
     @Test
     public void testNoUndefinedPropertiesIfAllInOtherNamespace() {
-        Model m = D2RQTestHelper.loadTurtle("/vocab/other-namespace-properties.ttl");
+        Model m = JenaModelUtils.loadTurtle("/vocab/other-namespace-properties.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Assert.assertTrue(vocab.getUndefinedProperties(m).isEmpty());
     }
 
     @Test
     public void testFindOneUndefinedProperty() {
-        final Model m = D2RQTestHelper.loadTurtle("/vocab/one-undefined-property.ttl");
+        final Model m = JenaModelUtils.loadTurtle("/vocab/one-undefined-property.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Collection<Property> expected = new HashSet<Property>() {{
             this.add(m.createProperty(D2RQ.NS + "price"));
@@ -160,7 +160,7 @@ public class VocabularySummarizerTest {
 
     @Test
     public void testFindTwoUndefinedProperties() {
-        final Model m = D2RQTestHelper.loadTurtle("/vocab/two-undefined-properties.ttl");
+        final Model m = JenaModelUtils.loadTurtle("/vocab/two-undefined-properties.ttl");
         VocabularySummarizer vocab = new VocabularySummarizer(D2RQ.class);
         Collection<Property> expected = new HashSet<Property>() {{
             this.add(m.createProperty(D2RQ.NS + "price"));

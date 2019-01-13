@@ -7,6 +7,7 @@ import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * A set of simple tests that apply various parts of D2RQ to
  * an HSQL database, exercising our test helpers like
- * {@link HSQLDatabase} and {@link MappingTestHelper}.
+ * {@link HSQLDatabase} and {@link MappingUtils}.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
@@ -90,7 +91,7 @@ public class HSQLSimpleTest {
 
     @Test
     public void testGenerateEmptyGraphFromSimpleD2RQMapping() {
-        Mapping m = MappingTestHelper.readFromTestFile("/helpers/simple.ttl");
+        Mapping m = MappingUtils.readFromTestFile("/helpers/simple.ttl");
         m.getConfiguration().setServeVocabulary(false);
         Graph g = m.getData();
         Assert.assertTrue(g.isEmpty());
@@ -98,9 +99,9 @@ public class HSQLSimpleTest {
 
     @Test
     public void testGenerateTripleFromSimpleD2RQMapping() {
-        Mapping m = MappingTestHelper.readFromTestFile("/helpers/simple.ttl");
+        Mapping m = MappingUtils.readFromTestFile("/helpers/simple.ttl");
         m.getConfiguration().setServeVocabulary(false);
-        MappingTestHelper.print(m);
+        MappingUtils.print(m);
 
         db.executeSQL("INSERT INTO TEST VALUES (1, 'Hello World!')");
 

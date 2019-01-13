@@ -1,6 +1,6 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -73,7 +73,7 @@ public class FilterTest {
         // set iri"
         OWLOntologyID id2 = OntologyID.create("http://d2rq.example.com", "http://d2rq.example.com/version/1.0");
         filteredByProperties.applyChange(new SetOntologyID(filteredByProperties, id2));
-        D2RQTestHelper.print(filteredByProperties.asGraphModel());
+        JenaModelUtils.print(filteredByProperties.asGraphModel());
         // validate:
         Assert.assertEquals("Expected two ontologies", 2, manager.ontologies().count());
         Assert.assertTrue("Can't find " + id2, manager.contains(id2));
@@ -99,7 +99,7 @@ public class FilterTest {
         OntologyModel filteredByClasses = manager.loadOntologyFromOntologyDocument(source3);
         OWLOntologyID id3 = OntologyID.create("http://d2rq.example.com", "http://d2rq.example.com/version/2.0");
         filteredByClasses.applyChange(new SetOntologyID(filteredByClasses, id3));
-        D2RQTestHelper.print(filteredByClasses.asGraphModel());
+        JenaModelUtils.print(filteredByClasses.asGraphModel());
         // validate:
         Assert.assertEquals("Expected three ontologies", 3, manager.ontologies().count());
         Assert.assertTrue("Can't find " + id3, manager.contains(id3));

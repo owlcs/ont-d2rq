@@ -1,8 +1,8 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.graph.compose.Union;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -98,7 +98,7 @@ public class ISWCModelDataTest {
         inMemory.add(data);
         DynamicSchemaTest.validateInferredOWLForPredefinedMapping(inMemory);
         Assert.assertEquals(13, inMemory.listClasses().peek(x -> LOGGER.debug("Schema+Data: {}", x)).count());
-        D2RQTestHelper.print(inMemory);
+        JenaModelUtils.print(inMemory);
         DynamicSchemaTest.validateInferredOWLForPredefinedMapping(inMemory);
         validateMappedOWLDataForPredefinedMapping(inMemory);
 

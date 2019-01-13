@@ -1,8 +1,6 @@
 package ru.avicomp.d2rq;
 
 import com.google.common.collect.LinkedListMultimap;
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
@@ -10,6 +8,8 @@ import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import de.fuberlin.wiwiss.d2rq.mapgen.W3CMappingGenerator;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.XSD;
@@ -66,10 +66,10 @@ public class MappingGeneratorTest {
         Mapping m = MappingFactory.create(g.mappingModel(uri), uri);
 
         m.getConfiguration().setControlOWL(true).setServeVocabulary(true);
-        MappingTestHelper.print(m);
+        MappingUtils.print(m);
 
         OntGraphModel all = OntModelFactory.createModel(m.getData(), OntModelConfig.ONT_PERSONALITY_LAX);
-        D2RQTestHelper.print(all);
+        JenaModelUtils.print(all);
         OWLUtils.validateOWLEntities(all, 2, 0, 6, 0, 6, 7);
 
         validateNamedIndividuals(all, 6, uri, "%s#pk_table/id=%d", "%s/vocab#pk_table#%s", false);
@@ -84,10 +84,10 @@ public class MappingGeneratorTest {
         Mapping m = MappingFactory.create(g.mappingModel(uri), uri);
 
         m.getConfiguration().setControlOWL(true).setServeVocabulary(true);
-        MappingTestHelper.print(m);
+        MappingUtils.print(m);
 
         OntGraphModel all = OntModelFactory.createModel(m.getData(), OntModelConfig.ONT_PERSONALITY_LAX);
-        D2RQTestHelper.print(all);
+        JenaModelUtils.print(all);
         OWLUtils.validateOWLEntities(all, 2, 0, 6, 0, 7, 0);
 
         validateNamedIndividuals(all, 6, uri, "%s#pk_table/%d", "%s/vocab#pk_table_%s", true);
@@ -112,11 +112,11 @@ public class MappingGeneratorTest {
                 IRI.create(db.getJdbcURL()), db.getUsername(), db.getPassword(), null);
         MappingHelper.useConnectedDB(source.getMapping(), db);
         Mapping m = source.getMapping();
-        MappingTestHelper.print(m);
+        MappingUtils.print(m);
 
         OntGraphModel all = OntModelFactory.createModel(D2RQGraphUtils.toVirtual(source.getGraph()),
                 OntModelConfig.ONT_PERSONALITY_LAX);
-        D2RQTestHelper.print(all);
+        JenaModelUtils.print(all);
         OWLUtils.validateOWLEntities(all, 2, 0, 6, 0, 6, 7);
 
         validateNamedIndividuals(all, 6, uri, "%s#pk_table/%d", "%s/vocab#pk_table_%s", true);

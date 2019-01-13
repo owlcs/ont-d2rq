@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.engine;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.algebra.TripleRelation;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.TestVocab;
 import org.apache.jena.rdf.model.Model;
@@ -45,7 +45,7 @@ public class MapFixture {
         LOGGER.debug("Mapping file {}", file);
         if (!file.startsWith("/")) file = "/" + file;
         Model m = ModelFactory.createDefaultModel();
-        try (InputStream is = D2RQTestHelper.class.getResourceAsStream(file)) {
+        try (InputStream is = JenaModelUtils.class.getResourceAsStream(file)) {
             m.read(is, null, "ttl");
         } catch (IOException e) {
             throw new AssertionError(e);
@@ -55,7 +55,7 @@ public class MapFixture {
                 .addProperty(D2RQ.jdbcDSN, "jdbc:" + file);
 
         Mapping res = MappingFactory.create(m, null);
-        MappingTestHelper.connectToDummyDBs(res);
+        MappingUtils.connectToDummyDBs(res);
         return MappingHelper.asConnectingMapping(res).compiledPropertyBridges();
     }
 }

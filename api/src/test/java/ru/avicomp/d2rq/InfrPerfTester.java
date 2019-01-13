@@ -1,7 +1,7 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import org.apache.jena.graph.Graph;
 import org.apache.log4j.Level;
 import org.junit.*;
@@ -101,7 +101,7 @@ public class InfrPerfTester {
         LOGGER.info("Test inference (number={}, withCache={})", NUMBER_ROWS_TO_INSERT, withCache);
         D2RQGraphDocumentSource source = D2RQSpinTest.createSource(data, DATABASE_NAME);
         source.getMapping().getConfiguration().setWithCache(Data.WITH_CACHE.equals(withCache));
-        MappingTestHelper.print(source.getMapping());
+        MappingUtils.print(source.getMapping());
 
         OWLMapManager manager = Managers.createOWLMapManager();
         OntGraphModel target = OntMapSimpleTest.createTargetModel(manager);

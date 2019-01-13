@@ -1,8 +1,8 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.graph.Graph;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,9 +57,9 @@ public class OntMapSimpleTest {
         OWLMapManager manager = Managers.createOWLMapManager();
         OntGraphModel target = createTargetModel(manager);
         OntGraphModel source = createSourceModel(manager, TestData.CACHE.equals(test));
-        D2RQTestHelper.print(source);
+        JenaModelUtils.print(source);
         MapModel spin = composeMapping(manager, source, target);
-        D2RQTestHelper.print(spin.asGraphModel());
+        JenaModelUtils.print(spin.asGraphModel());
 
         LOGGER.debug("Run inference.");
         Graph data = OWLUtils.getDataGraph(source);
@@ -69,7 +69,7 @@ public class OntMapSimpleTest {
 
         target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
-        D2RQTestHelper.print(target);
+        JenaModelUtils.print(target);
         OWLUtils.closeConnections(source);
     }
 

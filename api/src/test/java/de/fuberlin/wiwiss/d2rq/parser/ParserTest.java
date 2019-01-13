@@ -2,9 +2,9 @@ package de.fuberlin.wiwiss.d2rq.parser;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.*;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.sql.SQL;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import de.fuberlin.wiwiss.d2rq.values.Translator;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Model;
@@ -31,7 +31,7 @@ public class ParserTest {
         Mapping mapping = MappingFactory.create(model, null);
         Resource r = addTranslationTableResource(model);
         Assert.assertEquals(1, mapping.listTranslationTables().count());
-        TranslationTable table = MappingTestHelper.findTranslationTable(mapping);
+        TranslationTable table = MappingUtils.findTranslationTable(mapping);
         Assert.assertNotNull(table);
         Assert.assertEquals(r, table.asResource());
         Assert.assertEquals(0, table.listTranslations().count());
@@ -43,12 +43,12 @@ public class ParserTest {
         Resource r = addTranslationTableResource(model);
         Resource t = addTranslationResource(r, "foo1", "bar1");
         Mapping mapping = MappingFactory.create(model, null);
-        TranslationTable table1 = MappingTestHelper.findTranslationTable(mapping);
-        TranslationTable table2 = MappingTestHelper.findTranslationTable(mapping);
+        TranslationTable table1 = MappingUtils.findTranslationTable(mapping);
+        TranslationTable table2 = MappingUtils.findTranslationTable(mapping);
         Assert.assertNotSame(table1, table2);
         Assert.assertEquals(table1, table2);
-        Resource translation1 = MappingTestHelper.findTranslation(table1).asResource();
-        Resource translation2 = MappingTestHelper.findTranslation(table2).asResource();
+        Resource translation1 = MappingUtils.findTranslation(table1).asResource();
+        Resource translation2 = MappingUtils.findTranslation(table2).asResource();
         Assert.assertEquals(t, translation1);
         Assert.assertEquals(t, translation2);
     }
@@ -59,7 +59,7 @@ public class ParserTest {
         Resource r = addTranslationTableResource(model);
         addTranslationResource(r, "foo", "bar");
         Mapping mapping = MappingFactory.create(model, null);
-        TranslationTable table = MappingTestHelper.findTranslationTable(mapping, r);
+        TranslationTable table = MappingUtils.findTranslationTable(mapping, r);
         Assert.assertEquals(1, table.listTranslations().count());
         Translator translator = table.asTranslator();
         Assert.assertEquals("bar", translator.toRDFValue("foo"));
@@ -67,8 +67,8 @@ public class ParserTest {
 
     @Test
     public void testParseAlias() {
-        Mapping m = MappingTestHelper.readFromTestFile("/parser/alias.ttl");
-        MappingTestHelper.connectToDummyDBs(m);
+        Mapping m = MappingUtils.readFromTestFile("/parser/alias.ttl");
+        MappingUtils.connectToDummyDBs(m);
         Assert.assertEquals(1, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
         TripleRelation bridge = MappingHelper.asConnectingMapping(m).compiledPropertyBridges().iterator().next();
         Assert.assertTrue(bridge.baseRelation().condition().isTrue());
@@ -80,7 +80,7 @@ public class ParserTest {
     @Test
     public void testParseResourceInsteadOfLiteral() {
         try {
-            MappingTestHelper.readFromTestFile("/parser/resource-instead-of-literal.ttl");
+            MappingUtils.readFromTestFile("/parser/resource-instead-of-literal.ttl");
         } catch (D2RQException ex) {
             Assert.assertEquals(D2RQException.MAPPING_RESOURCE_INSTEADOF_LITERAL, ex.errorCode());
         }
@@ -89,7 +89,7 @@ public class ParserTest {
     @Test
     public void testParseLiteralInsteadOfResource() {
         try {
-            MappingTestHelper.readFromTestFile("/parser/literal-instead-of-resource.ttl");
+            MappingUtils.readFromTestFile("/parser/literal-instead-of-resource.ttl");
         } catch (D2RQException ex) {
             Assert.assertEquals(D2RQException.MAPPING_LITERAL_INSTEADOF_RESOURCE, ex.errorCode());
         }
@@ -97,22 +97,22 @@ public class ParserTest {
 
     @Test
     public void testTranslationTableRDFValueCanBeLiteral() {
-        Mapping m = MappingTestHelper.readFromTestFile("/parser/translation-table.ttl");
-        TranslationTable tt = MappingTestHelper.findTranslationTable(m, ResourceFactory.createResource("http://example.org/tt"));
+        Mapping m = MappingUtils.readFromTestFile("/parser/translation-table.ttl");
+        TranslationTable tt = MappingUtils.findTranslationTable(m, ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.asTranslator().toRDFValue("literal"));
     }
 
     @Test
     public void testTranslationTableRDFValueCanBeURI() {
-        Mapping m = MappingTestHelper.readFromTestFile("/parser/translation-table.ttl");
-        TranslationTable tt = MappingTestHelper.findTranslationTable(m, ResourceFactory.createResource("http://example.org/tt"));
+        Mapping m = MappingUtils.readFromTestFile("/parser/translation-table.ttl");
+        TranslationTable tt = MappingUtils.findTranslationTable(m, ResourceFactory.createResource("http://example.org/tt"));
         Assert.assertEquals("http://example.org/foo", tt.asTranslator().toRDFValue("uri"));
     }
 
     @Test
     public void testTypeConflictClassMapAndBridgeIsDetected() {
         try {
-            MappingTestHelper.readFromTestFile("/parser/type-classmap-and-propertybridge.ttl");
+            MappingUtils.readFromTestFile("/parser/type-classmap-and-propertybridge.ttl");
         } catch (D2RQException ex) {
             Assert.assertEquals(D2RQException.MAPPING_TYPECONFLICT, ex.errorCode());
         }
@@ -120,15 +120,15 @@ public class ParserTest {
 
     @Test
     public void testGenerateDownloadMap() {
-        Mapping m = MappingTestHelper.readFromTestFile("/parser/download-map.ttl");
-        MappingTestHelper.connectToDummyDBs(m);
-        DownloadMap d = MappingTestHelper.findDownloadMap(m, ResourceFactory.createResource("http://example.org/dm"));
-        Assert.assertEquals("image/png", MappingTestHelper.getMediaTypeValueMaker(d).makeValue(column -> null));
-        Attribute a = MappingTestHelper.getContentDownloadColumnAttribute(d);
+        Mapping m = MappingUtils.readFromTestFile("/parser/download-map.ttl");
+        MappingUtils.connectToDummyDBs(m);
+        DownloadMap d = MappingUtils.findDownloadMap(m, ResourceFactory.createResource("http://example.org/dm"));
+        Assert.assertEquals("image/png", MappingUtils.getMediaTypeValueMaker(d).makeValue(column -> null));
+        Attribute a = MappingUtils.getContentDownloadColumnAttribute(d);
         Assert.assertNotNull(a);
         Assert.assertEquals("People.pic", a.qualifiedName());
-        Assert.assertEquals("URI(Pattern(http://example.org/downloads/@@People.ID@@))", MappingTestHelper.getNodeMaker(d).toString());
-        Relation r = MappingTestHelper.getRelation(d);
+        Assert.assertEquals("URI(Pattern(http://example.org/downloads/@@People.ID@@))", MappingUtils.getNodeMaker(d).toString());
+        Relation r = MappingUtils.getRelation(d);
         Assert.assertEquals(new HashSet<ProjectionSpec>() {{
                                 add(SQL.parseAttribute("People.ID"));
                                 add(SQL.parseAttribute("People.pic"));

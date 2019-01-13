@@ -1,8 +1,8 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.*;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
 import org.junit.Assert;
@@ -55,10 +55,10 @@ public class AssembleMappingTest {
                 .addClass(ns + "XXX");
 
         mapping.validate();
-        MappingTestHelper.print(mapping);
+        MappingUtils.print(mapping);
 
         OntGraphModel m = OntModelFactory.createModel(mapping.getData());
-        D2RQTestHelper.print(m);
+        JenaModelUtils.print(m);
         Assert.assertEquals(5, m.size());
     }
 
@@ -92,12 +92,12 @@ public class AssembleMappingTest {
         mapping.validate();
 
         OntGraphModel full = OntModelFactory.createModel(mapping.getData());
-        D2RQTestHelper.print(full);
+        JenaModelUtils.print(full);
 
-        MappingTestHelper.print(mapping);
+        MappingUtils.print(mapping);
 
         Model schema = mapping.getVocabularyModel();
-        D2RQTestHelper.print(schema);
+        JenaModelUtils.print(schema);
         Assert.assertEquals(3, schema.size());
 
         Assert.assertEquals(9, full.listDataProperties().peek(x -> LOGGER.debug("DataProperty:{}", x)).count());
@@ -137,7 +137,7 @@ public class AssembleMappingTest {
         mapping.validate();
 
         OntGraphModel full = OntModelFactory.createModel(mapping.getData());
-        D2RQTestHelper.print(full);
+        JenaModelUtils.print(full);
 
         Assert.assertEquals(2, full.listClasses().count());
         Assert.assertEquals(0, full.listNamedIndividuals().count());

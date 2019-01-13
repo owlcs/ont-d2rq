@@ -1,9 +1,9 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.graph.Graph;
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,7 +74,7 @@ public class OntMapWholeTest {
 
         OntIndividual res = dst.listNamedIndividuals().findFirst().orElseThrow(AssertionError::new);
         Assert.assertEquals(9, res.positiveAssertions().peek(x -> LOGGER.debug("Address: '{}'", x.getString())).count());
-        D2RQTestHelper.print(dst);
+        JenaModelUtils.print(dst);
 
         source.close();
     }

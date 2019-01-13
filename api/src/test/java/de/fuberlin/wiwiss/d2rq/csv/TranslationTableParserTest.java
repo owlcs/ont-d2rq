@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.csv;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class TranslationTableParserTest {
 
     @Test
     public void testParseFromFile() {
-        String file = D2RQTestHelper.getRelativeResourcePath("/csv/translationtable.csv");
+        String file = JenaModelUtils.getRelativeResourcePath("/csv/translationtable.csv");
         Collection<TranslationTableParser.Row> translations = new TranslationTableParser(file).parseTranslations();
         Assert.assertEquals(this.simpleTranslations, new HashSet<>(translations));
     }

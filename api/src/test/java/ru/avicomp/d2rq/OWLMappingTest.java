@@ -1,7 +1,7 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
@@ -35,7 +35,7 @@ public class OWLMappingTest {
             LOGGER.info("System base URI: {}", loader.getSystemBaseURI());
             LOGGER.debug("Load schema with data.");
             Model actual = loader.build().getDataModel();
-            D2RQTestHelper.print(actual);
+            JenaModelUtils.print(actual);
             Stream.of(OWL.Class, OWL.DatatypeProperty, OWL.ObjectProperty).forEach(t -> {
                 LOGGER.debug("Test {}", t);
                 Set<Resource> classes_ex = subjects(original, t).collect(Collectors.toSet());

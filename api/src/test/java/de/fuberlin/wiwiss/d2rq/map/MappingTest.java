@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.impl.DatabaseImpl;
 import de.fuberlin.wiwiss.d2rq.map.impl.MappingImpl;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Statement;
@@ -215,19 +215,19 @@ public class MappingTest {
             Assert.assertEquals(42, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
             Assert.assertEquals(40, m.listPropertyBridges().count());
 
-            PropertyBridge b = MappingTestHelper.findPropertyBridge(m, "organizations_Type_U");
+            PropertyBridge b = MappingUtils.findPropertyBridge(m, "organizations_Type_U");
             m.asModel().removeAll(b.asResource(), null, null);
             Assert.assertEquals(39, m.listPropertyBridges().count());
             Assert.assertEquals(41, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
 
             // return back:
-            ClassMap c = MappingTestHelper.findClassMap(m, "Organizations");
+            ClassMap c = MappingUtils.findClassMap(m, "Organizations");
             m.createPropertyBridge(m.asModel().expandPrefix("map:organizations_Type_U"))
                     .setBelongsToClassMap(c).addProperty(RDF.type)
                     .setURIPattern("http://annotation.semanticweb.org/iswc/iswc.daml#University")
                     .addCondition("organizations.Type = 'U'");
 
-            MappingTestHelper.print(m);
+            MappingUtils.print(m);
             Assert.assertEquals(42, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
             Assert.assertEquals(40, m.listPropertyBridges().count());
 
@@ -259,7 +259,7 @@ public class MappingTest {
         Assert.assertTrue(c.getWithCache());
         Assert.assertEquals(1, c.getCacheMaxSize());
         Assert.assertEquals(2, c.getCacheLengthLimit());
-        MappingTestHelper.print(m);
+        MappingUtils.print(m);
     }
 
     @Test

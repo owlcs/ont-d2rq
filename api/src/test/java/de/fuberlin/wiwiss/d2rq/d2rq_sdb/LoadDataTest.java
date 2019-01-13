@@ -1,7 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.d2rq_sdb;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sdb.SDBFactory;
 import org.apache.jena.sdb.Store;
@@ -32,7 +32,7 @@ public abstract class LoadDataTest {
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoadDataTest.class);
 
     // directories and data-files and config-files
-    static final String CURR_DIR = D2RQTestHelper.getRelativeResourcePath("/d2rq_sdb");
+    static final String CURR_DIR = JenaModelUtils.getRelativeResourcePath("/d2rq_sdb");
     private static final String DATA_DIR = "dataset";
     private static final String CONFIG_DIR = "config";
     private static final String FILENAME_TTL_DATA = "dataset.ttl.zip";

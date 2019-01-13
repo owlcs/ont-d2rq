@@ -1,7 +1,6 @@
-package de.fuberlin.wiwiss.d2rq.helpers;
+package de.fuberlin.wiwiss.d2rq.utils;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
 import de.fuberlin.wiwiss.d2rq.algebra.Relation;
 import de.fuberlin.wiwiss.d2rq.map.*;
@@ -20,17 +19,17 @@ import java.util.stream.Stream;
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
-public class MappingTestHelper {
+public class MappingUtils {
 
     /**
-     * Parses a D2RQ mapping from a file located relative to the {@link D2RQTestHelper} directory.
+     * Parses a D2RQ mapping from a file located relative to the {@link JenaModelUtils} directory.
      *
-     * @param testFileName Filename, relative to {@link D2RQTestHelper}'s location
+     * @param testFileName Filename, relative to {@link JenaModelUtils}'s location
      * @return A mapping
      * @throws D2RQException On error during parse
      */
     public static Mapping readFromTestFile(String testFileName) {
-        return MappingFactory.create(D2RQTestHelper.loadTurtle(testFileName), "http://example.org/");
+        return MappingFactory.create(JenaModelUtils.loadTurtle(testFileName), "http://example.org/");
     }
 
     public static void connectToDummyDBs(Mapping m) {
@@ -82,7 +81,7 @@ public class MappingTestHelper {
     }
 
     public static void print(Mapping m) {
-        D2RQTestHelper.print(m.asModel());
+        JenaModelUtils.print(m.asModel());
     }
 
     public static Attribute getContentDownloadColumnAttribute(DownloadMap downloadMap) {

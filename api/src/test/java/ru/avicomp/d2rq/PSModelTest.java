@@ -1,9 +1,9 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -79,7 +79,7 @@ public class PSModelTest {
         Assert.assertNotNull(psDataSource.getMapping());
         OntologyModel o = OntManagers.createONT().loadOntologyFromOntologyDocument(psDataSource);
         LOGGER.debug("Schema:");
-        D2RQTestHelper.print(o.asGraphModel());
+        JenaModelUtils.print(o.asGraphModel());
 
         // in memory, no duplicates:
         OntGraphModel data = OWLUtils.toMemory(o.asGraphModel());
@@ -93,7 +93,7 @@ public class PSModelTest {
         Assert.assertEquals(87, axioms.size());
 
         LOGGER.debug("Mapping:");
-        D2RQTestHelper.print(psDataSource.getMapping().asModel());
+        JenaModelUtils.print(psDataSource.getMapping().asModel());
 
         // simple validation of all data in the graphs
         validatePSDatabase(data);
@@ -106,7 +106,7 @@ public class PSModelTest {
         OntologyModel o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.wrap(m).getGraph());
         OntGraphModel data = OWLUtils.toVirtual(o.asGraphModel());
         LOGGER.debug("Scheme+Data:");
-        D2RQTestHelper.print(data);
+        JenaModelUtils.print(data);
         validatePSDatabase(data);
     }
 

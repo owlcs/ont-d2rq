@@ -1,11 +1,11 @@
 package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
-import de.fuberlin.wiwiss.d2rq.helpers.MappingTestHelper;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
+import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
@@ -66,7 +66,7 @@ public class DynamicSchemaTest {
         } catch (D2RQException e) {
             LOGGER.debug("Expected: '{}'", e.getMessage());
         }
-        D2RQTestHelper.print(m);
+        JenaModelUtils.print(m);
     }
 
     @Test
@@ -88,7 +88,7 @@ public class DynamicSchemaTest {
         Assert.assertEquals(2, schema.getID().annotations()
                 .peek(s -> LOGGER.debug("1) Schema annotation: {}", s)).count());
 
-        D2RQTestHelper.print(schema);
+        JenaModelUtils.print(schema);
         Assert.assertTrue(schema.contains(null, RDFS.comment, comment));
 
         OntGraphModel mappingAsOWL = OntModelFactory.createModel(mapping.asModel().getGraph());
@@ -112,8 +112,8 @@ public class DynamicSchemaTest {
         Assert.assertTrue(schema.contains(schema.getResource(uri2), RDFS.comment, comment));
 
         // reload mapping
-        String res = D2RQTestHelper.toTurtleString(mapping.asModel());
-        Model m = D2RQTestHelper.loadFromString(res);
+        String res = JenaModelUtils.toTurtleString(mapping.asModel());
+        Model m = JenaModelUtils.loadFromString(res);
         Assert.assertEquals(uri2, OntModelFactory.createModel(m.getGraph()).getID().getURI());
         OntGraphModel schema2 = OntModelFactory.createModel(MappingFactory.wrap(m).getSchema());
         Assert.assertEquals(2, schema2.getID().annotations()
@@ -156,7 +156,7 @@ public class DynamicSchemaTest {
         Mapping mapping = ISWCData.MYSQL.loadMapping();
 
         OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
-        D2RQTestHelper.print(schema);
+        JenaModelUtils.print(schema);
         Assert.assertFalse(mapping.getConfiguration().getControlOWL());
         validateInferredOWLForPredefinedMapping(schema);
 
@@ -165,7 +165,7 @@ public class DynamicSchemaTest {
         mapping.getConfiguration().setControlOWL(true);
         Assert.assertTrue(mapping.getConfiguration().getControlOWL());
 
-        D2RQTestHelper.print(schema);
+        JenaModelUtils.print(schema);
         validateInferredOWLForPredefinedMapping(schema);
         Assert.assertEquals(8, schema.listClasses().peek(x -> LOGGER.debug("2) CLASS: {}", x)).count());
         schema.createOntEntity(OntClass.class, "OneMore");
@@ -189,11 +189,11 @@ public class DynamicSchemaTest {
         // connection:
         try (Mapping mapping = ConnectionData.MYSQL.toDocumentSource("iswc").getMapping()) {
 
-            MappingTestHelper.print(mapping);
+            MappingUtils.print(mapping);
 
             OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
 
-            D2RQTestHelper.print(schema);
+            JenaModelUtils.print(schema);
             Assert.assertEquals(6, schema.listClasses().peek(x -> LOGGER.debug("Class {}", x)).count());
             Assert.assertEquals(8, schema.listObjectProperties().peek(x -> LOGGER.debug("Object property {}", x)).count());
             Assert.assertEquals(33, schema.listDataProperties().peek(x -> LOGGER.debug("Datatype property {}", x)).count());

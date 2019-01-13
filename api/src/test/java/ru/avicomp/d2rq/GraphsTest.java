@@ -1,8 +1,8 @@
 package ru.avicomp.d2rq;
 
-import de.fuberlin.wiwiss.d2rq.D2RQTestHelper;
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
@@ -44,7 +44,7 @@ public class GraphsTest {
         Model x = ModelFactory.createModelForGraph(graph);
         Resource r = m.createResource("ex", OWL.Class).addProperty(RDFS.comment, "xxxx");
 
-        D2RQTestHelper.print(x);
+        JenaModelUtils.print(x);
         Assert.assertFalse(x.containsResource(D2RQ.PropertyBridge));
         Assert.assertTrue(x.containsResource(OWL.Class));
 
@@ -52,7 +52,7 @@ public class GraphsTest {
         Assert.assertTrue(m.containsResource(D2RQ.PropertyBridge));
 
         m.removeAll(r, null, null);
-        D2RQTestHelper.print(x);
+        JenaModelUtils.print(x);
 
         Assert.assertFalse(x.containsResource(OWL.Class));
         Assert.assertFalse(m.containsResource(OWL.Class));
@@ -70,7 +70,7 @@ public class GraphsTest {
             Model u = ModelFactory.createModelForGraph(new Union(left, right));
 
             // findAll: test no java.util.ConcurrentModificationException:
-            String ttl = D2RQTestHelper.toTurtleString(u);
+            String ttl = JenaModelUtils.toTurtleString(u);
 
             LOGGER.debug("\n{}", ttl);
 
