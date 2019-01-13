@@ -6,7 +6,6 @@ import de.fuberlin.wiwiss.d2rq.map.Mapping;
  * Created by @szz on 18.10.2018.
  */
 public enum ISWCData {
-
     MYSQL(ConnectionData.MYSQL) {
         @Override
         public String getResourcePath() {
@@ -30,6 +29,10 @@ public enum ISWCData {
 
     public Mapping loadMapping() {
         return loadMapping(null);
+    }
+
+    public ConnectionData getConnection() {
+        return data;
     }
 
     public Mapping loadMapping(String baseURI) {

@@ -266,9 +266,9 @@ public class SystemLoader implements AutoCloseable {
         if (jdbcURL != null) {
             ods = res.findDatabase(jdbcURL);
         } else {
-            // then choose first
+            // then choose first if it is single
             Set<Database> dbs = res.listDatabases().collect(Collectors.toSet());
-            if (!dbs.isEmpty()) {
+            if (dbs.size() == 1) {
                 ods = Optional.of(dbs.iterator().next());
             }
         }

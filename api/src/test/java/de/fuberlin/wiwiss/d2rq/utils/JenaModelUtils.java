@@ -18,9 +18,9 @@ import java.nio.file.Paths;
  */
 public class JenaModelUtils {
 
-    public static Model loadTurtle(String fileName) {
+    public static Model loadTurtle(String resourceName) {
         Model m = ModelFactory.createDefaultModel();
-        try (InputStream in = JenaModelUtils.class.getResourceAsStream(fileName)) {
+        try (InputStream in = JenaModelUtils.class.getResourceAsStream(resourceName)) {
             m.read(in, null, "ttl");
         } catch (IOException e) {
             throw new AssertionError(e);
