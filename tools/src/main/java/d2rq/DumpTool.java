@@ -1,9 +1,7 @@
 package d2rq;
 
 import d2rq.utils.ArgDecl;
-import d2rq.utils.CommandLine;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.MapParser;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -11,8 +9,6 @@ import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFWriter;
 import org.apache.jena.shared.NoWriterForLangException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -24,16 +20,18 @@ import java.nio.charset.StandardCharsets;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class DumpTool extends CommandLineTool {
-    private final static Logger LOGGER = LoggerFactory.getLogger(DumpTool.class);
-
     private final static int DUMP_DEFAULT_FETCH_SIZE = 500;
+
+    private ArgDecl baseArg = new ArgDecl(true, "b", "base");
+    private ArgDecl formatArg = new ArgDecl(true, "f", "format");
+    private ArgDecl outfileArg = new ArgDecl(true, "o", "out", "outfile");
 
     DumpTool(PrintStream console) {
         super(console);
     }
 
     @Override
-    public void usage() {
+    public void printUsage() {
         console.println("usage:");
         console.println("  dump-rdf [output-options] mappingFile");
         console.println("  dump-rdf [output-options] [connection-options] jdbcURL");
@@ -50,33 +48,28 @@ public class DumpTool extends CommandLineTool {
         console.println("  Database connection options (only with jdbcURL):");
         printConnectionOptions();
         console.println();
-        throw new Exit(1);
     }
 
-    private ArgDecl baseArg = new ArgDecl(true, "b", "base");
-    private ArgDecl formatArg = new ArgDecl(true, "f", "format");
-    private ArgDecl outfileArg = new ArgDecl(true, "o", "out", "outfile");
-
     @Override
-    public void initArgs(CommandLine cmd) {
+    public void initArgs() {
         cmd.add(baseArg);
         cmd.add(formatArg);
         cmd.add(outfileArg);
     }
 
     @Override
-    public void run(CommandLine cmd, SystemLoader loader) throws IOException {
+    public void run() throws IOException {
         if (cmd.numItems() == 1) {
             loader.setMappingFileOrJdbcURL(cmd.getItem(0));
         }
 
         String format = "N-TRIPLE";
-        if (cmd.hasArg(formatArg)) {
-            format = cmd.getArg(formatArg).getValue();
+        if (cmd.contains(formatArg)) {
+            format = cmd.getArgValue(formatArg);
         }
         PrintStream out;
-        if (cmd.hasArg(outfileArg)) {
-            File f = new File(cmd.getArg(outfileArg).getValue());
+        if (cmd.contains(outfileArg)) {
+            File f = new File(cmd.getArgValue(outfileArg));
             LOGGER.info("Writing to {}", f);
             out = new PrintStream(new FileOutputStream(f));
             loader.setSystemBaseURI(MapParser.absolutizeURI(f.toURI().toString() + "#"));
@@ -84,8 +77,8 @@ public class DumpTool extends CommandLineTool {
             LOGGER.info("Writing to stdout");
             out = System.out;
         }
-        if (cmd.hasArg(baseArg)) {
-            loader.setSystemBaseURI(cmd.getArg(baseArg).getValue());
+        if (cmd.contains(baseArg)) {
+            loader.setSystemBaseURI(cmd.getArgValue(baseArg));
         }
 
         Mapping mapping = loader.setResultSizeLimit(Database.NO_LIMIT).setFetchSize(DUMP_DEFAULT_FETCH_SIZE).build();

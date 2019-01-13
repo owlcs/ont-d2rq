@@ -3,122 +3,59 @@ package d2rq.utils;
 import org.apache.jena.util.FileUtils;
 
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 /**
- * A copy-paste from some old Jena.
- * todo: better to replace with commons-cli + this impl is really ugly, cleanup is needed at least.
- * <p>
- * Command line argument processing based on a trigger model.
- * An action is called whenever an argument is encountered. Example:
- * <CODE>
- * public static void main (String[] args)
- * {
- * CommandLine cl = new CommandLine() ;
- * cl.add(false, "verbose")
- * .add(true, "--file") ;
- * cl.process(args) ;
- * for ( Iterator iter = cl.args() ; iter.hasNext() ; )
- * ...
- * }
- * </CODE>
- * A gloabl hook is provided to inspect arguments just before the
- * action.  Tracing is enabled by setting this to a suitable function
- * such as that provided by trace():
- * <CODE>
- * cl.setHook(cl.trace()) ;
- * </CODE>
- * <ul>
- * <li>Neutral as to whether options have - or --</li>
- * <li>Does not allow multiple single letter options to be concatenated.</li>
- * <li>Options may be ended with - or --</li>
- * <li>Arguments with values can use "="</li>
- * </ul>
+ * Command line processing helper.
+ * A modified copy-paste from some old Jena.
+ * todo: better to replace with apache commons-cli.
  */
 public class CommandLine {
-    protected String usage = null;
-    protected Map<String, Arg> args = new HashMap<>();
-    /* Extra processor called before the registered one when set.
-     * Used for tracing.
-     */
-    protected BiConsumer<String, String> argHook = null;
-    protected Map<String, ArgDecl> argMap = new HashMap<>();
-    // Rest of the items found on the command line
-    protected String indirectionMarker = "@";
-    protected boolean allowItemIndirect = false;   // Allow @ to mean contents of file
-    protected boolean ignoreIndirectionMarker = false;       // Allow comand line items to have leading @ but strip it.
-    protected List<String> items = new ArrayList<>();
 
-    /**
-     * Set the global argument handler.  Called on every valid argument.
-     *
-     * @param argHandler Handler
-     */
-    public void setHook(BiConsumer<String, String> argHandler) {
-        argHook = argHandler;
+    private final Map<String, Arg> args = new HashMap<>();
+    private final Map<String, ArgDecl> argMap = new HashMap<>();
+    private final List<String> items = new ArrayList<>();
+
+    public static boolean isHelpOption(String arg) {
+        return Stream.of("-h", "--h", "-help", "--help", "/?").anyMatch(h -> h.equalsIgnoreCase(arg));
     }
 
-    public void setUsage(String usageMessage) {
-        usage = usageMessage;
-    }
-
-    public boolean hasArgs() {
-        return args.size() > 0;
-    }
-
-    public boolean hasItems() {
-        return items.size() > 0;
-    }
-
-    public Iterator<Arg> args() {
-        return args.values().iterator();
-    }
-
-    public int numArgs() {
-        return args.size();
-    }
-
-    public int numItems() {
-        return items.size();
-    }
-
-    public void pushItem(String s) {
-        items.add(s);
-    }
-
-    public boolean isIndirectItem(int i) {
-        return allowItemIndirect && items.get(i).startsWith(indirectionMarker);
-    }
-
-    public String getItem(int i) {
-        return getItem(i, allowItemIndirect);
-    }
-
-    public String getItem(int i, boolean withIndirect) {
-        if (i < 0 || i >= items.size())
-            return null;
-
-
-        String item = items.get(i);
-
-        if (withIndirect && item.startsWith(indirectionMarker)) {
-            item = item.substring(1);
-            try {
-                item = FileUtils.readWholeFileAsUTF8(item);
-            } catch (Exception ex) {
-                throw new IllegalArgumentException("Failed to read '" + item + "': " + ex.getMessage());
-            }
+    public static String withIndirection(String value, String indirectionMarker) {
+        if (!value.startsWith(indirectionMarker)) {
+            return value;
         }
-        return item;
+        try {
+            return FileUtils.readWholeFileAsUTF8(value.substring(1));
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Failed to read '" + value + "': " + ex.getMessage(), ex);
+        }
+    }
+
+    private static String canonicalForm(String str) {
+        if (str.startsWith("--"))
+            return str.substring(2);
+
+        if (str.startsWith("-"))
+            return str.substring(1);
+
+        return str;
+    }
+
+    private static boolean matches(ArgDecl declaration, Arg value) {
+        Iterator<String> names = declaration.names();
+        while (names.hasNext()) {
+            if (names.next().equals(value.getName())) return true;
+        }
+        return false;
     }
 
     /**
-     * Process a set of command line arguments.
+     * Processes a set of command line arguments.
      *
-     * @param argv The words of the command line.
-     * @throws IllegalArgumentException Throw when something is wrong (no value found, action fails).
+     * @param argv The words of the command line
+     * @throws IllegalArgumentException Throw when something is wrong (no value found, action fails)
      */
-    public void process(String[] argv) throws IllegalArgumentException {
+    public void process(String... argv) throws IllegalArgumentException {
         List<String> argList = new ArrayList<>(Arrays.asList(argv));
 
         int i = 0;
@@ -126,9 +63,6 @@ public class CommandLine {
             String argStr = argList.get(i);
             if (endProcessing(argStr))
                 break;
-
-            if (ignoreArgument(argStr))
-                continue;
 
             // If the flag has a "=" or :, it is long form --arg=value.
             // Split and insert the arg
@@ -147,8 +81,8 @@ public class CommandLine {
                 argStr = argStr.substring(0, j);
             }
 
-            argStr = ArgDecl.canonicalForm(argStr);
-            String val = null;
+            argStr = canonicalForm(argStr);
+            String val;
 
             if (argMap.containsKey(argStr)) {
                 if (!args.containsKey(argStr))
@@ -162,20 +96,14 @@ public class CommandLine {
                         throw new IllegalArgumentException("No value for argument: " + arg.getName());
                     i++;
                     val = argList.get(i);
-                    arg.setValue(val);
                     arg.addValue(val);
                 }
 
-                // Global hook
-                if (argHook != null)
-                    argHook.accept(argStr, val);
-
-                argDecl.trigger(arg);
-            } else
-                handleUnrecognizedArg(argList.get(i));
+            } else {
+                throw new IllegalArgumentException("Unknown argument: " + argList.get(i));
+            }
         }
-
-        // Remainder.
+        // Remainder
         if (i < argList.size()) {
             if (argList.get(i).equals("-") || argList.get(i).equals("--"))
                 i++;
@@ -187,34 +115,15 @@ public class CommandLine {
     }
 
     /**
-     * Hook to test whether this argument should be processed further
-     *
-     * @param argStr String
-     * @return boolean
-     */
-    public boolean ignoreArgument(String argStr) {
-        return false;
-    }
-
-    /**
-     * Answer true if this argument terminates argument processing for the rest
+     * Answers {@code true} if the argument terminates argument processing for the rest
      * of the command line. Default is to stop just before the first arg that
      * does not start with "-", or is "-" or "--".
      *
      * @param argStr String
      * @return boolean
      */
-    public boolean endProcessing(String argStr) {
+    private boolean endProcessing(String argStr) {
         return !argStr.startsWith("-") || argStr.equals("--") || argStr.equals("-");
-    }
-
-    /**
-     * Handle an unrecognised argument; default is to throw an exception
-     *
-     * @param argStr The string image of the unrecognised argument
-     */
-    public void handleUnrecognizedArg(String argStr) {
-        throw new IllegalArgumentException("Unknown argument: " + argStr);
     }
 
     /**
@@ -228,77 +137,18 @@ public class CommandLine {
     }
 
     /**
-     * Test whether an argument was seen.
-     *
-     * @param s String
-     * @return boolean
-     */
-    public boolean contains(String s) {
-        return getArg(s) != null;
-    }
-
-    /**
-     * Test whether the command line had a particular argument
-     *
-     * @param argName String
-     * @return boolean
-     */
-    public boolean hasArg(String argName) {
-        return getArg(argName) != null;
-    }
-
-    /**
-     * Test whether the command line had a particular argument
-     *
-     * @param argDecl {@link ArgDecl}
-     * @return boolean
-     */
-    public boolean hasArg(ArgDecl argDecl) {
-        return getArg(argDecl) != null;
-    }
-
-    /**
-     * Get the argument associated with the argument declaration.
+     * Gets the argument associated with the argument declaration.
      * Actually returns the LAST one seen
      *
      * @param argDecl Argument declaration to find
      * @return Last argument that matched.
      */
-    public Arg getArg(ArgDecl argDecl) {
-        Arg arg = null;
+    private Arg getArg(ArgDecl argDecl) {
         for (Arg a : args.values()) {
-            if (argDecl.matches(a)) {
-                arg = a;
+            if (matches(argDecl, a)) {
+                return a;
             }
         }
-        return arg;
-    }
-
-    /**
-     * Get the argument associated with the arguement name.
-     * Actually returns the LAST one seen
-     *
-     * @param arg Argument declaration to find
-     * @return Arg - Last argument that matched.
-     */
-    public Arg getArg(String arg) {
-        arg = ArgDecl.canonicalForm(arg);
-        return args.get(arg);
-    }
-
-    /**
-     * Returns the value (a string) for an argument with a value -
-     * returns null for no argument and no value.
-     *
-     * @param argDecl {@link ArgDecl}
-     * @return String
-     */
-    public String getValue(ArgDecl argDecl) {
-        Arg arg = getArg(argDecl);
-        if (arg == null)
-            return null;
-        if (arg.hasValue())
-            return arg.getValue();
         return null;
     }
 
@@ -306,67 +156,18 @@ public class CommandLine {
      * Returns the value (a string) for an argument with a value -
      * returns null for no argument and no value.
      *
-     * @param argName String
+     * @param argDecl {@link ArgDecl}
      * @return String
      */
-    public String getValue(String argName) {
-        Arg arg = getArg(argName);
+    public String getArgValue(ArgDecl argDecl) {
+        Arg arg = getArg(argDecl);
         if (arg == null)
             return null;
         return arg.getValue();
     }
 
     /**
-     * Returns all the values (0 or more strings) for an argument.
-     *
-     * @param argDecl ArgDecl
-     * @return List
-     */
-    public List<String> getValues(ArgDecl argDecl) {
-        Arg arg = getArg(argDecl);
-        if (arg == null)
-            return null;
-        return arg.getValues();
-    }
-
-    /**
-     * Returns all the values (0 or more strings) for an argument.
-     *
-     * @param argName String
-     * @return List
-     */
-    public List<String> getValues(String argName) {
-        Arg arg = getArg(argName);
-        if (arg == null)
-            return null;
-        return arg.getValues();
-    }
-
-    /**
-     * Add an argument to those to be accepted on the command line.
-     *
-     * @param argName  Name
-     * @param hasValue True if the command takes a (string) value
-     * @return The CommandLine processor object
-     */
-    public CommandLine add(String argName, boolean hasValue) {
-        return add(new ArgDecl(hasValue, argName));
-    }
-
-    /**
-     * Add an argument to those to be accepted on the command line.
-     * Argument order reflects ArgDecl.
-     *
-     * @param hasValue True if the command takes a (string) value
-     * @param argName  Name
-     * @return The CommandLine processor object
-     */
-    public CommandLine add(boolean hasValue, String argName) {
-        return add(new ArgDecl(hasValue, argName));
-    }
-
-    /**
-     * Add an argument object
+     * Adds an argument declaration object.
      *
      * @param arg Argument to add
      * @return The CommandLine processor object
@@ -377,49 +178,42 @@ public class CommandLine {
         return this;
     }
 
-    /**
-     * @return Returns whether items starting "@" have the value of named file.
-     */
-    public boolean allowItemIndirect() {
-        return allowItemIndirect;
+    public int numItems() {
+        return items.size();
+    }
+
+    public String getItem(int i) {
+        return getItem(i, null);
+    }
+
+    public String getItem(int i, String indirectionMarker) {
+        if (i < 0 || i >= items.size())
+            return null;
+        String item = items.get(i);
+        return indirectionMarker == null ? item : withIndirection(item, indirectionMarker);
     }
 
     /**
-     * @param allowItemIndirect Set whether items starting "@" have the value of named file.
+     * A command line argument that has been found specification.
      */
-    public void setAllowItemIndirect(boolean allowItemIndirect) {
-        this.allowItemIndirect = allowItemIndirect;
-    }
+    static class Arg {
+        private final String name;
+        private final List<String> values = new ArrayList<>();
 
-    /**
-     * @return Returns the ignoreIndirectionMarker.
-     */
-    public boolean isIgnoreIndirectionMarker() {
-        return ignoreIndirectionMarker;
-    }
+        Arg(String name) {
+            this.name = name;
+        }
 
-    /**
-     * @param ignoreIndirectionMarker The ignoreIndirectionMarker to set.
-     */
-    public void setIgnoreIndirectionMarker(boolean ignoreIndirectionMarker) {
-        this.ignoreIndirectionMarker = ignoreIndirectionMarker;
-    }
+        void addValue(String v) {
+            values.add(v);
+        }
 
-    /**
-     * @return Returns the indirectionMarker.
-     */
-    public String getIndirectionMarker() {
-        return indirectionMarker;
-    }
+        String getName() {
+            return name;
+        }
 
-    /**
-     * @param indirectionMarker The indirectionMarker to set.
-     */
-    public void setIndirectionMarker(String indirectionMarker) {
-        this.indirectionMarker = indirectionMarker;
-    }
-
-    public BiConsumer<String, String> trace() {
-        return (arg, val) -> System.out.println("Seen: " + arg + (val != null ? " = " + val : ""));
+        String getValue() {
+            return values.isEmpty() ? null : values.get(0);
+        }
     }
 }

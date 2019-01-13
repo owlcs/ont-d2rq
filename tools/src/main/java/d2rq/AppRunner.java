@@ -1,5 +1,6 @@
 package d2rq;
 
+import d2rq.utils.CommandLine;
 import d2rq.utils.LogHelper;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +18,7 @@ public class AppRunner {
     public static void main(String... args) {
         LogHelper.turnLoggingOff();
         PrintStream out = System.err;
-        if (args.length == 0 || CommandLineTool.isHelpOption(args[0])) {
+        if (args.length == 0 || CommandLine.isHelpOption(args[0])) {
             out.println("usage:");
             ToolFactory.printUsage(out);
             System.exit(0);

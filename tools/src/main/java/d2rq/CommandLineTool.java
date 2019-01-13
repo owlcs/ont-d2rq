@@ -11,7 +11,6 @@ import de.fuberlin.wiwiss.d2rq.mapgen.FilterMatchAny;
 import de.fuberlin.wiwiss.d2rq.mapgen.FilterParser;
 import de.fuberlin.wiwiss.d2rq.mapgen.FilterParser.ParseException;
 import org.apache.jena.shared.JenaException;
-import org.apache.jena.util.FileManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,21 +20,26 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 
 /**
  * Base class for the D2RQ command line tools.
- * They share much of their argument list and functionality, therefore this is extracted into this superclass.
  *
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class CommandLineTool {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommandLineTool.class);
+
+    static final Logger LOGGER = LoggerFactory.getLogger(CommandLineTool.class);
+    static final String INDIRECTION_MARKER = "@";
 
     protected final PrintStream console;
+    protected final CommandLine cmd;
+    protected final SystemLoader loader;
+    protected final boolean supportImplicitJdbcURL;
+    protected final int minArguments;
+    protected final int maxArguments;
 
-    private final CommandLine cmd = new CommandLine();
     private final ArgDecl userArg = new ArgDecl(true, "u", "user", "username");
     private final ArgDecl passArg = new ArgDecl(true, "p", "pass", "password");
     private final ArgDecl driverArg = new ArgDecl(true, "d", "driver");
@@ -50,137 +54,21 @@ public abstract class CommandLineTool {
     private final ArgDecl skipTablesArg = new ArgDecl(true, "skip-table", "skip-tables");
     private final ArgDecl skipColumnsArg = new ArgDecl(true, "skip-column", "skip-columns");
 
-    private final SystemLoader loader = new SystemLoader();
-    protected boolean supportImplicitJdbcURL = true;
-    protected int minArguments = 0;
-    protected int maxArguments = 1;
-
     protected CommandLineTool(PrintStream out) {
+        this(out, 0, 1);
+    }
+
+    protected CommandLineTool(PrintStream out, int minArguments, int maxArguments) {
+        this(out, minArguments, maxArguments, true);
+    }
+
+    protected CommandLineTool(PrintStream out, int minArguments, int maxArguments, boolean implicitJdbcURL) {
         this.console = Objects.requireNonNull(out);
-    }
-
-    private static String withIndirection(String value) {
-        if (value.startsWith("@")) {
-            value = value.substring(1);
-            try {
-                value = FileManager.get().readWholeFileAsUTF8(value);
-            } catch (Exception ex) {
-                throw new IllegalArgumentException("Failed to read '" + value + "': " + ex.getMessage(), ex);
-            }
-        }
-        return value;
-    }
-
-    static boolean isHelpOption(String arg) {
-        return Stream.of("-h", "--h", "-help", "--help", "/?").anyMatch(h -> h.equalsIgnoreCase(arg));
-    }
-
-    public abstract void usage() throws Exit;
-
-    public abstract void initArgs(CommandLine cmd);
-
-    public abstract void run(CommandLine cmd, SystemLoader loader) throws D2RQException, IOException;
-
-    public void process(String[] args) throws Exit {
-        if (args.length == 0 || isHelpOption(args[args.length - 1])) {
-            usage();
-        }
-        cmd.add(userArg)
-                .add(passArg)
-                .add(driverArg)
-                .add(sqlFileArg)
-                .add(w3cArg)
-                .add(verboseArg)
-                .add(debugArg)
-                .add(schemasArg)
-                .add(tablesArg)
-                .add(columnsArg)
-                .add(skipSchemasArg)
-                .add(skipTablesArg)
-                .add(skipColumnsArg);
-
-        initArgs(cmd);
-
-        try {
-            cmd.process(args);
-        } catch (IllegalArgumentException ex) {
-            reportException(ex);
-        }
-
-        if (cmd.hasArg(verboseArg)) {
-            LogHelper.setVerboseLogging();
-        }
-        if (cmd.hasArg(debugArg)) {
-            LogHelper.setDebugLogging();
-        }
-
-        if (cmd.numItems() == minArguments && supportImplicitJdbcURL && cmd.hasArg(sqlFileArg)) {
-            loader.setJdbcURL(SystemLoader.DEFAULT_JDBC_URL);
-        } else if (cmd.numItems() == 0) {
-            usage();
-        }
-        if (cmd.numItems() < minArguments) {
-            reportException(new IllegalArgumentException("Not enough arguments"));
-        } else if (cmd.numItems() > maxArguments) {
-            reportException(new IllegalArgumentException("Too many arguments"));
-        }
-        if (cmd.contains(userArg)) {
-            loader.setUsername(cmd.getArg(userArg).getValue());
-        }
-        if (cmd.contains(passArg)) {
-            loader.setPassword(cmd.getArg(passArg).getValue());
-        }
-        if (cmd.contains(driverArg)) {
-            loader.setJDBCDriverClass(cmd.getArg(driverArg).getValue());
-        }
-        if (cmd.contains(sqlFileArg)) {
-            loader.setStartupSQLScript(cmd.getArg(sqlFileArg).getValue());
-        }
-        if (cmd.contains(w3cArg)) {
-            loader.setGenerateW3CDirectMapping(true);
-        }
-        try {
-            Collection<Filter> includes = new ArrayList<>();
-            Collection<Filter> excludes = new ArrayList<>();
-            if (cmd.contains(schemasArg)) {
-                String spec = withIndirection(cmd.getArg(schemasArg).getValue());
-                includes.add(new FilterParser(spec).parseSchemaFilter());
-            }
-            if (cmd.contains(tablesArg)) {
-                String spec = withIndirection(cmd.getArg(tablesArg).getValue());
-                includes.add(new FilterParser(spec).parseTableFilter(true));
-            }
-            if (cmd.contains(columnsArg)) {
-                String spec = withIndirection(cmd.getArg(columnsArg).getValue());
-                includes.add(new FilterParser(spec).parseColumnFilter(true));
-            }
-            if (cmd.contains(skipSchemasArg)) {
-                String spec = withIndirection(cmd.getArg(skipSchemasArg).getValue());
-                excludes.add(new FilterParser(spec).parseSchemaFilter());
-            }
-            if (cmd.contains(skipTablesArg)) {
-                String spec = withIndirection(cmd.getArg(skipTablesArg).getValue());
-                excludes.add(new FilterParser(spec).parseTableFilter(false));
-            }
-            if (cmd.contains(skipColumnsArg)) {
-                String spec = withIndirection(cmd.getArg(skipColumnsArg).getValue());
-                excludes.add(new FilterParser(spec).parseColumnFilter(false));
-            }
-            if (!includes.isEmpty() || !excludes.isEmpty()) {
-                loader.setFilter(new FilterIncludeExclude(
-                        includes.isEmpty() ? Filter.ALL : FilterMatchAny.create(includes),
-                        FilterMatchAny.create(excludes)));
-            }
-            run(cmd, loader);
-        } catch (IllegalArgumentException | ParseException | IOException | JenaException ex) {
-            reportException(ex);
-        }
-    }
-
-    private void reportException(Exception ex) {
-        console.println(getMessage(ex));
-        LOGGER.error("Command line tool exception", ex);
-        throw new Exit(2, ex);
+        this.loader = new SystemLoader();
+        this.cmd = new CommandLine();
+        this.supportImplicitJdbcURL = implicitJdbcURL;
+        this.minArguments = minArguments;
+        this.maxArguments = maxArguments;
     }
 
     private static String getMessage(Exception ex) {
@@ -198,6 +86,145 @@ public abstract class CommandLineTool {
             res = ex.getMessage();
         }
         return res;
+    }
+
+    private static String withIndirection(String value) {
+        return CommandLine.withIndirection(value, INDIRECTION_MARKER);
+    }
+
+    public abstract void printUsage();
+
+    public abstract void initArgs();
+
+    public abstract void run() throws D2RQException, IOException;
+
+    /**
+     * Runs process.
+     *
+     * @param args array of arguments
+     * @throws Exit with error code inside
+     */
+    void process(String[] args) throws Exit {
+        if (args.length == 0 || CommandLine.isHelpOption(args[args.length - 1])) {
+            printUsage();
+            throw new Exit(Exit.Code.USAGE);
+        }
+        initCommonArgs();
+        initArgs();
+        try {
+            cmd.process(args);
+        } catch (IllegalArgumentException ex) {
+            console.println(ex.getMessage());
+            throw new Exit(Exit.Code.WRONG_INPUT);
+        }
+        setLogging();
+        if (cmd.numItems() == minArguments && supportImplicitJdbcURL && cmd.contains(sqlFileArg)) {
+            loader.setJdbcURL(SystemLoader.DEFAULT_JDBC_URL);
+        } else if (cmd.numItems() == 0) {
+            printUsage();
+            throw new Exit(Exit.Code.USAGE);
+        }
+        validateItems();
+        if (cmd.contains(userArg)) {
+            loader.setUsername(cmd.getArgValue(userArg));
+        }
+        if (cmd.contains(passArg)) {
+            loader.setPassword(cmd.getArgValue(passArg));
+        }
+        if (cmd.contains(driverArg)) {
+            loader.setJDBCDriverClass(cmd.getArgValue(driverArg));
+        }
+        if (cmd.contains(sqlFileArg)) {
+            loader.setStartupSQLScript(cmd.getArgValue(sqlFileArg));
+        }
+        if (cmd.contains(w3cArg)) {
+            loader.setGenerateW3CDirectMapping(true);
+        }
+        parseFilters();
+        try {
+            run();
+        } catch (IOException | JenaException ex) {
+            console.println(getMessage(ex));
+            LOGGER.info("Command line tool exception", ex);
+            throw new Exit(ex);
+        }
+    }
+
+    private void initCommonArgs() {
+        cmd.add(userArg)
+                .add(passArg)
+                .add(driverArg)
+                .add(sqlFileArg)
+                .add(w3cArg)
+                .add(verboseArg)
+                .add(debugArg)
+                .add(schemasArg)
+                .add(tablesArg)
+                .add(columnsArg)
+                .add(skipSchemasArg)
+                .add(skipTablesArg)
+                .add(skipColumnsArg);
+    }
+
+    private void setLogging() {
+        if (cmd.contains(verboseArg)) {
+            LogHelper.setVerboseLogging();
+        }
+        if (cmd.contains(debugArg)) {
+            LogHelper.setDebugLogging();
+        }
+    }
+
+    private void validateItems() throws Exit {
+        String error = null;
+        if (cmd.numItems() < minArguments) {
+            error = "Not enough arguments";
+        } else if (cmd.numItems() > maxArguments) {
+            error = "Too many arguments";
+        }
+        if (error != null) {
+            console.println(error);
+            throw new Exit(Exit.Code.WRONG_INPUT);
+        }
+    }
+
+    private void parseFilters() throws Exit {
+        try {
+            Collection<Filter> includes = new ArrayList<>();
+            Collection<Filter> excludes = new ArrayList<>();
+            if (cmd.contains(schemasArg)) {
+                String spec = withIndirection(cmd.getArgValue(schemasArg));
+                includes.add(new FilterParser(spec).parseSchemaFilter());
+            }
+            if (cmd.contains(tablesArg)) {
+                String spec = withIndirection(cmd.getArgValue(tablesArg));
+                includes.add(new FilterParser(spec).parseTableFilter(true));
+            }
+            if (cmd.contains(columnsArg)) {
+                String spec = withIndirection(cmd.getArgValue(columnsArg));
+                includes.add(new FilterParser(spec).parseColumnFilter(true));
+            }
+            if (cmd.contains(skipSchemasArg)) {
+                String spec = withIndirection(cmd.getArgValue(skipSchemasArg));
+                excludes.add(new FilterParser(spec).parseSchemaFilter());
+            }
+            if (cmd.contains(skipTablesArg)) {
+                String spec = withIndirection(cmd.getArgValue(skipTablesArg));
+                excludes.add(new FilterParser(spec).parseTableFilter(false));
+            }
+            if (cmd.contains(skipColumnsArg)) {
+                String spec = withIndirection(cmd.getArgValue(skipColumnsArg));
+                excludes.add(new FilterParser(spec).parseColumnFilter(false));
+            }
+            if (!includes.isEmpty() || !excludes.isEmpty()) {
+                loader.setFilter(new FilterIncludeExclude(
+                        includes.isEmpty() ? Filter.ALL : FilterMatchAny.create(includes),
+                        FilterMatchAny.create(excludes)));
+            }
+        } catch (ParseException | IllegalArgumentException ex) {
+            console.println(ex.getMessage());
+            throw new Exit(Exit.Code.WRONG_INPUT);
+        }
     }
 
     protected void printStandardArguments(boolean withMappingFile) {
@@ -222,19 +249,26 @@ public abstract class CommandLineTool {
     }
 
     public static class Exit extends RuntimeException {
-        private final int code;
+        private final Code code;
 
-        public Exit(int code) {
+        public Exit(Code code) {
             this.code = code;
         }
 
-        public Exit(int code, Throwable cause) {
+        public Exit(Throwable cause) {
             super(cause);
-            this.code = code;
+            this.code = Code.ERROR;
         }
 
         public int getCode() {
-            return code;
+            return code.ordinal() + 1;
+        }
+
+        public enum Code {
+            USAGE,
+            WRONG_INPUT,
+            ERROR,
+            ;
         }
     }
 }

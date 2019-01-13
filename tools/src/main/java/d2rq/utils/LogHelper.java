@@ -15,23 +15,30 @@ import java.lang.reflect.Method;
  */
 public class LogHelper {
 
+    /**
+     * Turns off any logging.
+     */
     public static void turnLoggingOff() {
         forceDisableExternalLogging();
         org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
-//        try {
-//            Class<?> logger = Class.forName("org.apache.log4j.Logger");
-//            Class<?> level = Class.forName("org.apache.log4j.Level");
-//            Object rootLogger = logger.getMethod("getRootLogger").invoke(null);
-//            Object off = level.getField("OFF").get(null);
-//            //noinspection JavaReflectionInvocation
-//            logger.getMethod("setLevel", level).invoke(rootLogger, off);
-//        } catch (Exception e) {
-//            throw new IllegalStateException("Can't turn off logging", e);
-//        }
+        /*
+        try {
+            Class<?> logger = Class.forName("org.apache.log4j.Logger");
+            Class<?> level = Class.forName("org.apache.log4j.Level");
+            Object rootLogger = logger.getMethod("getRootLogger").invoke(null);
+            Object off = level.getField("OFF").get(null);
+            //noinspection JavaReflectionInvocation
+            logger.getMethod("setLevel", level).invoke(rootLogger, off);
+        } catch (Exception e) {
+            throw new IllegalStateException("Can't turn off logging", e);
+        }
+        */
     }
 
+    /**
+     * Adjusts Log4j log level to show more stuff.
+     */
     public static void setVerboseLogging() {
-        // Adjust Log4j log level to show more stuff
         /*
         org.apache.log4j.Logger.getLogger("d2rq").setLevel(org.apache.log4j.Level.INFO);
         org.apache.log4j.Logger.getLogger("de.fuberlin.wiwiss.d2rq").setLevel(org.apache.log4j.Level.INFO);
@@ -42,8 +49,10 @@ public class LogHelper {
         setSystemLogLevelTo("INFO");
     }
 
+    /**
+     * Adjusts Log4j log level to show MUCH more stuff.
+     */
     public static void setDebugLogging() {
-        // Adjust Log4j log level to show MUCH more stuff
         /*
         org.apache.log4j.Logger.getLogger("d2rq").setLevel(org.apache.log4j.Level.ALL);
         org.apache.log4j.Logger.getLogger("de.fuberlin.wiwiss.d2rq").setLevel(org.apache.log4j.Level.ALL);

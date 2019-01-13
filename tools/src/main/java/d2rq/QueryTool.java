@@ -1,9 +1,7 @@
 package d2rq;
 
 import d2rq.utils.ArgDecl;
-import d2rq.utils.CommandLine;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
-import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.engine.QueryEngineD2RQ;
 import org.apache.jena.query.QueryCancelledException;
 import org.apache.jena.query.QueryExecution;
@@ -12,8 +10,6 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sparql.resultset.ResultsFormat;
 import org.apache.jena.sparql.util.QueryExecUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 
@@ -23,16 +19,17 @@ import java.io.PrintStream;
  * @author Richard Cyganiak (richard@cyganiak.de)
  */
 public class QueryTool extends CommandLineTool {
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueryTool.class);
+
+    private ArgDecl baseArg = new ArgDecl(true, "b", "base");
+    private ArgDecl formatArg = new ArgDecl(true, "f", "format");
+    private ArgDecl timeoutArg = new ArgDecl(true, "t", "timeout");
 
     QueryTool(PrintStream console) {
-        super(console);
-        minArguments = 1;
-        maxArguments = 2;
+        super(console, 1, 2);
     }
 
     @Override
-    public void usage() {
+    public void printUsage() {
         console.println("usage:");
         console.println("  d2r-query [query-options] mappingFile query");
         console.println("  d2r-query [query-options] [connection-options] jdbcURL query");
@@ -50,44 +47,40 @@ public class QueryTool extends CommandLineTool {
         console.println("  Database connection options (only with jdbcURL):");
         printConnectionOptions();
         console.println();
-        throw new Exit(1);
     }
 
-    private ArgDecl baseArg = new ArgDecl(true, "b", "base");
-    private ArgDecl formatArg = new ArgDecl(true, "f", "format");
-    private ArgDecl timeoutArg = new ArgDecl(true, "t", "timeout");
-
     @Override
-    public void initArgs(CommandLine cmd) {
+    public void initArgs() {
         cmd.add(baseArg);
         cmd.add(formatArg);
         cmd.add(timeoutArg);
     }
 
     @Override
-    public void run(CommandLine cmd, SystemLoader loader) {
+    public void run() {
         String query = null;
         if (cmd.numItems() == 1) {
-            query = cmd.getItem(0, true);
+            query = cmd.getItem(0, INDIRECTION_MARKER);
         } else if (cmd.numItems() == 2) {
             loader.setMappingFileOrJdbcURL(cmd.getItem(0));
-            query = cmd.getItem(1, true);
+            query = cmd.getItem(1, INDIRECTION_MARKER);
         }
 
         String format = null;
-        if (cmd.hasArg(formatArg)) {
-            format = cmd.getArg(formatArg).getValue();
+        if (cmd.contains(formatArg)) {
+            format = cmd.getArgValue(formatArg);
         }
-        if (cmd.hasArg(baseArg)) {
-            loader.setSystemBaseURI(cmd.getArg(baseArg).getValue());
+        if (cmd.contains(baseArg)) {
+            loader.setSystemBaseURI(cmd.getArgValue(baseArg));
         }
         double timeout = -1;
-        if (cmd.hasArg(timeoutArg)) {
+        if (cmd.contains(timeoutArg)) {
+            String t = cmd.getArgValue(timeoutArg);
             try {
-                timeout = Double.parseDouble(cmd.getArg(timeoutArg).getValue());
+                timeout = Double.parseDouble(t);
             } catch (NumberFormatException ex) {
-                throw new D2RQException("Timeout must be a number in seconds: '"
-                        + cmd.getArg(timeoutArg).getValue() + "'", D2RQException.MUST_BE_NUMERIC);
+                throw new D2RQException("Timeout must be a number in seconds: '" + t + "'",
+                        D2RQException.MUST_BE_NUMERIC);
             }
         }
 
