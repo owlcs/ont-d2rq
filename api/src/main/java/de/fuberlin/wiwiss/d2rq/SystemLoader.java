@@ -19,9 +19,8 @@ import java.net.URI;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Builder for MappingGenerators, ModelD2RQs and the like.
@@ -248,20 +247,48 @@ public class SystemLoader implements AutoCloseable {
         connectedDB = null;
     }
 
+    /**
+     * Builds a {@link Mapping} taking into account various {@link SystemLoader}'s settings.
+     * Note: if the builder contains both {@code mappingFile} and JDBC settings,
+     * then the mapping will be loaded from the file and then, if possible,
+     * adjusted according to the other JDBC settings.
+     *
+     * @return {@link Mapping}
+     */
     public Mapping build() {
         Mapping res = fetchMapping();
         res.getConfiguration()
                 .setControlOWL(useOWLControl)
                 .setUseAllOptimizations(fastMode)
                 .setServeVocabulary(withSchema);
-        if (fetchSize != Database.NO_FETCH_SIZE || resultSizeLimit != Database.NO_LIMIT || properties != null) {
-            res.findDatabase(jdbcURL).ifPresent(d -> {
-                if (properties != null) {
-                    d.addConnectionProperties(properties);
-                }
-                d.setResultSizeLimit(resultSizeLimit).setFetchSize(fetchSize);
-            });
+        // in case jdbc-parameters are also present, pass them into the mapping
+        Optional<Database> ods = Optional.empty();
+        if (jdbcURL != null) {
+            ods = res.findDatabase(jdbcURL);
+        } else {
+            // then choose first
+            Set<Database> dbs = res.listDatabases().collect(Collectors.toSet());
+            if (!dbs.isEmpty()) {
+                ods = Optional.of(dbs.iterator().next());
+            }
         }
+        ods.ifPresent(d -> {
+            if (properties != null) {
+                d.addConnectionProperties(properties);
+            }
+            if (resultSizeLimit != Database.NO_LIMIT) {
+                d.setResultSizeLimit(resultSizeLimit);
+            }
+            if (fetchSize != Database.NO_FETCH_SIZE) {
+                d.setFetchSize(fetchSize);
+            }
+            if (username != null) {
+                d.setUsername(username);
+            }
+            if (password != null) {
+                d.setPassword(password);
+            }
+        });
         if (connectedDB != null) {
             // Hack! We don't want the Database to open another ConnectedDB,
             // so we check if it's connected to the same DB, and in that case
@@ -280,15 +307,11 @@ public class SystemLoader implements AutoCloseable {
      * @throws D2RQException in case some arguments are incorrect
      */
     private Mapping fetchMapping() throws D2RQException {
-        if (jdbcURL != null && mappingFile != null) {
-            throw new D2RQException(String.format("conflicting mapping locations %s and %s; specify at most one",
-                    mappingFile, jdbcURL));
-        }
         if (jdbcURL == null && mappingFile == null) {
             throw new D2RQException("no mapping file or JDBC URL specified");
         }
         String baseURI = getResourceBaseURI();
-        if (jdbcURL != null) {
+        if (jdbcURL != null && mappingFile == null) {
             return MappingFactory.create(getMappingGenerator().mappingModel(baseURI), baseURI);
         }
         LOGGER.info("Reading mapping file from <{}>", mappingFile);
