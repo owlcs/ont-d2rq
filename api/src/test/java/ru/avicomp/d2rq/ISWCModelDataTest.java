@@ -13,13 +13,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.d2rq.conf.D2RQModelConfig;
 import ru.avicomp.d2rq.conf.ISWCData;
 import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.ontapi.jena.OntModelFactory;
-import ru.avicomp.ontapi.jena.model.OntClass;
-import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.model.OntNDP;
-import ru.avicomp.ontapi.jena.model.OntNOP;
+import ru.avicomp.ontapi.jena.model.*;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Validate ISWC mappings data.
@@ -78,7 +80,7 @@ public class ISWCModelDataTest {
     }
 
     @Test
-    public void testValidateSchemaAndData() {
+    public void testValidateSchemaAndDataWithControlOWL() {
         int totalNumberOfStatements = 443;
         Mapping mapping = data.loadMapping();
 
@@ -129,6 +131,21 @@ public class ISWCModelDataTest {
         Assert.assertEquals(totalNumberOfStatements, mapping.getDataModel().listStatements().toList().size());
 
         mapping.close();
+    }
+
+    @Test
+    public void testValidateDataWithoutControlOWL() {
+        try (Mapping mapping = data.loadMapping()) {
+            OntGraphModel m = OntModelFactory.createModel(mapping.getData(), D2RQModelConfig.D2RQ_PERSONALITY);
+            LOGGER.debug("Data:");
+            List<OntIndividual> individuals = m.classAssertions()
+                    .peek(x -> LOGGER.debug("INDIVIDUAL: {}", x)).collect(Collectors.toList());
+            LOGGER.debug("Get: {}", individuals.size());
+            Assert.assertEquals(48, individuals.size());
+            String txt = JenaModelUtils.toTurtleString(m);
+            LOGGER.debug("Model:\n{}", txt);
+            Assert.assertFalse(txt.contains(m.shortForm(OWL.NamedIndividual.getURI())));
+        }
     }
 
 }

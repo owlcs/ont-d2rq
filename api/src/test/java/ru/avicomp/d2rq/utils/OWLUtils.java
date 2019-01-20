@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.OntologyModel;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
-import ru.avicomp.ontapi.jena.impl.OntGraphModelImpl;
+import ru.avicomp.ontapi.jena.impl.PersonalityModel;
 import ru.avicomp.ontapi.jena.impl.conf.OntModelConfig;
 import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
 import ru.avicomp.ontapi.jena.model.OntEntity;
@@ -117,7 +117,7 @@ public class OWLUtils {
     }
 
     public static OntPersonality getPersonality(OntGraphModel m) {
-        return m instanceof OntGraphModelImpl ? ((OntGraphModelImpl) m).getPersonality() :
+        return m instanceof PersonalityModel ? ((PersonalityModel) m).getOntPersonality() :
                 OntModelConfig.ONT_PERSONALITY_LAX;
     }
 

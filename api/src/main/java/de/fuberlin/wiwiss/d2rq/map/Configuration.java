@@ -51,12 +51,17 @@ public interface Configuration extends MapObject {
     Configuration setControlOWL(boolean controlOWL);
 
     /**
-     * Answers whether to use {@code avc:controlOWL} option.
+     * Answers whether to use {@code avc:controlOWL} settings option.
      * <b>It is {@code false} by default</b>.
-     * If this option is specified, the generated data (see {@link Mapping#getData()})
-     * will also be supplemented with OWL2 declarations and other axioms.
-     * For example in OWL2 named individuals must have
-     * {@link ru.avicomp.ontapi.jena.vocabulary.OWL#NamedIndividual owl:NamedIndividual} {@code rdf:type}.
+     * <p>
+     * If this option is specified, then the generated data (see {@link Mapping#getData()})
+     * will also be supplemented with OWL2 declarations and other axioms, according to specification requirements.
+     * For example, in OWL2 any named individuals must have
+     * {@link ru.avicomp.ontapi.jena.vocabulary.OWL#NamedIndividual owl:NamedIndividual} declaration ({@code rdf:type}).
+     * <p>
+     * If this option is turned off, it still possible to have correct OWL2 view.
+     * In order to achieve this need to use {@link ru.avicomp.ontapi.jena.model.OntGraphModel} model view,
+     * built with the {@link ru.avicomp.d2rq.conf.D2RQModelConfig#D2RQ_PERSONALITY} inside.
      *
      * @return boolean
      * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>

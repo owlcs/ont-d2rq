@@ -73,6 +73,7 @@ public interface Mapping extends AutoCloseable {
 
     /**
      * Returns an OWL2 schema part of this mapping.
+     *
      * It is a dynamic virtual graph which is partially backed by the mapping graph.
      * This means that it responses axioms which are either contained in the base mapping graph
      * or inferred from the D2RQ instructions.
@@ -90,6 +91,7 @@ public interface Mapping extends AutoCloseable {
      * @return {@link Graph}, an OWL2 schema
      * @see ru.avicomp.ontapi.jena.model.OntGraphModel
      * @see ru.avicomp.ontapi.OntologyModel
+     * @see Configuration#getControlOWL()
      * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>
      */
     Graph getSchema();
