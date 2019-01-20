@@ -57,7 +57,7 @@
         <!--The tests depend on configured local databases (mysql, postgres), so (temporary) disabled-->
         <skipTests>true</skipTests>
 
-        <version.jena>3.9.0</version.jena>
+        <version.jena>3.10.0</version.jena>
         <version.ontapi>1.4.0-SNAPSHOT</version.ontapi>
         <version.slf4j>1.7.25</version.slf4j>
 
