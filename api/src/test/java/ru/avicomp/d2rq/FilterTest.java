@@ -78,19 +78,19 @@ public class FilterTest {
         Assert.assertEquals("Expected two ontologies", 2, manager.ontologies().count());
         Assert.assertTrue("Can't find " + id2, manager.contains(id2));
         Assert.assertNotEquals(full.asGraphModel().getBaseGraph(), filteredByProperties.asGraphModel().getBaseGraph());
-        Assert.assertEquals("Expected two classes", 2, filteredByProperties.asGraphModel().listClasses().count());
-        Assert.assertEquals("Expected one data property", 1, filteredByProperties.asGraphModel().listDataProperties().count());
-        Assert.assertEquals("Expected one object property", 1, filteredByProperties.asGraphModel().listObjectProperties().count());
+        Assert.assertEquals("Expected two classes", 2, filteredByProperties.asGraphModel().classes().count());
+        Assert.assertEquals("Expected one data property", 1, filteredByProperties.asGraphModel().dataProperties().count());
+        Assert.assertEquals("Expected one object property", 1, filteredByProperties.asGraphModel().objectProperties().count());
         source2.close();
         testResult.computeIfAbsent(data, d -> new HashMap<>()).put(filteredByProperties, 11);
 
         // creates a filter:
         LOGGER.info("Load the restricted model from db (class constraints)");
-        OntOPE p = full.asGraphModel().listObjectProperties().min(Comparator.comparing(Resource::getURI))
+        OntOPE p = full.asGraphModel().objectProperties().min(Comparator.comparing(Resource::getURI))
                 .orElseThrow(() -> new AssertionError("Can't find any ont object property."));
-        IRI class1 = p.range().map(Resource::getURI).map(IRI::create).sorted().findFirst()
+        IRI class1 = p.ranges().map(Resource::getURI).map(IRI::create).sorted().findFirst()
                 .orElseThrow(() -> new AssertionError("Can't find range for " + p));
-        IRI class2 = p.domain().map(Resource::getURI).map(IRI::create).sorted().findFirst()
+        IRI class2 = p.domains().map(Resource::getURI).map(IRI::create).sorted().findFirst()
                 .orElseThrow(() -> new AssertionError("Can't find domain for " + p));
         MappingFilter filter2 = MappingFilter.create().includeClass(class1).includeClass(class2);
         LOGGER.debug("Constraint classes: " + filter2.classes().collect(Collectors.toList()));
@@ -103,7 +103,7 @@ public class FilterTest {
         // validate:
         Assert.assertEquals("Expected three ontologies", 3, manager.ontologies().count());
         Assert.assertTrue("Can't find " + id3, manager.contains(id3));
-        Assert.assertEquals("Expected two classes", 1, filteredByClasses.asGraphModel().listClasses().count());
+        Assert.assertEquals("Expected two classes", 1, filteredByClasses.asGraphModel().classes().count());
         List<OntPE> props = filteredByClasses.asGraphModel().ontObjects(OntPE.class).collect(Collectors.toList());
         props.forEach(x -> LOGGER.debug("{}", x));
         Assert.assertFalse("No properties:", props.isEmpty());

@@ -93,7 +93,7 @@ public class GraphsTest {
 
             u.createOntEntity(OntDT.class, u.expandPrefix("iswc:string"));
 
-            List<OntClass> classes = u.listClasses().collect(Collectors.toList());
+            List<OntClass> classes = u.classes().collect(Collectors.toList());
 
             classes.forEach(x -> LOGGER.debug("{}", x));
 

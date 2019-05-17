@@ -51,7 +51,7 @@ public class DynamicSchemaTest {
         Assert.assertFalse(m.isEmpty());
         Assert.assertEquals(uri, m.getID().getURI());
         m.createOntEntity(OntClass.class, ns + "Clazz");
-        Assert.assertEquals(1, m.listClasses().count());
+        Assert.assertEquals(1, m.classes().count());
         Assert.assertEquals(2, m.size());
         Assert.assertFalse(m.isEmpty());
         try {
@@ -160,26 +160,26 @@ public class DynamicSchemaTest {
         Assert.assertFalse(mapping.getConfiguration().getControlOWL());
         validateInferredOWLForPredefinedMapping(schema);
 
-        Assert.assertEquals(7, schema.listClasses().peek(x -> LOGGER.debug("1) CLASS: {}", x)).count());
+        Assert.assertEquals(7, schema.classes().peek(x -> LOGGER.debug("1) CLASS: {}", x)).count());
 
         mapping.getConfiguration().setControlOWL(true);
         Assert.assertTrue(mapping.getConfiguration().getControlOWL());
 
         JenaModelUtils.print(schema);
         validateInferredOWLForPredefinedMapping(schema);
-        Assert.assertEquals(8, schema.listClasses().peek(x -> LOGGER.debug("2) CLASS: {}", x)).count());
+        Assert.assertEquals(8, schema.classes().peek(x -> LOGGER.debug("2) CLASS: {}", x)).count());
         schema.createOntEntity(OntClass.class, "OneMore");
 
-        Assert.assertEquals(9, schema.listClasses().count());
+        Assert.assertEquals(9, schema.classes().count());
         Assert.assertEquals(1, mapping.asModel().listStatements(null, RDF.type, OWL.Class).toSet().size());
 
-        Assert.assertEquals(8, schema.listObjectProperties().peek(p -> LOGGER.debug("{}", p)).count());
-        Assert.assertEquals(13, schema.listDataProperties().peek(p -> LOGGER.debug("{}", p)).count());
-        Assert.assertEquals(4, schema.listAnnotationProperties().peek(p -> LOGGER.debug("{}", p)).count());
+        Assert.assertEquals(8, schema.objectProperties().peek(p -> LOGGER.debug("{}", p)).count());
+        Assert.assertEquals(13, schema.dataProperties().peek(p -> LOGGER.debug("{}", p)).count());
+        Assert.assertEquals(4, schema.annotationProperties().peek(p -> LOGGER.debug("{}", p)).count());
 
         schema.ontObjects(OntPE.class).peek(p -> LOGGER.debug("Test: {}", p))
-                .forEach(p -> Assert.assertTrue(p.domain().count() >= 1));
-        schema.ontObjects(OntDOP.class).forEach(p -> Assert.assertTrue(p.range().count() >= 1));
+                .forEach(p -> Assert.assertTrue(p.domains().count() >= 1));
+        schema.ontObjects(OntDOP.class).forEach(p -> Assert.assertTrue(p.ranges().count() >= 1));
 
         mapping.close();
     }
@@ -194,9 +194,9 @@ public class DynamicSchemaTest {
             OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
 
             JenaModelUtils.print(schema);
-            Assert.assertEquals(6, schema.listClasses().peek(x -> LOGGER.debug("Class {}", x)).count());
-            Assert.assertEquals(8, schema.listObjectProperties().peek(x -> LOGGER.debug("Object property {}", x)).count());
-            Assert.assertEquals(33, schema.listDataProperties().peek(x -> LOGGER.debug("Datatype property {}", x)).count());
+            Assert.assertEquals(6, schema.classes().peek(x -> LOGGER.debug("Class {}", x)).count());
+            Assert.assertEquals(8, schema.objectProperties().peek(x -> LOGGER.debug("Object property {}", x)).count());
+            Assert.assertEquals(33, schema.dataProperties().peek(x -> LOGGER.debug("Datatype property {}", x)).count());
             Assert.assertEquals(47, schema.ontEntities().peek(e -> {
                 LOGGER.debug("Entity: {}", e);
                 Assert.assertTrue(e.annotations().count() > 0);
@@ -280,15 +280,15 @@ public class DynamicSchemaTest {
 
         // skos:primarySubject owl:equivalentProperty skos:subject
         Assert.assertEquals(1, m.statements(null, OWL.equivalentProperty, null).count());
-        Assert.assertTrue(skosPrimarySubject.equivalentProperty().collect(Collectors.toSet()).contains(skosSubject));
+        Assert.assertTrue(skosPrimarySubject.equivalentProperties().collect(Collectors.toSet()).contains(skosSubject));
 
         // iswc:InProceedings owl:equivalentClass foaf:Document
         Assert.assertEquals(1, m.statements(null, OWL.equivalentClass, null).count());
-        Assert.assertTrue(iswcInProceedingClass.equivalentClass().collect(Collectors.toSet()).contains(foafDocumentClass));
+        Assert.assertTrue(iswcInProceedingClass.equivalentClasses().collect(Collectors.toSet()).contains(foafDocumentClass));
 
         // iswc:Conference rdfs:subClassOf iswc:Event
         Assert.assertEquals(1, m.statements(null, RDFS.subClassOf, null).count());
-        Assert.assertTrue(iswcConferenceClass.subClassOf().collect(Collectors.toSet()).contains(iswcEventClass));
+        Assert.assertTrue(iswcConferenceClass.superClasses().collect(Collectors.toSet()).contains(iswcEventClass));
 
         Assert.assertFalse(m.contains(RDFS.label, RDF.type, (RDFNode) null));
     }
@@ -303,11 +303,11 @@ public class DynamicSchemaTest {
     }
 
     static void checkHasRanges(OntPE p, Resource... ranges) {
-        checkHas(p, OntPE::range, ranges);
+        checkHas(p, OntPE::ranges, ranges);
     }
 
     static void checkHasDomains(OntPE p, Resource... domains) {
-        checkHas(p, OntPE::domain, domains);
+        checkHas(p, OntPE::domains, domains);
     }
 
     private static void checkHas(OntPE p, Function<OntPE, Stream<? extends Resource>> get, Resource... domains) {

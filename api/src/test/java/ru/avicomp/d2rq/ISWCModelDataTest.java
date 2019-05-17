@@ -48,7 +48,7 @@ public class ISWCModelDataTest {
         OntClass iswcInstitute = OWLUtils.findEntity(m, OntClass.class, "iswc:Institute");
         OntClass iswcUniversity = OWLUtils.findEntity(m, OntClass.class, "iswc:University");
         OntClass iswcResearcher = OWLUtils.findEntity(m, OntClass.class, "iswc:Researcher");
-        OntClass postalAddresses = m.listClasses().filter(x -> "PostalAddresses".equalsIgnoreCase(x.getLocalName()))
+        OntClass postalAddresses = m.classes().filter(x -> "PostalAddresses".equalsIgnoreCase(x.getLocalName()))
                 .findFirst().orElseThrow(AssertionError::new);
         OntClass iswcOrganizationClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Organization");
 
@@ -96,10 +96,10 @@ public class ISWCModelDataTest {
         OntGraphModel inMemory = OntModelFactory.createModel();
         inMemory.add(mapping.getVocabularyModel());
         // + PostalAddresses:
-        Assert.assertEquals(8, inMemory.listClasses().peek(x -> LOGGER.debug("Schema: {}", x)).count());
+        Assert.assertEquals(8, inMemory.classes().peek(x -> LOGGER.debug("Schema: {}", x)).count());
         inMemory.add(data);
         DynamicSchemaTest.validateInferredOWLForPredefinedMapping(inMemory);
-        Assert.assertEquals(13, inMemory.listClasses().peek(x -> LOGGER.debug("Schema+Data: {}", x)).count());
+        Assert.assertEquals(13, inMemory.classes().peek(x -> LOGGER.debug("Schema+Data: {}", x)).count());
         JenaModelUtils.print(inMemory);
         DynamicSchemaTest.validateInferredOWLForPredefinedMapping(inMemory);
         validateMappedOWLDataForPredefinedMapping(inMemory);
@@ -116,13 +116,13 @@ public class ISWCModelDataTest {
         OntClass additional = dynamic.createOntEntity(OntClass.class, inMemory.expandPrefix("iswc:OneMoreClass"));
         additional.addAnnotation(inMemory.getRDFSLabel(), "OneMoreClass");
 
-        Assert.assertEquals(14, dynamic.listClasses().peek(x -> LOGGER.debug("1) DYNAMIC CLASS: {}", x)).count());
+        Assert.assertEquals(14, dynamic.classes().peek(x -> LOGGER.debug("1) DYNAMIC CLASS: {}", x)).count());
 
         Assert.assertEquals(totalNumberOfStatements + 2, dynamic.statements().count());
 
         // remove new class
         mapping.asModel().removeAll(additional, null, null);
-        Assert.assertEquals(13, dynamic.listClasses().peek(x -> LOGGER.debug("2) DYNAMIC CLASS: {}", x)).count());
+        Assert.assertEquals(13, dynamic.classes().peek(x -> LOGGER.debug("2) DYNAMIC CLASS: {}", x)).count());
 
         mapping.getConfiguration().setServeVocabulary(true);
         Assert.assertTrue(mapping.getConfiguration().getServeVocabulary());

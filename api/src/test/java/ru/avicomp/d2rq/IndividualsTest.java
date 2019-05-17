@@ -70,7 +70,7 @@ public class IndividualsTest {
     }
 
     private void testIndividuals(OntGraphModel model, int expected) {
-        List<OntIndividual.Named> individuals = model.listNamedIndividuals().collect(Collectors.toList());
+        List<OntIndividual.Named> individuals = model.namedIndividuals().collect(Collectors.toList());
         LOGGER.debug("Number of individuals " + individuals.size());
         individuals.forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of (named)individuals", expected, individuals.size());

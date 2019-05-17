@@ -113,9 +113,9 @@ public class InfrPerfTester {
         manager.getInferenceEngine(map).run(data, target.getBaseGraph());
         LOGGER.debug("Done.");
 
-        target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
+        target.namedIndividuals().forEach(x -> LOGGER.debug("{}", x));
         Assert.assertEquals("Incorrect number of result individuals.",
-                INIT_ROW_NUMBER + NUMBER_ROWS_TO_INSERT, target.listNamedIndividuals().count());
+                INIT_ROW_NUMBER + NUMBER_ROWS_TO_INSERT, target.namedIndividuals().count());
     }
 
     enum Data {

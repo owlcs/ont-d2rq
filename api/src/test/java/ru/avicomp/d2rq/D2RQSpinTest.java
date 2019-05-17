@@ -69,8 +69,8 @@ public class D2RQSpinTest extends SpinMappingTest {
     public void validate(OntGraphModel source, OntGraphModel target) {
         OntGraphModel src = OWLUtils.toMemory(source);
         super.validate(src, target);
-        target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
-        Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
+        target.namedIndividuals().forEach(x -> LOGGER.debug("{}", x));
+        Assert.assertEquals("Incorrect number of result individuals.", 7, target.namedIndividuals().count());
         OntologyModel o = manager.getOntology(IRI.create(source.getID().getURI()));
         Assert.assertNotNull(o);
         ReadWriteUtils.print(o);

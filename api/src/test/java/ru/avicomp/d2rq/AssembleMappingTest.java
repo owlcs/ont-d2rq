@@ -100,7 +100,7 @@ public class AssembleMappingTest {
         JenaModelUtils.print(schema);
         Assert.assertEquals(3, schema.size());
 
-        Assert.assertEquals(9, full.listDataProperties().peek(x -> LOGGER.debug("DataProperty:{}", x)).count());
+        Assert.assertEquals(9, full.dataProperties().peek(x -> LOGGER.debug("DataProperty:{}", x)).count());
         Assert.assertEquals(9, full.classAssertions().peek(x -> LOGGER.debug("Individual:{}", x))
                 .peek(i -> Assert.assertEquals(1, i.positiveAssertions()
                         .peek(x -> LOGGER.debug("Assertion:{}", Models.toString(x)))
@@ -139,11 +139,11 @@ public class AssembleMappingTest {
         OntGraphModel full = OntModelFactory.createModel(mapping.getData());
         JenaModelUtils.print(full);
 
-        Assert.assertEquals(2, full.listClasses().count());
-        Assert.assertEquals(0, full.listNamedIndividuals().count());
-        Assert.assertEquals(0, full.listDataProperties().count());
+        Assert.assertEquals(2, full.classes().count());
+        Assert.assertEquals(0, full.namedIndividuals().count());
+        Assert.assertEquals(0, full.dataProperties().count());
         Assert.assertEquals(16, full.classAssertions().count());
-        Assert.assertEquals(15, full.listObjectProperties()
+        Assert.assertEquals(15, full.objectProperties()
                 .peek(p -> LOGGER.debug("OP:::{}", p))
                 .peek(p -> Assert.assertEquals(1, full.statements(null, p, null)
                         .peek(s -> LOGGER.debug("Assertion:::{}", s))

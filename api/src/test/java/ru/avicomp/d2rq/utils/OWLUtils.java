@@ -38,7 +38,7 @@ public class OWLUtils {
                                            int annotationProperties,
                                            int namedIndividuals,
                                            int anonymousIndividuals) {
-        Assert.assertEquals(namedIndividuals, m.listNamedIndividuals()
+        Assert.assertEquals(namedIndividuals, m.namedIndividuals()
                 .peek(i -> LOGGER.debug("Named: {}", i)).count());
         Assert.assertEquals(anonymousIndividuals, m.ontObjects(OntIndividual.Anonymous.class)
                 .peek(i -> LOGGER.debug("Anonymous: {}", i)).count());
@@ -46,13 +46,13 @@ public class OWLUtils {
         Assert.assertEquals(namedIndividuals + anonymousIndividuals, m.ontObjects(OntIndividual.class)
                 .peek(i -> LOGGER.debug("Individual: {}", i)).count());
 
-        Assert.assertEquals(classes, m.listClasses().peek(x -> LOGGER.debug("Class: {}", x)).count());
+        Assert.assertEquals(classes, m.classes().peek(x -> LOGGER.debug("Class: {}", x)).count());
 
-        Assert.assertEquals(annotationProperties, m.listAnnotationProperties()
+        Assert.assertEquals(annotationProperties, m.annotationProperties()
                 .peek(x -> LOGGER.debug("AnnotationProperty: {}", x)).count());
-        Assert.assertEquals(objectProperties, m.listObjectProperties()
+        Assert.assertEquals(objectProperties, m.objectProperties()
                 .peek(x -> LOGGER.debug("ObjectProperty: {}", x)).count());
-        Assert.assertEquals(dataProperties, m.listDataProperties()
+        Assert.assertEquals(dataProperties, m.dataProperties()
                 .peek(x -> LOGGER.debug("DatatypeProperty: {}", x)).count());
     }
 

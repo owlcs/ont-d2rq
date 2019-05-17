@@ -127,13 +127,13 @@ public class CachingGraphTest {
     }
 
     private static void performSomeReadActionsOnPizza(OntGraphModel pizza) {
-        Assert.assertEquals(100, pizza.listClasses().count());
+        Assert.assertEquals(100, pizza.classes().count());
         Assert.assertEquals(332, pizza.ontObjects(OntCE.class).count());
         Assert.assertEquals(5, pizza.ontObjects(OntIndividual.class).count());
         OntClass c = pizza.getOntEntity(OntClass.class, pizza.expandPrefix(":AnchoviesTopping"));
         Assert.assertNotNull(c);
-        Assert.assertEquals(1, c.subClassOf().count());
-        Assert.assertEquals(2, c.disjointWith().count());
+        Assert.assertEquals(1, c.superClasses().count());
+        Assert.assertEquals(2, c.disjointClasses().count());
         Assert.assertEquals("CoberturaDeAnchovies", c.getLabel("pt"));
         OntIndividual.Named ind = pizza.getOntEntity(OntIndividual.Named.class, pizza.expandPrefix(":America"));
         Assert.assertNotNull(ind);

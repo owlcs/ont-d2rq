@@ -67,8 +67,8 @@ public class OntMapSimpleTest {
         manager.getInferenceEngine(spin).run(data, target.getBaseGraph());
         LOGGER.debug("Done.");
 
-        target.listNamedIndividuals().forEach(x -> LOGGER.debug("{}", x));
-        Assert.assertEquals("Incorrect number of result individuals.", 7, target.listNamedIndividuals().count());
+        target.namedIndividuals().forEach(x -> LOGGER.debug("{}", x));
+        Assert.assertEquals("Incorrect number of result individuals.", 7, target.namedIndividuals().count());
         JenaModelUtils.print(target);
         OWLUtils.closeConnections(source);
     }
@@ -104,10 +104,10 @@ public class OntMapSimpleTest {
 
     public static MapModel composeMapping(MapManager manager, OntGraphModel source, OntGraphModel target) {
         LOGGER.debug("Compose the (spin) mapping.");
-        OntClass sourceClass = source.listClasses().findFirst().orElseThrow(AssertionError::new);
-        OntClass targetClass = target.listClasses().findFirst().orElseThrow(AssertionError::new);
-        List<OntNDP> sourceProperties = source.listDataProperties().collect(Collectors.toList());
-        OntNDP targetProperty = target.listDataProperties().findFirst().orElse(null);
+        OntClass sourceClass = source.classes().findFirst().orElseThrow(AssertionError::new);
+        OntClass targetClass = target.classes().findFirst().orElseThrow(AssertionError::new);
+        List<OntNDP> sourceProperties = source.dataProperties().collect(Collectors.toList());
+        OntNDP targetProperty = target.dataProperties().findFirst().orElse(null);
         MapModel res = manager.createMapModel();
 
         MapFunction.Builder self = manager.getFunction(SPINMAPL.self).create();
