@@ -7,9 +7,8 @@ import org.apache.jena.vocabulary.RDF;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Lists all the classes and properties in a schemagen-generated
@@ -128,5 +127,13 @@ public class VocabularySummarizer {
                             unknownClasses.iterator().next()) + ", maybe a typo?",
                     undefinedClassErrorCode);
         }
+    }
+
+    public static Stream<? extends Resource> resources(Class<?>... classes) {
+        return Arrays.stream(classes)
+                .map(VocabularySummarizer::new)
+                .flatMap(x -> Stream.of(x.getAllClasses(), x.getAllProperties()).flatMap(Collection::stream))
+                // jena 3.11.0: XSD contains null (#ENTITIES)
+                .filter(Objects::nonNull);
     }
 }

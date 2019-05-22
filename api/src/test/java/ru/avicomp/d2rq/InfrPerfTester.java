@@ -24,7 +24,9 @@ import java.sql.Statement;
 
 /**
  * A tester (not a test) for checking inference performance,
- * for investigation and finding the optimal way to infer D2RQ graph using ONT-MAP.
+ * for investigation and finding the an optimal way to infer D2RQ graph using ONT-MAP.
+ *
+ * TODO: Add D2RQ Mapping to compare
  * <p>
  * Created by @ssz on 28.10.2018.
  */
@@ -33,16 +35,13 @@ import java.sql.Statement;
 public class InfrPerfTester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InfrPerfTester.class);
-
-    private static Level log4jLevel;
-
     private static final String DATABASE_NAME = "iswc_test";
     private static final String DATABASE_SCRIPT = "./doc/example/iswc-postgres.sql";
-    private static ConnectionData data = ConnectionData.POSTGRES;
     private static final int INIT_ROW_NUMBER = 7;
     private static final int INIT_PAPER_ID = 8;
-
     private static final int NUMBER_ROWS_TO_INSERT = 100_000;
+    private static Level log4jLevel;
+    private static ConnectionData data = ConnectionData.POSTGRES;
     private final Data withCache;
 
     public InfrPerfTester(Data data) {
@@ -56,7 +55,8 @@ public class InfrPerfTester {
 
     @BeforeClass
     public static void createDB() throws Exception {
-        Path script = Paths.get(DATABASE_SCRIPT).toRealPath();
+        Path script = Paths.get(".").toRealPath().getParent().resolve(DATABASE_SCRIPT).toRealPath();
+        LOGGER.debug("SQL Dump: {}", script);
         int step = NUMBER_ROWS_TO_INSERT / 20;
 
         try {
@@ -92,7 +92,8 @@ public class InfrPerfTester {
 
     @AfterClass
     public static void after() {
-        org.apache.log4j.Logger.getRootLogger().setLevel(log4jLevel);
+        if (log4jLevel != null)
+            org.apache.log4j.Logger.getRootLogger().setLevel(log4jLevel);
         LOGGER.info("Fin.");
     }
 
@@ -113,14 +114,14 @@ public class InfrPerfTester {
         manager.getInferenceEngine(map).run(data, target.getBaseGraph());
         LOGGER.debug("Done.");
 
-        target.namedIndividuals().forEach(x -> LOGGER.debug("{}", x));
+        long actual = target.namedIndividuals().peek(x -> LOGGER.debug("{}", x)).count();
         Assert.assertEquals("Incorrect number of result individuals.",
-                INIT_ROW_NUMBER + NUMBER_ROWS_TO_INSERT, target.namedIndividuals().count());
+                INIT_ROW_NUMBER + NUMBER_ROWS_TO_INSERT, actual);
     }
 
     enum Data {
-        WITH_CACHE,
         WITHOUT_CACHE,
+        WITH_CACHE,
     }
 
 }

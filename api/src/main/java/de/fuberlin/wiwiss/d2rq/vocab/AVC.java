@@ -60,7 +60,7 @@ public class AVC {
      * must be {@code xsd:integer} literal, with positive int as value.
      *
      * @see D2RQ#Configuration
-     * @see de.fuberlin.wiwiss.d2rq.jena.CachingGraph#cacheMaxSize
+     * @see de.fuberlin.wiwiss.d2rq.jena.CachingGraph#findCacheSize
      */
     public static final Property cacheMaxSize = property("maxKeysSize");
 
