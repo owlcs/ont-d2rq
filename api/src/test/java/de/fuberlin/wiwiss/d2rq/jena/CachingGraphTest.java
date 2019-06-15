@@ -5,17 +5,24 @@ import de.fuberlin.wiwiss.d2rq.utils.ReadStatsGraph;
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.atlas.lib.Cache;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.shared.AddDeniedException;
 import org.apache.jena.shared.DeleteDeniedException;
+import org.apache.jena.vocabulary.RDFS;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.jena.OntModelFactory;
+import ru.avicomp.ontapi.jena.UnionGraph;
 import ru.avicomp.ontapi.jena.model.OntCE;
 import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.io.PrintStream;
@@ -26,7 +33,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * To test and develop {@link CachingGraph}
@@ -90,34 +96,44 @@ public class CachingGraphTest {
     }
 
     @Test
-    public void testSmallCache() {
+    public void testSmallGraphCaching() {
         String uri = "http://x";
-        OntGraphModel m = OntModelFactory.createModel()
+        OntGraphModel m1 = OntModelFactory.createModel()
                 .setNsPrefixes(OntModelFactory.STANDARD).setNsPrefix("x", uri + "#");
-        m.setID(uri);
-        OntClass c = m.createOntClass(uri + "#Class");
+        m1.setID(uri);
+        OntClass c = m1.createOntClass(uri + "#NamedClass01");
         c.addLabel("TheClass");
-        OntIndividual i = c.createIndividual(uri + "#Individual");
-        i.addComment("This is individual");
+        c.createIndividual(uri + "#Individual01").addComment("This is a first named individual");
+        c.createIndividual(uri + "#Individual02").addComment("This is a second named individual");
+        c.createIndividual().addComment("This is an anonymous individual");
+        JenaModelUtils.print(m1);
 
-        m = OntModelFactory.createModel(new CachingGraph(m.getBaseGraph(), 10, 150));
-        m.write(SINK, "ttl");
-        Assert.assertEquals(1, m.ontObjects(OntCE.class).peek(x -> LOGGER.debug("{}", x)).count());
-        Assert.assertEquals(1, m.ontObjects(OntIndividual.class).peek(x -> LOGGER.debug("{}", x)).count());
-        Assert.assertEquals(6, m.size());
+        Model m2 = OntModelFactory.createModel(new CachingGraph(m1.getBaseGraph(), 10, 150));
 
-        Cache<Triple, List<Triple>> findCache = ((CachingGraph) m.getBaseGraph()).findTriples;
-        Cache<Triple, Boolean> containsCache = ((CachingGraph) m.getBaseGraph()).containsTriples;
-        Assert.assertTrue(findCache.size() >= 7);
-        Assert.assertTrue(containsCache.size() >= 5);
+        Assert.assertEquals(1, m2.listStatements(null, RDF.type, OWL.Class).toList().size());
+        Assert.assertEquals(2, m2.listStatements(null, RDF.type, OWL.NamedIndividual)
+                .mapWith(Statement::getSubject)
+                .filterKeep(x -> m2.contains(x, RDF.type, c)).toList().size());
+        Assert.assertEquals(3, m2.listStatements(null, RDFS.comment, (RDFNode) null).toList().size());
 
-        List<Triple> header = findCache.getIfPresent(Triple.createMatch(m.getID().asNode(), null, null));
-        Assert.assertEquals(1, header.size());
-        Assert.assertEquals(m.getID().getRoot().asTriple(), header.get(0));
+        CachingGraph g = (CachingGraph) ((UnionGraph) m2.getGraph()).getBaseGraph();
+        Cache<Triple, List<Triple>> findCache = g.findTriples;
+        Cache<Triple, Boolean> containsCache = g.containsTriples;
 
-        Stream.of(c, i)
-                .map(x -> Triple.createMatch(x.asNode(), null, null))
-                .forEach(x -> Assert.assertSame(CachingGraph.OUT_OF_SPACE, findCache.getIfPresent(x)));
+        Assert.assertEquals(3, findCache.size());
+        Assert.assertEquals(2, containsCache.size());
+        List<Triple> outOfSpace = findCache.getIfPresent(Triple.createMatch(null, RDFS.comment.asNode(), null));
+        Assert.assertNotNull(outOfSpace);
+        Assert.assertSame(CachingGraph.OUT_OF_SPACE, outOfSpace);
+        findCache.keys().forEachRemaining(key -> {
+            List<Triple> cache = findCache.getIfPresent(key);
+            Assert.assertNotNull("Null cache for " + key, cache);
+            if (Triple.createMatch(null, RDFS.comment.asNode(), null).equals(key)) {
+                Assert.assertSame(CachingGraph.OUT_OF_SPACE, cache);
+            } else {
+                Assert.assertFalse(cache.isEmpty());
+            }
+        });
     }
 
     @Test

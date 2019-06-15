@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class CachingGraph extends GraphBase {
 
     // value-marker, used to indicate that retrieved Triples set is too large to store in-memory
-    protected static final List<Triple> OUT_OF_SPACE = new ArrayList<>();
+    protected static final List<Triple> OUT_OF_SPACE = Collections.unmodifiableList(new ArrayList<>());
     // caches, for find and contains operations
     protected final Cache<Triple, List<Triple>> findTriples;
     protected final Cache<Triple, Boolean> containsTriples;
@@ -209,6 +209,7 @@ public class CachingGraph extends GraphBase {
     public static ToLongFunction<Triple> createTripleLengthCalculator() {
         Set<String> uris = VocabularySummarizer.resources(OWL.class, RDF.class, RDFS.class, XSD.class)
                 .map(Resource::getURI).collect(Collectors.toSet());
+        // todo: this is wrong, uri nodes are not cached to be skipped
         return new TripleLength(uris, 1, 1, 1);
     }
 
