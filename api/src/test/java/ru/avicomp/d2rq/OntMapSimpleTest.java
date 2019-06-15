@@ -67,7 +67,7 @@ public class OntMapSimpleTest {
         manager.getInferenceEngine(spin).run(data, target.getBaseGraph());
         LOGGER.debug("Done.");
 
-        long actual = target.namedIndividuals().peek(x -> LOGGER.debug("{}", x)).count();
+        long actual = target.individuals().peek(x -> LOGGER.debug("{}", x)).count();
         Assert.assertEquals("Incorrect number of result individuals.", 7, actual);
         JenaModelUtils.print(target);
         OWLUtils.closeConnections(source);

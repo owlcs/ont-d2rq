@@ -138,7 +138,7 @@ public class ISWCModelDataTest {
         try (Mapping mapping = data.loadMapping()) {
             OntGraphModel m = OntModelFactory.createModel(mapping.getData(), D2RQModelConfig.D2RQ_PERSONALITY);
             LOGGER.debug("Data:");
-            List<OntIndividual> individuals = m.classAssertions()
+            List<OntIndividual> individuals = m.individuals()
                     .peek(x -> LOGGER.debug("INDIVIDUAL: {}", x)).collect(Collectors.toList());
             LOGGER.debug("Get: {}", individuals.size());
             Assert.assertEquals(48, individuals.size());

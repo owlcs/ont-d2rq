@@ -101,7 +101,7 @@ public class AssembleMappingTest {
         Assert.assertEquals(3, schema.size());
 
         Assert.assertEquals(9, full.dataProperties().peek(x -> LOGGER.debug("DataProperty:{}", x)).count());
-        Assert.assertEquals(9, full.classAssertions().peek(x -> LOGGER.debug("Individual:{}", x))
+        Assert.assertEquals(9, full.individuals().peek(x -> LOGGER.debug("Individual:{}", x))
                 .peek(i -> Assert.assertEquals(1, i.positiveAssertions()
                         .peek(x -> LOGGER.debug("Assertion:{}", Models.toString(x)))
                         .peek((Consumer<Statement>) s -> Assert.assertTrue(s.getObject().isLiteral())).count()))
@@ -142,7 +142,7 @@ public class AssembleMappingTest {
         Assert.assertEquals(2, full.classes().count());
         Assert.assertEquals(0, full.namedIndividuals().count());
         Assert.assertEquals(0, full.dataProperties().count());
-        Assert.assertEquals(16, full.classAssertions().count());
+        Assert.assertEquals(16, full.individuals().count());
         Assert.assertEquals(15, full.objectProperties()
                 .peek(p -> LOGGER.debug("OP:::{}", p))
                 .peek(p -> Assert.assertEquals(1, full.statements(null, p, null)

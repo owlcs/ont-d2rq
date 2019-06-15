@@ -70,9 +70,9 @@ public class OntMapWholeTest {
         manager.getInferenceEngine(spin).run(data, dst.getBaseGraph());
         LOGGER.debug("Done.");
 
-        Assert.assertEquals(1, dst.namedIndividuals().count());
+        Assert.assertEquals(1, dst.individuals().count());
 
-        OntIndividual res = dst.namedIndividuals().findFirst().orElseThrow(AssertionError::new);
+        OntIndividual res = dst.individuals().findFirst().orElseThrow(AssertionError::new);
         Assert.assertEquals(9, res.positiveAssertions().peek(x -> LOGGER.debug("Address: '{}'", x.getString())).count());
         JenaModelUtils.print(dst);
 
