@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -65,7 +64,7 @@ abstract class ResourceMap extends MapObjectImpl {
     }
 
     public Stream<AdditionalProperty> listAdditionalProperties() {
-        return Iter.asStream(additionalProperties()).map(Function.identity());
+        return Iter.asStream(additionalProperties());
     }
 
     public ExtendedIterator<AdditionalPropertyImpl> additionalProperties() {

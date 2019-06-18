@@ -36,7 +36,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -282,7 +281,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public Stream<Database> listDatabases() {
-        return Iter.asStream(databases()).map(Function.identity());
+        return Iter.asStream(databases());
     }
 
     public ExtendedIterator<DatabaseImpl> databases() {
@@ -306,7 +305,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public Stream<TranslationTable> listTranslationTables() {
-        return Iter.asStream(translationTables()).map(Function.identity());
+        return Iter.asStream(translationTables());
     }
 
     public ExtendedIterator<TranslationTableImpl> translationTables() {
@@ -330,7 +329,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public Stream<AdditionalProperty> listAdditionalProperties() {
-        return Iter.asStream(additionalProperties()).map(Function.identity());
+        return Iter.asStream(additionalProperties());
     }
 
     public ExtendedIterator<AdditionalPropertyImpl> additionalProperties() {
@@ -354,7 +353,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public Stream<DownloadMap> listDownloadMaps() {
-        return Iter.asStream(downloadMaps()).map(Function.identity());
+        return Iter.asStream(downloadMaps());
     }
 
     public ExtendedIterator<DownloadMapImpl> downloadMaps() {
@@ -392,7 +391,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public Stream<PropertyBridge> listPropertyBridges() {
-        return Iter.asStream(propertyBridges()).map(Function.identity());
+        return Iter.asStream(propertyBridges());
     }
 
     public ExtendedIterator<PropertyBridgeImpl> propertyBridges() {
@@ -416,7 +415,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public Stream<ClassMap> listClassMaps() {
-        return Iter.asStream(classMaps()).map(Function.identity());
+        return Iter.asStream(classMaps());
     }
 
     public ExtendedIterator<ClassMapImpl> classMaps() {

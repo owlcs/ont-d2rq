@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 
 /**
- * Representation of a d2rq:Configuration from the mapping file.
+ * Representation of a {@code d2rq:Configuration} from the mapping file.
  *
  * @author Christian Becker &lt;http://beckr.org#chris&gt;
  */
@@ -52,6 +52,16 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
     }
 
     @Override
+    public boolean getGenerateNamedIndividuals() {
+        return getBoolean(AVC.generateNamedIndividuals, false);
+    }
+
+    @Override
+    public Configuration setGenerateNamedIndividuals(boolean generateNamedIndividuals) {
+        return setBoolean(AVC.generateNamedIndividuals, generateNamedIndividuals);
+    }
+
+    @Override
     public boolean getWithCache() {
         return getBoolean(AVC.withCache, false);
     }
@@ -89,7 +99,8 @@ public class ConfigurationImpl extends MapObjectImpl implements Configuration {
     @Override
     public void validate() throws D2RQException {
         Validator v = new Validator(this);
-        Stream.of(D2RQ.serveVocabulary, D2RQ.useAllOptimizations, AVC.controlOWL, AVC.withCache)
+        Stream.of(D2RQ.serveVocabulary, D2RQ.useAllOptimizations,
+                AVC.controlOWL, AVC.withCache, AVC.generateNamedIndividuals)
                 .map(v::forProperty)
                 .filter(Validator.ForProperty::exists)
                 .forEach(p -> p.requireHasNoDuplicates(D2RQException.UNSPECIFIED)

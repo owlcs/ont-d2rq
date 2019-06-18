@@ -2,7 +2,11 @@ package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import org.apache.jena.enhanced.BuiltinPersonalities;
+import org.apache.jena.enhanced.EnhGraph;
+import org.apache.jena.enhanced.EnhNode;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.junit.Assert;
@@ -14,7 +18,6 @@ import org.semanticweb.owlapi.model.SetOntologyID;
 import org.topbraid.spin.inference.SPINInferences;
 import org.topbraid.spin.system.SPINModuleRegistry;
 import ru.avicomp.d2rq.conf.ConnectionData;
-import ru.avicomp.d2rq.conf.D2RQModelConfig;
 import ru.avicomp.d2rq.utils.D2RQGraphUtils;
 import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.map.spin.SpinModelConfig;
@@ -22,10 +25,20 @@ import ru.avicomp.ontapi.OntologyManager;
 import ru.avicomp.ontapi.OntologyModel;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.UnionGraph;
-import ru.avicomp.ontapi.jena.impl.conf.OntPersonality;
+import ru.avicomp.ontapi.jena.impl.OntIndividualImpl;
+import ru.avicomp.ontapi.jena.impl.PersonalityModel;
+import ru.avicomp.ontapi.jena.impl.conf.*;
+import ru.avicomp.ontapi.jena.model.OntCE;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
+import ru.avicomp.ontapi.jena.model.OntIndividual;
+import ru.avicomp.ontapi.jena.model.OntStatement;
+import ru.avicomp.ontapi.jena.utils.Iter;
+import ru.avicomp.ontapi.jena.vocabulary.OWL;
+import ru.avicomp.ontapi.jena.vocabulary.RDF;
 import ru.avicomp.ontapi.tests.SpinMappingTest;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
+
+import java.util.Optional;
 
 /**
  * To test SPIN + D2RQ + ONT-API.
@@ -120,4 +133,56 @@ public class D2RQSpinTest extends SpinMappingTest {
         SPINInferences.run(source, target, null, null, false, null);
     }
 
+    /**
+     * A Personalities holder.
+     *
+     * @see OntModelConfig
+     */
+    @SuppressWarnings("WeakerAccess")
+    public static class D2RQModelConfig {
+        /**
+         * A {@link OntPersonality Ontology Personality},
+         * that does not require explicit {@link OWL#NamedIndividual owl:NamedIndividual} declarations.
+         * This personality is based on {@link OntModelConfig#ONT_PERSONALITY_LAX} and other settings are standard.
+         */
+        public static final OntPersonality D2RQ_PERSONALITY = PersonalityBuilder.from(OntModelConfig.ONT_PERSONALITY_LAX)
+                .add(OntIndividual.Named.class, createNamedIndividualFactory())
+                .build();
+
+
+        public static ObjectFactory createNamedIndividualFactory() {
+            OntMaker maker = new OntMaker.Default(IndividualImpl.class) {
+
+                @Override
+                public EnhNode instance(Node node, EnhGraph eg) {
+                    return new IndividualImpl(node, eg);
+                }
+            };
+            OntFinder finder = new OntFinder.ByPredicate(RDF.type);
+            OntFilter filter = OntFilter.URI
+                    .and(new OntFilter.HasPredicate(RDF.type))
+                    .and((s, g) -> Iter.asStream(g.asGraph().find(s, RDF.type.asNode(), Node.ANY)).map(Triple::getObject)
+                            .anyMatch(o -> PersonalityModel.canAs(OntCE.class, o, g)));
+            return new CommonFactoryImpl(maker, finder, filter) {
+                @Override
+                public String toString() {
+                    return "NamedIndividualFactory";
+                }
+            };
+        }
+
+        /**
+         * Named individual which does not required explicit {@code _:x rdf:type owl:NamedIndividual} declaration, just only class.
+         */
+        public static class IndividualImpl extends OntIndividualImpl.NamedImpl {
+            private IndividualImpl(Node n, EnhGraph m) {
+                super(n, m);
+            }
+
+            @Override
+            public Optional<OntStatement> findRootStatement() {
+                return getOptionalRootStatement(this, OWL.NamedIndividual);
+            }
+        }
+    }
 }

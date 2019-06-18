@@ -2,6 +2,7 @@ package ru.avicomp.d2rq.utils;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.mem.GraphMem;
+import org.apache.jena.rdf.model.RDFNode;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,9 @@ import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.utils.Graphs;
 
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by @ssz on 20.10.2018.
@@ -38,13 +41,14 @@ public class OWLUtils {
                                            int annotationProperties,
                                            int namedIndividuals,
                                            int anonymousIndividuals) {
-        Assert.assertEquals(namedIndividuals, m.namedIndividuals()
-                .peek(i -> LOGGER.debug("Named: {}", i)).count());
-        Assert.assertEquals(anonymousIndividuals, m.ontObjects(OntIndividual.Anonymous.class)
-                .peek(i -> LOGGER.debug("Anonymous: {}", i)).count());
+        // class assertions:
+        Set<OntIndividual> individuals = m.individuals()
+                .peek(i -> LOGGER.debug("Individual: {}", i))
+                .collect(Collectors.toSet());
+        Assert.assertEquals(namedIndividuals + anonymousIndividuals, individuals.size());
 
-        Assert.assertEquals(namedIndividuals + anonymousIndividuals, m.ontObjects(OntIndividual.class)
-                .peek(i -> LOGGER.debug("Individual: {}", i)).count());
+        Assert.assertEquals(namedIndividuals, individuals.stream().filter(RDFNode::isURIResource).count());
+        Assert.assertEquals(anonymousIndividuals, individuals.stream().filter(RDFNode::isAnon).count());
 
         Assert.assertEquals(classes, m.classes().peek(x -> LOGGER.debug("Class: {}", x)).count());
 

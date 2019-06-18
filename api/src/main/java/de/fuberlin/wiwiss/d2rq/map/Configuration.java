@@ -12,10 +12,10 @@ public interface Configuration extends MapObject {
     /**
      * Sets {@code d2rq:serveVocabulary} boolean value.
      *
-     * @param b boolean
+     * @param serveVocabulary boolean
      * @return this instance
      */
-    Configuration setServeVocabulary(boolean b);
+    Configuration setServeVocabulary(boolean serveVocabulary);
 
     /**
      * Answers whether to serve inferred and user-supplied vocabulary data.
@@ -29,10 +29,10 @@ public interface Configuration extends MapObject {
     /**
      * Sets {@code d2rq:useAllOptimizations} boolean value.
      *
-     * @param b boolean
+     * @param useAllOptimizations boolean
      * @return this instance
      */
-    Configuration setUseAllOptimizations(boolean b);
+    Configuration setUseAllOptimizations(boolean useAllOptimizations);
 
     /**
      * Answers whether to use bleeding edge optimizations.
@@ -54,19 +54,43 @@ public interface Configuration extends MapObject {
      * Answers whether to use {@code avc:controlOWL} settings option.
      * <b>It is {@code false} by default</b>.
      * <p>
-     * If this option is specified, then the generated data (see {@link Mapping#getData()})
-     * will also be supplemented with OWL2 declarations and other axioms, according to specification requirements.
-     * For example, in OWL2 any named individuals must have
-     * {@link ru.avicomp.ontapi.jena.vocabulary.OWL#NamedIndividual owl:NamedIndividual} declaration ({@code rdf:type}).
+     * If this option is specified, then the mapping will be automatically supplemented
+     * with some additional D2RQ rules so that the generated data (see {@link Mapping#getData()})
+     * will also include several reasonable axioms, according to the OWL2 specification requirements.
+     * Also it is to handle {@link PropertyBridge#listDynamicProperties()} dynamic properties}.
      * <p>
-     * If this option is turned off, it still possible to have correct OWL2 view.
-     * In order to achieve this need to use {@link ru.avicomp.ontapi.jena.model.OntGraphModel} model view,
-     * built with the {@link ru.avicomp.d2rq.conf.D2RQModelConfig#D2RQ_PERSONALITY} inside.
+     * If this option is turned off, it still possible to have correct OWL2 schema,
+     * depending on the original mapping itself.
      *
      * @return boolean
      * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>
+     * @see de.fuberlin.wiwiss.d2rq.vocab.AVC#controlOWL
      */
     boolean getControlOWL();
+
+    /**
+     * Changes {@link #getGenerateNamedIndividuals() generatedNamedIndividuals} setting
+     * depending on the specified parameter.
+     * No effect in case {@link #getControlOWL() control OWL} is off.
+     *
+     * @param generateNamedIndividuals boolean
+     * @return this instance to allow cascading calls
+     */
+    Configuration setGenerateNamedIndividuals(boolean generateNamedIndividuals);
+
+    /**
+     * Answers {@code true} if each individual that appears in the {@link Mapping#getData() data}
+     * must have explicit {@link ru.avicomp.ontapi.jena.vocabulary.OWL#NamedIndividual owl:NamedIndividual} declaration,
+     * that is optional, but desirable.
+     * This setting depends on the {@link #getControlOWL()},
+     * and does not work if {@link #getControlOWL() control OWL} of off.
+     * <p>
+     * By default it is off.
+     *
+     * @return boolean
+     * @see de.fuberlin.wiwiss.d2rq.vocab.AVC#generateNamedIndividuals
+     */
+    boolean getGenerateNamedIndividuals();
 
     /**
      * Sets {@link de.fuberlin.wiwiss.d2rq.vocab.AVC#withCache avc:withCache}.

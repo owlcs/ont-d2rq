@@ -13,7 +13,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.d2rq.conf.D2RQModelConfig;
 import ru.avicomp.d2rq.conf.ISWCData;
 import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.ontapi.jena.OntModelFactory;
@@ -81,7 +80,7 @@ public class ISWCModelDataTest {
 
     @Test
     public void testValidateSchemaAndDataWithControlOWL() {
-        int totalNumberOfStatements = 443;
+        int totalNumberOfStatements = 401;
         Mapping mapping = data.loadMapping();
 
         mapping.getConfiguration().setServeVocabulary(false).setControlOWL(true);
@@ -136,7 +135,8 @@ public class ISWCModelDataTest {
     @Test
     public void testValidateDataWithoutControlOWL() {
         try (Mapping mapping = data.loadMapping()) {
-            OntGraphModel m = OntModelFactory.createModel(mapping.getData(), D2RQModelConfig.D2RQ_PERSONALITY);
+            OntGraphModel m = OntModelFactory.createModel(mapping.getData());
+            Assert.assertEquals(0, m.namedIndividuals().count());
             LOGGER.debug("Data:");
             List<OntIndividual> individuals = m.individuals()
                     .peek(x -> LOGGER.debug("INDIVIDUAL: {}", x)).collect(Collectors.toList());
@@ -145,6 +145,31 @@ public class ISWCModelDataTest {
             String txt = JenaModelUtils.toTurtleString(m);
             LOGGER.debug("Model:\n{}", txt);
             Assert.assertFalse(txt.contains(m.shortForm(OWL.NamedIndividual.getURI())));
+        }
+    }
+
+    @Test
+    public void testValidateDataWithNamedIndividuals() {
+        try (Mapping mapping = data.loadMapping()) {
+            mapping.getConfiguration().setGenerateNamedIndividuals(true).setControlOWL(true);
+            Assert.assertTrue(mapping.getConfiguration().getControlOWL());
+            Assert.assertTrue(mapping.getConfiguration().getGenerateNamedIndividuals());
+
+
+            OntGraphModel res = OntModelFactory.createModel(mapping.getData());
+            // TODO: there is a bug with intersections of
+            //  d2rq:uriPattern=http://annotation.semanticweb.org/iswc/iswc.daml#@@persons.Type@@ and
+            //  d2rq:uriColumn=topics.URI, which retrieves uris with the same namespace.
+            //  It is not possible to find anything by the pattern 'iswc:e-Business ANY ANY',
+            //  although this triple is present in the full set 'ANY ANY ANY'.
+            //  So, a Graph becomes inconsistent.
+            //  As a result - no named individuals are generated for the owl:sameAs rule.
+            //  Right now don't know what to deal with it.
+
+            Assert.assertEquals(42, res.namedIndividuals().peek(x -> LOGGER.debug("NAMED INDIVIDUAL: {}", x)).count());
+            Assert.assertEquals(51, res.individuals()
+                    .peek(x -> LOGGER.debug("INDIVIDUAL: {}", x))
+                    .distinct().count());
         }
     }
 

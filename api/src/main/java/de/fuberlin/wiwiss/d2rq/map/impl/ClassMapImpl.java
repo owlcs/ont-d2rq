@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -154,7 +153,7 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
 
     @Override
     public Stream<PropertyBridge> listPropertyBridges() {
-        return Iter.asStream(propertyBridges()).map(Function.identity());
+        return Iter.asStream(propertyBridges());
     }
 
     public ExtendedIterator<PropertyBridgeImpl> propertyBridges() {

@@ -150,6 +150,7 @@ public class CachingGraph extends GraphBase {
         // prepare data for caching:
         Bucket list = new Bucket();
         Iterator<Triple> it = base.find(m);
+        // todo: optimize
         while (it.hasNext()) list.add(it.next());
         list.trimToSize();
         // put into cache:

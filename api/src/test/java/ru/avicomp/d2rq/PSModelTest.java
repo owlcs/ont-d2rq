@@ -90,7 +90,7 @@ public class PSModelTest {
                 .map(ONTObject::getObject)
                 .collect(Collectors.toList());
         axioms.forEach(x -> LOGGER.debug("AXIOM:::{}", x));
-        Assert.assertEquals(87, axioms.size());
+        Assert.assertEquals(80, axioms.size());
 
         LOGGER.debug("Mapping:");
         JenaModelUtils.print(psDataSource.getMapping().asModel());
