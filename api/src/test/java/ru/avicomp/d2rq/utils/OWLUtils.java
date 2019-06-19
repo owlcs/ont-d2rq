@@ -117,7 +117,7 @@ public class OWLUtils {
     }
 
     public static boolean isInMemory(Graph g) {
-        return Graphs.flat(g).allMatch(GraphMem.class::isInstance);
+        return Graphs.baseGraphs(g).allMatch(GraphMem.class::isInstance);
     }
 
     public static OntPersonality getPersonality(OntGraphModel m) {

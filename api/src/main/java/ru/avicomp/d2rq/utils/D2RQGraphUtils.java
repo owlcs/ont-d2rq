@@ -26,6 +26,7 @@ import java.util.Objects;
  *
  * @see Graphs
  */
+@SuppressWarnings("WeakerAccess")
 public class D2RQGraphUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(D2RQGraphUtils.class);
@@ -158,6 +159,6 @@ public class D2RQGraphUtils {
             g.close();
             return;
         }
-        Graphs.flat(g).forEach(D2RQGraphUtils::closeConnections);
+        Graphs.baseGraphs(g).forEach(D2RQGraphUtils::closeConnections);
     }
 }
