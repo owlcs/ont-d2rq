@@ -6,10 +6,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import ru.avicomp.d2rq.conf.ConnectionData;
 
 public class ISWCSchemaTest {
     private final static String driverClass = "com.mysql.jdbc.Driver";
-    private final static String jdbcURL = "jdbc:mysql://127.0.0.1/iswc?user=root";
+    private final static String jdbcURL = ConnectionData.MYSQL.getJdbcConnectionString("iswc");
 
     private ConnectedDB db;
 

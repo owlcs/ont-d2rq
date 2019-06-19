@@ -103,7 +103,7 @@ public class D2RQSpinTest extends SpinMappingTest {
     }
 
     public static D2RQGraphDocumentSource createSource(ConnectionData data, String name) {
-        LOGGER.info("Create source model based on {}", data.getJdbcIRI(name));
+        LOGGER.info("Create source model based on {}", data.getJdbcURI(name));
         MappingFilter filter = prepareDataFilter(data);
         return data.toDocumentSource(name).filter(filter);
     }

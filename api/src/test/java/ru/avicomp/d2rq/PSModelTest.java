@@ -58,7 +58,7 @@ public class PSModelTest {
 
     private static Mapping createMapping(ConnectionData data, IRI base, String dbName) {
         return new SystemLoader()
-                .setJdbcURL(data.getJdbcIRI(dbName).getIRIString())
+                .setJdbcURL(data.getJdbcURI(dbName))
                 .setServeVocabulary(false)
                 .setSystemBaseURI(base.getIRIString())
                 .setControlOWL(true)

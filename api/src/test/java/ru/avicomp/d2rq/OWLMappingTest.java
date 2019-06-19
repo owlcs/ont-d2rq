@@ -12,6 +12,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.avicomp.d2rq.conf.ConnectionData;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.Set;
@@ -26,7 +27,7 @@ import java.util.stream.Stream;
 public class OWLMappingTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OWLMappingTest.class);
-    private static final String JDBC_URI = "jdbc:mysql://127.0.0.1/iswc?user=root";
+    private static final String JDBC_URI = ConnectionData.MYSQL.getJdbcConnectionString("iswc");
 
     @Test
     public void test() {

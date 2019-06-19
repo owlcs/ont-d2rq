@@ -46,7 +46,7 @@ public class AssembleMappingTest {
         Mapping mapping = MappingFactory.create();
         OntModelFactory.createModel(mapping.asModel().getGraph()).setID(uri);
         Database db = mapping.createDatabase(null)
-                .setJDBCDSN(data.getJdbcIRI("iswc").getIRIString())
+                .setJDBCDSN(data.getJdbcURI("iswc"))
                 .setUsername(data.getUser()).setPassword(data.getPwd())
                 .addConnectionProperties(data.getConnectionProperties());
 
@@ -76,7 +76,7 @@ public class AssembleMappingTest {
         Assert.assertEquals(ns, mapping.asModel().getNsPrefixURI(prefix));
 
         Database db = mapping.createDatabase(null)
-                .setJDBCDSN(data.getJdbcIRI("iswc").getIRIString())
+                .setJDBCDSN(data.getJdbcURI("iswc"))
                 .setUsername(data.getUser()).setPassword(data.getPwd())
                 .addConnectionProperties(data.getConnectionProperties());
 
@@ -117,7 +117,7 @@ public class AssembleMappingTest {
         mapping.getConfiguration().setControlOWL(true);
 
         Database db = mapping.createDatabase(null)
-                .setJDBCDSN(data.getJdbcIRI("iswc").getIRIString())
+                .setJDBCDSN(data.getJdbcURI("iswc"))
                 .setUsername(data.getUser()).setPassword(data.getPwd())
                 .addConnectionProperties(data.getConnectionProperties());
 

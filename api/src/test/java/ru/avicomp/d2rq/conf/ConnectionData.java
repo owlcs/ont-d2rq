@@ -73,18 +73,39 @@ public enum ConnectionData {
     public static final IRI DEFAULT_BASE_IRI = IRI.create("http://d2rq.avc.ru/test/");
 
     private static final Properties PROPERTIES = loadProperties("/db.properties");
-    private IRI base;
+    private String base;
     private Properties connectionProperties;
 
-    public IRI getJdbcBaseIRI() {
+    public String getBase() {
         if (base != null) return base;
         String str = PROPERTIES.getProperty(prefix() + "uri");
         if (!str.endsWith("/")) str += "/";
-        return base = IRI.create(str);
+        return base = str;
     }
 
-    public IRI getJdbcIRI(String databaseName) {
-        return IRI.create(getJdbcBaseIRI() + Objects.requireNonNull(databaseName));
+    public String getJdbcURI(String databaseName) {
+        return getBase() + Objects.requireNonNull(databaseName);
+    }
+
+    /**
+     * Gets full JDBC connection string with login credentials.
+     *
+     * @param databaseName the name for database
+     * @return String
+     */
+    public String getJdbcConnectionString(String databaseName) {
+        String res = getJdbcURI(databaseName);
+        String u = getUser();
+        String p = getPwd();
+        String delimiter = "?";
+        if (u != null && !u.isEmpty()) {
+            res = res + delimiter + "user=" + u;
+            delimiter = "&";
+        }
+        if (p != null && !p.isEmpty()) {
+            res = res + delimiter + "password=" + p;
+        }
+        return res;
     }
 
     public String getUser() {
@@ -124,8 +145,8 @@ public enum ConnectionData {
     }
 
     public D2RQGraphDocumentSource toDocumentSource(IRI base, String dbName) {
-        return D2RQGraphDocumentSource.create(base,
-                getJdbcIRI(dbName), getUser(), getPwd(), getConnectionProperties());
+        return D2RQGraphDocumentSource.create(base, IRI.create(getJdbcURI(dbName)),
+                getUser(), getPwd(), getConnectionProperties());
     }
 
     /**
@@ -149,11 +170,11 @@ public enum ConnectionData {
     }
 
     public ConnectedDB toConnectedDB() {
-        return createConnectedDB(getJdbcBaseIRI().getIRIString());
+        return createConnectedDB(getBase());
     }
 
     public ConnectedDB toConnectedDB(String dbName) {
-        return createConnectedDB(getJdbcIRI(dbName).getIRIString());
+        return createConnectedDB(getJdbcURI(dbName));
     }
 
     private ConnectedDB createConnectedDB(String uri) {
@@ -224,6 +245,7 @@ public enum ConnectionData {
         }
         LOGGER.info("The database '{}' has been created.", databaseName);
     }
+
     /**
      * Deletes the given database.
      *
@@ -254,7 +276,6 @@ public enum ConnectionData {
     protected void beforeDrop(Statement statement, String databaseName) throws SQLException {
     }
 
-
     /**
      * Creates a fresh database {@link MapObjectImpl}.
      *
@@ -265,7 +286,7 @@ public enum ConnectionData {
      */
     public Database createDatabaseMapObject(Mapping mapping, String uri, String name) {
         return mapping.createDatabase(Objects.requireNonNull(uri, "Null uri"))
-                .setJDBCDSN(getJdbcIRI(Objects.requireNonNull(name, "Null name")).getIRIString())
+                .setJDBCDSN(getJdbcURI(Objects.requireNonNull(name, "Null name")))
                 .setJDBCDriver(getDriver())
                 .setUsername(getUser())
                 .setPassword(getPwd())
@@ -279,9 +300,38 @@ public enum ConnectionData {
     }
 
     public void insert(Mapping mapping) {
-        Set<Database> dbs = mapping.listDatabases()
-                .filter(s -> s.getJDBCDSN().startsWith(getJdbcBaseIRI().getIRIString())).collect(Collectors.toSet());
-        if (dbs.isEmpty()) throw new IllegalArgumentException("Can't find db " + getJdbcBaseIRI());
+        insert(mapping, true);
+    }
+
+    /**
+     * Inserts into the given mapping this JDBC data settings.
+     *
+     * @param mapping {@link Mapping}
+     * @param force   if {@code true}, then replace previous {@code d2rq:Database} with the new one,
+     *                otherwise only fixes connection credentials
+     * @throws IllegalArgumentException if the mapping cannot be updated due to some incompatibility
+     */
+    public void insert(Mapping mapping, boolean force) {
+        String base = getBase();
+        Set<Database> dbs;
+        if (force) {
+            dbs = mapping.listDatabases().collect(Collectors.toSet());
+            if (dbs.size() != 1) {
+                throw new IllegalArgumentException("Too many d2rq:Database. Can update only single one.");
+            }
+            Database db = dbs.iterator().next();
+            String prev = db.getJDBCDSN();
+            if (!prev.contains(base)) {
+                String uri = prev.replaceFirst("^.+/([^/]+)$", base + "$1");
+                LOGGER.debug("Replace <{}> with <{}>", prev, uri);
+                db.setJDBCDSN(uri);
+            }
+        }
+        dbs = mapping.listDatabases()
+                .filter(s -> s.getJDBCDSN().startsWith(base)).collect(Collectors.toSet());
+        if (dbs.isEmpty()) {
+            throw new IllegalArgumentException("Can't find any db for the uri " + base);
+        }
         dbs.forEach(d -> d.setUsername(getUser()).setPassword(getPwd()));
     }
 
