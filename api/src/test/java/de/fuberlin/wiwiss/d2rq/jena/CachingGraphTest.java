@@ -31,6 +31,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -68,9 +69,9 @@ public class CachingGraphTest {
         performSomeReadActionsOnPizza(m);
 
         CachingGraph cg = ((CachingGraph) m.getBaseGraph());
-        Set<Triple> cachedFindTriples = Iter.asStream(cg.findTriples.keys())
+        Set<Triple> cachedFindTriples = Iter.asStream(cg.findCache.keys())
                 .collect(Collectors.toSet());
-        Set<Triple> cachedContainsTriples = Iter.asStream(cg.containsTriples.keys())
+        Set<Triple> cachedContainsTriples = Iter.asStream(cg.containsCache.keys())
                 .collect(Collectors.toSet());
 
         for (Triple t : cachedFindTriples) {
@@ -96,7 +97,7 @@ public class CachingGraphTest {
     }
 
     @Test
-    public void testSmallGraphCaching() {
+    public void testInternalGraphCachingBuckets() {
         String uri = "http://x";
         OntGraphModel m1 = OntModelFactory.createModel()
                 .setNsPrefixes(OntModelFactory.STANDARD).setNsPrefix("x", uri + "#");
@@ -108,7 +109,7 @@ public class CachingGraphTest {
         c.createIndividual().addComment("This is an anonymous individual");
         JenaModelUtils.print(m1);
 
-        Model m2 = OntModelFactory.createModel(new CachingGraph(m1.getBaseGraph(), 10, 150));
+        Model m2 = OntModelFactory.createModel(new CachingGraph(m1.getBaseGraph(), 10, 200));
 
         Assert.assertEquals(1, m2.listStatements(null, RDF.type, OWL.Class).toList().size());
         Assert.assertEquals(2, m2.listStatements(null, RDF.type, OWL.NamedIndividual)
@@ -117,41 +118,52 @@ public class CachingGraphTest {
         Assert.assertEquals(3, m2.listStatements(null, RDFS.comment, (RDFNode) null).toList().size());
 
         CachingGraph g = (CachingGraph) ((UnionGraph) m2.getGraph()).getBaseGraph();
-        Cache<Triple, List<Triple>> findCache = g.findTriples;
-        Cache<Triple, Boolean> containsCache = g.containsTriples;
+        Cache<Triple, CachingGraph.Bucket> findCache = g.findCache;
+        Cache<Triple, Boolean> containsCache = g.containsCache;
 
         Assert.assertEquals(3, findCache.size());
         Assert.assertEquals(2, containsCache.size());
-        List<Triple> outOfSpace = findCache.getIfPresent(Triple.createMatch(null, RDFS.comment.asNode(), null));
+        CachingGraph.Bucket outOfSpace = findCache.getIfPresent(Triple.createMatch(null, RDFS.comment.asNode(), null));
         Assert.assertNotNull(outOfSpace);
         Assert.assertSame(CachingGraph.OUT_OF_SPACE, outOfSpace);
         findCache.keys().forEachRemaining(key -> {
-            List<Triple> cache = findCache.getIfPresent(key);
+            CachingGraph.Bucket cache = findCache.getIfPresent(key);
             Assert.assertNotNull("Null cache for " + key, cache);
             if (Triple.createMatch(null, RDFS.comment.asNode(), null).equals(key)) {
                 Assert.assertSame(CachingGraph.OUT_OF_SPACE, cache);
             } else {
-                Assert.assertFalse(cache.isEmpty());
+                Assert.assertNotEquals(String.format("Key: %s, Value: %s", key, cache), 0, cache.size());
             }
         });
     }
 
     @Test
     public void testCacheInMultiThreads() {
-        ReadStatsGraph g = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
-        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(g));
-
         int threadsNum = 120;
+        int timeoutInMs = 5000;
+
+        ReadStatsGraph g = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
+        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(new ReadStatsGraph(g)));
+
         ExecutorService service = Executors.newFixedThreadPool(threadsNum);
+        AtomicBoolean stop = new AtomicBoolean(false);
         List<Future<?>> res = new ArrayList<>();
         LOGGER.debug("Start concurrent reading");
         for (int i = 0; i < threadsNum; i++)
             res.add(service.submit(() -> {
                 LOGGER.debug("{} go", Thread.currentThread());
-                performSomeReadActionsOnPizza(m);
+                while (!stop.get()) {
+                    performSomeReadActionsOnPizza(m);
+                }
                 LOGGER.debug("{} exit", Thread.currentThread());
             }));
         service.shutdown();
+        try {
+            Thread.sleep(timeoutInMs);
+        } catch (InterruptedException e) {
+            throw new AssertionError(e);
+        }
+        stop.set(true);
         for (Future<?> f : res) {
             try {
                 f.get();

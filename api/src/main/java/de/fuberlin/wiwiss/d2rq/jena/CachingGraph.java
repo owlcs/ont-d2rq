@@ -3,21 +3,24 @@ package de.fuberlin.wiwiss.d2rq.jena;
 import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
 import org.apache.jena.atlas.lib.Cache;
 import org.apache.jena.atlas.lib.CacheFactory;
+import org.apache.jena.graph.FrontsNode;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.impl.GraphBase;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.util.iterator.NullIterator;
 import org.apache.jena.util.iterator.WrappedIterator;
-import org.apache.jena.vocabulary.RDFS;
-import ru.avicomp.ontapi.jena.vocabulary.OWL;
-import ru.avicomp.ontapi.jena.vocabulary.RDF;
-import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
@@ -26,7 +29,7 @@ import java.util.stream.Collectors;
  * an LRU basis with fixed length to minimise query calls.
  * Must be thread-safe.
  * Notice that it is a read only accessor.
- *
+ * <p>
  * Currently it is experimental optimization.
  *
  * @author Holger Knublauch (holger@topquadrant.com)
@@ -36,19 +39,46 @@ import java.util.stream.Collectors;
 public class CachingGraph extends GraphBase {
 
     // value-marker, used to indicate that retrieved Triples set is too large to store in-memory
-    protected static final List<Triple> OUT_OF_SPACE = Collections.unmodifiableList(new ArrayList<>());
-    // caches, for find and contains operations
-    protected final Cache<Triple, List<Triple>> findTriples;
-    protected final Cache<Triple, Boolean> containsTriples;
+    protected static final Bucket OUT_OF_SPACE = new Bucket() {
 
+        @Override
+        public String toString() {
+            return "OutOfSpace";
+        }
+    };
+    // the base graph
     protected final Graph base;
+
+    // limit of a total sum lengths of all cached queries
+    protected final long cacheLengthLimit;
+    // limit of a single query length
+    protected final long queryLengthLimit;
+    // initial bucket capacity
+    protected final int bucketCapacity;
+    // the current sum of lengths of all cached queries
+    protected final LongAdder queriesLength;
+
     // cache parameters:
     protected final int findCacheSize;
     protected final int containsCacheSize;
-    protected final long cacheLengthLimit;
-    protected final int bucketCapacity;
-    protected final ToLongFunction<Triple> lengthCalculator;
-    protected final LongAdder size;
+    // cache for find operations. use jena cache for some abstract uniformity reasons
+    protected final Cache<Triple, Bucket> findCache;
+    // cache for contains operation.
+    protected final Cache<Triple, Boolean> containsCache;
+    // the Map to provide synchronisation when caching
+    protected final Map<Triple, Lock> locks = new ConcurrentHashMap<>();
+    // a Set of all triplets that definitely cannot fit the cache
+    protected final Set<Triple> forbidden = new HashSet<>();
+    // a Map with all builtin URIs that do not need caching and can appear in a subject or object position
+    protected final Map<Node, Node> resourceVocabulary;
+    // a Map with all builtin URIs that do not need caching and can appear in a predicate position
+    protected final Map<Node, Node> propertyVocabulary;
+    // to calculate the length of URI
+    protected final ToLongFunction<Node> uriLengthCalculator;
+    // to calculate the length of b-Node
+    protected final ToLongFunction<Node> bNodeLengthCalculator;
+    // to calculate the length of literal
+    protected final ToLongFunction<Node> literalLengthCalculator;
 
     /**
      * Creates a caching graph, that keeps track of its own size.
@@ -59,7 +89,7 @@ public class CachingGraph extends GraphBase {
      * and {@link Node} memory consumption is equal to the {@code String}).
      * It is enough to restrict uncontrolled increasing of memory usage.
      * Also, the cached queries limit is taken equal to {@code 10_000},
-     * which means both caches ({@link #findTriples} and {@link #containsTriples})
+     * which means both caches ({@link #findCache} and {@link #containsCache})
      * may have no more than this number items.
      *
      * @param base {@link Graph} to wrap, not {@code null}
@@ -70,52 +100,76 @@ public class CachingGraph extends GraphBase {
 
     /**
      * Creates a caching graph, that keeps track of its own size.
-     * The {@link #findTriples} cache will have the {@code cacheCapacity} size,
-     * and the {@link #containsTriples} will have the half of {@code cacheCapacity} size.
+     * <p>
+     * The {@link #findCache} cache will have the {@code cacheCapacity} size,
+     * and the {@link #containsCache} will have the half of {@code cacheCapacity} size.
      * This relation is found experimentally,
      * using the spin-map inference with {@code spin:concatWithSeparator} property rule
      * and, also, saving RDF as turtle.
      *
-     * @param base             {@link Graph} to wrap, not {@code null}
-     * @param cacheCapacity    int, the cache size
-     * @param cacheLengthLimit long, max number of chars that this cache can hold
+     * @param base                  {@link Graph} to wrap, not {@code null}
+     * @param cacheCapacity         int, the cache size
+     * @param cacheTotalLengthLimit long, max number of chars that this cache can hold
      */
-    public CachingGraph(Graph base, int cacheCapacity, long cacheLengthLimit) {
-        this(base, createTripleLengthCalculator(), cacheCapacity, cacheCapacity / 2, cacheLengthLimit,
-                cacheLengthLimit > cacheCapacity ?
-                        (int) (cacheLengthLimit / cacheCapacity) : cacheCapacity);
+    public CachingGraph(Graph base, int cacheCapacity, long cacheTotalLengthLimit) {
+        this(base,
+                VocabularySummarizer.getStandardResources(),
+                VocabularySummarizer.getStandardProperties(),
+                n -> n.getURI().length(),
+                n -> n.getBlankNodeLabel().length(),
+                n -> n.getLiteralLexicalForm().length(),
+                cacheCapacity,                          // find-cache size
+                cacheCapacity / 2,                      // contains-cache size
+                cacheTotalLengthLimit,                  // total (sum) length limit
+                cacheTotalLengthLimit / 2,              // a query length limit, half of total limit
+                cacheTotalLengthLimit > cacheCapacity ? // ArrayList initial capacity
+                        (int) (cacheTotalLengthLimit / cacheCapacity) : cacheCapacity);
     }
 
     /**
      * Creates a caching graph, that keeps track of its own size.
+     * This is the base constructor.
      * If the queried bunch size is too large to fit in the cache, then an uncached iterator is returned.
      *
-     * @param graph                  {@link Graph} to wrap, not {@code null}
-     * @param tripleLengthCalculator {@link ToLongFunction} to calculate {@link Triple} "length"
-     * @param findCacheSize          int, the find cache size
-     * @param containsCacheSize      int, the contains cache size
-     * @param cacheLengthLimit       long, max number of chars that this cache can hold
-     * @param bucketCapacity         int, the default initial bucket capacity
+     * @param graph                   {@link Graph} to wrap, not {@code null}
+     * @param builtinResources        a {@code Collection} of all builtin {@link Resource}s to skip from length calculation
+     * @param builtinProperties       a {@code Collection} of all builtin {@link Property}s to skip from length calculation
+     * @param uriLengthCalculator     a URI length calculator
+     * @param bNodeLengthCalculator   a b-node length calculator
+     * @param literalLengthCalculator a literal calculator
+     * @param findCacheSize           int, the find-cache size
+     * @param containsCacheSize       int, the contains-cache size
+     * @param cacheLengthLimit        long, max number of lengths of all queries that this cache can hold
+     * @param queryLengthLimit        long, max number of a query length,
+     *                                if a query has length greater then it should not be cached
+     * @param bucketCapacity          int, the default initial bucket ({@code ArrayList}) capacity
      */
-    public CachingGraph(Graph graph,
-                        ToLongFunction<Triple> tripleLengthCalculator,
-                        int findCacheSize,
-                        int containsCacheSize,
-                        long cacheLengthLimit,
-                        int bucketCapacity) {
+    protected CachingGraph(Graph graph,
+                           Collection<Resource> builtinResources,
+                           Collection<Property> builtinProperties,
+                           ToLongFunction<Node> uriLengthCalculator,
+                           ToLongFunction<Node> bNodeLengthCalculator,
+                           ToLongFunction<Node> literalLengthCalculator,
+                           int findCacheSize,
+                           int containsCacheSize,
+                           long cacheLengthLimit,
+                           long queryLengthLimit,
+                           int bucketCapacity) {
         this.base = Objects.requireNonNull(graph, "Null graph.");
-        this.lengthCalculator = Objects.requireNonNull(tripleLengthCalculator, "Null triple length calculator");
+        this.uriLengthCalculator = Objects.requireNonNull(uriLengthCalculator, "Null URI length calculator");
+        this.bNodeLengthCalculator = Objects.requireNonNull(bNodeLengthCalculator, "Null Blank Node length calculator");
+        this.literalLengthCalculator = Objects.requireNonNull(literalLengthCalculator, "Null Literal length calculator");
+        this.resourceVocabulary = asCacheMap(builtinResources);
+        this.propertyVocabulary = asCacheMap(builtinProperties);
         this.findCacheSize = requirePositive(findCacheSize, "Negative find cache size parameter");
         this.containsCacheSize = requirePositive(findCacheSize, "Negative contains cache size parameter");
-        this.cacheLengthLimit = requirePositive(cacheLengthLimit, "Negative max length");
+        this.cacheLengthLimit = requirePositive(cacheLengthLimit, "Negative queries max length");
+        this.queryLengthLimit = requirePositive(queryLengthLimit, "Negative query max length");
         this.bucketCapacity = requirePositive(bucketCapacity, "Negative default bucket size");
-        this.size = new LongAdder();
-        this.findTriples = CacheFactory.createCache(findCacheSize);
-        this.findTriples.setDropHandler((k, v) -> {
-            if (v instanceof Bucket)
-                size.add(-((Bucket) v).getLength());
-        });
-        this.containsTriples = CacheFactory.createCache(containsCacheSize);
+        this.findCache = CacheFactory.createCache(findCacheSize);
+        this.containsCache = CacheFactory.createCache(containsCacheSize);
+        this.queriesLength = new LongAdder();
+        this.findCache.setDropHandler((k, v) -> queriesLength.add(-v.getLength()));
     }
 
     private static <N extends Number> N requirePositive(N n, String msg) {
@@ -123,6 +177,12 @@ public class CachingGraph extends GraphBase {
             throw new IllegalArgumentException(msg);
         }
         return n;
+    }
+
+    protected static Map<Node, Node> asCacheMap(Collection<? extends Resource> vocabulary) {
+        return Collections.unmodifiableMap(Objects.requireNonNull(vocabulary, "Null vocabulary")
+                .stream().map(FrontsNode::asNode)
+                .collect(Collectors.toMap(Function.identity(), Function.identity())));
     }
 
     @Override
@@ -141,53 +201,71 @@ public class CachingGraph extends GraphBase {
 
     @Override
     public ExtendedIterator<Triple> graphBaseFind(Triple m) {
-        List<Triple> res = findTriples.getIfPresent(m);
+        ExtendedIterator<Triple> res = fromCache(m);
+        if (res != null) {
+            return res;
+        }
+        // use lock per triple pattern
+        Lock lock = locks.computeIfAbsent(m, x -> createLock());
+        try {
+            lock.lock();
+            // double checking:
+            res = fromCache(m);
+            if (res != null) {
+                return res;
+            }
+            // prepare data for caching:
+            Bucket list = createTripleBucket();
+            Iterator<Triple> it = base.find(m);
+            while (it.hasNext()) {
+                list.put(it.next());
+                // check if there is enough space in the cache
+                if (queriesLength.longValue() + list.getLength() > cacheLengthLimit) {
+                    // to not even try to put this query into the cache next time
+                    if (list.getLength() > queryLengthLimit) {
+                        forbidden.add(m);
+                    }
+                    // or until the value will be invalidated by the LRU basis
+                    findCache.put(m, OUT_OF_SPACE);
+                    return WrappedIterator.create(list.iterator()).andThen(it);
+                }
+            }
+            queriesLength.add(list.getLength());
+            list.trimToSize();
+            // do cache:
+            findCache.put(m, list);
+            return WrappedIterator.create(list.iterator());
+        } finally {
+            lock.unlock();
+            locks.remove(m);
+        }
+    }
+
+    protected ExtendedIterator<Triple> fromCache(Triple m) {
+        if (forbidden.contains(m)) {
+            return base.find(m);
+        }
+        Bucket res = findCache.getIfPresent(m);
         if (OUT_OF_SPACE == res) {
             return base.find(m);
         } else if (res != null) {
             return WrappedIterator.create(res.iterator());
         }
-        // prepare data for caching:
-        Bucket list = new Bucket();
-        Iterator<Triple> it = base.find(m);
-        // todo: optimize
-        while (it.hasNext()) list.add(it.next());
-        list.trimToSize();
-        // put into cache:
-        long current = list.getLength();
-        if (size.longValue() + current < cacheLengthLimit) {
-            findTriples.put(m, list);
-            size.add(current);
-        } else {
-            // not enough space in the cache
-            findTriples.put(m, OUT_OF_SPACE);
-        }
-        return WrappedIterator.create(list.iterator());
+        return null;
+    }
+
+    protected Bucket createTripleBucket() {
+        return new BucketImpl(bucketCapacity, resourceVocabulary, propertyVocabulary,
+                uriLengthCalculator, bNodeLengthCalculator, literalLengthCalculator);
+    }
+
+    protected Lock createLock() {
+        return new ReentrantLock();
     }
 
     @Override
     public boolean graphBaseContains(Triple t) {
-        return containsTriples.getOrFill(t, () -> base.contains(t));
-    }
-
-    /**
-     * A {@link Triple triple} container, that is used as value in the cache.
-     */
-    public class Bucket extends ArrayList<Triple> {
-        private long length;
-
-        public Bucket() {
-            super(bucketCapacity);
-        }
-
-        public boolean add(Triple t) {
-            length += lengthCalculator.applyAsLong(t);
-            return super.add(t);
-        }
-
-        public long getLength() {
-            return length;
-        }
+        return containsCache.getOrFill(t, () -> base.contains(t));
     }
 
     /**
@@ -196,58 +274,131 @@ public class CachingGraph extends GraphBase {
      */
     @SuppressWarnings("unused")
     public void clearCache() {
-        findTriples.clear();
-        containsTriples.clear();
+        findCache.clear();
+        containsCache.clear();
+    }
+
+    @Override
+    public void close() {
+        clearCache();
+        base.close();
+        super.close();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("CachingGraph{queries-length=%s}{base=%s}", queriesLength, base);
     }
 
     /**
-     * Creates default {@link Triple}s length calculator.
-     * All factors equal {@code 1},
-     * and skipping the calculation for constants (from OWL, RDF, RDFS and XSD vocabularies}.
-     *
-     * @return {@link ToLongFunction} for {@link Triple}
+     * An abstract {@link Triple triple} container, that is used as value in the find-cache.
      */
-    public static ToLongFunction<Triple> createTripleLengthCalculator() {
-        Set<String> uris = VocabularySummarizer.resources(OWL.class, RDF.class, RDFS.class, XSD.class)
-                .map(Resource::getURI).collect(Collectors.toSet());
-        // todo: this is wrong, uri nodes are not cached to be skipped
-        return new TripleLength(uris, 1, 1, 1);
+    public interface Bucket {
+
+        default void put(Triple t) {
+            throw new IllegalStateException("Attempt to put " + t);
+        }
+
+        default long getLength() {
+            return 0;
+        }
+
+        default int size() {
+            return 0;
+        }
+
+        default Iterator<Triple> iterator() {
+            return NullIterator.instance();
+        }
+
+        default void trimToSize() {
+            // nothing
+        }
     }
 
     /**
-     * A class-helper to calculate {@link Triple} "length",
-     * assuming it is equal (or proportional to) the number of characters in a {@code Triple} String representation.
-     * Language tag for literal nodes is not taken into account.
+     * Default {@link ArrayList Array-based} implementation of {@link Bucket}.
      */
-    public static class TripleLength implements ToLongFunction<Triple> {
-        private final double uriNodeFactor;
-        private final double literalNodeFactor;
-        private final double blankNodeFactor;
-        private final Set<String> skips;
+    public static class BucketImpl extends ArrayList<Triple> implements Bucket {
+        protected final Map<Node, Node> resourceMap;
+        protected final Map<Node, Node> propertyMap;
+        protected final ToLongFunction<Node> uriLength;
+        protected final ToLongFunction<Node> bNodeLength;
+        protected final ToLongFunction<Node> literalLength;
+        private long length;
 
-        public TripleLength(Set<String> skipURIs, double uriFactor, double bNodeFactor, double literalFactor) {
-            this.skips = Objects.requireNonNull(skipURIs);
-            uriNodeFactor = requirePositive(uriFactor, "Negative uri node factor");
-            blankNodeFactor = requirePositive(bNodeFactor, "Negative blank node factor");
-            literalNodeFactor = requirePositive(literalFactor, "Negative literal node factor");
+        protected BucketImpl(int initialCapacity,
+                             Map<Node, Node> resources,
+                             Map<Node, Node> properties,
+                             ToLongFunction<Node> uriLength,
+                             ToLongFunction<Node> bNodeLength,
+                             ToLongFunction<Node> literalLength) {
+            super(initialCapacity);
+            this.resourceMap = Objects.requireNonNull(resources);
+            this.propertyMap = Objects.requireNonNull(properties);
+            this.uriLength = Objects.requireNonNull(uriLength);
+            this.bNodeLength = Objects.requireNonNull(bNodeLength);
+            this.literalLength = Objects.requireNonNull(literalLength);
         }
 
         @Override
-        public long applyAsLong(Triple t) {
-            return calc(t.getSubject()) + calc(t.getPredicate()) + calc(t.getObject());
-        }
-
-        protected long calc(Node n) {
-            if (n.isURI()) {
-                return skips.contains(n.getURI()) ? 0 : calc(n.getURI(), uriNodeFactor);
+        public void put(Triple t) {
+            Node s = t.getSubject();
+            Node p = t.getPredicate();
+            Node o = t.getObject();
+            if (s.isURI()) {
+                Node replace = resourceMap.get(s);
+                if (replace != null) {
+                    s = replace;
+                    t = null;
+                } else {
+                    length += uriLength.applyAsLong(s);
+                }
+            } else if (s.isBlank()) {
+                length += bNodeLength.applyAsLong(s);
+            } else {
+                throw new IllegalStateException("Unexpected subject for " + t);
             }
-            if (n.isLiteral()) return calc(n.getLiteral().getLexicalForm(), literalNodeFactor);
-            if (n.isBlank()) return calc(n.getBlankNodeLabel(), blankNodeFactor);
-            throw new IllegalStateException("Can't calculate node length: " + n);
+            if (p.isURI()) {
+                Node replace = propertyMap.get(p);
+                if (replace != null) {
+                    p = replace;
+                    t = null;
+                } else {
+                    length += uriLength.applyAsLong(p);
+                }
+            } else {
+                throw new IllegalStateException("Unexpected predicate for " + t);
+            }
+            if (o.isURI()) {
+                Node replace = resourceMap.get(o);
+                if (replace != null) {
+                    o = replace;
+                    t = null;
+                } else {
+                    length += uriLength.applyAsLong(o);
+                }
+            } else if (o.isBlank()) {
+                length += bNodeLength.applyAsLong(o);
+            } else if (o.isLiteral()) {
+                length += literalLength.applyAsLong(o);
+            } else {
+                throw new IllegalStateException("Unexpected object for " + t);
+            }
+            if (t == null) {
+                t = Triple.create(s, p, o);
+            }
+            super.add(t);
         }
 
-        public static long calc(String txt, double factor) {
-            return (long) (txt.length() * factor);
+        @Override
+        public long getLength() {
+            return length;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Bucket{length=%d}{super=%s}", length, super.toString());
         }
     }
 
