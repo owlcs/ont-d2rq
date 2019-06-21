@@ -235,7 +235,8 @@ public class SchemaController {
                     }
 
                     // creates dynamic class map for a property bridge with rdf:type
-                    if (p.getURIPattern() != null && p.listProperties().anyMatch(RDF.type::equals)) {
+                    if (p.getURIPattern() != null
+                            && p.listProperties().anyMatch(RDF.type::equals)) {
                         MappingUtils.fetchClassMap(p, OWL.Class, D2RQ.uriPattern).setContainsDuplicates(true);
                     }
 
@@ -281,7 +282,7 @@ public class SchemaController {
 
     private static ExtendedIterator<Resource> listClasses(SchemaBuilder helper, ClassMap c) {
         Model m = c.getMapping().asModel();
-        return helper.listOWLClasses(m.getGraph(), c.asResource().asNode()).mapWith(m::wrapAsResource);
+        return helper.listRDFSClasses(m.getGraph(), c.asResource().asNode()).mapWith(m::wrapAsResource);
     }
 
     private static ExtendedIterator<Resource> listPropertyTypes(PropertyBridge p) {

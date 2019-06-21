@@ -325,7 +325,19 @@ public class SchemaBuilder {
      * @see SchemaHelper#listClasses(Graph, Node)
      */
     public ExtendedIterator<Node> listOWLClasses(Graph g, Node classMap) {
-        return listClasses(g, classMap).filterDrop(reservedClasses::contains);
+        return listRDFSClasses(g, classMap).filterDrop(reservedClasses::contains);
+    }
+
+    /**
+     * Lists all {@code rdfs:Class}es that are attached to the given {@code ClassMap}.
+     *
+     * @param g {@link Graph} to search in
+     * @param c {@link Node} ClassMap
+     * @return {@link ExtendedIterator} of {@link Node}s
+     * @see SchemaHelper#listClasses(Graph, Node)
+     */
+    public ExtendedIterator<Node> listRDFSClasses(Graph g, Node c) {
+        return listClasses(g, c);
     }
 
     /**

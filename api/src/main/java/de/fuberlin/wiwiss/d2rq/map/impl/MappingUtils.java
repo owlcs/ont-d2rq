@@ -28,10 +28,11 @@ class MappingUtils {
     static PropertyBridgeImpl fetchPropertyBridge(ClassMapImpl c, Resource classType) {
         MappingImpl m = c.getMapping();
         Optional<PropertyBridgeImpl> res = Iter.findFirst(m.asModel()
-                .listResourcesWithProperty(D2RQ.constantValue, classType)
-                .filterKeep(r -> r.hasProperty(D2RQ.belongsToClassMap, c.asResource())
-                        && r.hasProperty(D2RQ.property, RDF.type))
+                .listResourcesWithProperty(D2RQ.belongsToClassMap, c.asResource())
+                .filterKeep(x -> x.hasProperty(D2RQ.property, RDF.type)
+                        && x.hasProperty(D2RQ.constantValue, classType))
                 .mapWith(m::asPropertyBridge));
+
         if (res.isPresent()) return res.get();
         PropertyBridgeImpl p = m.createPropertyBridge(null);
         if (LOGGER.isDebugEnabled()) {

@@ -77,9 +77,24 @@ public interface ClassMap extends MapObject,
      */
     Stream<PropertyBridge> listPropertyBridges();
 
-
+    /**
+     * Adds an uri resource for predicate {@code d2rq:class}
+     *
+     * @param uri String
+     * @return this instance to allow cascading calls
+     */
     default ClassMap addClass(String uri) {
         return addClass(getMapping().asModel().createResource(uri));
+    }
+
+    /**
+     * Creates a {@code PropertyBridge} that belongs to this {@code ClassMap}.
+     *
+     * @param uri an uri or {@code null} to create an anonymous {@code d2rq:PropertyBridge}
+     * @return {@link PropertyBridge}
+     */
+    default PropertyBridge createPropertyBridge(String uri) {
+        return getMapping().createPropertyBridge(uri).setBelongsToClassMap(this);
     }
 
 }

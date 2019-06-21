@@ -97,6 +97,12 @@ public class ISWCModelDataTest {
         // + PostalAddresses:
         Assert.assertEquals(8, inMemory.classes().peek(x -> LOGGER.debug("Schema: {}", x)).count());
         inMemory.add(data);
+        // todo:
+        inMemory.write(System.err, "ttl");
+        System.out.println("----");
+        mapping.asModel().write(System.err, "ttl");
+        System.out.println("----");
+
         DynamicSchemaTest.validateInferredOWLForPredefinedMapping(inMemory);
         Assert.assertEquals(13, inMemory.classes().peek(x -> LOGGER.debug("Schema+Data: {}", x)).count());
         JenaModelUtils.print(inMemory);
@@ -165,6 +171,7 @@ public class ISWCModelDataTest {
             //  So, a Graph becomes inconsistent.
             //  As a result - no named individuals are generated for the owl:sameAs rule.
             //  Right now don't know what to deal with it.
+            //  See https://github.com/avicomp/ont-d2rq/issues/21
 
             Assert.assertEquals(42, res.namedIndividuals().peek(x -> LOGGER.debug("NAMED INDIVIDUAL: {}", x)).count());
             Assert.assertEquals(51, res.individuals()
