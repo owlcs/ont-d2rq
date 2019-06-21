@@ -87,7 +87,7 @@ public class AssembleMappingTest {
         // dynamic property:
         mapping.createPropertyBridge(null).setBelongsToClassMap(c)
                 .addDynamicProperty(data.fixIRI("@@organizations.URI@@")).setColumn(data.fixIRI("organizations.Name"));
-        Assert.assertEquals(1, mapping.listPropertyBridges().flatMap(PropertyBridge::listDynamicProperties).count());
+        Assert.assertEquals(1, mapping.propertyBridges().flatMap(PropertyBridge::dynamicProperties).count());
 
         mapping.validate();
 
@@ -132,7 +132,7 @@ public class AssembleMappingTest {
 
         mapping.createPropertyBridge(null).setBelongsToClassMap(x).setRefersToClassMap(y)
                 .addDynamicProperty(data.fixIRI("@@topics.URI@@"));
-        Assert.assertEquals(1, mapping.listPropertyBridges().flatMap(PropertyBridge::listDynamicProperties).count());
+        Assert.assertEquals(1, mapping.propertyBridges().flatMap(PropertyBridge::dynamicProperties).count());
 
         mapping.validate();
 

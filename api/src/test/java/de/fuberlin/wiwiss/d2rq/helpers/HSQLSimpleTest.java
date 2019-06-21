@@ -77,7 +77,7 @@ public class HSQLSimpleTest {
     @Test
     public void testGenerateSomeClassMapsInDefaultMapping() { // ??
         Mapping mapping = generateDefaultMapping();
-        Collection<Resource> res = mapping.listClassMaps().map(MapObject::asResource).collect(Collectors.toSet());
+        Collection<Resource> res = mapping.classMaps().map(MapObject::asResource).collect(Collectors.toSet());
         LOGGER.debug("Class-maps: {}", res);
         Assert.assertEquals("Unexpected class-maps" + res, 1, res.size());
     }

@@ -72,7 +72,7 @@ public class MySQLDatatypeTest {
         Graph graph = mapping.getData();
         Assert.assertNotNull(graph);
 
-        Database db = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new);
+        Database db = mapping.databases().findFirst().orElseThrow(AssertionError::new);
         DatabaseSchemaInspector inspector = MappingHelper.getConnectedDB(db).schemaInspector();
         Assert.assertNotNull(inspector);
 

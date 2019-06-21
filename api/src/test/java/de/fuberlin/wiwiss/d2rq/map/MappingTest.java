@@ -34,14 +34,14 @@ public class MappingTest {
     public void testReturnAddedDatabase() {
         Mapping m = MappingFactory.create();
         Database db = m.createDatabase(database1).setJDBCDSN("x");
-        Assert.assertEquals(Collections.singletonList(db), m.listDatabases().collect(Collectors.toList()));
-        Assert.assertTrue(m.findDatabase("x").isPresent());
+        Assert.assertEquals(Collections.singletonList(db), m.databases().collect(Collectors.toList()));
+        Assert.assertTrue(m.database("x").isPresent());
     }
 
     @Test
     public void testNoDatabaseCausesValidationError() {
         Mapping m = MappingFactory.create();
-        Assert.assertEquals(0, m.listDatabases().count());
+        Assert.assertEquals(0, m.databases().count());
         try {
             m.validate();
         } catch (D2RQException ex) {
@@ -139,24 +139,24 @@ public class MappingTest {
     @Test
     public void testEmptyMapping() {
         Mapping m = MappingFactory.create();
-        Assert.assertEquals(0, m.listClassMaps().count());
-        Assert.assertEquals(0, m.listDatabases().count());
-        Assert.assertEquals(0, m.listDownloadMaps().count());
-        Assert.assertEquals(0, m.listAdditionalProperties().count());
-        Assert.assertEquals(0, m.listTranslationTables().count());
-        Assert.assertEquals(0, m.listPropertyBridges().count());
+        Assert.assertEquals(0, m.classMaps().count());
+        Assert.assertEquals(0, m.databases().count());
+        Assert.assertEquals(0, m.downloadMaps().count());
+        Assert.assertEquals(0, m.additionalProperties().count());
+        Assert.assertEquals(0, m.translationTables().count());
+        Assert.assertEquals(0, m.propertyBridges().count());
     }
 
     @Test
     public void testReturnAddedClassMaps() {
         Mapping m = MappingFactory.create();
         ClassMap c = m.createClassMap(classMap1);
-        Assert.assertEquals(1, m.listClassMaps().count());
+        Assert.assertEquals(1, m.classMaps().count());
         Assert.assertNotNull(m.addClassMap(c));
-        ClassMap found = m.listClassMaps().filter(x -> classMap1.equals(x.asResource().getURI()))
+        ClassMap found = m.classMaps().filter(x -> classMap1.equals(x.asResource().getURI()))
                 .findFirst().orElseThrow(AssertionError::new);
         Assert.assertEquals(c, found);
-        Assert.assertEquals(1, m.listClassMaps().count());
+        Assert.assertEquals(1, m.classMaps().count());
     }
 
     @Test
@@ -194,8 +194,8 @@ public class MappingTest {
     @Test
     public void testConnectionWhileModification() {
         try (Mapping m = ISWCData.MYSQL.loadMapping("http://x#")) {
-            Assert.assertEquals(1, m.listDatabases().count());
-            Database db = m.listDatabases().findFirst().orElseThrow(AssertionError::new);
+            Assert.assertEquals(1, m.databases().count());
+            Database db = m.databases().findFirst().orElseThrow(AssertionError::new);
             db.addConnectionProperty("a", "b");
 
             MappingHelper.asConnectingMapping(m).connect();
@@ -211,13 +211,13 @@ public class MappingTest {
     @Test
     public void testModifyCompiledPropertyBridges() {
         try (Mapping m = ISWCData.MYSQL.loadMapping("http://x#")) {
-            Assert.assertEquals(35, m.listPropertyBridges().count());
+            Assert.assertEquals(35, m.propertyBridges().count());
             Assert.assertEquals(42, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
-            Assert.assertEquals(40, m.listPropertyBridges().count());
+            Assert.assertEquals(40, m.propertyBridges().count());
 
             PropertyBridge b = MappingUtils.findPropertyBridge(m, "organizations_Type_U");
             m.asModel().removeAll(b.asResource(), null, null);
-            Assert.assertEquals(39, m.listPropertyBridges().count());
+            Assert.assertEquals(39, m.propertyBridges().count());
             Assert.assertEquals(41, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
 
             // return back:
@@ -229,7 +229,7 @@ public class MappingTest {
 
             MappingUtils.print(m);
             Assert.assertEquals(42, MappingHelper.asConnectingMapping(m).compiledPropertyBridges().size());
-            Assert.assertEquals(40, m.listPropertyBridges().count());
+            Assert.assertEquals(40, m.propertyBridges().count());
 
         }
     }
@@ -292,7 +292,7 @@ public class MappingTest {
     @Test
     public void testReConnectionOnImpl() {
         MappingImpl mapping = (MappingImpl) ISWCData.MYSQL.loadMapping();
-        DatabaseImpl d = Iter.findFirst(mapping.databases()).orElseThrow(AssertionError::new);
+        DatabaseImpl d = Iter.findFirst(mapping.listDatabases()).orElseThrow(AssertionError::new);
         long size = mapping.getDataModel().size();
         Assert.assertTrue(mapping.isConnected());
         Assert.assertTrue(mapping.getConnectedDB(d).isConnected());

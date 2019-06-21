@@ -48,7 +48,7 @@ interface HasUnclassified<R extends MapObject> extends HasTranslateWith<R> {
      *
      * @return Stream of String's
      */
-    Stream<String> listValueRegex();
+    Stream<String> valueRegexes();
 
     /**
      * Adds {@code d2rq:valueContains} value to the object map, that
@@ -66,7 +66,7 @@ interface HasUnclassified<R extends MapObject> extends HasTranslateWith<R> {
      *
      * @return Stream of String's
      */
-    Stream<String> listValueContains();
+    Stream<String> valueContains();
 
     /**
      * Adds {@code d2rq:valueMaxLength} integer value to the RDF, that

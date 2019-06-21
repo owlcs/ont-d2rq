@@ -239,11 +239,11 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     }
 
     @Override
-    public Stream<Property> listProperties() {
-        return Iter.asStream(properties());
+    public Stream<Property> properties() {
+        return Iter.asStream(listProperties());
     }
 
-    public ExtendedIterator<Property> properties() {
+    public ExtendedIterator<Property> listProperties() {
         return listStatements(D2RQ.property).mapWith(s -> s.getObject().as(Property.class));
     }
 
@@ -253,11 +253,11 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
     }
 
     @Override
-    public Stream<String> listDynamicProperties() {
-        return Iter.asStream(dynamicProperties());
+    public Stream<String> dynamicProperties() {
+        return Iter.asStream(listDynamicProperties());
     }
 
-    public ExtendedIterator<String> dynamicProperties() {
+    public ExtendedIterator<String> listDynamicProperties() {
         return listLiterals(D2RQ.dynamicProperty).mapWith(Literal::getString);
     }
 
@@ -340,7 +340,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
             orderAsc.requireHasNoDuplicates(D2RQException.PROPERTYBRIDGE_DUPLICATE_ORDER)
                     .requireIsStringLiteral(D2RQException.UNSPECIFIED);
         }
-        if (properties().toSet().isEmpty() && dynamicProperties().toSet().isEmpty()) {
+        if (listProperties().toSet().isEmpty() && listDynamicProperties().toSet().isEmpty()) {
             throw new D2RQException(toString() + " needs a d2rq:property or d2rq:dynamicProperty",
                     D2RQException.PROPERTYBRIDGE_MISSING_PREDICATESPEC);
         }
@@ -372,7 +372,7 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         if (refersToClassMap != null) {
             builder.addAliased(refersToClassMap.relationBuilder(db));
         }
-        dynamicProperties()
+        listDynamicProperties()
                 .mapWith(PropertyMap::new)
                 .mapWith(p -> p.relationBuilder(db))
                 .forEachRemaining(builder::addOther);
@@ -397,12 +397,12 @@ public class PropertyBridgeImpl extends ResourceMap implements PropertyBridge {
         NodeMaker s = getBelongsToClassMap().nodeMaker();
         NodeMaker o = this.nodeMaker();
         Relation base = buildRelation();
-        properties()
+        listProperties()
                 .mapWith(FrontsNode::asNode)
                 .mapWith(p -> new FixedNodeMaker(p, false))
                 .mapWith(p -> new TripleRelation(base, s, p, o))
                 .forEachRemaining(res::add);
-        dynamicProperties()
+        listDynamicProperties()
                 .mapWith(PropertyMap::new)
                 .mapWith(PropertyMap::nodeMaker)
                 .mapWith(p -> new TripleRelation(base, s, p, o))

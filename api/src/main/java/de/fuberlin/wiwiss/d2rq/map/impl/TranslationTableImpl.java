@@ -41,7 +41,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
     }
 
     @Override
-    public Stream<Entry> listTranslations() {
+    public Stream<Entry> translations() {
         return Iter.asStream(listTranslationResources().mapWith(this::asTranslation));
     }
 
@@ -120,7 +120,7 @@ public class TranslationTableImpl extends MapObjectImpl implements TranslationTa
 
     @Override
     public void validate() throws D2RQException {
-        Set<Entry> translations = listTranslations()
+        Set<Entry> translations = translations()
                 .peek(MapObject::validate)
                 .peek(this::checkNoDuplicates)
                 .collect(Collectors.toSet());

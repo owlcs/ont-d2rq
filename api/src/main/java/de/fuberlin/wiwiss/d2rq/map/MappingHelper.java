@@ -51,8 +51,7 @@ public class MappingHelper {
      * @throws IllegalArgumentException in case no {@code d2rq:Database} is found for the given {@code ConnectedDB}
      */
     public static void useConnectedDB(Mapping m, ConnectedDB db) throws IllegalArgumentException {
-        DatabaseImpl res = (DatabaseImpl) m.findDatabase(db.getJdbcURL())
-                .orElseThrow(() -> new IllegalArgumentException("Can't find d2rq:Database for " + db.getJdbcURL()));
+        DatabaseImpl res = (DatabaseImpl) m.getDatabase(db.getJdbcURL());
         ((MappingImpl) m).registerConnectedDB(res, db);
     }
 

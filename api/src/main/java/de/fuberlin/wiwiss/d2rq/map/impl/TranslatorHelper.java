@@ -44,7 +44,7 @@ class TranslatorHelper {
                     TranslationTableParser.Row::first, TranslationTableParser.Row::second);
         }
         // rdf:
-        return new Table(table.listTranslations().collect(Collectors.toSet()),
+        return new Table(table.translations().collect(Collectors.toSet()),
                 TranslationTable.Entry::getDatabaseValue, TranslationTable.Entry::getRDFValue);
     }
 

@@ -315,7 +315,7 @@ public enum ConnectionData {
         String base = getBase();
         Set<Database> dbs;
         if (force) {
-            dbs = mapping.listDatabases().collect(Collectors.toSet());
+            dbs = mapping.databases().collect(Collectors.toSet());
             if (dbs.size() != 1) {
                 throw new IllegalArgumentException("Too many d2rq:Database. Can update only single one.");
             }
@@ -327,7 +327,7 @@ public enum ConnectionData {
                 db.setJDBCDSN(uri);
             }
         }
-        dbs = mapping.listDatabases()
+        dbs = mapping.databases()
                 .filter(s -> s.getJDBCDSN().startsWith(base)).collect(Collectors.toSet());
         if (dbs.isEmpty()) {
             throw new IllegalArgumentException("Can't find any db for the uri " + base);

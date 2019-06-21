@@ -36,11 +36,11 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     @Override
-    public Stream<Resource> listClasses() {
-        return Iter.asStream(classes());
+    public Stream<Resource> classes() {
+        return Iter.asStream(listClasses());
     }
 
-    public ExtendedIterator<Resource> classes() {
+    public ExtendedIterator<Resource> listClasses() {
         return listStatements(D2RQ.clazz).mapWith(Statement::getResource);
     }
 
@@ -152,11 +152,11 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     @Override
-    public Stream<PropertyBridge> listPropertyBridges() {
-        return Iter.asStream(propertyBridges());
+    public Stream<PropertyBridge> propertyBridges() {
+        return Iter.asStream(listPropertyBridges());
     }
 
-    public ExtendedIterator<PropertyBridgeImpl> propertyBridges() {
+    public ExtendedIterator<PropertyBridgeImpl> listPropertyBridges() {
         return getModel().listResourcesWithProperty(D2RQ.belongsToClassMap, resource).mapWith(mapping::asPropertyBridge);
     }
 
@@ -193,12 +193,12 @@ public class ClassMapImpl extends ResourceMap implements ClassMap {
     }
 
     public boolean hasContent() {
-        return listClasses().count() != 0 || listPropertyBridges().count() != 0;
+        return classes().count() != 0 || propertyBridges().count() != 0;
     }
 
     public Collection<TripleRelation> toTripleRelations() {
-        return propertyBridges()
-                .andThen(classes().mapWith(c -> MappingUtils.fetchPropertyBridge(ClassMapImpl.this, c)))
+        return listPropertyBridges()
+                .andThen(listClasses().mapWith(c -> MappingUtils.fetchPropertyBridge(ClassMapImpl.this, c)))
                 .toSet() // no duplicates
                 .stream()
                 .map(PropertyBridgeImpl::toTripleRelations)

@@ -48,7 +48,7 @@ public class ClassMapLister {
 
     private void groupTripleRelationsByClassMap() {
         if (!classMapInventoryBridges.isEmpty() || !classMapNodeMakers.isEmpty()) return;
-        mapping.listClassMaps().forEach(c -> {
+        mapping.classMaps().forEach(c -> {
             ClassMapImpl classMap = ((ClassMapImpl) c);
             Resource classMapResource = classMap.asResource();
             NodeMaker resourceMaker = classMap.nodeMaker();

@@ -30,11 +30,11 @@ public class ParserTest {
         Model model = ModelFactory.createDefaultModel();
         Mapping mapping = MappingFactory.create(model, null);
         Resource r = addTranslationTableResource(model);
-        Assert.assertEquals(1, mapping.listTranslationTables().count());
+        Assert.assertEquals(1, mapping.translationTables().count());
         TranslationTable table = MappingUtils.findTranslationTable(mapping);
         Assert.assertNotNull(table);
         Assert.assertEquals(r, table.asResource());
-        Assert.assertEquals(0, table.listTranslations().count());
+        Assert.assertEquals(0, table.translations().count());
     }
 
     @Test
@@ -60,7 +60,7 @@ public class ParserTest {
         addTranslationResource(r, "foo", "bar");
         Mapping mapping = MappingFactory.create(model, null);
         TranslationTable table = MappingUtils.findTranslationTable(mapping, r);
-        Assert.assertEquals(1, table.listTranslations().count());
+        Assert.assertEquals(1, table.translations().count());
         Translator translator = table.asTranslator();
         Assert.assertEquals("bar", translator.toRDFValue("foo"));
     }

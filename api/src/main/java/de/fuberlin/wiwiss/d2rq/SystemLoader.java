@@ -264,10 +264,10 @@ public class SystemLoader implements AutoCloseable {
         // in case jdbc-parameters are also present, pass them into the mapping
         Optional<Database> ods = Optional.empty();
         if (jdbcURL != null) {
-            ods = res.findDatabase(jdbcURL);
+            ods = res.database(jdbcURL);
         } else {
             // then choose first if it is single
-            Set<Database> dbs = res.listDatabases().collect(Collectors.toSet());
+            Set<Database> dbs = res.databases().collect(Collectors.toSet());
             if (dbs.size() == 1) {
                 ods = Optional.of(dbs.iterator().next());
             }

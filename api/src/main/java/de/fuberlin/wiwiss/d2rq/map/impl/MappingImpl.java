@@ -280,11 +280,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     @Override
-    public Stream<Database> listDatabases() {
-        return Iter.asStream(databases());
+    public Stream<Database> databases() {
+        return Iter.asStream(listDatabases());
     }
 
-    public ExtendedIterator<DatabaseImpl> databases() {
+    public ExtendedIterator<DatabaseImpl> listDatabases() {
         return model.listResourcesWithProperty(RDF.type, D2RQ.Database).mapWith(this::asDatabase);
     }
 
@@ -304,11 +304,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     @Override
-    public Stream<TranslationTable> listTranslationTables() {
-        return Iter.asStream(translationTables());
+    public Stream<TranslationTable> translationTables() {
+        return Iter.asStream(listTranslationTables());
     }
 
-    public ExtendedIterator<TranslationTableImpl> translationTables() {
+    public ExtendedIterator<TranslationTableImpl> listTranslationTables() {
         return model.listResourcesWithProperty(RDF.type, D2RQ.TranslationTable).mapWith(this::asTranslationTable);
     }
 
@@ -328,11 +328,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     @Override
-    public Stream<AdditionalProperty> listAdditionalProperties() {
-        return Iter.asStream(additionalProperties());
+    public Stream<AdditionalProperty> additionalProperties() {
+        return Iter.asStream(listAdditionalProperties());
     }
 
-    public ExtendedIterator<AdditionalPropertyImpl> additionalProperties() {
+    public ExtendedIterator<AdditionalPropertyImpl> listAdditionalProperties() {
         return model.listResourcesWithProperty(RDF.type, D2RQ.AdditionalProperty).mapWith(this::asAdditionalProperty);
     }
 
@@ -352,11 +352,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     @Override
-    public Stream<DownloadMap> listDownloadMaps() {
-        return Iter.asStream(downloadMaps());
+    public Stream<DownloadMap> downloadMaps() {
+        return Iter.asStream(listDownloadMaps());
     }
 
-    public ExtendedIterator<DownloadMapImpl> downloadMaps() {
+    public ExtendedIterator<DownloadMapImpl> listDownloadMaps() {
         return model.listResourcesWithProperty(RDF.type, D2RQ.DownloadMap).mapWith(this::asDownloadMap);
     }
 
@@ -390,11 +390,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     @Override
-    public Stream<PropertyBridge> listPropertyBridges() {
-        return Iter.asStream(propertyBridges());
+    public Stream<PropertyBridge> propertyBridges() {
+        return Iter.asStream(listPropertyBridges());
     }
 
-    public ExtendedIterator<PropertyBridgeImpl> propertyBridges() {
+    public ExtendedIterator<PropertyBridgeImpl> listPropertyBridges() {
         return model.listResourcesWithProperty(RDF.type, D2RQ.PropertyBridge).mapWith(this::asPropertyBridge);
     }
 
@@ -414,11 +414,11 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     @Override
-    public Stream<ClassMap> listClassMaps() {
-        return Iter.asStream(classMaps());
+    public Stream<ClassMap> classMaps() {
+        return Iter.asStream(listClassMaps());
     }
 
-    public ExtendedIterator<ClassMapImpl> classMaps() {
+    public ExtendedIterator<ClassMapImpl> listClassMaps() {
         return classMapResources().mapWith(this::asClassMap);
     }
 
@@ -464,7 +464,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     }
 
     public ExtendedIterator<TripleRelation> tripleRelations() throws D2RQException {
-        return Iter.flatMap(classMaps(), c -> c.toTripleRelations().iterator());
+        return Iter.flatMap(listClassMaps(), c -> c.toTripleRelations().iterator());
     }
 
     @Override
@@ -476,7 +476,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
             throw new D2RQException("Duplicate configurations : " + conf);
         }
         Set<String> jdbcURIs = new HashSet<>();
-        if (listDatabases()
+        if (databases()
                 .peek(MapObject::validate)
                 .peek(d -> {
                     if (jdbcURIs.add(d.getJDBCDSN())) return;
@@ -486,13 +486,13 @@ public class MappingImpl implements Mapping, ConnectingMapping {
                 .count() == 0) {
             throw new D2RQException("No d2rq:Database defined in the mapping", D2RQException.MAPPING_NO_DATABASE);
         }
-        translationTables().forEachRemaining(MapObject::validate);
-        additionalProperties().forEachRemaining(MapObject::validate);
-        downloadMaps().forEachRemaining(MapObject::validate);
-        propertyBridges().forEachRemaining(MapObject::validate);
+        listTranslationTables().forEachRemaining(MapObject::validate);
+        listAdditionalProperties().forEachRemaining(MapObject::validate);
+        listDownloadMaps().forEachRemaining(MapObject::validate);
+        listPropertyBridges().forEachRemaining(MapObject::validate);
 
-        classMaps().forEachRemaining(MapObject::validate);
-        List<ClassMapImpl> incomplete = classMaps().filterDrop(ClassMapImpl::hasContent).toList();
+        listClassMaps().forEachRemaining(MapObject::validate);
+        List<ClassMapImpl> incomplete = listClassMaps().filterDrop(ClassMapImpl::hasContent).toList();
         if (!incomplete.isEmpty()) {
             throw new D2RQException((incomplete.size() == 1 ?
                     String.format("Class map %s has", incomplete.get(0)) :
@@ -550,7 +550,7 @@ public class MappingImpl implements Mapping, ConnectingMapping {
 
     @Override
     public String toString() {
-        return Iter.asStream(databases().mapWith(DatabaseImpl::getJDBCDSN))
+        return Iter.asStream(listDatabases().mapWith(DatabaseImpl::getJDBCDSN))
                 .collect(Collectors.joining(", ", "D2RQ-Mapping[", "]"));
     }
 

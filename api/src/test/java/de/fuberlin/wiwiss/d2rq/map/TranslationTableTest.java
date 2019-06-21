@@ -29,7 +29,7 @@ public class TranslationTableTest {
     public void testNewTranslationTableIsEmpty() {
         Mapping m = MappingFactory.create();
         TranslationTable table = m.createTranslationTable(table1);
-        Assert.assertEquals(0, table.listTranslations().count());
+        Assert.assertEquals(0, table.translations().count());
     }
 
     @Test
@@ -37,7 +37,7 @@ public class TranslationTableTest {
         Mapping m = MappingFactory.create();
         TranslationTable table = m.createTranslationTable(table1);
         table.addTranslation("key1", "value1");
-        Assert.assertEquals(1, table.listTranslations().count());
+        Assert.assertEquals(1, table.translations().count());
     }
 
     @Test
@@ -91,16 +91,16 @@ public class TranslationTableTest {
     public void testAddMultipleTranslations() {
         Mapping m = MappingFactory.create();
         TranslationTable tb1 = m.createTranslationTable("tb1").addTranslation("foo", "bar").addTranslation("foo", "bar2");
-        Assert.assertEquals(1, m.listTranslationTables().count());
+        Assert.assertEquals(1, m.translationTables().count());
         TranslationTable tb2 = m.createTranslationTable("tb2")
                 .createTranslation().setDatabaseValue("foo2").setLiteral("bar").getTable();
-        Assert.assertEquals(2, m.listTranslationTables().count());
+        Assert.assertEquals(2, m.translationTables().count());
 
-        Assert.assertEquals(2, tb1.listTranslations().count());
-        Assert.assertEquals(1, tb2.listTranslations().count());
-        Assert.assertEquals(2, tb1.listTranslations().filter(s -> "foo".equals(s.getDatabaseValue())).count());
-        Assert.assertEquals(1, tb1.listTranslations().filter(s -> "bar2".equals(s.getRDFValue())).count());
-        Assert.assertEquals(1, tb1.listTranslations().filter(s -> "bar".equals(s.getRDFValue())).count());
+        Assert.assertEquals(2, tb1.translations().count());
+        Assert.assertEquals(1, tb2.translations().count());
+        Assert.assertEquals(2, tb1.translations().filter(s -> "foo".equals(s.getDatabaseValue())).count());
+        Assert.assertEquals(1, tb1.translations().filter(s -> "bar2".equals(s.getRDFValue())).count());
+        Assert.assertEquals(1, tb1.translations().filter(s -> "bar".equals(s.getRDFValue())).count());
 
         tb1.validate();
         tb2.validate();
@@ -114,13 +114,13 @@ public class TranslationTableTest {
                 .createTranslationTable("tb").addTranslation("a", "b").addTranslation("c", "c");
 
         Mapping m = MappingFactory.create().addTranslationTable(ex);
-        Assert.assertEquals(1, m.listTranslationTables().count());
+        Assert.assertEquals(1, m.translationTables().count());
         Assert.assertEquals(1, m.asModel().listStatements(null, RDF.type, D2RQ.TranslationTable).toSet().size());
         Assert.assertEquals(2, m.asModel().listStatements(null, D2RQ.translation, (RDFNode) null).toSet().size());
-        Assert.assertEquals(2, m.listTranslationTables().flatMap(TranslationTable::listTranslations).count());
+        Assert.assertEquals(2, m.translationTables().flatMap(TranslationTable::translations).count());
 
-        List<String> expected = m.listTranslationTables()
-                .flatMap(TranslationTable::listTranslations)
+        List<String> expected = m.translationTables()
+                .flatMap(TranslationTable::translations)
                 .flatMap(s -> Stream.of(s.getDatabaseValue(), s.getRDFValue()))
                 .sorted()
                 .collect(Collectors.toList());

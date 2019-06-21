@@ -33,39 +33,39 @@ public class MappingUtils {
     }
 
     public static void connectToDummyDBs(Mapping m) {
-        m.listDatabases().map(DummyDB::create).forEach(c -> MappingHelper.useConnectedDB(m, c));
+        m.databases().map(DummyDB::create).forEach(c -> MappingHelper.useConnectedDB(m, c));
     }
 
     public static TranslationTable.Entry findTranslation(TranslationTable table) {
-        return table.listTranslations().findFirst().orElseThrow(AssertionError::new);
+        return table.translations().findFirst().orElseThrow(AssertionError::new);
     }
 
     public static TranslationTable findTranslationTable(Mapping mapping) {
-        return mapping.listTranslationTables().findFirst().orElseThrow(AssertionError::new);
+        return mapping.translationTables().findFirst().orElseThrow(AssertionError::new);
     }
 
     public static TranslationTable findTranslationTable(Mapping mapping, Resource name) {
-        return find(mapping, Mapping::listTranslationTables, name);
+        return find(mapping, Mapping::translationTables, name);
     }
 
     public static DownloadMap findDownloadMap(Mapping mapping, Resource name) {
-        return find(mapping, Mapping::listDownloadMaps, name);
+        return find(mapping, Mapping::downloadMaps, name);
     }
 
     public static PropertyBridge findPropertyBridge(Mapping mapping, Resource name) {
-        return find(mapping, Mapping::listPropertyBridges, name);
+        return find(mapping, Mapping::propertyBridges, name);
     }
 
     public static PropertyBridge findPropertyBridge(Mapping mapping, String localName) {
-        return find(mapping, Mapping::listPropertyBridges, localName);
+        return find(mapping, Mapping::propertyBridges, localName);
     }
 
     public static ClassMap findClassMap(Mapping mapping, Resource name) {
-        return find(mapping, Mapping::listClassMaps, name);
+        return find(mapping, Mapping::classMaps, name);
     }
 
     public static ClassMap findClassMap(Mapping mapping, String localName) {
-        return find(mapping, Mapping::listClassMaps, localName);
+        return find(mapping, Mapping::classMaps, localName);
     }
 
     private static <X extends MapObject> X find(Mapping m, Function<Mapping, Stream<X>> get, Resource name) {

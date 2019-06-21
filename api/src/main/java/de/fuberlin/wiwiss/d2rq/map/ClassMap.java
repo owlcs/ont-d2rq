@@ -26,7 +26,7 @@ public interface ClassMap extends MapObject,
      *
      * @return Stream of {@link Resource}s
      */
-    Stream<Resource> listClasses();
+    Stream<Resource> classes();
 
     /**
      * Sets {@code d2rq:containsDuplicates} boolean literal.
@@ -75,7 +75,7 @@ public interface ClassMap extends MapObject,
      *
      * @return Stream of {@link PropertyBridge}s
      */
-    Stream<PropertyBridge> listPropertyBridges();
+    Stream<PropertyBridge> propertyBridges();
 
     /**
      * Adds an uri resource for predicate {@code d2rq:class}

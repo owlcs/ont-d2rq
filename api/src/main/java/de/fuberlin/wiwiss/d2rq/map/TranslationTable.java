@@ -31,7 +31,7 @@ public interface TranslationTable extends MapObject {
      *
      * @return Stream of {@link Entry}.
      */
-    Stream<Entry> listTranslations();
+    Stream<Entry> translations();
 
     /**
      * Links to a java {@link Translator} implementation using predicate {@code d2rq:javaClass}.

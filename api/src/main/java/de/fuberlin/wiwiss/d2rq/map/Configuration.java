@@ -57,7 +57,7 @@ public interface Configuration extends MapObject {
      * If this option is specified, then the mapping will be automatically supplemented
      * with some additional D2RQ rules so that the generated data (see {@link Mapping#getData()})
      * will also include several reasonable axioms, according to the OWL2 specification requirements.
-     * Also it is to handle {@link PropertyBridge#listDynamicProperties()} dynamic properties}.
+     * Also it is to handle {@link PropertyBridge#dynamicProperties()} dynamic properties}.
      * <p>
      * If this option is turned off, it still possible to have correct OWL2 schema,
      * depending on the original mapping itself.

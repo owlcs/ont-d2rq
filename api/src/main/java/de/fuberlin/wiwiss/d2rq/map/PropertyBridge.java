@@ -68,7 +68,7 @@ public interface PropertyBridge extends MapObject,
      *
      * @return Stream of {@link Property}s
      */
-    Stream<Property> listProperties();
+    Stream<Property> properties();
 
     /**
      * Adds {@code d2rq:dynamicProperty} pattern to the object.
@@ -86,7 +86,7 @@ public interface PropertyBridge extends MapObject,
      *
      * @return Stream of Strings
      */
-    Stream<String> listDynamicProperties();
+    Stream<String> dynamicProperties();
 
     /**
      * Sets {@code d2rq:sqlExpression} literal value.

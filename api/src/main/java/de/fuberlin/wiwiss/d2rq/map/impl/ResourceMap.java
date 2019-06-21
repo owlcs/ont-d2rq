@@ -63,11 +63,11 @@ abstract class ResourceMap extends MapObjectImpl {
         return addRDFNode(additionalPropertyPredicate(), res.asResource());
     }
 
-    public Stream<AdditionalProperty> listAdditionalProperties() {
-        return Iter.asStream(additionalProperties());
+    public Stream<AdditionalProperty> additionalProperties() {
+        return Iter.asStream(listAdditionalProperties());
     }
 
-    public ExtendedIterator<AdditionalPropertyImpl> additionalProperties() {
+    public ExtendedIterator<AdditionalPropertyImpl> listAdditionalProperties() {
         return resource.listProperties(additionalPropertyPredicate())
                 .mapWith(s -> mapping.asAdditionalProperty(s.getResource()));
     }
@@ -76,11 +76,11 @@ abstract class ResourceMap extends MapObjectImpl {
         return addRDFNode(definitionCommentPredicate(), value);
     }
 
-    public Stream<Literal> listComments() {
-        return Iter.asStream(comments());
+    public Stream<Literal> comments() {
+        return Iter.asStream(listComments());
     }
 
-    public ExtendedIterator<Literal> comments() {
+    public ExtendedIterator<Literal> listComments() {
         return listLiterals(definitionCommentPredicate());
     }
 
@@ -88,11 +88,11 @@ abstract class ResourceMap extends MapObjectImpl {
         return addRDFNode(definitionLabelPredicate(), value);
     }
 
-    public Stream<Literal> listLabels() {
-        return Iter.asStream(labels());
+    public Stream<Literal> labels() {
+        return Iter.asStream(listLabels());
     }
 
-    public ExtendedIterator<Literal> labels() {
+    public ExtendedIterator<Literal> listLabels() {
         return listLiterals(definitionLabelPredicate());
     }
 
@@ -160,24 +160,24 @@ abstract class ResourceMap extends MapObjectImpl {
         return addLiteral(D2RQ.valueRegex, regex);
     }
 
-    public ExtendedIterator<String> getValueRegexesIterator() {
+    public ExtendedIterator<String> listValueRegexes() {
         return listStrings(D2RQ.valueRegex);
     }
 
-    public Stream<String> listValueRegex() {
-        return Iter.asStream(getValueRegexesIterator());
+    public Stream<String> valueRegexes() {
+        return Iter.asStream(listValueRegexes());
     }
 
     public ResourceMap addValueContains(String contains) {
         return addLiteral(D2RQ.valueContains, contains);
     }
 
-    public ExtendedIterator<String> getValueContainsIterator() {
+    public ExtendedIterator<String> listValueContains() {
         return listStrings(D2RQ.valueContains);
     }
 
-    public Stream<String> listValueContains() {
-        return Iter.asStream(getValueContainsIterator());
+    public Stream<String> valueContains() {
+        return Iter.asStream(listValueContains());
     }
 
     public ResourceMap setValueMaxLength(int maxLength) {
@@ -368,8 +368,8 @@ abstract class ResourceMap extends MapObjectImpl {
         if (valueMaxLength != null) {
             constraints.add(ValueDecorator.maxLengthConstraint(valueMaxLength));
         }
-        getValueContainsIterator().mapWith(ValueDecorator::containsConstraint).forEachRemaining(constraints::add);
-        getValueRegexesIterator().mapWith(ValueDecorator::regexConstraint).forEachRemaining(constraints::add);
+        listValueContains().mapWith(ValueDecorator::containsConstraint).forEachRemaining(constraints::add);
+        listValueRegexes().mapWith(ValueDecorator::regexConstraint).forEachRemaining(constraints::add);
         TranslationTable translateWith = getTranslateWith();
         if (translateWith == null) {
             if (constraints.isEmpty()) {

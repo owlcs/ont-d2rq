@@ -13,13 +13,13 @@ interface HasProperties<R extends MapObject> {
 
     R addAdditionalProperty(AdditionalProperty property);
 
-    Stream<AdditionalProperty> listAdditionalProperties();
+    Stream<AdditionalProperty> additionalProperties();
 
     R addComment(Literal value);
 
-    Stream<Literal> listComments();
+    Stream<Literal> comments();
 
     R addLabel(Literal value);
 
-    Stream<Literal> listLabels();
+    Stream<Literal> labels();
 }

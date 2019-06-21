@@ -37,7 +37,7 @@ public class DBConnectionTest {
     @Before
     public void setUp() {
         mapModel = ISWCData.MYSQL.loadMapping("http://test.").asModel();
-        databases = MappingFactory.create(mapModel, null).listDatabases().collect(Collectors.toList());
+        databases = MappingFactory.create(mapModel, null).databases().collect(Collectors.toList());
         firstDatabase = databases.iterator().next();
         simplestQuery = "SELECT 1;";
         // mediumQuery = "SELECT PaperID from papers";

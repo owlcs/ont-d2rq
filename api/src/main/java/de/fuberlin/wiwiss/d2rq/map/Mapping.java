@@ -188,7 +188,7 @@ public interface Mapping extends AutoCloseable {
      *
      * @return Stream of {@link Database}s
      */
-    Stream<Database> listDatabases();
+    Stream<Database> databases();
 
     /**
      * Lists all {@link TranslationTable Translation Table}s that are declared in the mapping graph.
@@ -196,35 +196,35 @@ public interface Mapping extends AutoCloseable {
      *
      * @return Stream of {@link TranslationTable}s
      */
-    Stream<TranslationTable> listTranslationTables();
+    Stream<TranslationTable> translationTables();
 
     /**
      * Lists all {@link AdditionalProperty}s.
      *
      * @return Stream of {@link AdditionalProperty}s
      */
-    Stream<AdditionalProperty> listAdditionalProperties();
+    Stream<AdditionalProperty> additionalProperties();
 
     /**
      * Lists all {@link DownloadMap Download Map}s that are declared in the mapping graph.
      *
      * @return Stream of {@link DownloadMap}s
      */
-    Stream<DownloadMap> listDownloadMaps();
+    Stream<DownloadMap> downloadMaps();
 
     /**
      * Lists all {@link ClassMap Class Map}s that are declared in the mapping graph.
      *
      * @return Stream of {@link ClassMap}s
      */
-    Stream<ClassMap> listClassMaps();
+    Stream<ClassMap> classMaps();
 
     /**
      * Lists all {@link PropertyBridge Property Bridge}s that are declared in the mapping graph.
      *
      * @return Stream of {@link PropertyBridge}s
      */
-    Stream<PropertyBridge> listPropertyBridges();
+    Stream<PropertyBridge> propertyBridges();
 
     /**
      * Appends the specified database {@link MapObject map object} into the mapping.
@@ -294,12 +294,25 @@ public interface Mapping extends AutoCloseable {
     /**
      * Finds a database with the given jdbc-uri.
      *
-     * @param jdbcURL db connection string for looking for, not {@code null}
+     * @param jdbcURI db connection string for looking for, not {@code null}
      * @return {@link Optional} of the {@link Database}, can be empty
      */
-    default Optional<Database> findDatabase(String jdbcURL) {
-        Objects.requireNonNull(jdbcURL, "Null JDBC URL");
-        return listDatabases().filter(c -> Objects.equals(c.getJDBCDSN(), jdbcURL)).findFirst();
+    default Optional<Database> database(String jdbcURI) {
+        Objects.requireNonNull(jdbcURI, "Null JDBC URL");
+        return databases().filter(c -> Objects.equals(c.getJDBCDSN(), jdbcURI)).findFirst();
+    }
+
+    /**
+     * Returns a database with the given jdbc-uri or throws an exception.
+     *
+     * @param uri db connection string for looking for, not {@code null}
+     * @return {@link Database}, cannot be {@code null}
+     * @throws NullPointerException     if input is {@code null}
+     * @throws IllegalArgumentException if can't find the given {@code uri}
+     */
+    default Database getDatabase(String uri) {
+        return database(uri)
+                .orElseThrow(() -> new IllegalArgumentException("Can't find d2rq:Database with URI <" + uri + ">"));
     }
 
     default Model getDataModel() {

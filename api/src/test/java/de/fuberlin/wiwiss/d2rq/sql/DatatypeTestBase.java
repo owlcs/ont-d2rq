@@ -79,7 +79,7 @@ public abstract class DatatypeTestBase {
         mapping.getConfiguration().setUseAllOptimizations(true).setServeVocabulary(false);
         mapping.validate();
         graph = mapping.getData();
-        Database db = mapping.listDatabases().findFirst().orElseThrow(AssertionError::new);
+        Database db = mapping.databases().findFirst().orElseThrow(AssertionError::new);
         inspector = MappingHelper.getConnectedDB(db).schemaInspector();
     }
 

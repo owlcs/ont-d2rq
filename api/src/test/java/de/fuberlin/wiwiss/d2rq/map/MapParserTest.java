@@ -33,7 +33,7 @@ public class MapParserTest {
         JenaModelUtils.print(m);
 
         Mapping map = MappingFactory.wrap(m);
-        Assert.assertEquals(0, map.listPropertyBridges().count());
+        Assert.assertEquals(0, map.propertyBridges().count());
 
         long size = m.size();
         MapParser.fixLegacyPropertyBridges(m);
@@ -42,7 +42,7 @@ public class MapParserTest {
         Assert.assertEquals(size, m.size());
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.DataPropertyBridge));
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.ObjectPropertyBridge));
-        Assert.assertEquals(2, map.listPropertyBridges().count());
+        Assert.assertEquals(2, map.propertyBridges().count());
         PropertyBridge opb = MappingUtils.findPropertyBridge(map, op);
         PropertyBridge dpb = MappingUtils.findPropertyBridge(map, dp);
         Assert.assertNull(opb.getPattern());
@@ -78,9 +78,9 @@ public class MapParserTest {
 
         JenaModelUtils.print(m);
         Mapping map = MappingFactory.wrap(m);
-        Assert.assertEquals(1, map.listClassMaps().count());
-        Assert.assertEquals(1, map.listAdditionalProperties().count());
-        Assert.assertEquals(0, map.listPropertyBridges().count());
+        Assert.assertEquals(1, map.classMaps().count());
+        Assert.assertEquals(1, map.additionalProperties().count());
+        Assert.assertEquals(0, map.propertyBridges().count());
 
         long size = m.size();
         MapParser.fixLegacyAdditionalProperty(m);
@@ -88,17 +88,17 @@ public class MapParserTest {
         Assert.assertEquals(size + 3, m.size());
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.additionalProperty));
         JenaModelUtils.print(m);
-        Assert.assertEquals(1, map.listClassMaps().count());
-        Assert.assertEquals(1, map.listAdditionalProperties().count());
-        Assert.assertEquals(1, map.listPropertyBridges().count());
+        Assert.assertEquals(1, map.classMaps().count());
+        Assert.assertEquals(1, map.additionalProperties().count());
+        Assert.assertEquals(1, map.propertyBridges().count());
 
         ClassMap cm = MappingUtils.findClassMap(map, c);
-        Assert.assertEquals(1, cm.listPropertyBridges().count());
+        Assert.assertEquals(1, cm.propertyBridges().count());
 
-        PropertyBridge p = map.listPropertyBridges().findFirst().orElseThrow(AssertionError::new);
-        Assert.assertEquals(p, cm.listPropertyBridges().findFirst().orElseThrow(AssertionError::new));
+        PropertyBridge p = map.propertyBridges().findFirst().orElseThrow(AssertionError::new);
+        Assert.assertEquals(p, cm.propertyBridges().findFirst().orElseThrow(AssertionError::new));
         Assert.assertEquals(iri, p.getConstantValue());
-        Assert.assertEquals(RDFS.seeAlso, p.listProperties().findFirst().orElseThrow(AbstractMethodError::new));
+        Assert.assertEquals(RDFS.seeAlso, p.properties().findFirst().orElseThrow(AbstractMethodError::new));
 
         MapParser.fixLegacyAdditionalProperty(m);
         Assert.assertEquals(size + 3, m.size());
@@ -127,10 +127,10 @@ public class MapParserTest {
         Mapping map = MappingFactory.wrap(m);
         ClassMap cm = MappingUtils.findClassMap(map, mc);
         PropertyBridge pb = MappingUtils.findPropertyBridge(map, mp);
-        Assert.assertEquals(1, map.listClassMaps().count());
-        Assert.assertEquals(1, map.listPropertyBridges().count());
-        Assert.assertEquals(0, cm.listClasses().count());
-        Assert.assertEquals(0, pb.listProperties().count());
+        Assert.assertEquals(1, map.classMaps().count());
+        Assert.assertEquals(1, map.propertyBridges().count());
+        Assert.assertEquals(0, cm.classes().count());
+        Assert.assertEquals(0, pb.properties().count());
 
         long size = m.size();
         MapParser.fixLegacyReferences(m);
@@ -140,12 +140,12 @@ public class MapParserTest {
         Assert.assertFalse(m.containsResource(MapParser.LegacyD2RQ.propertyBridge));
         JenaModelUtils.print(m);
 
-        Assert.assertEquals(1, map.listClassMaps().count());
-        Assert.assertEquals(1, map.listPropertyBridges().count());
-        Assert.assertEquals(1, cm.listClasses().count());
-        Assert.assertEquals(1, pb.listProperties().count());
-        Assert.assertEquals(sc, cm.listClasses().findFirst().orElseThrow(AssertionError::new));
-        Assert.assertEquals(sp, pb.listProperties().findFirst().orElseThrow(AssertionError::new));
+        Assert.assertEquals(1, map.classMaps().count());
+        Assert.assertEquals(1, map.propertyBridges().count());
+        Assert.assertEquals(1, cm.classes().count());
+        Assert.assertEquals(1, pb.properties().count());
+        Assert.assertEquals(sc, cm.classes().findFirst().orElseThrow(AssertionError::new));
+        Assert.assertEquals(sp, pb.properties().findFirst().orElseThrow(AssertionError::new));
 
         MapParser.fixLegacyReferences(m);
         Assert.assertEquals(size, m.size());

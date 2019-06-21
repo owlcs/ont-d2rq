@@ -45,7 +45,7 @@ public class SystemLoaderTest {
         String pwd = getString(model, D2RQ.password);
 
         Mapping mapping = new SystemLoader().setMappingURL(url.toString()).setJdbcURL("xxx").build();
-        Database db = mapping.findDatabase(jdbcURL).orElseThrow(AssertionError::new);
+        Database db = mapping.getDatabase(jdbcURL);
         Assert.assertEquals(pwd, db.getPassword());
         Assert.assertEquals(user, db.getUsername());
     }
@@ -64,7 +64,7 @@ public class SystemLoaderTest {
         SystemLoader loader = new SystemLoader().setMappingURL(url.toString());
         Mapping mapping = op.apply(loader, jdbcURL).setPassword(pwd).build();
         MappingUtils.print(mapping);
-        Database db = mapping.findDatabase(jdbcURL).orElseThrow(AssertionError::new);
+        Database db = mapping.getDatabase(jdbcURL);
         Assert.assertEquals(pwd, db.getPassword());
         Assert.assertEquals(user, db.getUsername());
     }
