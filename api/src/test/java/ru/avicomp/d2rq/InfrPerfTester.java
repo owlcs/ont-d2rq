@@ -1,9 +1,12 @@
 package ru.avicomp.d2rq;
 
+import de.fuberlin.wiwiss.d2rq.map.Mapping;
+import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
 import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
+import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
-
+import org.apache.jena.graph.GraphUtil;
 import org.apache.log4j.Level;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -12,10 +15,12 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.d2rq.conf.ConnectionData;
+import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.map.Managers;
 import ru.avicomp.map.MapManager;
 import ru.avicomp.map.MapModel;
 import ru.avicomp.map.OWLMapManager;
+import ru.avicomp.ontapi.OntManagers;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntDT;
@@ -31,16 +36,11 @@ import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A tester (not a test) for checking inference performance,
  * for investigation and finding the an optimal way to infer D2RQ graph using ONT-MAP.
- * <p>
- * TODO: Add D2RQ Mapping to compare
  * <p>
  * Created by @ssz on 28.10.2018.
  */
@@ -67,7 +67,7 @@ public class InfrPerfTester {
 
     @Parameterized.Parameters(name = "{0}")
     public static TestData[] getData() {
-        return TestData.values();
+        return TestData.getData();
     }
 
     @BeforeClass
@@ -87,8 +87,9 @@ public class InfrPerfTester {
         result.entrySet().stream()
                 .sorted(Comparator.comparing((Map.Entry<TestData, Object> o) -> ((Duration) o.getValue())))
                 .forEach(e -> res.put(e.getKey(), toMinutes((Duration) e.getValue())));
-        double min = res.values().iterator().next();
-        res.forEach((k, v) -> LOGGER.info("{}:::{} ({}m)", k, round(v / min), v));
+        TestData first = TestData.getSample();
+        double base = res.containsKey(first) ? res.get(first) : res.values().iterator().next();
+        res.forEach((k, v) -> LOGGER.info("{}:::{} ({}m)", k, round(v / base), v));
         result.clear();
     }
 
@@ -160,6 +161,15 @@ public class InfrPerfTester {
         return target;
     }
 
+    private static OntGraphModel deriveTargetFromGraph(Graph g) {
+        Assume.assumeNotNull(g);
+        OntGraphModel source = OntModelFactory.createModel(g);
+        OWLMapManager manager = Managers.createOWLMapManager();
+        OntGraphModel target = OntMapSimpleTest.createTargetModel(manager);
+        runOntMapInference(manager, source, target, source.getBaseGraph(), target.getBaseGraph());
+        return target;
+    }
+
     private static void runOntMapInference(MapManager manager,
                                            OntGraphModel sourceSchema,
                                            OntGraphModel targetSchema,
@@ -189,6 +199,18 @@ public class InfrPerfTester {
         return m.getBaseGraph();
     }
 
+    private static Graph putDefaultDBInMem() throws OWLOntologyCreationException {
+        D2RQGraphDocumentSource src = D2RQSpinTest.createSource(connection, DATABASE_NAME);
+        String uri = "http://source";
+        String ns = uri + "#";
+        OntGraphModel m = OntManagers.createONT().loadOntologyFromOntologyDocument(src).asGraphModel();
+        m.setNsPrefix("src", ns).setID(uri);
+
+        Graph res = Factory.createGraphMem();
+        GraphUtil.addInto(res, OWLUtils.toMemory(m).getBaseGraph());
+        return res;
+    }
+
     @Before
     public void beforeTest() {
         testData.before();
@@ -199,8 +221,14 @@ public class InfrPerfTester {
     @Test
     public void tesInference() throws Exception {
         OntGraphModel target = testData.deriveTarget();
+
         LOGGER.debug("Validate");
-        long actual = target.individuals().peek(x -> LOGGER.debug("{}", x)).count();
+        long actual = target.individuals().peek(x -> LOGGER.debug("Individual:::{}", x))
+                .peek(i -> Assert.assertEquals("Incorrect number of assertions for individual " + i, 1,
+                        i.positiveAssertions()
+                                .peek(x -> Assert.assertTrue(x.isData() && x.getObject().isLiteral())).count()))
+                .count();
+        LOGGER.info("{}::individuals::{}", testData, actual);
         Assert.assertEquals("Incorrect number of result individuals.", NUMBER_OF_INDIVIDUALS, actual);
     }
 
@@ -213,11 +241,8 @@ public class InfrPerfTester {
     }
 
     enum TestData {
-        DEF_DB_ONT_MAP_WITHOUT_CACHE,
-        DEF_DB_ONT_MAP_WITH_CACHE,
-
-        // to compare
-        MEM_ONT_MAP_WITHOUT_CACHE {
+        // to compare, inference on in-memory graph, created outside the test
+        MEM_ONT_MAP_NO_CACHE {
             @Override
             public void before() {
                 tempSource = createBigGraphInMem();
@@ -230,23 +255,88 @@ public class InfrPerfTester {
 
             @Override
             public OntGraphModel deriveTarget() {
-                Assume.assumeNotNull(tempSource);
-                OntGraphModel source = OntModelFactory.createModel(tempSource);
-                OWLMapManager manager = Managers.createOWLMapManager();
-                OntGraphModel target = OntMapSimpleTest.createTargetModel(manager);
-                runOntMapInference(manager, source, target, source.getBaseGraph(), target.getBaseGraph());
-                return target;
+                return deriveTargetFromGraph(tempSource);
             }
-        };
+        },
 
-        public OntGraphModel deriveTarget() throws Exception {
-            return deriveTargetFromDBWithOntMap(DEF_DB_ONT_MAP_WITH_CACHE == this);
-        }
+        // use predefined D2RQ mapping
+        DB_D2RQ_MAP {
+            @Override
+            public OntGraphModel deriveTarget() {
+                String map_ns = "urn:map#";
+                String uri = "http://target.avicomp.ru";
+                String ns = uri + "#";
+
+                Mapping m = MappingFactory.create();
+                OntGraphModel o = OntModelFactory.createModel(m.getSchema());
+
+                m.createClassMap(map_ns + "Papers")
+                        .setDatabase(m.createDatabase(map_ns + "database")
+                                .setUsername(connection.getUser())
+                                .setPassword(connection.getPwd())
+                                .setJDBCDSN(connection.getJdbcURI(DATABASE_NAME)))
+                        .addClass(o.createOntClass(ns + "ClassTarget"))
+                        .setURIPattern("papers/@@papers.paperid@@")
+                        .createPropertyBridge(map_ns + "TitleAndYear")
+                        .addProperty(o.createDataProperty(ns + "targetProperty"))
+                        .setSQLExpression("CONCAT(papers.title, \', \', papers.year)\n");
+
+                // put to mem:
+                Graph res = Factory.createGraphMem();
+                GraphUtil.addInto(res, m.getData());
+                return OntModelFactory.createModel(res).setNsPrefix("schema", ns);
+            }
+
+            @Override
+            public boolean sample() {
+                return true;
+            }
+        },
+
+        // run inference on default DB virtual graph
+        DEF_DB_ONT_MAP_NO_CACHE {
+            @Override
+            public OntGraphModel deriveTarget() throws Exception {
+                return deriveTargetFromDBWithOntMap(false);
+            }
+        },
+
+        // run inference on default DB virtual graph using cache buffer
+        DEF_DB_ONT_MAP_WITH_CACHE {
+            @Override
+            public OntGraphModel deriveTarget() throws Exception {
+                return deriveTargetFromDBWithOntMap(true);
+            }
+        },
+
+        // put the default DB into mem first and only then run inference
+        DEF_DB_IN_MEM_ONT_MAP {
+            @Override
+            public OntGraphModel deriveTarget() throws Exception {
+                Graph g = putDefaultDBInMem();
+                return deriveTargetFromGraph(g);
+            }
+        },
+        ;
+
+        public abstract OntGraphModel deriveTarget() throws Exception;
 
         public void before() {
         }
 
         public void after() {
+        }
+
+        public boolean sample() {
+            return false;
+        }
+
+        public static TestData getSample() {
+            return Arrays.stream(values()).filter(TestData::sample).findFirst().orElseThrow(IllegalStateException::new);
+        }
+
+        public static TestData[] getData() {
+            return values();
         }
     }
 
