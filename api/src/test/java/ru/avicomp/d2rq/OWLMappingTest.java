@@ -5,6 +5,7 @@ import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
+import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.rdf.model.*;
 import org.junit.Assert;
@@ -12,7 +13,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.avicomp.d2rq.conf.ConnectionData;
-import ru.avicomp.ontapi.OntFormat;
+import ru.avicomp.ontapi.jena.OntModelFactory;
+import ru.avicomp.ontapi.jena.model.OntCE;
+import ru.avicomp.ontapi.jena.model.OntClass;
+import ru.avicomp.ontapi.jena.model.OntGraphModel;
+import ru.avicomp.ontapi.jena.model.OntIndividual;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
@@ -24,13 +29,63 @@ import java.util.stream.Stream;
 
 /**
  * For test misc mapping functionality.
- *
+ * <p>
  * Created by szuev on 21.02.2017.
  */
 public class OWLMappingTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OWLMappingTest.class);
+
     private static final String JDBC_URI = ConnectionData.MYSQL.getJdbcConnectionString("iswc");
+
+    /**
+     * @see <a href='https://github.com/avicomp/ont-d2rq/issues/22'>bug #22</a>
+     */
+    @Test
+    public void testEditMappingAndSchemaSimultaneously() {
+        ConnectionData cd = ConnectionData.MYSQL;
+        String ns = "http://m#";
+        Mapping m = MappingFactory.create();
+        OntGraphModel o = OntModelFactory.createModel(m.getSchema());
+
+        // add d2rq:ClassMap and owl:Class
+        m.createClassMap(ns + "Y")
+                .addClass(o.createOntClass(ns + "X"))
+                .setURIColumn("topics.URI");
+        // create d2rq:Database
+        m.createDatabase(ns + "DB").setPassword(cd.getPwd()).setUsername(cd.getUser()).setJDBCDSN(cd.getJdbcURI("iswc"));
+        // add rdfs:subClassOf and owl:Axiom (annotation)
+        o.classes().findFirst().orElseThrow(AssertionError::new)
+                .addSubClassOfStatement(o.getOWLThing()).annotate(o.getRDFSComment(), "Super class relation");
+        // add d2rq:database ref
+        m.classMaps().findFirst().orElseThrow(AssertionError::new)
+                .setDatabase(m.databases().findFirst().orElseThrow(AssertionError::new));
+
+        // validate mapping
+        JenaModelUtils.print(m.asModel());
+        Assert.assertEquals(15, m.asModel().size());
+
+        try {
+            OntGraphModel res = OntModelFactory.createModel(m.getData())
+                    .setNsPrefix("schema", ns)
+                    .setNsPrefix("iswc", ISWC.getURI());
+            String txt = JenaModelUtils.toTurtleString(res);
+            LOGGER.debug(":\n{}", txt);
+
+            // validate whole graph
+            OntClass c = res.getOntClass(res.expandPrefix("schema:X"));
+            Assert.assertNotNull(c);
+            OntIndividual i = res.getIndividual(res.expandPrefix("iswc:e-Business"));
+            Assert.assertNotNull(i);
+            List<OntCE> classes = i.classes().collect(Collectors.toList());
+            Assert.assertEquals(1, classes.size());
+            Assert.assertEquals(c, classes.get(0));
+
+            Assert.assertEquals(22, res.size());
+        } finally {
+            m.close();
+        }
+    }
 
     @Test
     public void testMappingDerivingNamedIndividuals() {
@@ -39,7 +94,7 @@ public class OWLMappingTest {
 
     @Test
     public void testMappingDerivingNamedIndividualsWithControlOWL() {
-        testMappingDerivingNamedIndividuals(false);
+        testMappingDerivingNamedIndividuals(true);
     }
 
     /**
@@ -70,11 +125,11 @@ public class OWLMappingTest {
         String foaf_ns = "http://xmlns.com/foaf/0.1/";
 
         try (Mapping m = MappingFactory.create()) {
-            ConnectionData connData = ConnectionData.MYSQL;
+            ConnectionData cd = ConnectionData.MYSQL;
             Database db = m.createDatabase(map_ns + "database")
-                    .setUsername(connData.getUser())
-                    .setPassword(connData.getPwd())
-                    .setJDBCDSN(connData.getJdbcURI("iswc"));
+                    .setUsername(cd.getUser())
+                    .setPassword(cd.getPwd())
+                    .setJDBCDSN(cd.getJdbcURI("iswc"));
 
             if (withControlOWL)
                 m.getConfiguration().setControlOWL(true);
@@ -88,7 +143,7 @@ public class OWLMappingTest {
 
             Model res = ModelFactory.createModelForGraph(m.getData())
                     .setNsPrefix("jswc", iswc_ns);
-            String txt = ReadWriteUtils.toString(res, OntFormat.TURTLE);
+            String txt = JenaModelUtils.toTurtleString(res);
             LOGGER.debug(":\n{}", txt);
 
             JenaModelUtils.print(m.asModel());

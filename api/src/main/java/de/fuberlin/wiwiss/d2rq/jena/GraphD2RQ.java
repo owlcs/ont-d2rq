@@ -120,6 +120,11 @@ public class GraphD2RQ extends MappingGraph implements Graph {
         return data;
     }
 
+    @Override
+    protected void checkOpen() {
+        mapping.connect();
+    }
+
     /**
      * Do not allow database excursion.
      *

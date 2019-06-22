@@ -18,12 +18,6 @@ public abstract class SchemaGraph extends MappingGraph {
     }
 
     @Override
-    public void checkOpen() {
-        if (getMapping().isEmpty()) return;
-        super.checkOpen();
-    }
-
-    @Override
     public MappingImpl getMapping() {
         return (MappingImpl) mapping;
     }

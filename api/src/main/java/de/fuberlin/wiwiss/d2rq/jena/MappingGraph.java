@@ -29,11 +29,6 @@ public abstract class MappingGraph extends GraphBase {
         mapping.close();
     }
 
-    @Override
-    protected void checkOpen() {
-        mapping.connect();
-    }
-
     /**
      * @return the {@link ConnectingMapping} this graph is based on
      */
