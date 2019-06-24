@@ -26,13 +26,21 @@ import java.util.stream.Collectors;
 
 /**
  * A {@code Graph} that caches the results of the most recently performed queries on
- * an LRU basis with fixed length to minimise query calls.
- * Must be thread-safe.
- * Notice that it is a read only accessor.
+ * an LRU basis to minimise query calls.
+ * The graph keeps track of its own size, any cache operation is performed under control.
+ * Must be thread-safe, locking is performed per triple pattern.
+ * Notice that it is a read only accessor: any mutation is prohibited
+ * and an attempt to modify the graph will lead to {@link org.apache.jena.shared.JenaException}.
+ * Also note that the external changing of underlying (DB) data may lead to graph inconsistently.
  * <p>
- * Currently it is experimental optimization.
+ * Currently it is an experimental optimization.
+ * See also {@code ru.avicomp.d2rq.InferenceStrategies} -
+ * a minimal set of tests to compare and measure performance while graph inference.
+ * <p>
+ * It is a former <a href='https://github.com/d2rq/d2rq/blob/master/src/de/fuberlin/wiwiss/d2rq/jena/CachingGraphD2RQ.java'>de.fuberlin.wiwiss.d2rq.jena.CachingGraphD2RQ</a>
  *
  * @author Holger Knublauch (holger@topquadrant.com)
+ * <p>
  * Created by @ssz on 27.10.2018.
  */
 @SuppressWarnings({"WeakerAccess"})
@@ -61,7 +69,8 @@ public class CachingGraph extends GraphBase {
     // cache parameters:
     protected final int findCacheSize;
     protected final int containsCacheSize;
-    // cache for find operations. use jena cache for some abstract uniformity reasons
+    // cache for find operations.
+    // use jena cache for some abstract uniformity reasons - what kind of cache to use almost doesn't matter
     protected final Cache<Triple, Bucket> findCache;
     // cache for contains operation.
     protected final Cache<Triple, Boolean> containsCache;

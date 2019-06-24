@@ -33,6 +33,7 @@ import java.util.Objects;
  * A factory to create and load {@link Mapping D2RQ Mapping}s.
  * <p>
  * Created by szuev on 22.02.2017.
+ *
  * @see MappingHelper
  */
 public class MappingFactory {
@@ -58,7 +59,13 @@ public class MappingFactory {
             .setNsPrefix(JDBC_PREFIX, JDBC.getURI()).lock();
 
     /**
-     * Creates a fresh mapping.
+     * Creates a fresh mapping with the following default settings:
+     * <ul>
+     * <li>{@link D2RQ#serveVocabulary} is {@code true}</li>
+     * <li>{@link D2RQ#useAllOptimizations} is {@code false}</li>
+     * <li>{@link de.fuberlin.wiwiss.d2rq.vocab.AVC#controlOWL} is {@code false}</li>
+     * <li>{@link de.fuberlin.wiwiss.d2rq.vocab.AVC#withCache} is {@code false}</li>
+     * </ul>
      *
      * @return {@link Mapping}
      */
@@ -69,8 +76,11 @@ public class MappingFactory {
     /**
      * Creates a mapping from the given model.
      * The difference between the {@link #wrap(Model)} method and this one is that
-     * the first method does not change the model, whereas this method performs some operations on the model,
+     * the first method does not change the model,
+     * whereas this method changes it performing some specific operations on the model,
      * for example it fixes legacy D2RQ instructions.
+     * If the specified RDF does not contain any {@link D2RQ#Configuration d2rq:Configuration},
+     * then the returned mapping will have the default settings, described for the method {@link #create()}.
      *
      * @param model {@link Model} the mapping model contained D2RQ rules.
      * @return {@link Mapping}
@@ -231,6 +241,8 @@ public class MappingFactory {
 
     /**
      * Wraps the given model as a {@link Mapping}.
+     * If the specified RDF does not contain any {@link D2RQ#Configuration d2rq:Configuration},
+     * then the returned mapping will have the default settings, see {@link #create()}.
      *
      * @param model {@link Model}, not {@code null}
      * @return {@link Mapping}

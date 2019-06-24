@@ -40,15 +40,15 @@ import java.util.*;
 
 /**
  * A tester (not a test) for checking inference performance,
- * for investigation and finding the an optimal way to infer D2RQ graph using ONT-MAP.
+ * for investigation and finding an optimal way to infer D2RQ graph using ONT-MAP.
  * <p>
  * Created by @ssz on 28.10.2018.
  */
 @Ignore // not a test - ignore
 @RunWith(Parameterized.class)
-public class InfrPerfTester {
+public class InferenceStrategies {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(InfrPerfTester.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(InferenceStrategies.class);
     private static final String DATABASE_NAME = "iswc_test";
     private static final String DATABASE_SCRIPT = "./doc/example/iswc-postgres.sql";
     private static final int INIT_ROW_NUMBER = 7;
@@ -61,7 +61,7 @@ public class InfrPerfTester {
     private static Graph tempSource;
     private final TestData testData;
 
-    public InfrPerfTester(TestData data) {
+    public InferenceStrategies(TestData data) {
         this.testData = data;
     }
 

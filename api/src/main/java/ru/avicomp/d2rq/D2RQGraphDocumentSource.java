@@ -1,10 +1,10 @@
 package ru.avicomp.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
-import de.fuberlin.wiwiss.d2rq.map.Configuration;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.vocab.AVC;
+import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
@@ -25,10 +25,9 @@ import java.util.Properties;
  * but it is also a {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph D2RQ Mapping Graph} and, therefore,
  * has a reference to a {@link Mapping D2RQ Mapping}
  * (which is also provided by the method {@link D2RQGraphDocumentSource#getMapping()},
- * with a possibility to get a raw
- * (in case a default method {@link #create(IRI, IRI, String, String, Properties) #create(...)}
- * to get a instance of this OGDS is used)
- * database data in the form of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ Data Graph}.
+ * with a possibility to get a raw database data
+ * (but only in case the default method {@link #create(IRI, IRI, String, String, Properties) #create(...)} was used)
+ * in the form of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ Data Graph}.
  * <p>
  * Created by @szuev on 24.02.2017.
  *
@@ -52,6 +51,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
 
     /**
      * Creates an OWL Document Source using the given connection settings.
+     * For more details see the method {@link #create(IRI, IRI, String, String, Properties)} description.
      *
      * @param jdbcURI {@link IRI} jdbc-connection string, not {@code null}
      * @param user    the connection user login
@@ -68,22 +68,23 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * using the specified connection parameters.
      * This is a generic method to create a mapping and document source.
      * <p>
-     * The returning graph document source (i.e. OGDS) encapsulates the {@link Mapping D2RQ Mapping},
+     * The returned graph document source (OGDS in short) encapsulates the {@link Mapping D2RQ Mapping},
      * which is slightly different from what can be generated with help of the
      * {@link de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator Default Mapping Generator} or
      * {@link de.fuberlin.wiwiss.d2rq.mapgen.W3CMappingGenerator Direct Mapping Generator}.
      * Like a {@code W3CMappingGenerator} it produces anonymous individuals
      * for each tuple from the table without primary key and named individuals for all other (good) tuples.
-     * Each of the anonymous individuals will be equipped with the same label.
+     * Each of the anonymous individuals will be equipped with one for all label.
      * All other {@link de.fuberlin.wiwiss.d2rq.map.PropertyBridge PropertyBridge}s will be the same
      * as {@code MappingGenerator} would created.
-     * Also notice, that the encapsulated {@link Mapping} has
-     * the parameter {@link Configuration#getControlOWL()} set to {@code true} and
-     * the parameter {@link Configuration#getServeVocabulary()} set to {@code false}.
-     * The first setting means that each retrieved individual has always class-type and,
-     * if it is named, a {@code owl:NamedIndividual} declaration.
-     * The second setting means that a data part from the {@link #getGraph() Hybrid Graph} does not served with a schema,
-     * it comes as primary (wrapped) part.
+     * Also, the {@code Mapping} will have the following D2RQ settings:
+     * <ul>
+     * <li>{@link D2RQ#serveVocabulary} is {@code false}</li>
+     * <li>{@link D2RQ#useAllOptimizations} is {@code false}</li>
+     * <li>{@link de.fuberlin.wiwiss.d2rq.vocab.AVC#controlOWL} is {@code true}</li>
+     * <li>{@link de.fuberlin.wiwiss.d2rq.vocab.AVC#withCache} is {@code false}</li>
+     * </ul>
+     * For more info see {@link de.fuberlin.wiwiss.d2rq.map.Configuration}).
      *
      * @param baseIRI {@link IRI} the base iri to build owl-entity iris (see {@code d2rq:uriPattern})
      * @param jdbcIRI {@link IRI} jdbc-connection string, not {@code null}
@@ -92,6 +93,7 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
      * @param props   {@link Properties}, the JDBC connection properties or {@code null}
      * @return {@link D2RQGraphDocumentSource D2RQ OGDS}
      * @see de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator
+     * @see MappingFactory#create()
      */
     public static D2RQGraphDocumentSource create(IRI baseIRI,
                                                  IRI jdbcIRI,
@@ -154,15 +156,16 @@ public class D2RQGraphDocumentSource extends OntGraphDocumentSource implements A
     /**
      * Provides a DB schema {@code Graph}, that contains OWL2 declarations
      * reflecting the concrete database schema according to the {@link #getMapping() D2RQ Mapping} instructions.
-     * This graph is virtual but editable: any changes in it go directly to the mapping {@code Graph}.
-     * It is also a {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph Mapping Graph}, and, therefore,
-     * there is a possibility to get database data from it
-     * (is the form of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ Data Graph}),
+     * This graph is virtual, but also editable: any changes in it go directly to the mapping {@code Graph}.
+     * The returned graph is also an instance of {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph Mapping Graph},
+     * and, therefore, there is always a possibility to get access to the database data
+     * in the form of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ D2RQ Data Graph},
      * see {@link D2RQGraphUtils#getDataGraph(Graph)}.
      * <p>
-     * If this OGDS is default, i.e. constructed by the method {@link #create(IRI, IRI, String, String, Properties)},
-     * then a D2RQ data {@code Graph} does not contain a schema.
-     * Also, please note: a D2RQ Data {@code Graph} is unmodifiable and not distinct:
+     * Notice that if this OGDS is default
+     * (which means it is constructed by the method {@link #create(IRI, IRI, String, String, Properties)}),
+     * then a D2RQ data graph does not supplied with a schema.
+     * Also please remember: a D2RQ Data graph is unmodifiable and non-distinct:
      * it may contain duplicate triples reflecting the duplicated tuples in a db table.
      *
      * @see Mapping#getSchema()
