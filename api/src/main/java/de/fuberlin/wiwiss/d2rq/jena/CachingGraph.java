@@ -13,7 +13,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
-import org.apache.jena.util.iterator.WrappedIterator;
+import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 public class CachingGraph extends GraphBase {
 
     // value-marker, used to indicate that retrieved Triples set is too large to store in-memory
-    protected static final Bucket OUT_OF_SPACE = new Bucket() {
+    protected static final Bucket OUT_OF_SPACE = new EmptyBucket() {
 
         @Override
         public String toString() {
@@ -79,9 +79,9 @@ public class CachingGraph extends GraphBase {
     // a Set of all triplets that definitely cannot fit the cache
     protected final Set<Triple> forbidden = new HashSet<>();
     // a Map with all builtin URIs that do not need caching and can appear in a subject or object position
-    protected final Map<Node, Node> resourceVocabulary;
+    protected final Map<String, Node> resourceVocabulary;
     // a Map with all builtin URIs that do not need caching and can appear in a predicate position
-    protected final Map<Node, Node> propertyVocabulary;
+    protected final Map<String, Node> propertyVocabulary;
     // to calculate the length of URI
     protected final ToLongFunction<Node> uriLengthCalculator;
     // to calculate the length of b-Node
@@ -168,8 +168,8 @@ public class CachingGraph extends GraphBase {
         this.uriLengthCalculator = Objects.requireNonNull(uriLengthCalculator, "Null URI length calculator");
         this.bNodeLengthCalculator = Objects.requireNonNull(bNodeLengthCalculator, "Null Blank Node length calculator");
         this.literalLengthCalculator = Objects.requireNonNull(literalLengthCalculator, "Null Literal length calculator");
-        this.resourceVocabulary = asCacheMap(builtinResources);
-        this.propertyVocabulary = asCacheMap(builtinProperties);
+        this.resourceVocabulary = toNodesMap(builtinResources);
+        this.propertyVocabulary = toNodesMap(builtinProperties);
         this.findCacheSize = requirePositive(findCacheSize, "Negative find cache size parameter");
         this.containsCacheSize = requirePositive(findCacheSize, "Negative contains cache size parameter");
         this.cacheLengthLimit = requirePositive(cacheLengthLimit, "Negative queries max length");
@@ -188,10 +188,25 @@ public class CachingGraph extends GraphBase {
         return n;
     }
 
-    protected static Map<Node, Node> asCacheMap(Collection<? extends Resource> vocabulary) {
+    /**
+     * Turns the given collection of {@link Resource}s
+     * into an unmodifiable {@code Map} with URIs as keys and {@link Node}s as values.
+     *
+     * @param vocabulary {@code Collection}
+     * @return {@code Map}
+     * @throws RuntimeException in case the input contains {@code null}s or anonymous resources
+     */
+    public static Map<String, Node> toNodesMap(Collection<? extends Resource> vocabulary) {
         return Collections.unmodifiableMap(Objects.requireNonNull(vocabulary, "Null vocabulary")
-                .stream().map(FrontsNode::asNode)
-                .collect(Collectors.toMap(Function.identity(), Function.identity())));
+                .stream()
+                .peek(r -> {
+                    if (!Objects.requireNonNull(r).isURIResource()) {
+                        throw new IllegalArgumentException("Not uri: " + r);
+                    }
+                })
+                .map(FrontsNode::asNode)
+                .distinct()
+                .collect(Collectors.toMap(Node::getURI, Function.identity())));
     }
 
     @Override
@@ -236,14 +251,14 @@ public class CachingGraph extends GraphBase {
                     }
                     // or until the value will be invalidated by the LRU basis
                     findCache.put(m, OUT_OF_SPACE);
-                    return WrappedIterator.create(list.iterator()).andThen(it);
+                    return list.iterator().andThen(it);
                 }
             }
             queriesLength.add(list.getLength());
-            list.trimToSize();
+            list.flush();
             // do cache:
             findCache.put(m, list);
-            return WrappedIterator.create(list.iterator());
+            return list.iterator();
         } finally {
             lock.unlock();
             locks.remove(m);
@@ -258,13 +273,13 @@ public class CachingGraph extends GraphBase {
         if (OUT_OF_SPACE == res) {
             return base.find(m);
         } else if (res != null) {
-            return WrappedIterator.create(res.iterator());
+            return res.iterator();
         }
         return null;
     }
 
     protected Bucket createTripleBucket() {
-        return new BucketImpl(bucketCapacity, resourceVocabulary, propertyVocabulary,
+        return new ArrayBucketImpl(bucketCapacity, resourceVocabulary, propertyVocabulary,
                 uriLengthCalculator, bNodeLengthCalculator, literalLengthCalculator);
     }
 
@@ -304,45 +319,121 @@ public class CachingGraph extends GraphBase {
      */
     public interface Bucket {
 
-        default void put(Triple t) {
-            throw new IllegalStateException("Attempt to put " + t);
-        }
+        /**
+         * Puts triple into this bucket.
+         *
+         * @param t {@link Triple}
+         */
+        void put(Triple t);
 
-        default long getLength() {
-            return 0;
-        }
+        /**
+         * Gets the bucket current length.
+         *
+         * @return long
+         */
+        long getLength();
 
-        default int size() {
-            return 0;
-        }
+        /**
+         * Returns the count of cached triples.
+         *
+         * @return int
+         */
+        int size();
 
-        default Iterator<Triple> iterator() {
-            return NullIterator.instance();
-        }
+        /**
+         * Answers an iterator over all content.
+         *
+         * @return {@link ExtendedIterator} of {@link Triple}s
+         */
+        ExtendedIterator<Triple> iterator();
 
-        default void trimToSize() {
+        /**
+         * Performs some final actions to release the memory.
+         */
+        default void flush() {
             // nothing
+        }
+    }
+
+    /**
+     * A {@link Bucket} impl, that does not contain anything.
+     */
+    public static class EmptyBucket implements Bucket {
+
+        @Override
+        public void put(Triple t) {
+            throw new UnsupportedOperationException("Attempt to put " + t);
+        }
+
+        @Override
+        public long getLength() {
+            return 0;
+        }
+
+        @Override
+        public int size() {
+            return 0;
+        }
+
+        @Override
+        public ExtendedIterator<Triple> iterator() {
+            return NullIterator.instance();
         }
     }
 
     /**
      * Default {@link ArrayList Array-based} implementation of {@link Bucket}.
      */
-    public static class BucketImpl extends ArrayList<Triple> implements Bucket {
-        protected final Map<Node, Node> resourceMap;
-        protected final Map<Node, Node> propertyMap;
+    public static class ArrayBucketImpl extends BaseBucketImpl implements Bucket {
+        protected final ArrayList<Triple> array;
+
+        protected ArrayBucketImpl(int initialCapacity,
+                                  Map<String, Node> resources,
+                                  Map<String, Node> properties,
+                                  ToLongFunction<Node> uriLength,
+                                  ToLongFunction<Node> bNodeLength,
+                                  ToLongFunction<Node> literalLength) {
+            super(resources, properties, uriLength, bNodeLength, literalLength);
+            this.array = new ArrayList<>(initialCapacity);
+        }
+
+        @Override
+        public void put(Triple t) {
+            array.add(update(t));
+        }
+
+        @Override
+        public int size() {
+            return array.size();
+        }
+
+        @Override
+        public ExtendedIterator<Triple> iterator() {
+            return Iter.create(array);
+        }
+
+        @Override
+        public void flush() {
+            array.trimToSize();
+        }
+    }
+
+    /**
+     * Base impl.
+     */
+    protected static abstract class BaseBucketImpl {
+        protected final Map<String, Node> resourceMap;
+        protected final Map<String, Node> propertyMap;
         protected final ToLongFunction<Node> uriLength;
         protected final ToLongFunction<Node> bNodeLength;
         protected final ToLongFunction<Node> literalLength;
         private long length;
 
-        protected BucketImpl(int initialCapacity,
-                             Map<Node, Node> resources,
-                             Map<Node, Node> properties,
-                             ToLongFunction<Node> uriLength,
-                             ToLongFunction<Node> bNodeLength,
-                             ToLongFunction<Node> literalLength) {
-            super(initialCapacity);
+        protected BaseBucketImpl(Map<String, Node> resources,
+                                 Map<String, Node> properties,
+                                 ToLongFunction<Node> uriLength,
+                                 ToLongFunction<Node> bNodeLength,
+                                 ToLongFunction<Node> literalLength) {
             this.resourceMap = Objects.requireNonNull(resources);
             this.propertyMap = Objects.requireNonNull(properties);
             this.uriLength = Objects.requireNonNull(uriLength);
@@ -350,13 +441,12 @@ public class CachingGraph extends GraphBase {
             this.literalLength = Objects.requireNonNull(literalLength);
         }
 
-        @Override
-        public void put(Triple t) {
+        public Triple update(Triple t) {
             Node s = t.getSubject();
             Node p = t.getPredicate();
             Node o = t.getObject();
             if (s.isURI()) {
-                Node replace = resourceMap.get(s);
+                Node replace = resourceMap.get(s.getURI());
                 if (replace != null) {
                     s = replace;
                     t = null;
@@ -369,7 +459,7 @@ public class CachingGraph extends GraphBase {
                 throw new IllegalStateException("Unexpected subject for " + t);
             }
             if (p.isURI()) {
-                Node replace = propertyMap.get(p);
+                Node replace = propertyMap.get(p.getURI());
                 if (replace != null) {
                     p = replace;
                     t = null;
@@ -380,7 +470,7 @@ public class CachingGraph extends GraphBase {
                 throw new IllegalStateException("Unexpected predicate for " + t);
             }
             if (o.isURI()) {
-                Node replace = resourceMap.get(o);
+                Node replace = resourceMap.get(o.getURI());
                 if (replace != null) {
                     o = replace;
                     t = null;
@@ -397,17 +487,16 @@ public class CachingGraph extends GraphBase {
             if (t == null) {
                 t = Triple.create(s, p, o);
             }
-            super.add(t);
+            return t;
         }
 
-        @Override
         public long getLength() {
             return length;
         }
 
         @Override
         public String toString() {
-            return String.format("Bucket{length=%d}{super=%s}", length, super.toString());
+            return String.format("%s{length=%d}{super=%s}", getClass().getSimpleName(), length, super.toString());
         }
     }
 
