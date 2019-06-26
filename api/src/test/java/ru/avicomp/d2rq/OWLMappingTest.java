@@ -53,7 +53,11 @@ public class OWLMappingTest {
                 .addClass(o.createOntClass(ns + "X"))
                 .setURIColumn("topics.URI");
         // create d2rq:Database
-        m.createDatabase(ns + "DB").setPassword(cd.getPwd()).setUsername(cd.getUser()).setJDBCDSN(cd.getJdbcURI("iswc"));
+        m.createDatabase(ns + "DB")
+                .setPassword(cd.getPwd())
+                .setUsername(cd.getUser())
+                .setJDBCDSN(cd.getJdbcURI("iswc"))
+                .asResource().addProperty(o.getRDFSComment(), "The database");
         // add rdfs:subClassOf and owl:Axiom (annotation)
         o.classes().findFirst().orElseThrow(AssertionError::new)
                 .addSubClassOfStatement(o.getOWLThing()).annotate(o.getRDFSComment(), "Super class relation");
@@ -63,7 +67,14 @@ public class OWLMappingTest {
 
         // validate mapping
         JenaModelUtils.print(m.asModel());
-        Assert.assertEquals(15, m.asModel().size());
+        long expected = 15;
+        if (cd.getUser() != null) {
+            expected += 1;
+        }
+        if (cd.getPwd() != null) {
+            expected += 1;
+        }
+        Assert.assertEquals(expected, m.asModel().size());
 
         try {
             OntGraphModel res = OntModelFactory.createModel(m.getData())
