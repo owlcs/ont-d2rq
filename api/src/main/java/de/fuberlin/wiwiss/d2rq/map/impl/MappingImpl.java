@@ -139,12 +139,35 @@ public class MappingImpl implements Mapping, ConnectingMapping {
     public Graph createDataGraph() {
         ConfigurationImpl conf = findConfiguration().orElse(null);
         Graph schema = getSchema();
-        Graph res = new GraphD2RQ(this, schema.getPrefixMapping(),
+        Graph res = createDataGraph(schema.getPrefixMapping(),
                 conf == null || conf.getServeVocabulary() ? schema : null);
         if (conf != null && conf.getWithCache()) {
-            res = new CachingGraph(res, conf.getCacheMaxSize(), conf.getCacheLengthLimit());
+            res = withCache(res, conf.getCacheMaxSize(), conf.getCacheLengthLimit());
         }
         return res;
+    }
+
+    /**
+     * A factory method to produce virtual DB graph instance.
+     *
+     * @param pm     {@link PrefixMapping}, not {@code null}
+     * @param schema {@link Graph}, can be {@code null}
+     * @return {@link Graph}
+     */
+    protected Graph createDataGraph(PrefixMapping pm, Graph schema) {
+        return new GraphD2RQ(this, pm, schema);
+    }
+
+    /**
+     * A factory method to produce caching graph instance.
+     *
+     * @param g      {@link Graph}, not {@code null}
+     * @param size   positive
+     * @param length positive
+     * @return {@link Graph}
+     */
+    protected Graph withCache(Graph g, int size, long length) {
+        return new CachingGraph(g, size, length);
     }
 
     /**
