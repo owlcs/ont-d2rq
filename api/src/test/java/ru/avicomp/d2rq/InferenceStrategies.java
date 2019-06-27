@@ -1,5 +1,6 @@
 package ru.avicomp.d2rq;
 
+import de.fuberlin.wiwiss.d2rq.map.Configuration;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
@@ -37,6 +38,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * A tester (not a test) for checking inference performance,
@@ -49,11 +51,13 @@ import java.util.*;
 public class InferenceStrategies {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InferenceStrategies.class);
+
     private static final String DATABASE_NAME = "iswc_test";
     private static final String DATABASE_SCRIPT = "./doc/example/iswc-postgres.sql";
-    private static final int INIT_ROW_NUMBER = 7;
+       private static final int INIT_ROW_NUMBER = 7;
     private static final int INIT_PAPER_ID = 8;
     private static final int NUMBER_OF_INDIVIDUALS = 20_000;
+    private static final Consumer<Configuration> NO_CACHE = m -> {};
 
     private static Level log4jLevel;
     private static ConnectionData connection = ConnectionData.POSTGRES;
@@ -90,6 +94,7 @@ public class InferenceStrategies {
         TestData first = TestData.getSample();
         double base = res.containsKey(first) ? res.get(first) : res.values().iterator().next();
         res.forEach((k, v) -> LOGGER.info("{}:::{} ({}m)", k, round(v / base), v));
+        LOGGER.info("TOTAL: {}m", res.values().stream().mapToDouble(x -> x).sum());
         result.clear();
     }
 
@@ -145,10 +150,10 @@ public class InferenceStrategies {
         return Math.round(a * 100.0) / 100.0;
     }
 
-    private static OntGraphModel deriveTargetFromDBWithOntMap(boolean withCache) throws OWLOntologyCreationException {
-        LOGGER.info("Test inference (number={}, withCache={})", NUMBER_OF_INDIVIDUALS, withCache);
+    private static OntGraphModel deriveTargetFromDBWithOntMap(Consumer<Configuration> configure) throws OWLOntologyCreationException {
+        LOGGER.info("Test inference (number={}, withCache={})", NUMBER_OF_INDIVIDUALS, NO_CACHE == configure);
         D2RQGraphDocumentSource src = D2RQSpinTest.createSource(connection, DATABASE_NAME);
-        src.getMapping().getConfiguration().setWithCache(withCache);
+        configure.accept(src.getMapping().getConfiguration());
         MappingUtils.print(src.getMapping());
 
         OWLMapManager manager = Managers.createOWLMapManager();
@@ -297,15 +302,27 @@ public class InferenceStrategies {
         DEF_DB_ONT_MAP_NO_CACHE {
             @Override
             public OntGraphModel deriveTarget() throws Exception {
-                return deriveTargetFromDBWithOntMap(false);
+                return deriveTargetFromDBWithOntMap(NO_CACHE);
             }
         },
 
-        // run inference on default DB virtual graph using cache buffer
+        // run inference on default DB virtual graph using default cache buffer
         DEF_DB_ONT_MAP_WITH_CACHE {
             @Override
             public OntGraphModel deriveTarget() throws Exception {
-                return deriveTargetFromDBWithOntMap(true);
+                return deriveTargetFromDBWithOntMap(c -> c.setWithCache(true));
+            }
+        },
+
+        // run inference on default DB virtual graph using double cache buffer
+        DEF_DB_ONT_MAP_WITH_DOUBLE_CACHE {
+            @Override
+            public OntGraphModel deriveTarget() throws Exception {
+                return deriveTargetFromDBWithOntMap(c -> {
+                    long limit = c.getCacheLengthLimit();
+                    int size = c.getCacheMaxSize();
+                    c.setWithCache(true).setCacheLengthLimit(limit * 2).setCacheMaxSize(size * 2);
+                });
             }
         },
 
