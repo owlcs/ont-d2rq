@@ -15,10 +15,12 @@ import org.apache.jena.util.iterator.NullIterator;
 import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
@@ -67,10 +69,9 @@ public class CachingGraph extends GraphBase {
     protected final int findCacheSize;
     protected final int containsCacheSize;
     // cache for find operations.
-    // use jena cache for some abstract uniformity reasons - what kind of cache to use almost doesn't matter
-    protected final Cache<Triple, Bucket> findCache;
+    protected final CacheWrapper<Triple, Bucket> findCache;
     // cache for contains operation.
-    protected final Cache<Triple, Boolean> containsCache;
+    protected final CacheWrapper<Triple, Boolean> containsCache;
     // the Map to provide synchronisation when caching
     protected final Map<Triple, Lock> locks = new ConcurrentHashMap<>();
     // a Set of all triplets that definitely cannot fit the cache
@@ -168,10 +169,9 @@ public class CachingGraph extends GraphBase {
         this.containsCacheSize = requirePositive(findCacheSize, "Negative contains cache size parameter");
         this.cacheLengthLimit = requirePositive(cacheLengthLimit, "Negative queries max length");
         this.queryLengthLimit = requirePositive(queryLengthLimit, "Negative query max length");
-        this.findCache = CacheFactory.createCache(findCacheSize);
-        this.containsCache = CacheFactory.createCache(containsCacheSize);
         this.queriesLength = new LongAdder();
-        this.findCache.setDropHandler((k, v) -> queriesLength.add(-v.getLength()));
+        this.findCache = createCache(findCacheSize, (k, v) -> queriesLength.add(-v.getLength()));
+        this.containsCache = createCache(containsCacheSize, null);
     }
 
     private static <N extends Number> N requirePositive(N n, String msg) {
@@ -179,6 +179,55 @@ public class CachingGraph extends GraphBase {
             throw new IllegalArgumentException(msg);
         }
         return n;
+    }
+
+    /**
+     * A factory method to produce customized cache.
+     * Can be overridden to use some other cache vendor.
+     * Currently a Jena Guava is used, since, it seems, it does not matter what cache is used.
+     *
+     * @param size            maxSize
+     * @param removalListener {@code BiConsumer}, can be {@code null}, called when an object is dropped from the cache
+     * @param <K>             key
+     * @param <V>             value
+     * @return {@link CacheWrapper}
+     */
+    protected <K, V> CacheWrapper<K, V> createCache(int size, BiConsumer<K, V> removalListener) {
+        Cache<K, V> res = CacheFactory.createCache(size);
+        if (removalListener != null) {
+            res.setDropHandler(removalListener);
+        }
+        return new CacheWrapper<K, V>() {
+            @Override
+            public void put(K k, V v) {
+                res.put(k, v);
+            }
+
+            @Override
+            public Iterator<K> keys() {
+                return res.keys();
+            }
+
+            @Override
+            public V getOrFill(K key, Callable<V> callable) {
+                return res.getOrFill(key, callable);
+            }
+
+            @Override
+            public V get(K key) {
+                return res.getIfPresent(key);
+            }
+
+            @Override
+            public long size() {
+                return res.size();
+            }
+
+            @Override
+            public void clear() {
+                res.clear();
+            }
+        };
     }
 
     /**
@@ -261,7 +310,14 @@ public class CachingGraph extends GraphBase {
     @Override
     public boolean graphBaseContains(Triple m) {
         return containsCache.getOrFill(m, () -> {
-            Bucket res = findBucket(m);
+            Bucket res = findCache.get(m);
+            if (OUT_OF_SPACE == res) {
+                return base.contains(m);
+            }
+            if (res != null) {
+                return res.size() != 0;
+            }
+            res = findBucket(m);
             if (res != null) return res.contains(m);
             return containsByFind(m);
         });
@@ -277,7 +333,7 @@ public class CachingGraph extends GraphBase {
         if (forbidden.contains(m)) {
             return base.find(m);
         }
-        Bucket res = findCache.getIfPresent(m);
+        Bucket res = findCache.get(m);
         if (OUT_OF_SPACE == res) {
             return base.find(m);
         } else if (res != null) {
@@ -298,7 +354,7 @@ public class CachingGraph extends GraphBase {
      * @return {@link Bucket} or {@code null}
      */
     protected Bucket findBucket(Triple m) {
-        Bucket res = findCache.getIfPresent(Triple.ANY);
+        Bucket res = findCache.get(Triple.ANY);
         if (res != null) {
             return res;
         }
@@ -310,28 +366,28 @@ public class CachingGraph extends GraphBase {
         Node p = m.getPredicate();
         Node o = m.getObject();
 
-        res = findCache.getIfPresent(Triple.createMatch(s, Node.ANY, Node.ANY));
+        res = findCache.get(Triple.createMatch(s, Node.ANY, Node.ANY));
         if (res != null) {
             return res;
         }
-        res = findCache.getIfPresent(Triple.createMatch(Node.ANY, p, Node.ANY));
+        res = findCache.get(Triple.createMatch(Node.ANY, p, Node.ANY));
         if (res != null) {
             return res;
         }
-        res = findCache.getIfPresent(Triple.createMatch(Node.ANY, Node.ANY, o));
+        res = findCache.get(Triple.createMatch(Node.ANY, Node.ANY, o));
         if (res != null) {
             return res;
         }
 
-        res = findCache.getIfPresent(Triple.createMatch(s, p, Node.ANY));
+        res = findCache.get(Triple.createMatch(s, p, Node.ANY));
         if (res != null) {
             return res;
         }
-        res = findCache.getIfPresent(Triple.createMatch(s, Node.ANY, o));
+        res = findCache.get(Triple.createMatch(s, Node.ANY, o));
         if (res != null) {
             return res;
         }
-        res = findCache.getIfPresent(Triple.createMatch(Node.ANY, p, o));
+        res = findCache.get(Triple.createMatch(Node.ANY, p, o));
         return res;
 
     }
@@ -462,6 +518,21 @@ public class CachingGraph extends GraphBase {
         public boolean contains(Triple m) {
             return false;
         }
+    }
+
+    public interface CacheWrapper<K, V> {
+
+        void put(K k, V v);
+
+        Iterator<K> keys();
+
+        V getOrFill(K key, Callable<V> callable);
+
+        V get(K key);
+
+        long size();
+
+        void clear();
     }
 
     public static class GraphBucketImpl extends BaseBucketImpl implements Bucket {

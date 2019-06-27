@@ -3,7 +3,6 @@ package de.fuberlin.wiwiss.d2rq.jena;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import de.fuberlin.wiwiss.d2rq.utils.ReadStatsGraph;
 import org.apache.jena.atlas.iterator.Iter;
-import org.apache.jena.atlas.lib.Cache;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
@@ -133,16 +132,16 @@ public class CachingGraphTest {
         Assert.assertEquals(3, m2.listStatements(null, RDFS.comment, (RDFNode) null).toList().size());
 
         CachingGraph g = (CachingGraph) ((UnionGraph) m2.getGraph()).getBaseGraph();
-        Cache<Triple, CachingGraph.Bucket> findCache = g.findCache;
-        Cache<Triple, Boolean> containsCache = g.containsCache;
+        CachingGraph.CacheWrapper<Triple, CachingGraph.Bucket> findCache = g.findCache;
+        CachingGraph.CacheWrapper<Triple, Boolean> containsCache = g.containsCache;
 
         Assert.assertEquals(containsByFind ? 5 : 3, findCache.size());
         Assert.assertEquals(2, containsCache.size());
-        CachingGraph.Bucket outOfSpace = findCache.getIfPresent(Triple.createMatch(null, RDFS.comment.asNode(), null));
+        CachingGraph.Bucket outOfSpace = findCache.get(Triple.createMatch(null, RDFS.comment.asNode(), null));
         Assert.assertNotNull(outOfSpace);
         Assert.assertSame(CachingGraph.OUT_OF_SPACE, outOfSpace);
         findCache.keys().forEachRemaining(key -> {
-            CachingGraph.Bucket cache = findCache.getIfPresent(key);
+            CachingGraph.Bucket cache = findCache.get(key);
             Assert.assertNotNull("Null cache for " + key, cache);
             if (Triple.createMatch(null, RDFS.comment.asNode(), null).equals(key)) {
                 Assert.assertSame(CachingGraph.OUT_OF_SPACE, cache);
