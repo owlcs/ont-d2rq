@@ -8,4 +8,3 @@ target/
 /*.classpath
 /*.project
 /.settings/*.prefs
-/api/src/test/resources/db.properties
