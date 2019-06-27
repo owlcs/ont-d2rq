@@ -56,7 +56,7 @@ public class InferenceStrategies {
     private static final String DATABASE_SCRIPT = "./doc/example/iswc-postgres.sql";
        private static final int INIT_ROW_NUMBER = 7;
     private static final int INIT_PAPER_ID = 8;
-    private static final int NUMBER_OF_INDIVIDUALS = 20_000;
+    private static final int NUMBER_OF_INDIVIDUALS = 50_000;
     private static final Consumer<Configuration> NO_CACHE = m -> {};
 
     private static Level log4jLevel;
@@ -151,7 +151,7 @@ public class InferenceStrategies {
     }
 
     private static OntGraphModel deriveTargetFromDBWithOntMap(Consumer<Configuration> configure) throws OWLOntologyCreationException {
-        LOGGER.info("Test inference (number={}, withCache={})", NUMBER_OF_INDIVIDUALS, NO_CACHE == configure);
+        LOGGER.info("Test inference (number={}, withCache={})", NUMBER_OF_INDIVIDUALS, NO_CACHE != configure);
         D2RQGraphDocumentSource src = D2RQSpinTest.createSource(connection, DATABASE_NAME);
         configure.accept(src.getMapping().getConfiguration());
         MappingUtils.print(src.getMapping());
@@ -288,6 +288,7 @@ public class InferenceStrategies {
 
                 // put to mem:
                 Graph res = Factory.createGraphMem();
+                // here is only one SQL query for triple ANY-ANY-ANY !
                 GraphUtil.addInto(res, m.getData());
                 return OntModelFactory.createModel(res).setNsPrefix("schema", ns);
             }
@@ -314,14 +315,26 @@ public class InferenceStrategies {
             }
         },
 
-        // run inference on default DB virtual graph using double cache buffer
-        DEF_DB_ONT_MAP_WITH_DOUBLE_CACHE {
+        // run inference on default DB virtual graph using big cache buffer
+        DEF_DB_ONT_MAP_WITH_BIG_CACHE {
             @Override
             public OntGraphModel deriveTarget() throws Exception {
                 return deriveTargetFromDBWithOntMap(c -> {
                     long limit = c.getCacheLengthLimit();
                     int size = c.getCacheMaxSize();
-                    c.setWithCache(true).setCacheLengthLimit(limit * 2).setCacheMaxSize(size * 2);
+                    c.setWithCache(true).setCacheLengthLimit(limit * 10).setCacheMaxSize(size * 2);
+                });
+            }
+        },
+
+        // run inference on default DB virtual graph using small cache buffer
+        DEF_DB_ONT_MAP_WITH_SMALL_CACHE {
+            @Override
+            public OntGraphModel deriveTarget() throws Exception {
+                return deriveTargetFromDBWithOntMap(c -> {
+                    long limit = c.getCacheLengthLimit();
+                    int size = c.getCacheMaxSize();
+                    c.setWithCache(true).setCacheLengthLimit(limit / 10).setCacheMaxSize(size / 2);
                 });
             }
         },

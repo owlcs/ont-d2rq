@@ -5,22 +5,41 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.impl.WrappedGraph;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Created by @ssz on 22.05.2019.
  */
 public class ReadStatsGraph extends WrappedGraph {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReadStatsGraph.class);
+
     private final Map<Triple, LongAdder> findStats = new ConcurrentHashMap<>();
     private final Map<Triple, LongAdder> containsStats = new ConcurrentHashMap<>();
 
     public ReadStatsGraph(Graph base) {
         super(Objects.requireNonNull(base));
+    }
+
+    public static void debug(ReadStatsGraph g) {
+        debug("FIND", g.getFindStats());
+        debug("CONTAINS", g.getFindStats());
+    }
+
+    public static void debug(String msg, Stats stats) {
+        stats.triples().collect(Collectors.toMap(Function.identity(), stats::count))
+                .entrySet().stream()
+                .sorted(Comparator.comparingLong(Map.Entry::getValue))
+                .forEach(e -> LOGGER.debug("{} --- {}:::{}", msg, e.getValue(), e.getKey()));
     }
 
     @Override

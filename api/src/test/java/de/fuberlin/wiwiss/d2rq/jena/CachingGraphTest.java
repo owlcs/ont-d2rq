@@ -25,13 +25,15 @@ import ru.avicomp.ontapi.jena.vocabulary.RDF;
 import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -43,32 +45,10 @@ public class CachingGraphTest {
 
     private static final PrintStream SINK = ReadWriteUtils.NULL_OUT;
 
-    @Test
-    public void testCannotModify() {
-        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph()));
-        try {
-            m.createOntClass("x");
-            Assert.fail("Possible to add class");
-        } catch (AddDeniedException ade) {
-            LOGGER.debug("Expected: '{}'", ade.getMessage());
-        }
-        try {
-            m.removeOntObject(m.getIndividual(m.expandPrefix(":Germany")));
-            Assert.fail("Possible to delete individual");
-        } catch (DeleteDeniedException dde) {
-            LOGGER.debug("Expected: '{}'", dde.getMessage());
-        }
-    }
-
-    @Test
-    public void testValidateCachingGraph() {
-        testValidateCachingGraph(true);
-    }
-
     @SuppressWarnings("SameParameterValue")
     private static void testValidateCachingGraph(boolean containsByFind) {
-        ReadStatsGraph g = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
-        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(g));
+        ReadStatsGraph rsg = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
+        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(rsg));
 
         performSomeReadActionsOnPizza(m);
 
@@ -79,35 +59,29 @@ public class CachingGraphTest {
                 .collect(Collectors.toSet());
 
         for (Triple t : cachedFindTriples) {
-            if (g.getFindStats().hasTriple(t)) continue;
+            if (rsg.getFindStats().hasTriple(t)) continue;
             Assert.fail("Not in find stats map: " + t);
         }
 
         if (containsByFind) {
-            Assert.assertTrue(g.getContainsStats().isEmpty());
+            Assert.assertTrue(rsg.getContainsStats().isEmpty());
         } else {
             for (Triple t : cachedContainsTriples) {
-                if (g.getContainsStats().hasTriple(t)) continue;
+                if (rsg.getContainsStats().hasTriple(t)) continue;
                 Assert.fail("Not in contains stats map: " + t);
             }
         }
 
-        g.getFindStats().triples().forEach(t -> {
+        rsg.getFindStats().triples().forEach(t -> {
             if (cachedFindTriples.contains(t)) return;
             Assert.fail("Not in find cache: " + t);
         });
-        g.getContainsStats().triples().forEach(t -> {
+        rsg.getContainsStats().triples().forEach(t -> {
             if (cachedContainsTriples.contains(t)) return;
             Assert.fail("Not in contains cache: " + t);
         });
-        debugReadingStats("FIND", g.getFindStats());
-        debugReadingStats("CONTAINS", g.getContainsStats());
-        checkReadingStats(g.getFindStats(), 1);
-    }
-
-    @Test
-    public void testInternalGraphCachingBuckets() {
-        testInternalGraphCachingBuckets(true);
+        ReadStatsGraph.debug(rsg);
+        checkReadingStats(rsg.getFindStats(), 1);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -132,8 +106,8 @@ public class CachingGraphTest {
         Assert.assertEquals(3, m2.listStatements(null, RDFS.comment, (RDFNode) null).toList().size());
 
         CachingGraph g = (CachingGraph) ((UnionGraph) m2.getGraph()).getBaseGraph();
-        CachingGraph.CacheWrapper<Triple, CachingGraph.Bucket> findCache = g.findCache;
-        CachingGraph.CacheWrapper<Triple, Boolean> containsCache = g.containsCache;
+        CachingGraph.CacheMap<Triple, CachingGraph.Bucket> findCache = g.findCache;
+        CachingGraph.CacheMap<Triple, Boolean> containsCache = g.containsCache;
 
         Assert.assertEquals(containsByFind ? 5 : 3, findCache.size());
         Assert.assertEquals(2, containsCache.size());
@@ -151,13 +125,69 @@ public class CachingGraphTest {
         });
     }
 
+    private static void performSomeReadActionsOnPizza(OntGraphModel pizza) {
+        Assert.assertEquals(100, pizza.classes().count());
+        Assert.assertEquals(332, pizza.ontObjects(OntCE.class).count());
+        Assert.assertEquals(5, pizza.ontObjects(OntIndividual.class).count());
+        OntClass c = pizza.getOntEntity(OntClass.class, pizza.expandPrefix(":AnchoviesTopping"));
+        Assert.assertNotNull(c);
+        Assert.assertEquals(1, c.superClasses().count());
+        Assert.assertEquals(2, c.disjointClasses().count());
+        Assert.assertEquals("CoberturaDeAnchovies", c.getLabel("pt"));
+        OntIndividual.Named ind = pizza.getOntEntity(OntIndividual.Named.class, pizza.expandPrefix(":America"));
+        Assert.assertNotNull(ind);
+        Assert.assertEquals(2, ind.classes().count());
+        Set<String> classes = new HashSet<>();
+        classes.add(ind.classes().findFirst().orElseThrow(AssertionError::new).getURI());
+        classes.add(ind.classes().skip(1).findFirst().orElseThrow(AssertionError::new).getURI());
+        Assert.assertTrue(classes.contains(pizza.expandPrefix(":Country")));
+        Assert.assertTrue(classes.contains(pizza.expandPrefix("owl:Thing")));
+        Assert.assertEquals(1937, pizza.size());
+        pizza.write(SINK, "ttl");
+    }
+
+    private static void checkReadingStats(ReadStatsGraph.Stats stats, int max) {
+        stats.triples().forEach(t -> {
+            long actual = stats.count(t);
+            Assert.assertTrue("Unexpected number of the method '#find(Triple)' " +
+                    "calls for pattern [" + t + "]: " + actual, actual >= 1 && actual <= max);
+        });
+    }
+
+    @Test
+    public void testCannotModify() {
+        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph()));
+        try {
+            m.createOntClass("x");
+            Assert.fail("Possible to add class");
+        } catch (AddDeniedException ade) {
+            LOGGER.debug("Expected: '{}'", ade.getMessage());
+        }
+        try {
+            m.removeOntObject(m.getIndividual(m.expandPrefix(":Germany")));
+            Assert.fail("Possible to delete individual");
+        } catch (DeleteDeniedException dde) {
+            LOGGER.debug("Expected: '{}'", dde.getMessage());
+        }
+    }
+
+    @Test
+    public void testValidateCachingGraph() {
+        testValidateCachingGraph(true);
+    }
+
+    @Test
+    public void testInternalGraphCachingBuckets() {
+        testInternalGraphCachingBuckets(true);
+    }
+
     @Test
     public void testCacheInMultiThreads() {
         int threadsNum = 120;
         int timeoutInMs = 5000;
 
-        ReadStatsGraph g = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
-        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(new ReadStatsGraph(g)));
+        ReadStatsGraph rsg = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
+        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(new ReadStatsGraph(rsg)));
 
         ExecutorService service = Executors.newFixedThreadPool(threadsNum);
         AtomicBoolean stop = new AtomicBoolean(false);
@@ -186,44 +216,48 @@ public class CachingGraphTest {
             }
         }
         LOGGER.debug("Fin.");
-        debugReadingStats("FIND", g.getFindStats());
-        debugReadingStats("CONTAINS", g.getFindStats());
-        checkReadingStats(g.getFindStats(), threadsNum);
+        ReadStatsGraph.debug(rsg);
+        checkReadingStats(rsg.getFindStats(), threadsNum);
     }
 
-    private static void performSomeReadActionsOnPizza(OntGraphModel pizza) {
-        Assert.assertEquals(100, pizza.classes().count());
-        Assert.assertEquals(332, pizza.ontObjects(OntCE.class).count());
-        Assert.assertEquals(5, pizza.ontObjects(OntIndividual.class).count());
-        OntClass c = pizza.getOntEntity(OntClass.class, pizza.expandPrefix(":AnchoviesTopping"));
-        Assert.assertNotNull(c);
-        Assert.assertEquals(1, c.superClasses().count());
-        Assert.assertEquals(2, c.disjointClasses().count());
-        Assert.assertEquals("CoberturaDeAnchovies", c.getLabel("pt"));
-        OntIndividual.Named ind = pizza.getOntEntity(OntIndividual.Named.class, pizza.expandPrefix(":America"));
-        Assert.assertNotNull(ind);
-        Assert.assertEquals(2, ind.classes().count());
-        Set<String> classes = new HashSet<>();
-        classes.add(ind.classes().findFirst().orElseThrow(AssertionError::new).getURI());
-        classes.add(ind.classes().skip(1).findFirst().orElseThrow(AssertionError::new).getURI());
-        Assert.assertTrue(classes.contains(pizza.expandPrefix(":Country")));
-        Assert.assertTrue(classes.contains(pizza.expandPrefix("owl:Thing")));
-        Assert.assertEquals(1937, pizza.size());
-        pizza.write(SINK, "ttl");
+    @Test
+    public void testLargeGraphWithSmallCacheListIndividuals() {
+        int size = 100;
+        long length = 10;
+
+        int individuals = 1000;
+        String ns = "http://xxx#";
+        OntGraphModel orig = OntModelFactory.createModel().setNsPrefixes(OntModelFactory.STANDARD);
+        for (int i = 0; i < individuals; i++) {
+            orig.getOWLThing().createIndividual(ns + "Individual#" + i);
+        }
+
+        ReadStatsGraph rsg = new ReadStatsGraph(orig.getBaseGraph());
+        CachingGraph cg = new CachingGraph(rsg, size, length);
+        OntGraphModel m = OntModelFactory.createModel(cg);
+        Assert.assertEquals(individuals, m.individuals().count());
+        Assert.assertEquals(size, cg.tooLongChains.size());
+        Assert.assertEquals(0, rsg.getContainsStats().size());
     }
 
-    private static void debugReadingStats(String msg, ReadStatsGraph.Stats stats) {
-        stats.triples().collect(Collectors.toMap(Function.identity(), stats::count))
-                .entrySet().stream()
-                .sorted(Comparator.comparingLong(Map.Entry::getValue))
-                .forEach(e -> LOGGER.debug("{} --- {}:::{}", msg, e.getValue(), e.getKey()));
-    }
+    @Test
+    public void testLargeGraphWithLargeCacheListIndividuals() {
+        int individuals = 10000;
+        String ns = "http://x#";
+        OntGraphModel orig = OntModelFactory.createModel().setNsPrefixes(OntModelFactory.STANDARD);
+        for (int i = 0; i < individuals; i++) {
+            orig.getOWLThing().createIndividual(ns + "I#" + i);
+        }
 
-    private static void checkReadingStats(ReadStatsGraph.Stats stats, int max) {
-        stats.triples().forEach(t -> {
-            long actual = stats.count(t);
-            Assert.assertTrue("Unexpected number of the method '#find(Triple)' " +
-                    "calls for pattern [" + t + "]: " + actual, actual >= 1 && actual <= max);
-        });
+        ReadStatsGraph rsg = new ReadStatsGraph(orig.getBaseGraph());
+        CachingGraph cg = new CachingGraph(rsg, 10000, 100_000_000);
+        OntGraphModel m = OntModelFactory.createModel(cg);
+        Assert.assertEquals(individuals, m.individuals().count());
+        Assert.assertEquals(0, cg.tooLongChains.size());
+        Assert.assertEquals(0, rsg.getContainsStats().size());
+        // ~100 items (collecting system resources):
+        long finds = rsg.getFindStats().size();
+        Assert.assertTrue(finds > 0 && finds < 1000);
+        Assert.assertEquals(finds, cg.findCache.size());
     }
 }
