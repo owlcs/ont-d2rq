@@ -454,7 +454,8 @@ public class CachingGraph extends GraphBase {
      */
     protected Bucket createTripleBucket(Triple m) {
         if (m.isConcrete()) {
-            // small array for a concrete triple, for a distinct graph it should contain only one item:
+            // small array for a concrete triple search results,
+            // for a distinct graph it should contain only one item:
             return new ArrayBucketImpl(1, resourceVocabulary, propertyVocabulary,
                     uriLengthCalculator, bNodeLengthCalculator, literalLengthCalculator);
         }
@@ -709,11 +710,15 @@ public class CachingGraph extends GraphBase {
      * Base impl.
      */
     protected static abstract class BaseBucketImpl {
-        protected final Map<String, Node> resourceMap;
-        protected final Map<String, Node> propertyMap;
+        protected final Map<String, Node> standardResources;
+        protected final Map<String, Node> standardProperties;
+
         protected final ToLongFunction<Node> uriLength;
         protected final ToLongFunction<Node> bNodeLength;
         protected final ToLongFunction<Node> literalLength;
+
+        protected final Map<String, Node> uriCache = new HashMap<>();
+        protected final Map<String, Node> bnodeCache = new HashMap<>();
         private long length;
 
         protected BaseBucketImpl(Map<String, Node> resources,
@@ -721,60 +726,88 @@ public class CachingGraph extends GraphBase {
                                  ToLongFunction<Node> uriLength,
                                  ToLongFunction<Node> bNodeLength,
                                  ToLongFunction<Node> literalLength) {
-            this.resourceMap = Objects.requireNonNull(resources);
-            this.propertyMap = Objects.requireNonNull(properties);
+            this.standardResources = Objects.requireNonNull(resources);
+            this.standardProperties = Objects.requireNonNull(properties);
             this.uriLength = Objects.requireNonNull(uriLength);
             this.bNodeLength = Objects.requireNonNull(bNodeLength);
             this.literalLength = Objects.requireNonNull(literalLength);
         }
 
-        public Triple update(Triple t) {
+        public Triple update(final Triple t) {
             Node s = t.getSubject();
             Node p = t.getPredicate();
             Node o = t.getObject();
+            boolean createNewTriple = false;
             if (s.isURI()) {
-                Node replace = resourceMap.get(s.getURI());
+                Node replace = updateURI(s, standardResources, uriCache);
                 if (replace != null) {
                     s = replace;
-                    t = null;
-                } else {
-                    length += uriLength.applyAsLong(s);
+                    createNewTriple = true;
                 }
             } else if (s.isBlank()) {
-                length += bNodeLength.applyAsLong(s);
+                Node replace = updateBNode(s, bnodeCache);
+                if (replace != null) {
+                    s = replace;
+                    createNewTriple = true;
+                }
             } else {
                 throw new IllegalStateException("Unexpected subject for " + t);
             }
             if (p.isURI()) {
-                Node replace = propertyMap.get(p.getURI());
+                Node replace = updateURI(p, standardProperties, uriCache);
                 if (replace != null) {
                     p = replace;
-                    t = null;
-                } else {
-                    length += uriLength.applyAsLong(p);
+                    createNewTriple = true;
                 }
             } else {
                 throw new IllegalStateException("Unexpected predicate for " + t);
             }
             if (o.isURI()) {
-                Node replace = resourceMap.get(o.getURI());
+                Node replace = updateURI(o, standardResources, uriCache);
                 if (replace != null) {
                     o = replace;
-                    t = null;
-                } else {
-                    length += uriLength.applyAsLong(o);
+                    createNewTriple = true;
                 }
             } else if (o.isBlank()) {
-                length += bNodeLength.applyAsLong(o);
+                Node replace = updateBNode(o, bnodeCache);
+                if (replace != null) {
+                    o = replace;
+                    createNewTriple = true;
+                }
             } else if (o.isLiteral()) {
                 length += literalLength.applyAsLong(o);
             } else {
                 throw new IllegalStateException("Unexpected object for " + t);
             }
-            if (t == null) {
-                t = Triple.create(s, p, o);
+            if (createNewTriple) {
+                return Triple.create(s, p, o);
             }
             return t;
+        }
+
+        private Node updateURI(Node n, Map<String, Node> vocabulary, Map<String, Node> cache) {
+            String id = n.getURI();
+            Node res = vocabulary.get(id);
+            if (res != null) {
+                return res;
+            }
+            if ((res = cache.get(id)) != null) {
+                return res;
+            }
+            length += uriLength.applyAsLong(n);
+            cache.put(id, n);
+            return null;
+        }
+
+        private Node updateBNode(Node n, Map<String, Node> cache) {
+            String id = n.getBlankNodeLabel();
+            Node res = cache.get(id);
+            if (res != null) {
+                return res;
+            }
+            length += bNodeLength.applyAsLong(n);
+            cache.put(id, n);
+            return null;
         }
 
         public long getLength() {
@@ -782,7 +815,8 @@ public class CachingGraph extends GraphBase {
         }
 
         public void flush() {
-            // nothing
+            uriCache.clear();
+            bnodeCache.clear();
         }
 
         @Override
