@@ -63,6 +63,11 @@ public class CachingGraphTest {
 
     @Test
     public void testValidateCachingGraph() {
+        testValidateCachingGraph(true);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static void testValidateCachingGraph(boolean containsByFind) {
         ReadStatsGraph g = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
         OntGraphModel m = OntModelFactory.createModel(new CachingGraph(g));
 
@@ -78,9 +83,14 @@ public class CachingGraphTest {
             if (g.getFindStats().hasTriple(t)) continue;
             Assert.fail("Not in find stats map: " + t);
         }
-        for (Triple t : cachedContainsTriples) {
-            if (g.getContainsStats().hasTriple(t)) continue;
-            Assert.fail("Not in contains stats map: " + t);
+
+        if (containsByFind) {
+            Assert.assertTrue(g.getContainsStats().isEmpty());
+        } else {
+            for (Triple t : cachedContainsTriples) {
+                if (g.getContainsStats().hasTriple(t)) continue;
+                Assert.fail("Not in contains stats map: " + t);
+            }
         }
 
         g.getFindStats().triples().forEach(t -> {
@@ -98,6 +108,11 @@ public class CachingGraphTest {
 
     @Test
     public void testInternalGraphCachingBuckets() {
+        testInternalGraphCachingBuckets(true);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static void testInternalGraphCachingBuckets(boolean containsByFind) {
         String uri = "http://x";
         OntGraphModel m1 = OntModelFactory.createModel()
                 .setNsPrefixes(OntModelFactory.STANDARD).setNsPrefix("x", uri + "#");
@@ -121,7 +136,7 @@ public class CachingGraphTest {
         Cache<Triple, CachingGraph.Bucket> findCache = g.findCache;
         Cache<Triple, Boolean> containsCache = g.containsCache;
 
-        Assert.assertEquals(3, findCache.size());
+        Assert.assertEquals(containsByFind ? 5 : 3, findCache.size());
         Assert.assertEquals(2, containsCache.size());
         CachingGraph.Bucket outOfSpace = findCache.getIfPresent(Triple.createMatch(null, RDFS.comment.asNode(), null));
         Assert.assertNotNull(outOfSpace);

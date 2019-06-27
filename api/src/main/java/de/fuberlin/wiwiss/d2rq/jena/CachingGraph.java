@@ -3,11 +3,10 @@ package de.fuberlin.wiwiss.d2rq.jena;
 import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
 import org.apache.jena.atlas.lib.Cache;
 import org.apache.jena.atlas.lib.CacheFactory;
-import org.apache.jena.graph.FrontsNode;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
+import org.apache.jena.graph.*;
 import org.apache.jena.graph.impl.GraphBase;
+import org.apache.jena.graph.impl.GraphWithPerform;
+import org.apache.jena.mem.GraphMem;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
@@ -61,8 +60,6 @@ public class CachingGraph extends GraphBase {
     protected final long cacheLengthLimit;
     // limit of a single query length
     protected final long queryLengthLimit;
-    // initial bucket capacity
-    protected final int bucketCapacity;
     // the current sum of lengths of all cached queries
     protected final LongAdder queriesLength;
 
@@ -130,9 +127,8 @@ public class CachingGraph extends GraphBase {
                 cacheCapacity,                          // find-cache size
                 cacheCapacity / 2,                      // contains-cache size
                 cacheTotalLengthLimit,                  // total (sum) length limit
-                cacheTotalLengthLimit / 2,              // a query length limit, half of total limit
-                cacheTotalLengthLimit > cacheCapacity ? // ArrayList initial capacity
-                        (int) (cacheTotalLengthLimit / cacheCapacity) : cacheCapacity);
+                cacheTotalLengthLimit / 2              // a query length limit, half of total limit
+        );
     }
 
     /**
@@ -151,7 +147,6 @@ public class CachingGraph extends GraphBase {
      * @param cacheLengthLimit        long, max number of lengths of all queries that this cache can hold
      * @param queryLengthLimit        long, max number of a query length,
      *                                if a query has length greater then it should not be cached
-     * @param bucketCapacity          int, the default initial bucket ({@code ArrayList}) capacity
      */
     protected CachingGraph(Graph graph,
                            Collection<Resource> builtinResources,
@@ -162,8 +157,7 @@ public class CachingGraph extends GraphBase {
                            int findCacheSize,
                            int containsCacheSize,
                            long cacheLengthLimit,
-                           long queryLengthLimit,
-                           int bucketCapacity) {
+                           long queryLengthLimit) {
         this.base = Objects.requireNonNull(graph, "Null graph.");
         this.uriLengthCalculator = Objects.requireNonNull(uriLengthCalculator, "Null URI length calculator");
         this.bNodeLengthCalculator = Objects.requireNonNull(bNodeLengthCalculator, "Null Blank Node length calculator");
@@ -174,7 +168,6 @@ public class CachingGraph extends GraphBase {
         this.containsCacheSize = requirePositive(findCacheSize, "Negative contains cache size parameter");
         this.cacheLengthLimit = requirePositive(cacheLengthLimit, "Negative queries max length");
         this.queryLengthLimit = requirePositive(queryLengthLimit, "Negative query max length");
-        this.bucketCapacity = requirePositive(bucketCapacity, "Negative default bucket size");
         this.findCache = CacheFactory.createCache(findCacheSize);
         this.containsCache = CacheFactory.createCache(containsCacheSize);
         this.queriesLength = new LongAdder();
@@ -225,7 +218,7 @@ public class CachingGraph extends GraphBase {
 
     @Override
     public ExtendedIterator<Triple> graphBaseFind(Triple m) {
-        ExtendedIterator<Triple> res = fromCache(m);
+        ExtendedIterator<Triple> res = findIterator(m);
         if (res != null) {
             return res;
         }
@@ -234,7 +227,7 @@ public class CachingGraph extends GraphBase {
         try {
             lock.lock();
             // double checking:
-            res = fromCache(m);
+            res = findIterator(m);
             if (res != null) {
                 return res;
             }
@@ -265,7 +258,22 @@ public class CachingGraph extends GraphBase {
         }
     }
 
-    protected ExtendedIterator<Triple> fromCache(Triple m) {
+    @Override
+    public boolean graphBaseContains(Triple m) {
+        return containsCache.getOrFill(m, () -> {
+            Bucket res = findBucket(m);
+            if (res != null) return res.contains(m);
+            return containsByFind(m);
+        });
+    }
+
+    /**
+     * Finds a {@link ExtendedIterator} by {@link Triple} pattern.
+     *
+     * @param m {@link Triple} to search, not {@code null}
+     * @return {@link ExtendedIterator} of {@link Triple}s or {@code null}
+     */
+    protected ExtendedIterator<Triple> findIterator(Triple m) {
         if (forbidden.contains(m)) {
             return base.find(m);
         }
@@ -275,21 +283,68 @@ public class CachingGraph extends GraphBase {
         } else if (res != null) {
             return res.iterator();
         }
+
+        res = findBucket(m);
+        if (res != null) {
+            return res.iterator(m);
+        }
         return null;
     }
 
+    /**
+     * Finds a {@link Bucket} by {@link Triple} pattern.
+     *
+     * @param m {@link Triple} to search, not {@code null}
+     * @return {@link Bucket} or {@code null}
+     */
+    protected Bucket findBucket(Triple m) {
+        Bucket res = findCache.getIfPresent(Triple.ANY);
+        if (res != null) {
+            return res;
+        }
+        if (Triple.ANY.equals(m)) {
+            return null;
+        }
+
+        Node s = m.getSubject();
+        Node p = m.getPredicate();
+        Node o = m.getObject();
+
+        res = findCache.getIfPresent(Triple.createMatch(s, Node.ANY, Node.ANY));
+        if (res != null) {
+            return res;
+        }
+        res = findCache.getIfPresent(Triple.createMatch(Node.ANY, p, Node.ANY));
+        if (res != null) {
+            return res;
+        }
+        res = findCache.getIfPresent(Triple.createMatch(Node.ANY, Node.ANY, o));
+        if (res != null) {
+            return res;
+        }
+
+        res = findCache.getIfPresent(Triple.createMatch(s, p, Node.ANY));
+        if (res != null) {
+            return res;
+        }
+        res = findCache.getIfPresent(Triple.createMatch(s, Node.ANY, o));
+        if (res != null) {
+            return res;
+        }
+        res = findCache.getIfPresent(Triple.createMatch(Node.ANY, p, o));
+        return res;
+
+    }
+
     protected Bucket createTripleBucket() {
-        return new ArrayBucketImpl(bucketCapacity, resourceVocabulary, propertyVocabulary,
+        /*return new ArrayBucketImpl(bucketCapacity, resourceVocabulary, propertyVocabulary,
+                uriLengthCalculator, bNodeLengthCalculator, literalLengthCalculator);*/
+        return new GraphBucketImpl(new GraphMem(), resourceVocabulary, propertyVocabulary,
                 uriLengthCalculator, bNodeLengthCalculator, literalLengthCalculator);
     }
 
     protected Lock createLock() {
         return new ReentrantLock();
-    }
-
-    @Override
-    public boolean graphBaseContains(Triple t) {
-        return containsCache.getOrFill(t, () -> base.contains(t));
     }
 
     /**
@@ -348,6 +403,24 @@ public class CachingGraph extends GraphBase {
         ExtendedIterator<Triple> iterator();
 
         /**
+         * Answers an iterator over the content selected by the {@code SPO} pattern.
+         *
+         * @param m {@link Triple}, not {@code null}
+         * @return {@link ExtendedIterator} of {@link Triple}s
+         */
+        ExtendedIterator<Triple> iterator(Triple m);
+
+        /**
+         * Answers {@code true} if this triple contains the specified {@link Triple} pattern.
+         *
+         * @param m {@link Triple}, not {@code null}
+         * @return boolean
+         */
+        default boolean contains(Triple m) {
+            return Iter.findFirst(iterator(m)).isPresent();
+        }
+
+        /**
          * Performs some final actions to release the memory.
          */
         default void flush() {
@@ -379,11 +452,67 @@ public class CachingGraph extends GraphBase {
         public ExtendedIterator<Triple> iterator() {
             return NullIterator.instance();
         }
+
+        @Override
+        public ExtendedIterator<Triple> iterator(Triple m) {
+            return NullIterator.instance();
+        }
+
+        @Override
+        public boolean contains(Triple m) {
+            return false;
+        }
+    }
+
+    public static class GraphBucketImpl extends BaseBucketImpl implements Bucket {
+        protected final GraphWithPerform graph;
+
+        protected GraphBucketImpl(GraphWithPerform graph,
+                                  Map<String, Node> resources,
+                                  Map<String, Node> properties,
+                                  ToLongFunction<Node> uriLength,
+                                  ToLongFunction<Node> bNodeLength,
+                                  ToLongFunction<Node> literalLength) {
+            super(resources, properties, uriLength, bNodeLength, literalLength);
+            this.graph = Objects.requireNonNull(graph);
+        }
+
+        @Override
+        public void put(Triple t) {
+            graph.performAdd(update(t));
+        }
+
+        @Override
+        public int size() {
+            return graph.size();
+        }
+
+        @Override
+        public ExtendedIterator<Triple> iterator() {
+            return graph.find();
+        }
+
+        @Override
+        public ExtendedIterator<Triple> iterator(Triple m) {
+            return graph.find(m);
+        }
+
+        @Override
+        public boolean contains(Triple m) {
+            return graph.contains(m);
+        }
+
+        @Override
+        public void flush() {
+            super.flush();
+        }
     }
 
     /**
      * Default {@link ArrayList Array-based} implementation of {@link Bucket}.
+     * For debug.
      */
+    @SuppressWarnings("unused")
     public static class ArrayBucketImpl extends BaseBucketImpl implements Bucket {
         protected final ArrayList<Triple> array;
 
@@ -413,8 +542,14 @@ public class CachingGraph extends GraphBase {
         }
 
         @Override
+        public ExtendedIterator<Triple> iterator(Triple m) {
+            return iterator().filterKeep(m::matches);
+        }
+
+        @Override
         public void flush() {
             array.trimToSize();
+            super.flush();
         }
     }
 
@@ -494,10 +629,23 @@ public class CachingGraph extends GraphBase {
             return length;
         }
 
+        public void flush() {
+            // nothing
+        }
+
         @Override
         public String toString() {
             return String.format("%s{length=%d}{super=%s}", getClass().getSimpleName(), length, super.toString());
         }
+    }
+
+    public static void main(String... args) {
+        Triple ct = Triple.create(NodeFactory.createURI("A"), NodeFactory.createURI("B"), NodeFactory.createBlankNode());
+        Triple m1 = Triple.createMatch(ct.getSubject(), ct.getPredicate(), Node.ANY);
+        Triple m2 = Triple.ANY;
+        System.out.println(m1.matches(ct) + " & " + ct.matches(m1));
+        System.out.println(m2.matches(ct) + " & " + ct.matches(m2));
+        System.out.println(ct.matches(ct) + " & " + ct.matches(ct));
     }
 
 }
