@@ -286,11 +286,7 @@ public class InferenceStrategies {
                         .addProperty(o.createDataProperty(ns + "targetProperty"))
                         .setSQLExpression("CONCAT(papers.title, \', \', papers.year)\n");
 
-                // put to mem:
-                Graph res = Factory.createGraphMem();
-                // here is only one SQL query for triple ANY-ANY-ANY !
-                GraphUtil.addInto(res, m.getData());
-                return OntModelFactory.createModel(res).setNsPrefix("schema", ns);
+                return OntModelFactory.createModel(m.getData());
             }
 
             @Override
