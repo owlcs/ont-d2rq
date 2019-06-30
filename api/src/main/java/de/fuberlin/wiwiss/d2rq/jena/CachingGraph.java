@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 public class CachingGraph extends GraphBase {
 
     // value-marker, used to indicate that retrieved Triples Set is too large to be stored in-memory
-    protected static final Bucket OUT_OF_SPACE = new EmptyBucket() {
+    protected static final Bucket OUT_OF_SPACE = new EmptyBucketImpl() {
 
         @Override
         public ExtendedIterator<Triple> iterator() {
@@ -61,6 +61,34 @@ public class CachingGraph extends GraphBase {
         @Override
         public String toString() {
             return "OutOfSpace";
+        }
+    };
+    // value-marker, used to indicate that retrieved Triples Set is empty
+    protected static final Bucket EMPTY = new EmptyBucketImpl() {
+
+        @Override
+        public ExtendedIterator<Triple> iterator() {
+            return NullIterator.instance();
+        }
+
+        @Override
+        public int size() {
+            return 0;
+        }
+
+        @Override
+        public ExtendedIterator<Triple> iterator(Triple m) {
+            return NullIterator.instance();
+        }
+
+        @Override
+        public boolean contains(Triple m) {
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return "Empty";
         }
     };
     // the base graph
@@ -78,7 +106,8 @@ public class CachingGraph extends GraphBase {
     protected final int containsCacheSize;
     // cache for find operations.
     protected final CacheMap<Triple, Bucket> findCache;
-    // cache for contains operation.
+    // cache for contains operation
+    // TODO: it seems that it is redundant and may only slow down the process -> investigate and remove
     protected final CacheMap<Triple, Boolean> containsCache;
     // a Set of all triplet-patters for which result chains definitely cannot fit in the main cache
     // it is decorated as a cache to prevent uncontrolled increase its size for cahing graph with small limit
@@ -343,8 +372,12 @@ public class CachingGraph extends GraphBase {
                     return list.iterator().andThen(it);
                 }
             }
+            if (list.size() == 0) {
+                list = EMPTY;
+            } else {
+                list.flush();
+            }
             queriesLength.add(list.getLength());
-            list.flush();
             // do cache:
             findCache.put(m, list);
             return list.iterator();
@@ -592,32 +625,6 @@ public class CachingGraph extends GraphBase {
     }
 
     /**
-     * A {@link Bucket} impl, that does not contain anything.
-     */
-    public static class EmptyBucket implements Bucket {
-
-        @Override
-        public void put(Triple t) {
-            throw new UnsupportedOperationException("Attempt to put " + t);
-        }
-
-        @Override
-        public long getLength() {
-            return 0;
-        }
-
-        @Override
-        public int size() {
-            return 0;
-        }
-
-        @Override
-        public ExtendedIterator<Triple> iterator() {
-            return NullIterator.instance();
-        }
-    }
-
-    /**
      * A {@link GraphWithPerform}-based bucket.
      */
     public static class GraphBucketImpl extends BaseBucketImpl implements Bucket {
@@ -715,7 +722,23 @@ public class CachingGraph extends GraphBase {
     }
 
     /**
-     * Base impl.
+     * A base {@link Bucket} impl, that does not contain anything.
+     */
+    protected static abstract class EmptyBucketImpl implements Bucket {
+
+        @Override
+        public void put(Triple t) {
+            throw new UnsupportedOperationException("Attempt to put " + t);
+        }
+
+        @Override
+        public long getLength() {
+            return 0;
+        }
+    }
+
+    /**
+     * A base {@link Bucket} impl, that contains data.
      */
     protected static abstract class BaseBucketImpl {
         protected final Map<String, Node> standardResources;

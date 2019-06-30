@@ -46,7 +46,7 @@ public class CachingGraphTest {
     private static final PrintStream SINK = ReadWriteUtils.NULL_OUT;
 
     @SuppressWarnings("SameParameterValue")
-    private static void testValidateCachingGraph(boolean containsByFind) {
+    private static void validateCachingGraphWithCoverage(boolean containsByFind) {
         ReadStatsGraph rsg = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
         OntGraphModel m = OntModelFactory.createModel(new CachingGraph(rsg));
 
@@ -85,7 +85,7 @@ public class CachingGraphTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static void testInternalGraphCachingBuckets(boolean containsByFind) {
+    private static void validateInternalGraphCachingBuckets(boolean containsByFind) {
         String uri = "http://x";
         OntGraphModel m1 = OntModelFactory.createModel()
                 .setNsPrefixes(OntModelFactory.STANDARD).setNsPrefix("x", uri + "#");
@@ -104,24 +104,33 @@ public class CachingGraphTest {
                 .mapWith(Statement::getSubject)
                 .filterKeep(x -> m2.contains(x, RDF.type, c)).toList().size());
         Assert.assertEquals(3, m2.listStatements(null, RDFS.comment, (RDFNode) null).toList().size());
+        Assert.assertEquals(0, m2.listStatements(null, RDFS.seeAlso, (RDFNode) null).toList().size());
 
         CachingGraph g = (CachingGraph) ((UnionGraph) m2.getGraph()).getBaseGraph();
         CachingGraph.CacheMap<Triple, CachingGraph.Bucket> findCache = g.findCache;
         CachingGraph.CacheMap<Triple, Boolean> containsCache = g.containsCache;
 
-        Assert.assertEquals(containsByFind ? 5 : 3, findCache.size());
+        Assert.assertEquals(containsByFind ? 6 : 4, findCache.size());
         Assert.assertEquals(2, containsCache.size());
         CachingGraph.Bucket outOfSpace = findCache.get(Triple.createMatch(null, RDFS.comment.asNode(), null));
         Assert.assertNotNull(outOfSpace);
         Assert.assertSame(CachingGraph.OUT_OF_SPACE, outOfSpace);
+        CachingGraph.Bucket empty = findCache.get(Triple.createMatch(null, RDFS.seeAlso.asNode(), null));
+        Assert.assertNotNull(empty);
+        Assert.assertSame(CachingGraph.EMPTY, empty);
+
         findCache.keys().forEachRemaining(key -> {
             CachingGraph.Bucket cache = findCache.get(key);
             Assert.assertNotNull("Null cache for " + key, cache);
             if (Triple.createMatch(null, RDFS.comment.asNode(), null).equals(key)) {
                 Assert.assertSame(CachingGraph.OUT_OF_SPACE, cache);
-            } else {
-                Assert.assertNotEquals(String.format("Key: %s, Value: %s", key, cache), 0, cache.size());
+                return;
             }
+            if (Triple.createMatch(null, RDFS.seeAlso.asNode(), null).equals(key)) {
+                Assert.assertSame(CachingGraph.EMPTY, cache);
+                return;
+            }
+            Assert.assertNotEquals(String.format("Key: %s, Value: %s", key, cache), 0, cache.size());
         });
     }
 
@@ -172,13 +181,13 @@ public class CachingGraphTest {
     }
 
     @Test
-    public void testValidateCachingGraph() {
-        testValidateCachingGraph(true);
+    public void testValidateCachingGraphWithCoverage() {
+        validateCachingGraphWithCoverage(true);
     }
 
     @Test
     public void testInternalGraphCachingBuckets() {
-        testInternalGraphCachingBuckets(true);
+        validateInternalGraphCachingBuckets(true);
     }
 
     @Test

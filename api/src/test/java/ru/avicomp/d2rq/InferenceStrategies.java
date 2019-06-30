@@ -57,7 +57,7 @@ public class InferenceStrategies {
        private static final int INIT_ROW_NUMBER = 7;
     private static final int INIT_PAPER_ID = 8;
     private static final int NUMBER_OF_INDIVIDUALS = 50_000;
-    private static final Consumer<Configuration> NO_CACHE = m -> {};
+    private static final Consumer<Configuration> NO_CACHE = c -> c.setWithCache(false);
 
     private static Level log4jLevel;
     private static ConnectionData connection = ConnectionData.POSTGRES;
