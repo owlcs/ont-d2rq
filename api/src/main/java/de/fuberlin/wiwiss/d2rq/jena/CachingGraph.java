@@ -357,12 +357,9 @@ public class CachingGraph extends GraphBase {
     @Override
     public boolean graphBaseContains(Triple m) {
         return containsCache.getOrFill(m, () -> {
-            if (tooLongChains.contains(m)) {
+            Bucket res;
+            if (tooLongChains.contains(m) || OUT_OF_SPACE == (res = findCache.get(m))) {
                 return true;
-            }
-            Bucket res = findCache.get(m);
-            if (OUT_OF_SPACE == res) {
-                return base.contains(m);
             }
             if (res != null) {
                 return res.size() != 0;
@@ -665,6 +662,12 @@ public class CachingGraph extends GraphBase {
         public void flush() {
             super.flush();
         }
+
+        @Override
+        public String toString() {
+            return String.format("GraphBucket{length=%d}{size=%d}", length, graph.size());
+        }
+
     }
 
     /**
@@ -704,6 +707,11 @@ public class CachingGraph extends GraphBase {
             array.trimToSize();
             super.flush();
         }
+
+        @Override
+        public String toString() {
+            return String.format("ArrayBucket{length=%d}{size=%d}", length, array.size());
+        }
     }
 
     /**
@@ -719,7 +727,7 @@ public class CachingGraph extends GraphBase {
 
         protected final Map<String, Node> uriCache = new HashMap<>();
         protected final Map<String, Node> bnodeCache = new HashMap<>();
-        private long length;
+        protected long length;
 
         protected BaseBucketImpl(Map<String, Node> resources,
                                  Map<String, Node> properties,
@@ -817,11 +825,6 @@ public class CachingGraph extends GraphBase {
         public void flush() {
             uriCache.clear();
             bnodeCache.clear();
-        }
-
-        @Override
-        public String toString() {
-            return String.format("%s{length=%d}{super=%s}", getClass().getSimpleName(), length, super.toString());
         }
     }
 }

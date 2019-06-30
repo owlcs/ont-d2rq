@@ -143,11 +143,11 @@ public class ISWCModelDataTest {
         try (Mapping mapping = data.loadMapping()) {
             OntGraphModel m = OntModelFactory.createModel(mapping.getData());
             Assert.assertEquals(0, m.namedIndividuals().count());
-            LOGGER.debug("Data:");
+            LOGGER.debug("Data:"); // starting ont-api:1.4.2 no duplicates in the result:
             List<OntIndividual> individuals = m.individuals()
                     .peek(x -> LOGGER.debug("INDIVIDUAL: {}", x)).collect(Collectors.toList());
             LOGGER.debug("Get: {}", individuals.size());
-            Assert.assertEquals(48, individuals.size());
+            Assert.assertEquals(42, individuals.size());
             String txt = JenaModelUtils.toTurtleString(m);
             LOGGER.debug("Model:\n{}", txt);
             Assert.assertFalse(txt.contains(m.shortForm(OWL.NamedIndividual.getURI())));
