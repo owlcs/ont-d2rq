@@ -56,45 +56,11 @@ public class SystemLoader implements AutoCloseable {
     private Filter filter;
     private boolean fastMode;
     private boolean useOWLControl;
+    private boolean withCache;
     private boolean withSchema = true;
     private boolean withAnonymousIndividuals;
 
     private ConnectedDB connectedDB;
-
-    public SystemLoader setJdbcURL(String jdbcURL) {
-        this.jdbcURL = Objects.requireNonNull(jdbcURL);
-        return this;
-    }
-
-    public SystemLoader setUsername(String username) {
-        this.username = username;
-        return this;
-    }
-
-    public SystemLoader setPassword(String password) {
-        this.password = password;
-        return this;
-    }
-
-    public SystemLoader setFilter(Filter filter) {
-        this.filter = Objects.requireNonNull(filter);
-        return this;
-    }
-
-    public SystemLoader setJDBCDriverClass(String driver) {
-        this.jdbcDriverClass = driver;
-        return this;
-    }
-
-    public SystemLoader setStartupSQLScript(String sqlFile) {
-        this.sqlScript = sqlFile;
-        return this;
-    }
-
-    public SystemLoader setGenerateW3CDirectMapping(boolean flag) {
-        this.generateDirectMapping = flag;
-        return this;
-    }
 
     /**
      * Enables/disables generating anonymous individuals.
@@ -107,13 +73,6 @@ public class SystemLoader implements AutoCloseable {
     public SystemLoader withAnonymousIndividuals(boolean b) {
         this.withAnonymousIndividuals = b;
         return this;
-    }
-
-    public SystemLoader setMappingFileOrJdbcURL(String value) {
-        if (Objects.requireNonNull(value).toLowerCase().startsWith("jdbc:")) {
-            return setJdbcURL(value);
-        }
-        return setMappingURL(value);
     }
 
     /**
@@ -133,6 +92,14 @@ public class SystemLoader implements AutoCloseable {
         return this;
     }
 
+    /**
+     * Sets the base URI, which will be used to generate resource URIs.
+     *
+     * @param baseURI String, must be absolute, not {@code null}
+     * @return this instance to allow cascading calls
+     * @throws D2RQException        in case the URI is not absolute
+     * @throws NullPointerException null input
+     */
     public SystemLoader setSystemBaseURI(String baseURI) {
         if (!URI.create(baseURI).isAbsolute()) {
             throw new D2RQException("Base URI '" + baseURI + "' must be an absolute URI",
@@ -142,43 +109,198 @@ public class SystemLoader implements AutoCloseable {
         return this;
     }
 
+    /**
+     * Sets the {@code withCache} parameter to the desired state.
+     *
+     * @param flag boolean
+     * @return this instance to allow cascading calls
+     * @see Configuration#getWithCache()
+     * @see de.fuberlin.wiwiss.d2rq.vocab.AVC#withCache
+     */
+    public SystemLoader setWithCache(boolean flag) {
+        this.withCache = flag;
+        return this;
+    }
+
+    /**
+     * Sets the {@code useOWLControl} parameter to the desired state.
+     *
+     * @param flag boolean
+     * @return this instance to allow cascading calls
+     * @see Configuration#getControlOWL()
+     * @see de.fuberlin.wiwiss.d2rq.vocab.AVC#controlOWL
+     */
     public SystemLoader setControlOWL(boolean flag) {
         this.useOWLControl = flag;
         return this;
     }
 
+    /**
+     * Sets the {@code fastMode} parameter to the desired state.
+     *
+     * @param flag boolean
+     * @return this instance to allow cascading calls
+     */
     public SystemLoader setFastMode(boolean flag) {
         this.fastMode = flag;
         return this;
     }
 
-    public SystemLoader setServeVocabulary(boolean b) {
-        this.withSchema = b;
+    /**
+     * Sets the {@code withSchema} parameter to the desired state.
+     *
+     * @param flag boolean
+     * @return this instance to allow cascading calls
+     */
+    public SystemLoader setServeVocabulary(boolean flag) {
+        this.withSchema = flag;
         return this;
     }
 
+    /**
+     * Sets the {@code generateDirectMapping} parameter to the desired state.
+     * If it is {@code true}, the {@link W3CMappingGenerator W3C Mapping Generator} is used,
+     * otherwise {@link MappingGenerator Default D2RQ Mapping Generator} is used.
+     *
+     * @param flag boolean
+     * @return this instance to allow cascading calls
+     */
+    public SystemLoader setGenerateW3CDirectMapping(boolean flag) {
+        this.generateDirectMapping = flag;
+        return this;
+    }
+
+    /**
+     * Sets the resource file URL to the mapping.
+     * Either JDBC URI or mapping URL must be specified.
+     *
+     * @param mappingURL String
+     * @return this instance to allow cascading calls
+     * @see #setJdbcURL(String)
+     * @see #setMappingFileOrJdbcURL(String)
+     */
     public SystemLoader setMappingURL(String mappingURL) {
         this.mappingFile = mappingURL;
         return this;
     }
 
+    /**
+     * Sets the JDBC connection string.
+     * Either JDBC URI or mapping URL must be specified.
+     *
+     * @param jdbcURL String, not {@code null}
+     * @return this instance to allow cascading calls
+     * @see #setMappingURL(String)
+     * @see #setMappingFileOrJdbcURL(String)
+     */
+    public SystemLoader setJdbcURL(String jdbcURL) {
+        this.jdbcURL = Objects.requireNonNull(jdbcURL);
+        return this;
+    }
+
+    /**
+     * Sets required reference to resource (DB or mapping file).
+     *
+     * @param value String, not {@code null}
+     * @return this instance to allow cascading calls
+     * @see #setMappingURL(String)
+     * @see #setJdbcURL(String)
+     */
+    public SystemLoader setMappingFileOrJdbcURL(String value) {
+        if (Objects.requireNonNull(value).toLowerCase().startsWith("jdbc:")) {
+            return setJdbcURL(value);
+        }
+        return setMappingURL(value);
+    }
+
+    /**
+     * Sets the {@code resultSizeLimit} parameter to the desired value.
+     * @param value int
+     * @return this instance to allow cascading calls
+     */
     public SystemLoader setResultSizeLimit(int value) {
         this.resultSizeLimit = value;
         return this;
     }
 
+    /**
+     * Sets the {@code fetchSize} parameter to the desired value.
+     * @param value int
+     * @return this instance to allow cascading calls
+     */
     public SystemLoader setFetchSize(int value) {
         this.fetchSize = value;
         return this;
     }
 
+    /**
+     * Sets JDBC connection properties.
+     * @param properties {@link Properties}
+     * @return this instance to allow cascading calls
+     */
     public SystemLoader setConnectionProperties(Properties properties) {
         this.properties = properties;
         return this;
     }
 
     /**
+     * Sets a username if required by the database.
+     *
+     * @param username String
+     * @return this instance to allow cascading calls
+     */
+    public SystemLoader setUsername(String username) {
+        this.username = username;
+        return this;
+    }
+
+    /**
+     * Sets a password if required by the database.
+     *
+     * @param password String
+     * @return this instance to allow cascading calls
+     */
+    public SystemLoader setPassword(String password) {
+        this.password = password;
+        return this;
+    }
+
+    /**
+     * Sets the {@link Filter}.
+     *
+     * @param filter not {@code null}
+     * @return this instance to allow cascading calls
+     */
+    public SystemLoader setFilter(Filter filter) {
+        this.filter = Objects.requireNonNull(filter);
+        return this;
+    }
+
+    /**
+     * Sets the JDBC driver class path.
+     *
+     * @param driver not {@code null}
+     * @return this instance to allow cascading calls
+     */
+    public SystemLoader setJDBCDriverClass(String driver) {
+        this.jdbcDriverClass = driver;
+        return this;
+    }
+
+    /**
+     * Sets the database initialization script.
+     *
+     * @param sqlFile a valid path to script file
+     * @return this instance to allow cascading calls
+     */
+    public SystemLoader setStartupSQLScript(String sqlFile) {
+        this.sqlScript = sqlFile;
+        return this;
+    }
+
+    /**
      * @return Base URI where the server is assumed to run
+     * @see #setSystemBaseURI(String)
      */
     public String getSystemBaseURI() {
         return baseURI == null ? null : MapParser.absolutizeURI(baseURI);
@@ -258,6 +380,7 @@ public class SystemLoader implements AutoCloseable {
     public Mapping build() {
         Mapping res = fetchMapping();
         res.getConfiguration()
+                .setWithCache(withCache)
                 .setControlOWL(useOWLControl)
                 .setUseAllOptimizations(fastMode)
                 .setServeVocabulary(withSchema);

@@ -107,10 +107,9 @@ public class CachingGraph extends GraphBase {
     // cache for find operations.
     protected final CacheMap<Triple, Bucket> findCache;
     // cache for contains operation
-    // TODO: it seems that it is redundant and may only slow down the process -> investigate and remove
     protected final CacheMap<Triple, Boolean> containsCache;
     // a Set of all triplet-patters for which result chains definitely cannot fit in the main cache
-    // it is decorated as a cache to prevent uncontrolled increase its size for cahing graph with small limit
+    // it is decorated as a cache to prevent uncontrolled increase its size for caching graph with small limit
     protected final CacheSet<Triple> tooLongChains;
     // the Map to provide synchronisation when caching in find
     protected final Map<Triple, Lock> locks = new ConcurrentHashMap<>();
@@ -173,8 +172,18 @@ public class CachingGraph extends GraphBase {
 
     /**
      * Creates a caching graph, that keeps track of its own size.
+     *
      * This is the base constructor.
-     * If the queried bunch size is too large to fit in the cache, then an uncached iterator is returned.
+     *
+     * If the queried bunch size is too large to fit in the cache,
+     * then the {@code find(..)} methods will redirect to the {@link #find(Triple)} method of the base graph
+     * and uncached iterators will return.
+     * For better performance use wildcards as find {@link Triple}-pattern parameter:
+     * the caching graph do not try to query the base graph, if the result is already cached and can be found,
+     * but maybe for another triple pattern.
+     * For example, if there is cached data for triple {@code ANY, ANY, ANY},
+     * then everything can be found in that cache without calling any base graph methods.
+     * In this case and if the base data is small, the performance will be the same as for {@link GraphMem}.
      *
      * @param graph                   {@link Graph} to wrap, not {@code null}
      * @param builtinResources        a {@code Collection} of all builtin {@link Resource}s to skip from length calculation
@@ -188,16 +197,16 @@ public class CachingGraph extends GraphBase {
      * @param queryLengthLimit        long, max number of a query length,
      *                                if a query has length greater then it should not be cached
      */
-    protected CachingGraph(Graph graph,
-                           Collection<Resource> builtinResources,
-                           Collection<Property> builtinProperties,
-                           ToLongFunction<Node> uriLengthCalculator,
-                           ToLongFunction<Node> bNodeLengthCalculator,
-                           ToLongFunction<Node> literalLengthCalculator,
-                           int findCacheSize,
-                           int containsCacheSize,
-                           long cacheLengthLimit,
-                           long queryLengthLimit) {
+    public CachingGraph(Graph graph,
+                        Collection<Resource> builtinResources,
+                        Collection<Property> builtinProperties,
+                        ToLongFunction<Node> uriLengthCalculator,
+                        ToLongFunction<Node> bNodeLengthCalculator,
+                        ToLongFunction<Node> literalLengthCalculator,
+                        int findCacheSize,
+                        int containsCacheSize,
+                        long cacheLengthLimit,
+                        long queryLengthLimit) {
         this.base = Objects.requireNonNull(graph, "Null graph.");
         this.uriLengthCalculator = Objects.requireNonNull(uriLengthCalculator, "Null URI length calculator");
         this.bNodeLengthCalculator = Objects.requireNonNull(bNodeLengthCalculator, "Null Blank Node length calculator");
