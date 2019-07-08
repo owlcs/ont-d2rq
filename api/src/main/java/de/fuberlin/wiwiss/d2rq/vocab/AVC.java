@@ -10,7 +10,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
  */
 @SuppressWarnings("WeakerAccess")
 public class AVC {
-    public static final String BASE_URI = "http://avc.ru/d2rq";
+    public static final String BASE_URI = "https://github.com/avicomp/d2rq";
     public static final String NS = BASE_URI + "#";
 
     public static String getURI() {
