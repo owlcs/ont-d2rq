@@ -87,7 +87,7 @@ public class PSModelTest {
         List<OWLAxiom> axioms = AxiomType.AXIOM_TYPES.stream()
                 .map(AxiomParserProvider::get)
                 .flatMap(t -> t.axioms(data))
-                .map(ONTObject::getObject)
+                .map(ONTObject::getOWLObject)
                 .collect(Collectors.toList());
         axioms.forEach(x -> LOGGER.debug("AXIOM:::{}", x));
         Assert.assertEquals(80, axioms.size());

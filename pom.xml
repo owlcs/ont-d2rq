@@ -47,12 +47,12 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/avicomp/ont-d2rq/issues</url>
+        <url>https://github.com/owlcs/ont-d2rq/issues</url>
     </issueManagement>
 
     <organization>
-        <name>Avicomp Services, AO</name>
-        <url>http://avicomp.ru/</url>
+        <name>The University of Manchester, owl.cs group</name>
+        <url>https://github.com/owlcs/</url>
     </organization>
 
     <properties>
