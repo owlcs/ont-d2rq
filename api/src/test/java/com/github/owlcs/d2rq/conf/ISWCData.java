@@ -1,4 +1,4 @@
-package ru.avicomp.d2rq.conf;
+package com.github.owlcs.d2rq.conf;
 
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 

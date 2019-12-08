@@ -1,4 +1,4 @@
-package ru.avicomp.d2rq;
+package com.github.owlcs.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.rdf.model.Resource;
@@ -12,8 +12,8 @@ import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.d2rq.conf.ConnectionData;
-import ru.avicomp.d2rq.utils.OWLUtils;
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.d2rq.utils.OWLUtils;
 import ru.avicomp.ontapi.OntManagers;
 import ru.avicomp.ontapi.OntologyID;
 import ru.avicomp.ontapi.OntologyManager;

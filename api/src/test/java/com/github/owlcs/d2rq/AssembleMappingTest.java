@@ -1,5 +1,6 @@
-package ru.avicomp.d2rq;
+package com.github.owlcs.d2rq;
 
+import com.github.owlcs.d2rq.conf.ConnectionData;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
@@ -11,7 +12,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.d2rq.conf.ConnectionData;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.OntGraphModel;
 import ru.avicomp.ontapi.jena.model.OntIndividual;

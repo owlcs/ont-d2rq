@@ -1,4 +1,4 @@
-package ru.avicomp.d2rq.utils;
+package com.github.owlcs.d2rq.utils;
 
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;

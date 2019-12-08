@@ -7,7 +7,7 @@ import org.apache.jena.fuseki.main.FusekiServer;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import ru.avicomp.d2rq.utils.D2RQGraphUtils;
+import com.github.owlcs.d2rq.utils.D2RQGraphUtils;
 
 import java.io.PrintStream;
 import java.nio.file.Path;

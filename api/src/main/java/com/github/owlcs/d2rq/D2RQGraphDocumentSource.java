@@ -1,4 +1,4 @@
-package ru.avicomp.d2rq;
+package com.github.owlcs.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -8,7 +8,7 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
-import ru.avicomp.d2rq.utils.D2RQGraphUtils;
+import com.github.owlcs.d2rq.utils.D2RQGraphUtils;
 import ru.avicomp.ontapi.OntApiException;
 import ru.avicomp.ontapi.OntGraphDocumentSource;
 import ru.avicomp.ontapi.OntGraphUtils;

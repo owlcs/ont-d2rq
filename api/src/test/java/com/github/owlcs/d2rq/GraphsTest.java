@@ -1,4 +1,4 @@
-package ru.avicomp.d2rq;
+package com.github.owlcs.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -15,7 +15,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.d2rq.conf.ISWCData;
+import com.github.owlcs.d2rq.conf.ISWCData;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.OntClass;
 import ru.avicomp.ontapi.jena.model.OntDT;

@@ -1,4 +1,4 @@
-package ru.avicomp.d2rq;
+package com.github.owlcs.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
@@ -13,8 +13,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.d2rq.conf.ISWCData;
-import ru.avicomp.d2rq.utils.OWLUtils;
+import com.github.owlcs.d2rq.conf.ISWCData;
+import com.github.owlcs.d2rq.utils.OWLUtils;
 import ru.avicomp.ontapi.jena.OntModelFactory;
 import ru.avicomp.ontapi.jena.model.*;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;

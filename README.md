@@ -7,7 +7,7 @@ There are following major differences with the original:
 * Up-to-date dependencies (java 8, Apache Jena 3.x, etc)
 * OWL2 support
 * A Fuseki (SPARQLer) based embedded server instead of Joseki based native D2RQ Server
-* [ONT-API](https://github.com/avicomp/ont-api) (an [OWL-API](https://github.com/owlcs/owlapi) alternative implementation over [Apache Jena](https://github.com/apache/jena))
+* [ONT-API](https://github.com/owlcs/ont-api) (an [OWL-API](https://github.com/owlcs/owlapi) alternative implementation over [Apache Jena](https://github.com/apache/jena))
 
 ## Usage
 * To build: `mvn clean package`
@@ -15,9 +15,9 @@ There are following major differences with the original:
 * To include in dependencies [jitpack.io](https://jitpack.io/) can be used
 
 ## Notes and propositions
-* For ONT-API integration there is a special kind of `OWLDocumentSource`: `ru.avicomp.d2rq.D2RQGraphDocumentSource` 
-* It is also assumed that `ru.avicomp.d2rq.MappingFilter` can be used to filter the default database schema
-* [ONT-MAP](https://github.com/avicomp/ont-map) can be used to transform DB RDF data into a more suitable form
+* For ONT-API integration there is a special kind of `OWLDocumentSource`: `com.github.owlcs.d2rq.D2RQGraphDocumentSource` 
+* It is also assumed that `ru.owlcs.d2rq.MappingFilter` can be used to filter the default database schema
+* [ONT-MAP](https://github.com/owlcs/ont-map) can be used to transform DB RDF data into a more suitable form
 
 ## Tests
 For running tests please configure postgres and mysql databases. 

@@ -1,5 +1,8 @@
-package ru.avicomp.d2rq;
+package com.github.owlcs.d2rq;
 
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.d2rq.utils.D2RQGraphUtils;
+import com.github.owlcs.d2rq.utils.OWLUtils;
 import de.fuberlin.wiwiss.d2rq.mapgen.MappingGenerator;
 import org.apache.jena.enhanced.BuiltinPersonalities;
 import org.apache.jena.enhanced.EnhGraph;
@@ -17,9 +20,6 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.SetOntologyID;
 import org.topbraid.spin.inference.SPINInferences;
 import org.topbraid.spin.system.SPINModuleRegistry;
-import ru.avicomp.d2rq.conf.ConnectionData;
-import ru.avicomp.d2rq.utils.D2RQGraphUtils;
-import ru.avicomp.d2rq.utils.OWLUtils;
 import ru.avicomp.map.spin.SpinModelConfig;
 import ru.avicomp.ontapi.OntologyManager;
 import ru.avicomp.ontapi.OntologyModel;

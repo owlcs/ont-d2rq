@@ -1,4 +1,4 @@
-package ru.avicomp.d2rq.utils;
+package com.github.owlcs.d2rq.utils;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.mem.GraphMem;

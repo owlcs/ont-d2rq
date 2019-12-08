@@ -7,7 +7,7 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.vocabulary.DC;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.Test;
-import ru.avicomp.d2rq.conf.ISWCData;
+import com.github.owlcs.d2rq.conf.ISWCData;
 
 
 /**

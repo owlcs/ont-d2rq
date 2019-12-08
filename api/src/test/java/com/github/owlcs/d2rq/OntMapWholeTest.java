@@ -1,4 +1,4 @@
-package ru.avicomp.d2rq;
+package com.github.owlcs.d2rq;
 
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
@@ -14,9 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.spin.vocabulary.SP;
 import org.topbraid.spin.vocabulary.SPINMAP;
-import ru.avicomp.d2rq.conf.ConnectionData;
-import ru.avicomp.d2rq.conf.ISWCData;
-import ru.avicomp.d2rq.utils.OWLUtils;
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.d2rq.conf.ISWCData;
+import com.github.owlcs.d2rq.utils.OWLUtils;
 import ru.avicomp.map.*;
 import ru.avicomp.map.spin.vocabulary.AVC;
 import ru.avicomp.ontapi.OntologyManager;

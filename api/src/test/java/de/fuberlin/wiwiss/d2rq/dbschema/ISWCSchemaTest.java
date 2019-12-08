@@ -6,7 +6,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import ru.avicomp.d2rq.conf.ConnectionData;
+import com.github.owlcs.d2rq.conf.ConnectionData;
 
 public class ISWCSchemaTest {
     private final static String driverClass = "com.mysql.jdbc.Driver";

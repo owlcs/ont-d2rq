@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import ru.avicomp.d2rq.conf.ISWCData;
+import com.github.owlcs.d2rq.conf.ISWCData;
 
 import java.util.*;
 

@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
+import com.github.owlcs.d2rq.DynamicSchemaTest;
 import de.fuberlin.wiwiss.d2rq.helpers.FindTestFramework;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
@@ -13,8 +14,8 @@ import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.VCARD;
 import org.junit.Ignore;
 import org.junit.Test;
-import ru.avicomp.d2rq.ISWCModelDataTest;
-import ru.avicomp.d2rq.conf.ISWCData;
+import com.github.owlcs.d2rq.ISWCModelDataTest;
+import com.github.owlcs.d2rq.conf.ISWCData;
 import ru.avicomp.ontapi.jena.vocabulary.OWL;
 import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
@@ -206,7 +207,7 @@ public class FindTest extends FindTestFramework {
     }
 
     /**
-     * @see ru.avicomp.d2rq.DynamicSchemaTest
+     * @see DynamicSchemaTest
      * @see ISWCModelDataTest
      */
     @Ignore // schema part are excluded from the graph, there is now separated test for it
