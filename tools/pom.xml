@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>ontd2rq</artifactId>
-        <groupId>ru.avicomp</groupId>
-        <version>1.0.6-SNAPSHOT</version>
+        <groupId>com.github.owlcs</groupId>
+        <version>1.0.7-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,7 +15,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>ru.avicomp</groupId>
+            <groupId>com.github.owlcs</groupId>
             <artifactId>d2rq-api</artifactId>
             <version>${project.version}</version>
         </dependency>

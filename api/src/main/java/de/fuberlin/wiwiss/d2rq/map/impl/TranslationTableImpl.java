@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.MapObject;
 import de.fuberlin.wiwiss.d2rq.map.TranslationTable;
@@ -9,7 +10,6 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.util.iterator.ExtendedIterator;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.List;
 import java.util.Set;

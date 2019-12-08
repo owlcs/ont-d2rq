@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.sql.ConnectedDB;
@@ -7,7 +8,6 @@ import de.fuberlin.wiwiss.d2rq.sql.types.DataType.GenericType;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import de.fuberlin.wiwiss.d2rq.vocab.JDBC;
 import org.apache.jena.rdf.model.Resource;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.sql.Driver;
 import java.util.HashMap;

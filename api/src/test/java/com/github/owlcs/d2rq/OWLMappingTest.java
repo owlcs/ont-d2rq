@@ -1,6 +1,11 @@
 package com.github.owlcs.d2rq;
 
 import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.ontapi.jena.OntModelFactory;
+import com.github.owlcs.ontapi.jena.model.*;
+import com.github.owlcs.ontapi.jena.vocabulary.OWL;
+import com.github.owlcs.ontapi.jena.vocabulary.RDF;
+import com.github.owlcs.ontapi.utils.ReadWriteUtils;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -17,11 +22,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.jena.OntModelFactory;
-import ru.avicomp.ontapi.jena.model.*;
-import ru.avicomp.ontapi.jena.vocabulary.OWL;
-import ru.avicomp.ontapi.jena.vocabulary.RDF;
-import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -54,7 +54,7 @@ public class OWLMappingTest {
     private static Mapping prepareSQLConcatMapping() {
         ConnectionData cd = ConnectionData.MYSQL;
         String map_ns = "urn:map#";
-        String uri = "http://target.avicomp.ru";
+        String uri = "http://target.owlcs.github.com";
         String ns = uri + "#";
 
         Mapping m = MappingFactory.create();
@@ -69,7 +69,7 @@ public class OWLMappingTest {
                 .setURIPattern("papers/@@papers.paperid@@")
                 .createPropertyBridge(map_ns + "TitleAndYear")
                 .addProperty(o.createDataProperty(ns + "targetProperty"))
-                .setSQLExpression("CONCAT(papers.title, \', \', papers.year)\n");
+                .setSQLExpression("CONCAT(papers.title, ', ', papers.year)\n");
         return m;
     }
 

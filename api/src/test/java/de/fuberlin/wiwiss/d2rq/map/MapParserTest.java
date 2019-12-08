@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map;
 
+import com.github.owlcs.ontapi.jena.vocabulary.OWL;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import de.fuberlin.wiwiss.d2rq.utils.MappingUtils;
@@ -11,7 +12,6 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.Assert;
 import org.junit.Test;
-import ru.avicomp.ontapi.jena.vocabulary.OWL;
 
 /**
  * Test {@link MapParser}.

@@ -1,5 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.examples;
 
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -9,8 +11,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.owlcs.d2rq.conf.ConnectionData;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.io.IOException;
 import java.io.InputStream;

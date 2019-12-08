@@ -1,12 +1,12 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
+import com.github.owlcs.ontapi.jena.utils.BuiltIn;
+import com.github.owlcs.ontapi.jena.utils.Graphs;
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
 import org.apache.jena.graph.*;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
-import ru.avicomp.ontapi.jena.utils.BuiltIn;
-import ru.avicomp.ontapi.jena.utils.Graphs;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.Collections;
 import java.util.Objects;

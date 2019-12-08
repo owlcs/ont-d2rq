@@ -1,5 +1,15 @@
 package com.github.owlcs.d2rq;
 
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.d2rq.utils.OWLUtils;
+import com.github.owlcs.ontapi.ID;
+import com.github.owlcs.ontapi.OntManagers;
+import com.github.owlcs.ontapi.Ontology;
+import com.github.owlcs.ontapi.OntologyManager;
+import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntIndividual;
+import com.github.owlcs.ontapi.jena.model.OntOPE;
+import com.github.owlcs.ontapi.jena.model.OntPE;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.Assert;
@@ -12,16 +22,6 @@ import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.owlcs.d2rq.conf.ConnectionData;
-import com.github.owlcs.d2rq.utils.OWLUtils;
-import ru.avicomp.ontapi.OntManagers;
-import ru.avicomp.ontapi.OntologyID;
-import ru.avicomp.ontapi.OntologyManager;
-import ru.avicomp.ontapi.OntologyModel;
-import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.model.OntIndividual;
-import ru.avicomp.ontapi.jena.model.OntOPE;
-import ru.avicomp.ontapi.jena.model.OntPE;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,7 +37,7 @@ public class FilterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterTest.class);
     private ConnectionData data;
 
-    private static Map<ConnectionData, Map<OntologyModel, Integer>> testResult = new HashMap<>();
+    private static Map<ConnectionData, Map<Ontology, Integer>> testResult = new HashMap<>();
 
     public FilterTest(ConnectionData data) {
         this.data = data;
@@ -53,7 +53,7 @@ public class FilterTest {
         LOGGER.info("Load full db schema from {}", data);
         D2RQGraphDocumentSource source1 = data.toDocumentSource("iswc");
         OntologyManager manager = OntManagers.createONT();
-        OntologyModel full = manager.loadOntologyFromOntologyDocument(source1);
+        Ontology full = manager.loadOntologyFromOntologyDocument(source1);
         full.axioms().map(Object::toString).forEach(LOGGER::debug);
         source1.close();
 
@@ -69,9 +69,9 @@ public class FilterTest {
         // creates a source with filter by properties:
         D2RQGraphDocumentSource source2 = source1.filter(filter1);
         // load a model:
-        OntologyModel filteredByProperties = manager.loadOntologyFromOntologyDocument(source2);
+        Ontology filteredByProperties = manager.loadOntologyFromOntologyDocument(source2);
         // set iri"
-        OWLOntologyID id2 = OntologyID.create("http://d2rq.example.com", "http://d2rq.example.com/version/1.0");
+        OWLOntologyID id2 = ID.create("http://d2rq.example.com", "http://d2rq.example.com/version/1.0");
         filteredByProperties.applyChange(new SetOntologyID(filteredByProperties, id2));
         JenaModelUtils.print(filteredByProperties.asGraphModel());
         // validate:
@@ -96,8 +96,8 @@ public class FilterTest {
         LOGGER.debug("Constraint classes: " + filter2.classes().collect(Collectors.toList()));
 
         D2RQGraphDocumentSource source3 = source1.filter(filter2);
-        OntologyModel filteredByClasses = manager.loadOntologyFromOntologyDocument(source3);
-        OWLOntologyID id3 = OntologyID.create("http://d2rq.example.com", "http://d2rq.example.com/version/2.0");
+        Ontology filteredByClasses = manager.loadOntologyFromOntologyDocument(source3);
+        OWLOntologyID id3 = ID.create("http://d2rq.example.com", "http://d2rq.example.com/version/2.0");
         filteredByClasses.applyChange(new SetOntologyID(filteredByClasses, id3));
         JenaModelUtils.print(filteredByClasses.asGraphModel());
         // validate:
@@ -113,7 +113,7 @@ public class FilterTest {
 
     @Test
     public void test02FilterData() {
-        Map<OntologyModel, Integer> res = testResult.get(data);
+        Map<Ontology, Integer> res = testResult.get(data);
         Assume.assumeNotNull(res);
         res.forEach((schema, expectedCount) -> {
             LOGGER.info("Test data for ontology {}", schema.getOntologyID());

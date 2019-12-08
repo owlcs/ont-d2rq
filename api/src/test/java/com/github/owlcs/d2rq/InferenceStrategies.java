@@ -2,6 +2,17 @@ package com.github.owlcs.d2rq;
 
 import com.github.owlcs.d2rq.conf.ConnectionData;
 import com.github.owlcs.d2rq.utils.OWLUtils;
+import com.github.owlcs.map.Managers;
+import com.github.owlcs.map.MapManager;
+import com.github.owlcs.map.MapModel;
+import com.github.owlcs.map.OWLMapManager;
+import com.github.owlcs.ontapi.OntManagers;
+import com.github.owlcs.ontapi.jena.OntModelFactory;
+import com.github.owlcs.ontapi.jena.model.OntClass;
+import com.github.owlcs.ontapi.jena.model.OntDT;
+import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntNDP;
+import com.github.owlcs.ontapi.jena.vocabulary.XSD;
 import de.fuberlin.wiwiss.d2rq.map.Configuration;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
@@ -17,17 +28,6 @@ import org.junit.runners.Parameterized;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.map.Managers;
-import ru.avicomp.map.MapManager;
-import ru.avicomp.map.MapModel;
-import ru.avicomp.map.OWLMapManager;
-import ru.avicomp.ontapi.OntManagers;
-import ru.avicomp.ontapi.jena.OntModelFactory;
-import ru.avicomp.ontapi.jena.model.OntClass;
-import ru.avicomp.ontapi.jena.model.OntDT;
-import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.model.OntNDP;
-import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -269,7 +269,7 @@ public class InferenceStrategies {
             @Override
             public OntGraphModel deriveTarget() {
                 String map_ns = "urn:map#";
-                String uri = "http://target.avicomp.ru";
+                String uri = "http://target.owlcs.github.com";
                 String ns = uri + "#";
 
                 Mapping m = MappingFactory.create();
@@ -284,7 +284,7 @@ public class InferenceStrategies {
                         .setURIPattern("papers/@@papers.paperid@@")
                         .createPropertyBridge(map_ns + "TitleAndYear")
                         .addProperty(o.createDataProperty(ns + "targetProperty"))
-                        .setSQLExpression("CONCAT(papers.title, \', \', papers.year)\n");
+                        .setSQLExpression("CONCAT(papers.title, ', ', papers.year)\n");
 
                 return OntModelFactory.createModel(m.getData());
             }

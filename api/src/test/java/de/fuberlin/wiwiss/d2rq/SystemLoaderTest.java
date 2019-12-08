@@ -1,5 +1,7 @@
 package de.fuberlin.wiwiss.d2rq;
 
+import com.github.owlcs.d2rq.conf.ISWCData;
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.map.Database;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
@@ -13,8 +15,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.owlcs.d2rq.conf.ISWCData;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.net.URL;
 import java.util.function.BiFunction;

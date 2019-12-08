@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -7,7 +8,6 @@ import org.apache.jena.sparql.util.NodeUtils;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
 import org.apache.jena.util.iterator.WrappedIterator;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.*;
 import java.util.function.BiFunction;

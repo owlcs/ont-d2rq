@@ -1,14 +1,14 @@
 package com.github.owlcs.d2rq;
 
+import com.github.owlcs.ontapi.OntApiException;
+import com.github.owlcs.ontapi.jena.vocabulary.OWL;
+import com.github.owlcs.ontapi.jena.vocabulary.RDF;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.rdf.model.*;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLProperty;
-import ru.avicomp.ontapi.OntApiException;
-import ru.avicomp.ontapi.jena.vocabulary.OWL;
-import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -95,7 +95,7 @@ public class MappingFilter {
      * @param model D2RQ Mapping model
      * @return the new filter with completed list of properties and classes.
      * @see D2RQ
-     * @see ru.avicomp.ontapi.jena.vocabulary.OWL
+     * @see com.github.owlcs.ontapi.jena.vocabulary.OWL
      */
     public MappingFilter compile(Model model) {
         Set<Resource> _classes = new HashSet<>(classes);

@@ -1,5 +1,16 @@
 package com.github.owlcs.d2rq;
 
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.d2rq.conf.ISWCData;
+import com.github.owlcs.d2rq.utils.OWLUtils;
+import com.github.owlcs.map.*;
+import com.github.owlcs.map.spin.vocabulary.AVC;
+import com.github.owlcs.ontapi.OntologyManager;
+import com.github.owlcs.ontapi.jena.OntModelFactory;
+import com.github.owlcs.ontapi.jena.model.OntClass;
+import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntIndividual;
+import com.github.owlcs.ontapi.jena.model.OntNDP;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -14,17 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.spin.vocabulary.SP;
 import org.topbraid.spin.vocabulary.SPINMAP;
-import com.github.owlcs.d2rq.conf.ConnectionData;
-import com.github.owlcs.d2rq.conf.ISWCData;
-import com.github.owlcs.d2rq.utils.OWLUtils;
-import ru.avicomp.map.*;
-import ru.avicomp.map.spin.vocabulary.AVC;
-import ru.avicomp.ontapi.OntologyManager;
-import ru.avicomp.ontapi.jena.OntModelFactory;
-import ru.avicomp.ontapi.jena.model.OntClass;
-import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.model.OntIndividual;
-import ru.avicomp.ontapi.jena.model.OntNDP;
 
 import java.util.function.Supplier;
 

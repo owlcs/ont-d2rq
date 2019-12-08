@@ -65,7 +65,7 @@ public class LogHelper {
 
     private static void setApplicationLogLevelTo(String level) {
         LogCtl.setLevel("d2rq", level);
-        LogCtl.setLevel("ru.avicomp.d2rq", level);
+        LogCtl.setLevel("com.github.owlcs.d2rq", level);
         LogCtl.setLevel("de.fuberlin.wiwiss.d2rq", level);
     }
 

@@ -1,5 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
+import com.github.owlcs.ontapi.jena.utils.Iter;
+import com.github.owlcs.ontapi.jena.vocabulary.RDF;
 import de.fuberlin.wiwiss.d2rq.ClassMapLister;
 import de.fuberlin.wiwiss.d2rq.D2RQException;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
@@ -27,8 +29,6 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.WrappedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.jena.utils.Iter;
-import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 import java.io.IOException;
 import java.net.URI;

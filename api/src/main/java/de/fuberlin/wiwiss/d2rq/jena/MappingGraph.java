@@ -1,11 +1,11 @@
 package de.fuberlin.wiwiss.d2rq.jena;
 
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.map.ConnectingMapping;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.GraphUtil;
 import org.apache.jena.graph.impl.GraphBase;
 import org.apache.jena.mem.GraphMem;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.Objects;
 

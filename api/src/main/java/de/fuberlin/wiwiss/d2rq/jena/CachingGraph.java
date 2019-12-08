@@ -1,5 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.jena;
 
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.vocab.VocabularySummarizer;
 import org.apache.jena.atlas.lib.Cache;
 import org.apache.jena.atlas.lib.CacheFactory;
@@ -15,7 +16,6 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.NullIterator;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * Also note that the external changing of underlying (DB) data may lead to graph inconsistently.
  * <p>
  * Currently it is an experimental optimization.
- * See also {@code ru.avicomp.d2rq.InferenceStrategies} -
+ * See also {@code com.github.owlcs.d2rq.InferenceStrategies} -
  * a minimal set of tests to compare and measure performance while graph inference.
  * <p>
  * It is a former <a href='https://github.com/d2rq/d2rq/blob/master/src/de/fuberlin/wiwiss/d2rq/jena/CachingGraphD2RQ.java'>de.fuberlin.wiwiss.d2rq.jena.CachingGraphD2RQ</a>

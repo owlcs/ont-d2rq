@@ -53,7 +53,7 @@ public class ServerHelper {
 
     /**
      * Unpacks a jar resource directory to file-system directory.
-     * jar:file:///G:/work/avicomp/ont-d2rq/tools/target/d2rq.jar!/web-pages
+     * jar:file:///project-root/tools/target/d2rq.jar!/web-pages
      *
      * @param uri {@link URI}, example: {@code jar:file:///../ont-d2rq/tools/target/d2rq.jar!/web-pages}
      * @return {@link Path} in file-system

@@ -1,9 +1,9 @@
 package de.fuberlin.wiwiss.d2rq.utils;
 
+import com.github.owlcs.ontapi.OntFormat;
+import com.github.owlcs.ontapi.utils.ReadWriteUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import ru.avicomp.ontapi.OntFormat;
-import ru.avicomp.ontapi.utils.ReadWriteUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

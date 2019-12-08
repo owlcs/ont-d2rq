@@ -87,7 +87,7 @@ public interface Configuration extends MapObject {
 
     /**
      * Answers {@code true} if each individual that appears in the {@link Mapping#getData() data}
-     * must have explicit {@link ru.avicomp.ontapi.jena.vocabulary.OWL#NamedIndividual owl:NamedIndividual} declaration,
+     * must have explicit {@link com.github.owlcs.ontapi.jena.vocabulary.OWL#NamedIndividual owl:NamedIndividual} declaration,
      * that is optional, but desirable.
      * This setting depends on the {@link #getControlOWL()}, and does not work if it is not {@code true}.
      *

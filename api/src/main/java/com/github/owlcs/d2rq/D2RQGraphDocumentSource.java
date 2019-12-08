@@ -1,5 +1,9 @@
 package com.github.owlcs.d2rq;
 
+import com.github.owlcs.d2rq.utils.D2RQGraphUtils;
+import com.github.owlcs.ontapi.OntApiException;
+import com.github.owlcs.ontapi.OntGraphDocumentSource;
+import com.github.owlcs.ontapi.OntGraphUtils;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
@@ -8,18 +12,13 @@ import de.fuberlin.wiwiss.d2rq.vocab.D2RQ;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.IRI;
-import com.github.owlcs.d2rq.utils.D2RQGraphUtils;
-import ru.avicomp.ontapi.OntApiException;
-import ru.avicomp.ontapi.OntGraphDocumentSource;
-import ru.avicomp.ontapi.OntGraphUtils;
-import ru.avicomp.ontapi.OntologyModel;
 
 import java.util.Objects;
 import java.util.Properties;
 
 /**
  * This is an extended {@link org.semanticweb.owlapi.io.OWLOntologyDocumentSource OWLAPI Document Source}
- * for loading a graph from a database in the form of {@link OntologyModel OWL2 Ontology}.
+ * for loading a graph from a database in the form of {@link com.github.owlcs.ontapi.Ontology OWL2 Ontology}.
  * <p>
  * A graph, that is returned by the method {@link OntGraphDocumentSource#getGraph()}, reflects a Database Schema only,
  * but it is also a {@link de.fuberlin.wiwiss.d2rq.jena.MappingGraph D2RQ Mapping Graph} and, therefore,

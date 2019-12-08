@@ -1,5 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.sql;
 
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.ontapi.jena.vocabulary.XSD;
 import de.fuberlin.wiwiss.d2rq.dbschema.DatabaseSchemaInspector;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import org.apache.jena.graph.Graph;
@@ -17,8 +19,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.owlcs.d2rq.conf.ConnectionData;
-import ru.avicomp.ontapi.jena.vocabulary.XSD;
 
 import java.util.ArrayList;
 import java.util.Arrays;

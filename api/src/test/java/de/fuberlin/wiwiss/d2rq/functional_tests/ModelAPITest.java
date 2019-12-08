@@ -1,5 +1,7 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
+import com.github.owlcs.d2rq.conf.ISWCData;
+import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.pp.PrettyPrinter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.DC;
@@ -10,8 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.owlcs.d2rq.conf.ISWCData;
-import ru.avicomp.ontapi.jena.utils.Iter;
 
 /**
  * Functional tests that exercise a ModelD2RQ by calling Model API functions. For

@@ -1,5 +1,18 @@
 package com.github.owlcs.d2rq;
 
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.d2rq.utils.OWLUtils;
+import com.github.owlcs.map.*;
+import com.github.owlcs.ontapi.Ontology;
+import com.github.owlcs.ontapi.OntologyManager;
+import com.github.owlcs.ontapi.jena.OntModelFactory;
+import com.github.owlcs.ontapi.jena.model.OntClass;
+import com.github.owlcs.ontapi.jena.model.OntDT;
+import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntNDP;
+import com.github.owlcs.ontapi.jena.vocabulary.XSD;
+import com.github.owlcs.ontapi.utils.SP;
+import com.github.owlcs.ontapi.utils.SPINMAPL;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
@@ -13,19 +26,6 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.SetOntologyID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.owlcs.d2rq.conf.ConnectionData;
-import com.github.owlcs.d2rq.utils.OWLUtils;
-import ru.avicomp.map.*;
-import ru.avicomp.ontapi.OntologyManager;
-import ru.avicomp.ontapi.OntologyModel;
-import ru.avicomp.ontapi.jena.OntModelFactory;
-import ru.avicomp.ontapi.jena.model.OntClass;
-import ru.avicomp.ontapi.jena.model.OntDT;
-import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.model.OntNDP;
-import ru.avicomp.ontapi.jena.vocabulary.XSD;
-import ru.avicomp.ontapi.utils.SP;
-import ru.avicomp.ontapi.utils.SPINMAPL;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,13 +75,13 @@ public class OntMapSimpleTest {
 
     public static OntGraphModel createSourceModel(OntologyManager manager, boolean withCache) {
         D2RQGraphDocumentSource source = D2RQSpinTest.createSource(data, "iswc");
-        OntologyModel res;
+        Ontology res;
         try {
             res = manager.loadOntologyFromOntologyDocument(source);
         } catch (OWLOntologyCreationException e) {
             throw new AssertionError(e);
         }
-        res.applyChange(new SetOntologyID(res, IRI.create("http://source.avicomp.ru")));
+        res.applyChange(new SetOntologyID(res, IRI.create("http://source.owlcs.github.com")));
         source.getMapping().getConfiguration().setWithCache(withCache);
         Assert.assertEquals(withCache, source.getMapping().getConfiguration().getWithCache());
         return res.asGraphModel();
@@ -89,14 +89,14 @@ public class OntMapSimpleTest {
 
     public static OntGraphModel createTargetModel(OntologyManager manager) {
         LOGGER.debug("Create the target model.");
-        String uri = "http://target.avicomp.ru";
+        String uri = "http://target.owlcs.github.com";
         String ns = uri + "#";
         OntGraphModel res = manager.createGraphModel(uri).setNsPrefixes(OntModelFactory.STANDARD);
         OntClass clazz = res.createOntEntity(OntClass.class, ns + "ClassTarget");
         OntNDP prop = res.createOntEntity(OntNDP.class, ns + "targetProperty");
         prop.addRange(res.getOntEntity(OntDT.class, XSD.xstring));
         prop.addDomain(clazz);
-        OntologyModel o = manager.getOntology(IRI.create(uri));
+        Ontology o = manager.getOntology(IRI.create(uri));
         Assert.assertNotNull("Can't find ontology " + uri, o);
         o.axioms().forEach(x -> LOGGER.debug("{}", x));
         return res;

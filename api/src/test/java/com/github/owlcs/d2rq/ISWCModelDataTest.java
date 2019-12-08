@@ -1,5 +1,10 @@
 package com.github.owlcs.d2rq;
 
+import com.github.owlcs.d2rq.conf.ISWCData;
+import com.github.owlcs.d2rq.utils.OWLUtils;
+import com.github.owlcs.ontapi.jena.OntModelFactory;
+import com.github.owlcs.ontapi.jena.model.*;
+import com.github.owlcs.ontapi.jena.vocabulary.OWL;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingHelper;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
@@ -13,11 +18,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.owlcs.d2rq.conf.ISWCData;
-import com.github.owlcs.d2rq.utils.OWLUtils;
-import ru.avicomp.ontapi.jena.OntModelFactory;
-import ru.avicomp.ontapi.jena.model.*;
-import ru.avicomp.ontapi.jena.vocabulary.OWL;
 
 import java.util.List;
 import java.util.stream.Collectors;

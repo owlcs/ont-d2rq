@@ -2,6 +2,13 @@ package com.github.owlcs.d2rq;
 
 import com.github.owlcs.d2rq.conf.ConnectionData;
 import com.github.owlcs.d2rq.utils.OWLUtils;
+import com.github.owlcs.ontapi.OntManagers;
+import com.github.owlcs.ontapi.Ontology;
+import com.github.owlcs.ontapi.OntologyManager;
+import com.github.owlcs.ontapi.internal.AxiomParserProvider;
+import com.github.owlcs.ontapi.internal.ONTObject;
+import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntStatement;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
@@ -15,13 +22,6 @@ import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.model.parameters.Imports;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.OntManagers;
-import ru.avicomp.ontapi.OntologyManager;
-import ru.avicomp.ontapi.OntologyModel;
-import ru.avicomp.ontapi.internal.AxiomParserProvider;
-import ru.avicomp.ontapi.internal.ONTObject;
-import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.model.OntStatement;
 
 import java.util.Arrays;
 import java.util.List;
@@ -77,7 +77,7 @@ public class PSModelTest {
     @Test
     public void test01ValidatePSDB() throws OWLOntologyCreationException {
         Assert.assertNotNull(psDataSource.getMapping());
-        OntologyModel o = OntManagers.createONT().loadOntologyFromOntologyDocument(psDataSource);
+        Ontology o = OntManagers.createONT().loadOntologyFromOntologyDocument(psDataSource);
         LOGGER.debug("Schema:");
         JenaModelUtils.print(o.asGraphModel());
 
@@ -103,7 +103,7 @@ public class PSModelTest {
     public void test02ReloadPSOntByMapping() {
         Mapping m = psDataSource.getMapping();
         // reload using mapping only
-        OntologyModel o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.wrap(m).getGraph());
+        Ontology o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.wrap(m).getGraph());
         OntGraphModel data = OWLUtils.toVirtual(o.asGraphModel());
         LOGGER.debug("Scheme+Data:");
         JenaModelUtils.print(data);
@@ -113,15 +113,15 @@ public class PSModelTest {
     @Test
     public void test03CombineDifferentSources() throws OWLOntologyCreationException {
         OntologyManager m = OntManagers.createONT();
-        OntologyModel ps = m.loadOntologyFromOntologyDocument(psDataSource);
-        OntologyModel iswc = m.loadOntologyFromOntologyDocument(ConnectionData.MYSQL.toDocumentSource("iswc"));
+        Ontology ps = m.loadOntologyFromOntologyDocument(psDataSource);
+        Ontology iswc = m.loadOntologyFromOntologyDocument(ConnectionData.MYSQL.toDocumentSource("iswc"));
 
         String iri1 = psBaseIRI + "postgres";
         ps.asGraphModel().setID(iri1);
         iswc.asGraphModel().addImport(ps.asGraphModel());
 
         OntologyManager m2 = OntManagers.createONT();
-        OntologyModel reloaded = m2.addOntology(OWLUtils.toVirtual(iswc.asGraphModel()).getGraph());
+        Ontology reloaded = m2.addOntology(OWLUtils.toVirtual(iswc.asGraphModel()).getGraph());
 
         Assert.assertEquals(2, m2.ontologies().count());
 

@@ -89,8 +89,8 @@ public interface Mapping extends AutoCloseable {
      * but this also means some dynamic changes in the mapping.
      *
      * @return {@link Graph}, an OWL2 schema
-     * @see ru.avicomp.ontapi.jena.model.OntGraphModel
-     * @see ru.avicomp.ontapi.OntologyModel
+     * @see com.github.owlcs.ontapi.jena.model.OntGraphModel
+     * @see com.github.owlcs.ontapi.Ontology
      * @see Configuration#getControlOWL()
      * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>
      */

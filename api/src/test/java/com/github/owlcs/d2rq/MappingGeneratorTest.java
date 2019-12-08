@@ -1,5 +1,11 @@
 package com.github.owlcs.d2rq;
 
+import com.github.owlcs.d2rq.conf.ConnectionData;
+import com.github.owlcs.d2rq.utils.D2RQGraphUtils;
+import com.github.owlcs.d2rq.utils.OWLUtils;
+import com.github.owlcs.ontapi.jena.OntModelFactory;
+import com.github.owlcs.ontapi.jena.impl.conf.OntModelConfig;
+import com.github.owlcs.ontapi.jena.model.*;
 import com.google.common.collect.LinkedListMultimap;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
 import de.fuberlin.wiwiss.d2rq.map.MappingFactory;
@@ -17,12 +23,6 @@ import org.junit.*;
 import org.semanticweb.owlapi.model.IRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.owlcs.d2rq.conf.ConnectionData;
-import com.github.owlcs.d2rq.utils.D2RQGraphUtils;
-import com.github.owlcs.d2rq.utils.OWLUtils;
-import ru.avicomp.ontapi.jena.OntModelFactory;
-import ru.avicomp.ontapi.jena.impl.conf.OntModelConfig;
-import ru.avicomp.ontapi.jena.model.*;
 
 import java.util.List;
 import java.util.stream.Collectors;

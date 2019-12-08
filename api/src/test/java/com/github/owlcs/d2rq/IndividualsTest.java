@@ -2,6 +2,11 @@ package com.github.owlcs.d2rq;
 
 import com.github.owlcs.d2rq.conf.ConnectionData;
 import com.github.owlcs.d2rq.utils.OWLUtils;
+import com.github.owlcs.ontapi.OntManagers;
+import com.github.owlcs.ontapi.Ontology;
+import com.github.owlcs.ontapi.OntologyManager;
+import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntIndividual;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,11 +15,6 @@ import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.avicomp.ontapi.OntManagers;
-import ru.avicomp.ontapi.OntologyManager;
-import ru.avicomp.ontapi.OntologyModel;
-import ru.avicomp.ontapi.jena.model.OntGraphModel;
-import ru.avicomp.ontapi.jena.model.OntIndividual;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +46,7 @@ public class IndividualsTest {
         D2RQGraphDocumentSource source = data.toDocumentSource("iswc");
         LOGGER.info("Source: {}", source);
 
-        OntologyModel schema = m.loadOntologyFromOntologyDocument(source);
+        Ontology schema = m.loadOntologyFromOntologyDocument(source);
         schema.axioms().forEach(x -> LOGGER.debug("{}", x));
 
         int expectedNumberOfIndividuals = 56;
@@ -59,7 +59,7 @@ public class IndividualsTest {
         testIndividuals(schema.asGraphModel(), 0);
 
         // pass all data from DB to memory
-        OntologyModel inMemory = m.createOntology();
+        Ontology inMemory = m.createOntology();
         inMemory.asGraphModel().add(virtual);
 
         List<OWLAxiom> axioms = inMemory.axioms(AxiomType.CLASS_ASSERTION).collect(Collectors.toList());

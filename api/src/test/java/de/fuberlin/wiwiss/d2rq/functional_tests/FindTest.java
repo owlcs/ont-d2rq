@@ -1,6 +1,10 @@
 package de.fuberlin.wiwiss.d2rq.functional_tests;
 
 import com.github.owlcs.d2rq.DynamicSchemaTest;
+import com.github.owlcs.d2rq.ISWCModelDataTest;
+import com.github.owlcs.d2rq.conf.ISWCData;
+import com.github.owlcs.ontapi.jena.vocabulary.OWL;
+import com.github.owlcs.ontapi.jena.vocabulary.RDF;
 import de.fuberlin.wiwiss.d2rq.helpers.FindTestFramework;
 import de.fuberlin.wiwiss.d2rq.vocab.ISWC;
 import de.fuberlin.wiwiss.d2rq.vocab.SKOS;
@@ -14,10 +18,6 @@ import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.VCARD;
 import org.junit.Ignore;
 import org.junit.Test;
-import com.github.owlcs.d2rq.ISWCModelDataTest;
-import com.github.owlcs.d2rq.conf.ISWCData;
-import ru.avicomp.ontapi.jena.vocabulary.OWL;
-import ru.avicomp.ontapi.jena.vocabulary.RDF;
 
 /**
  * Functional tests for the find(spo) operation of {@link de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ}.
