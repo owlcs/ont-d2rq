@@ -5,8 +5,8 @@ import com.github.owlcs.d2rq.utils.OWLUtils;
 import com.github.owlcs.ontapi.OntManagers;
 import com.github.owlcs.ontapi.Ontology;
 import com.github.owlcs.ontapi.OntologyManager;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
 import com.github.owlcs.ontapi.jena.model.OntIndividual;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,7 +52,7 @@ public class IndividualsTest {
         int expectedNumberOfIndividuals = 56;
 
         LOGGER.info("Test schema+data ontology.");
-        OntGraphModel virtual = OWLUtils.toVirtual(schema.asGraphModel());
+        OntModel virtual = OWLUtils.toVirtual(schema.asGraphModel());
         testIndividuals(virtual, expectedNumberOfIndividuals);
 
         LOGGER.info("Test there is no individuals inside schema ontology.");
@@ -69,7 +69,7 @@ public class IndividualsTest {
         OWLUtils.closeConnections(schema);
     }
 
-    private void testIndividuals(OntGraphModel model, int expected) {
+    private void testIndividuals(OntModel model, int expected) {
         List<OntIndividual> individuals = model.individuals().collect(Collectors.toList());
         LOGGER.debug("Number of individuals " + individuals.size());
         individuals.forEach(x -> LOGGER.debug("{}", x));

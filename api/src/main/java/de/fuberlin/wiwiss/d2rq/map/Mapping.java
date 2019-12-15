@@ -20,6 +20,7 @@ import java.util.stream.Stream;
  * Created by @ssz on 25.09.2018.
  * @see <a href='http://d2rq.org/d2rq-language#database'>The D2RQ Mapping Language</a>
  */
+@SuppressWarnings("unused")
 public interface Mapping extends AutoCloseable {
 
     /**
@@ -89,7 +90,7 @@ public interface Mapping extends AutoCloseable {
      * but this also means some dynamic changes in the mapping.
      *
      * @return {@link Graph}, an OWL2 schema
-     * @see com.github.owlcs.ontapi.jena.model.OntGraphModel
+     * @see com.github.owlcs.ontapi.jena.model.OntModel
      * @see com.github.owlcs.ontapi.Ontology
      * @see Configuration#getControlOWL()
      * @see <a href='https://www.w3.org/TR/owl2-quick-reference/'>OWL 2 Quick Reference Guide</a>

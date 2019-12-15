@@ -68,7 +68,7 @@ public class MappingGeneratorTest {
         m.getConfiguration().setControlOWL(true).setServeVocabulary(true);
         MappingUtils.print(m);
 
-        OntGraphModel all = OntModelFactory.createModel(m.getData(), OntModelConfig.ONT_PERSONALITY_LAX);
+        OntModel all = OntModelFactory.createModel(m.getData(), OntModelConfig.ONT_PERSONALITY_LAX);
         JenaModelUtils.print(all);
         OWLUtils.validateOWLEntities(all, 2, 0, 6, 0, 6, 7);
 
@@ -86,17 +86,17 @@ public class MappingGeneratorTest {
         m.getConfiguration().setControlOWL(true).setServeVocabulary(true);
         MappingUtils.print(m);
 
-        OntGraphModel all = OntModelFactory.createModel(m.getData(), OntModelConfig.ONT_PERSONALITY_LAX);
+        OntModel all = OntModelFactory.createModel(m.getData(), OntModelConfig.ONT_PERSONALITY_LAX);
         JenaModelUtils.print(all);
         OWLUtils.validateOWLEntities(all, 2, 0, 6, 0, 7, 0);
 
         validateNamedIndividuals(all, 6, uri, "%s#pk_table/%d", "%s/vocab#pk_table_%s", true);
 
         OntIndividual noPkIndividual = all.getOntEntity(OntIndividual.Named.class, uri + "#no_pk_table");
-        LinkedListMultimap<OntPE, Resource> noPkAssertions = LinkedListMultimap.create();
-        OntNDP noPkTableNumber = all.getOntEntity(OntNDP.class, all.expandPrefix("vocab:no_pk_table_number"));
-        OntNDP noPkTableParameter = all.getOntEntity(OntNDP.class, all.expandPrefix("vocab:no_pk_table_parameter"));
-        OntNDP noPkTableValue = all.getOntEntity(OntNDP.class, all.expandPrefix("vocab:no_pk_table_value"));
+        LinkedListMultimap<OntProperty, Resource> noPkAssertions = LinkedListMultimap.create();
+        OntDataProperty noPkTableNumber = all.getDataProperty(all.expandPrefix("vocab:no_pk_table_number"));
+        OntDataProperty noPkTableParameter = all.getDataProperty(all.expandPrefix("vocab:no_pk_table_parameter"));
+        OntDataProperty noPkTableValue = all.getDataProperty(all.expandPrefix("vocab:no_pk_table_value"));
         IntStream.rangeClosed(1, 8).forEach(i -> {
             noPkAssertions.put(noPkTableNumber, XSD.integer);
             noPkAssertions.put(noPkTableParameter, XSD.xstring);
@@ -114,7 +114,7 @@ public class MappingGeneratorTest {
         Mapping m = source.getMapping();
         MappingUtils.print(m);
 
-        OntGraphModel all = OntModelFactory.createModel(D2RQGraphUtils.toVirtual(source.getGraph()),
+        OntModel all = OntModelFactory.createModel(D2RQGraphUtils.toVirtual(source.getGraph()),
                 OntModelConfig.ONT_PERSONALITY_LAX);
         JenaModelUtils.print(all);
         OWLUtils.validateOWLEntities(all, 2, 0, 6, 0, 6, 7);
@@ -124,16 +124,16 @@ public class MappingGeneratorTest {
         validateAnonymousIndividuals(all, 7, uri, "%s/vocab#no_pk_table_%s", true);
     }
 
-    private static void validateNamedIndividuals(OntGraphModel m,
+    private static void validateNamedIndividuals(OntModel m,
                                                  @SuppressWarnings("SameParameterValue") int num,
                                                  String uri,
                                                  String individual,
                                                  String property,
                                                  boolean withLabel) {
-        LinkedListMultimap<OntPE, Resource> pkAssertions = LinkedListMultimap.create();
-        OntNDP pkTableId = m.getOntEntity(OntNDP.class, String.format(property, uri, "id"));
-        OntNDP pkTableNumericColumn = m.getOntEntity(OntNDP.class, String.format(property, uri, "numeric_column"));
-        OntNDP pkTableTextColumn = m.getOntEntity(OntNDP.class, String.format(property, uri, "text_column"));
+        LinkedListMultimap<OntProperty, Resource> pkAssertions = LinkedListMultimap.create();
+        OntDataProperty pkTableId = m.getOntEntity(OntDataProperty.class, String.format(property, uri, "id"));
+        OntDataProperty pkTableNumericColumn = m.getOntEntity(OntDataProperty.class, String.format(property, uri, "numeric_column"));
+        OntDataProperty pkTableTextColumn = m.getOntEntity(OntDataProperty.class, String.format(property, uri, "text_column"));
         pkAssertions.put(pkTableId, XSD.decimal);
         pkAssertions.put(pkTableNumericColumn, XSD.decimal);
         pkAssertions.put(pkTableTextColumn, XSD.xstring);
@@ -145,21 +145,21 @@ public class MappingGeneratorTest {
                 .forEach(i -> checkIndividualAssertions(i, pkAssertions));
     }
 
-    private static void validateAnonymousIndividuals(OntGraphModel m,
+    private static void validateAnonymousIndividuals(OntModel m,
                                                      @SuppressWarnings("SameParameterValue") int num,
                                                      String uri,
                                                      String property,
                                                      boolean withLabel) {
-        OntNDP noPkTableNumber = m.getOntEntity(OntNDP.class, String.format(property, uri, "number"));
-        OntNDP noPkTableParameter = m.getOntEntity(OntNDP.class, String.format(property, uri, "parameter"));
-        OntNDP noPkTableValue = m.getOntEntity(OntNDP.class, String.format(property, uri, "value"));
-        OntNAP label = m.getRDFSLabel();
+        OntDataProperty noPkTableNumber = m.getOntEntity(OntDataProperty.class, String.format(property, uri, "number"));
+        OntDataProperty noPkTableParameter = m.getOntEntity(OntDataProperty.class, String.format(property, uri, "parameter"));
+        OntDataProperty noPkTableValue = m.getOntEntity(OntDataProperty.class, String.format(property, uri, "value"));
+        OntAnnotationProperty label = m.getRDFSLabel();
 
         List<OntIndividual> anons = m.ontObjects(OntIndividual.Anonymous.class).collect(Collectors.toList());
         Assert.assertEquals(num, anons.size());
         for (OntIndividual i : anons) {
             int n = i.hasProperty(noPkTableParameter, "duplicate") ? 2 : 1;
-            LinkedListMultimap<OntPE, Resource> noPkAssertions = LinkedListMultimap.create();
+            LinkedListMultimap<OntProperty, Resource> noPkAssertions = LinkedListMultimap.create();
             for (int j = 0; j < n; j++)
                 noPkAssertions.put(noPkTableNumber, XSD.integer);
             for (int j = 0; j < n; j++)
@@ -174,7 +174,7 @@ public class MappingGeneratorTest {
         }
     }
 
-    private static void checkIndividualAssertions(OntIndividual i, LinkedListMultimap<OntPE, Resource> assertions) {
+    private static void checkIndividualAssertions(OntIndividual i, LinkedListMultimap<OntProperty, Resource> assertions) {
         List<OntStatement> statements = i.positiveAssertions()
                 .peek(s -> LOGGER.debug("{} assertion: {}", PrettyPrinter.toString(i), PrettyPrinter.toString(s)))
                 .collect(Collectors.toList());

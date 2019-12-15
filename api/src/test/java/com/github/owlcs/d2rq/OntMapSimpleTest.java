@@ -7,9 +7,8 @@ import com.github.owlcs.ontapi.Ontology;
 import com.github.owlcs.ontapi.OntologyManager;
 import com.github.owlcs.ontapi.jena.OntModelFactory;
 import com.github.owlcs.ontapi.jena.model.OntClass;
-import com.github.owlcs.ontapi.jena.model.OntDT;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
-import com.github.owlcs.ontapi.jena.model.OntNDP;
+import com.github.owlcs.ontapi.jena.model.OntDataProperty;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import com.github.owlcs.ontapi.jena.vocabulary.XSD;
 import com.github.owlcs.ontapi.utils.SP;
 import com.github.owlcs.ontapi.utils.SPINMAPL;
@@ -55,8 +54,8 @@ public class OntMapSimpleTest {
     @Test
     public void testInference() {
         OWLMapManager manager = Managers.createOWLMapManager();
-        OntGraphModel target = createTargetModel(manager);
-        OntGraphModel source = createSourceModel(manager, TestData.CACHE.equals(test));
+        OntModel target = createTargetModel(manager);
+        OntModel source = createSourceModel(manager, TestData.CACHE.equals(test));
         JenaModelUtils.print(source);
         MapModel spin = composeMapping(manager, source, target);
         JenaModelUtils.print(spin.asGraphModel());
@@ -73,7 +72,7 @@ public class OntMapSimpleTest {
         OWLUtils.closeConnections(source);
     }
 
-    public static OntGraphModel createSourceModel(OntologyManager manager, boolean withCache) {
+    public static OntModel createSourceModel(OntologyManager manager, boolean withCache) {
         D2RQGraphDocumentSource source = D2RQSpinTest.createSource(data, "iswc");
         Ontology res;
         try {
@@ -87,14 +86,14 @@ public class OntMapSimpleTest {
         return res.asGraphModel();
     }
 
-    public static OntGraphModel createTargetModel(OntologyManager manager) {
+    public static OntModel createTargetModel(OntologyManager manager) {
         LOGGER.debug("Create the target model.");
         String uri = "http://target.owlcs.github.com";
         String ns = uri + "#";
-        OntGraphModel res = manager.createGraphModel(uri).setNsPrefixes(OntModelFactory.STANDARD);
-        OntClass clazz = res.createOntEntity(OntClass.class, ns + "ClassTarget");
-        OntNDP prop = res.createOntEntity(OntNDP.class, ns + "targetProperty");
-        prop.addRange(res.getOntEntity(OntDT.class, XSD.xstring));
+        OntModel res = manager.createGraphModel(uri).setNsPrefixes(OntModelFactory.STANDARD);
+        OntClass clazz = res.createOntClass(ns + "ClassTarget");
+        OntDataProperty prop = res.createOntEntity(OntDataProperty.class, ns + "targetProperty");
+        prop.addRange(res.getDatatype(XSD.xstring));
         prop.addDomain(clazz);
         Ontology o = manager.getOntology(IRI.create(uri));
         Assert.assertNotNull("Can't find ontology " + uri, o);
@@ -102,12 +101,12 @@ public class OntMapSimpleTest {
         return res;
     }
 
-    public static MapModel composeMapping(MapManager manager, OntGraphModel source, OntGraphModel target) {
+    public static MapModel composeMapping(MapManager manager, OntModel source, OntModel target) {
         LOGGER.debug("Compose the (spin) mapping, that concatenates two data property assertion values into a new one");
         OntClass sourceClass = source.classes().findFirst().orElseThrow(AssertionError::new);
         OntClass targetClass = target.classes().findFirst().orElseThrow(AssertionError::new);
-        List<OntNDP> sourceProperties = source.dataProperties().collect(Collectors.toList());
-        OntNDP targetProperty = target.dataProperties().findFirst().orElse(null);
+        List<OntDataProperty> sourceProperties = source.dataProperties().collect(Collectors.toList());
+        OntDataProperty targetProperty = target.dataProperties().findFirst().orElse(null);
         MapModel res = manager.createMapModel();
 
         MapFunction.Builder self = manager.getFunction(SPINMAPL.self).create();

@@ -40,16 +40,16 @@ public class ISWCModelDataTest {
         return ISWCData.values();
     }
 
-    private static void validateMappedOWLDataForPredefinedMapping(OntGraphModel m) {
+    private static void validateMappedOWLDataForPredefinedMapping(OntModel m) {
         Resource xstring = XSD.xstring;
-        OntClass iswcFull_Professor = OWLUtils.findEntity(m, OntClass.class, "iswc:Full_Professor");
-        OntClass iswcDepartment = OWLUtils.findEntity(m, OntClass.class, "iswc:Department");
-        OntClass iswcInstitute = OWLUtils.findEntity(m, OntClass.class, "iswc:Institute");
-        OntClass iswcUniversity = OWLUtils.findEntity(m, OntClass.class, "iswc:University");
-        OntClass iswcResearcher = OWLUtils.findEntity(m, OntClass.class, "iswc:Researcher");
+        OntClass iswcFull_Professor = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:Full_Professor");
+        OntClass iswcDepartment = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:Department");
+        OntClass iswcInstitute = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:Institute");
+        OntClass iswcUniversity = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:University");
+        OntClass iswcResearcher = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:Researcher");
         OntClass postalAddresses = m.classes().filter(x -> "PostalAddresses".equalsIgnoreCase(x.getLocalName()))
                 .findFirst().orElseThrow(AssertionError::new);
-        OntClass iswcOrganizationClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Organization");
+        OntClass iswcOrganizationClass = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:Organization");
 
         DynamicSchemaTest.checkIndividual(iswcResearcher, 5, false);
         DynamicSchemaTest.checkIndividual(iswcInstitute, 2, false);
@@ -58,11 +58,11 @@ public class ISWCModelDataTest {
         DynamicSchemaTest.checkIndividual(iswcFull_Professor, 2, false);
         DynamicSchemaTest.checkIndividual(postalAddresses, 9, true);
 
-        OntNOP vcardADR = OWLUtils.findEntity(m, OntNOP.class, "vcard:ADR");
-        OntNDP vcardPcode = OWLUtils.findEntity(m, OntNDP.class, "vcard:Pcode");
-        OntNDP vcardCountry = OWLUtils.findEntity(m, OntNDP.class, "vcard:Country");
-        OntNDP vcardLocality = OWLUtils.findEntity(m, OntNDP.class, "vcard:Locality");
-        OntNDP vcardStreet = OWLUtils.findEntity(m, OntNDP.class, "vcard:Street");
+        OntObjectProperty vcardADR = OWLUtils.findEntity(m, OntObjectProperty.Named.class, "vcard:ADR");
+        OntDataProperty vcardPcode = OWLUtils.findEntity(m, OntDataProperty.class, "vcard:Pcode");
+        OntDataProperty vcardCountry = OWLUtils.findEntity(m, OntDataProperty.class, "vcard:Country");
+        OntDataProperty vcardLocality = OWLUtils.findEntity(m, OntDataProperty.class, "vcard:Locality");
+        OntDataProperty vcardStreet = OWLUtils.findEntity(m, OntDataProperty.class, "vcard:Street");
 
         DynamicSchemaTest.checkHasDomains(vcardADR, iswcOrganizationClass);
         DynamicSchemaTest.checkHasRanges(vcardADR, postalAddresses);
@@ -92,7 +92,7 @@ public class ISWCModelDataTest {
 
         int compiledTriples = MappingHelper.asConnectingMapping(mapping).compiledPropertyBridges().size();
 
-        OntGraphModel inMemory = OntModelFactory.createModel();
+        OntModel inMemory = OntModelFactory.createModel();
         inMemory.add(mapping.getVocabularyModel());
         // + PostalAddresses:
         Assert.assertEquals(8, inMemory.classes().peek(x -> LOGGER.debug("Schema: {}", x)).count());
@@ -112,13 +112,13 @@ public class ISWCModelDataTest {
         Assert.assertEquals(totalNumberOfStatements, inMemory.size());
         mapping.getConfiguration().setServeVocabulary(true);
 
-        OntGraphModel dynamic = OntModelFactory.createModel(new Union(mapping.getSchema(), mapping.getData()));
+        OntModel dynamic = OntModelFactory.createModel(new Union(mapping.getSchema(), mapping.getData()));
 
         DynamicSchemaTest.validateInferredOWLForPredefinedMapping(dynamic);
         validateMappedOWLDataForPredefinedMapping(dynamic);
 
         // add new class
-        OntClass additional = dynamic.createOntEntity(OntClass.class, inMemory.expandPrefix("iswc:OneMoreClass"));
+        OntClass additional = dynamic.createOntClass(inMemory.expandPrefix("iswc:OneMoreClass"));
         additional.addAnnotation(inMemory.getRDFSLabel(), "OneMoreClass");
 
         Assert.assertEquals(14, dynamic.classes().peek(x -> LOGGER.debug("1) DYNAMIC CLASS: {}", x)).count());
@@ -141,7 +141,7 @@ public class ISWCModelDataTest {
     @Test
     public void testValidateDataWithoutControlOWL() {
         try (Mapping mapping = data.loadMapping()) {
-            OntGraphModel m = OntModelFactory.createModel(mapping.getData());
+            OntModel m = OntModelFactory.createModel(mapping.getData());
             Assert.assertEquals(0, m.namedIndividuals().count());
             LOGGER.debug("Data:"); // starting ont-api:1.4.2 no duplicates in the result:
             List<OntIndividual> individuals = m.individuals()
@@ -162,7 +162,7 @@ public class ISWCModelDataTest {
             Assert.assertTrue(mapping.getConfiguration().getGenerateNamedIndividuals());
 
 
-            OntGraphModel res = OntModelFactory.createModel(mapping.getData());
+            OntModel res = OntModelFactory.createModel(mapping.getData());
             // TODO: there is a bug with intersections of
             //  d2rq:uriPattern=http://annotation.semanticweb.org/iswc/iswc.daml#@@persons.Type@@ and
             //  d2rq:uriColumn=topics.URI, which retrieves uris with the same namespace.

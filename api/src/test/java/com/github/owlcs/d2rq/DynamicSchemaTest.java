@@ -41,7 +41,7 @@ public class DynamicSchemaTest {
         String ns = uri + "#";
 
         Mapping mapping = MappingFactory.create();
-        OntGraphModel m = OntModelFactory.createModel(mapping.getSchema());
+        OntModel m = OntModelFactory.createModel(mapping.getSchema());
         m.setNsPrefix("test", ns);
         Assert.assertEquals("test", m.getNsURIPrefix(ns));
         Assert.assertEquals("test", mapping.asModel().getNsURIPrefix(ns));
@@ -50,7 +50,7 @@ public class DynamicSchemaTest {
         m.setID(uri);
         Assert.assertFalse(m.isEmpty());
         Assert.assertEquals(uri, m.getID().getURI());
-        m.createOntEntity(OntClass.class, ns + "Clazz");
+        m.createOntClass(ns + "Clazz");
         Assert.assertEquals(1, m.classes().count());
         Assert.assertEquals(2, m.size());
         Assert.assertFalse(m.isEmpty());
@@ -79,7 +79,7 @@ public class DynamicSchemaTest {
 
         Graph g = mapping.getSchema();
 
-        OntGraphModel schema = OntModelFactory.createModel(g);
+        OntModel schema = OntModelFactory.createModel(g);
         schema.setID(uri1).addComment("xxxx");
         Assert.assertTrue(schema.contains(null, RDFS.comment, comment));
         Assert.assertTrue(schema.contains(schema.getResource(uri1), RDFS.comment, comment));
@@ -91,7 +91,7 @@ public class DynamicSchemaTest {
         JenaModelUtils.print(schema);
         Assert.assertTrue(schema.contains(null, RDFS.comment, comment));
 
-        OntGraphModel mappingAsOWL = OntModelFactory.createModel(mapping.asModel().getGraph());
+        OntModel mappingAsOWL = OntModelFactory.createModel(mapping.asModel().getGraph());
         Assert.assertEquals(1, mappingAsOWL.getID()
                 .annotations().peek(s -> LOGGER.debug("Mapping annotation: {}", s)).count());
         Assert.assertEquals(2, schema.getID().annotations()
@@ -115,7 +115,7 @@ public class DynamicSchemaTest {
         String res = JenaModelUtils.toTurtleString(mapping.asModel());
         Model m = JenaModelUtils.loadFromString(res);
         Assert.assertEquals(uri2, OntModelFactory.createModel(m.getGraph()).getID().getURI());
-        OntGraphModel schema2 = OntModelFactory.createModel(MappingFactory.wrap(m).getSchema());
+        OntModel schema2 = OntModelFactory.createModel(MappingFactory.wrap(m).getSchema());
         Assert.assertEquals(2, schema2.getID().annotations()
                 .peek(s -> LOGGER.debug("4) Schema annotation: {}", s)).count());
         Assert.assertEquals(uri2, schema2.getID().getURI());
@@ -155,7 +155,7 @@ public class DynamicSchemaTest {
     public void testValidatePredefinedISWCSchema() {
         Mapping mapping = ISWCData.MYSQL.loadMapping();
 
-        OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
+        OntModel schema = OntModelFactory.createModel(mapping.getSchema());
         JenaModelUtils.print(schema);
         Assert.assertFalse(mapping.getConfiguration().getControlOWL());
         validateInferredOWLForPredefinedMapping(schema);
@@ -168,7 +168,7 @@ public class DynamicSchemaTest {
         JenaModelUtils.print(schema);
         validateInferredOWLForPredefinedMapping(schema);
         Assert.assertEquals(8, schema.classes().peek(x -> LOGGER.debug("2) CLASS: {}", x)).count());
-        schema.createOntEntity(OntClass.class, "OneMore");
+        schema.createOntClass("OneMore");
 
         Assert.assertEquals(9, schema.classes().count());
         Assert.assertEquals(1, mapping.asModel().listStatements(null, RDF.type, OWL.Class).toSet().size());
@@ -177,9 +177,9 @@ public class DynamicSchemaTest {
         Assert.assertEquals(13, schema.dataProperties().peek(p -> LOGGER.debug("{}", p)).count());
         Assert.assertEquals(4, schema.annotationProperties().peek(p -> LOGGER.debug("{}", p)).count());
 
-        schema.ontObjects(OntPE.class).peek(p -> LOGGER.debug("Test: {}", p))
+        schema.ontObjects(OntProperty.class).peek(p -> LOGGER.debug("Test: {}", p))
                 .forEach(p -> Assert.assertTrue(p.domains().count() >= 1));
-        schema.ontObjects(OntDOP.class).forEach(p -> Assert.assertTrue(p.ranges().count() >= 1));
+        schema.ontObjects(OntRealProperty.class).forEach(p -> Assert.assertTrue(p.ranges().count() >= 1));
 
         mapping.close();
     }
@@ -191,7 +191,7 @@ public class DynamicSchemaTest {
 
             MappingUtils.print(mapping);
 
-            OntGraphModel schema = OntModelFactory.createModel(mapping.getSchema());
+            OntModel schema = OntModelFactory.createModel(mapping.getSchema());
 
             JenaModelUtils.print(schema);
             Assert.assertEquals(6, schema.classes().peek(x -> LOGGER.debug("Class {}", x)).count());
@@ -206,75 +206,75 @@ public class DynamicSchemaTest {
         }
     }
 
-    static void validateInferredOWLForPredefinedMapping(OntGraphModel m) {
+    static void validateInferredOWLForPredefinedMapping(OntModel m) {
         Resource xstring = XSD.xstring;
         Resource qYear = XSD.gYear;
 
-        OntClass iswcInProceedingClass = OWLUtils.findEntity(m, OntClass.class, "iswc:InProceedings");
-        OntClass iswcEventClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Event");
-        OntClass iswcConferenceClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Conference");
-        OntClass iswcOrganizationClass = OWLUtils.findEntity(m, OntClass.class, "iswc:Organization");
-        OntClass foafDocumentClass = OWLUtils.findEntity(m, OntClass.class, "foaf:Document");
-        OntClass foafPersonClass = OWLUtils.findEntity(m, OntClass.class, "foaf:Person");
-        OntClass skosConceptClass = OWLUtils.findEntity(m, OntClass.class, "skos:Concept");
+        OntClass iswcInProceedingClass = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:InProceedings");
+        OntClass iswcEventClass = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:Event");
+        OntClass iswcConferenceClass = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:Conference");
+        OntClass iswcOrganizationClass = OWLUtils.findEntity(m, OntClass.Named.class, "iswc:Organization");
+        OntClass foafDocumentClass = OWLUtils.findEntity(m, OntClass.Named.class, "foaf:Document");
+        OntClass foafPersonClass = OWLUtils.findEntity(m, OntClass.Named.class, "foaf:Person");
+        OntClass skosConceptClass = OWLUtils.findEntity(m, OntClass.Named.class, "skos:Concept");
 
-        OntNDP dcAbstract = OWLUtils.findEntity(m, OntNDP.class, "dcterms:abstract");
+        OntDataProperty dcAbstract = OWLUtils.findEntity(m, OntDataProperty.class, "dcterms:abstract");
         checkHasDomains(dcAbstract, iswcInProceedingClass);
         checkHasRanges(dcAbstract, xstring);
 
-        OntNDP dcTitle = OWLUtils.findEntity(m, OntNDP.class, "dc:title");
+        OntDataProperty dcTitle = OWLUtils.findEntity(m, OntDataProperty.class, "dc:title");
         checkHasRanges(dcTitle, xstring);
         checkHasDomains(dcTitle, iswcInProceedingClass);
 
-        OntNOP dcCreator = OWLUtils.findEntity(m, OntNOP.class, "dc:creator");
+        OntObjectProperty dcCreator = OWLUtils.findEntity(m, OntObjectProperty.Named.class, "dc:creator");
         checkHasDomains(dcCreator, iswcInProceedingClass);
         checkHasRanges(dcCreator, foafPersonClass);
 
-        OntNDP dcDate = OWLUtils.findEntity(m, OntNDP.class, "dc:date");
+        OntDataProperty dcDate = OWLUtils.findEntity(m, OntDataProperty.class, "dc:date");
         checkHasDomains(dcDate, iswcConferenceClass, iswcInProceedingClass);
         checkHasRanges(dcDate, qYear, xstring);
 
-        OntNOP skosSubject = OWLUtils.findEntity(m, OntNOP.class, "skos:subject");
+        OntObjectProperty skosSubject = OWLUtils.findEntity(m, OntObjectProperty.Named.class, "skos:subject");
         checkHasDomains(skosSubject, iswcInProceedingClass);
         checkHasRanges(skosSubject, skosConceptClass);
 
-        OntNOP skosBroader = OWLUtils.findEntity(m, OntNOP.class, "skos:broader");
+        OntObjectProperty skosBroader = OWLUtils.findEntity(m, OntObjectProperty.Named.class, "skos:broader");
         checkHasRanges(skosBroader, skosConceptClass);
         checkHasDomains(skosBroader, skosConceptClass);
 
-        OntNOP skosPrimarySubject = OWLUtils.findEntity(m, OntNOP.class, "skos:primarySubject");
+        OntObjectProperty skosPrimarySubject = OWLUtils.findEntity(m, OntObjectProperty.Named.class, "skos:primarySubject");
         checkHasDomains(skosPrimarySubject, iswcInProceedingClass);
         checkHasRanges(skosPrimarySubject, skosConceptClass);
 
-        OntNDP skosPrefLabel = OWLUtils.findEntity(m, OntNDP.class, "skos:prefLabel");
+        OntDataProperty skosPrefLabel = OWLUtils.findEntity(m, OntDataProperty.class, "skos:prefLabel");
         checkHasDomains(skosPrefLabel, skosConceptClass);
         checkHasRanges(skosPrefLabel, xstring);
 
-        OntNAP foafMbox = OWLUtils.findEntity(m, OntNAP.class, "foaf:mbox");
+        OntAnnotationProperty foafMbox = OWLUtils.findEntity(m, OntAnnotationProperty.class, "foaf:mbox");
         checkHasRanges(foafMbox);
         checkHasDomains(foafMbox, foafPersonClass);
 
-        OntNDP foafName = OWLUtils.findEntity(m, OntNDP.class, "foaf:name");
+        OntDataProperty foafName = OWLUtils.findEntity(m, OntDataProperty.class, "foaf:name");
         checkHasDomains(foafName, foafPersonClass);
         checkHasRanges(foafName, xstring);
 
-        OntNAP foafHomepage = OWLUtils.findEntity(m, OntNAP.class, "foaf:homepage");
+        OntAnnotationProperty foafHomepage = OWLUtils.findEntity(m, OntAnnotationProperty.class, "foaf:homepage");
         checkHasDomains(foafHomepage, foafPersonClass, iswcOrganizationClass);
         checkHasRanges(foafHomepage);
 
-        OntNAP foafDepiction = OWLUtils.findEntity(m, OntNAP.class, "foaf:depiction");
+        OntAnnotationProperty foafDepiction = OWLUtils.findEntity(m, OntAnnotationProperty.class, "foaf:depiction");
         checkHasRanges(foafDepiction);
         checkHasDomains(foafDepiction, foafPersonClass);
 
-        OntNOP iswcResearchInterests = OWLUtils.findEntity(m, OntNOP.class, "iswc:research_interests");
+        OntObjectProperty iswcResearchInterests = OWLUtils.findEntity(m, OntObjectProperty.Named.class, "iswc:research_interests");
         checkHasDomains(iswcResearchInterests, foafPersonClass);
         checkHasRanges(iswcResearchInterests, skosConceptClass);
 
-        OntNOP iswcConference = OWLUtils.findEntity(m, OntNOP.class, "iswc:conference");
+        OntObjectProperty iswcConference = OWLUtils.findEntity(m, OntObjectProperty.Named.class, "iswc:conference");
         checkHasRanges(iswcConference, iswcConferenceClass);
         checkHasDomains(iswcConference, iswcInProceedingClass);
 
-        OntNDP iswcLocation = OWLUtils.findEntity(m, OntNDP.class, "iswc:location");
+        OntDataProperty iswcLocation = OWLUtils.findEntity(m, OntDataProperty.class, "iswc:location");
         checkHasDomains(iswcLocation, iswcConferenceClass);
         checkHasRanges(iswcLocation, xstring);
 
@@ -302,15 +302,15 @@ public class DynamicSchemaTest {
         }).count());
     }
 
-    static void checkHasRanges(OntPE p, Resource... ranges) {
-        checkHas(p, OntPE::ranges, ranges);
+    static void checkHasRanges(OntProperty p, Resource... ranges) {
+        checkHas(p, OntProperty::ranges, ranges);
     }
 
-    static void checkHasDomains(OntPE p, Resource... domains) {
-        checkHas(p, OntPE::domains, domains);
+    static void checkHasDomains(OntProperty p, Resource... domains) {
+        checkHas(p, OntProperty::domains, domains);
     }
 
-    private static void checkHas(OntPE p, Function<OntPE, Stream<? extends Resource>> get, Resource... domains) {
+    private static void checkHas(OntProperty p, Function<OntProperty, Stream<? extends Resource>> get, Resource... domains) {
         Assert.assertEquals(domains.length, get.apply(p).count());
         for (Resource c : domains) {
             get.apply(p).filter(c::equals).findFirst().orElseThrow(() -> new AssertionError("Property " + p));

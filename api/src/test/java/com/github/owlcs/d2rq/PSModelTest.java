@@ -7,7 +7,7 @@ import com.github.owlcs.ontapi.Ontology;
 import com.github.owlcs.ontapi.OntologyManager;
 import com.github.owlcs.ontapi.internal.AxiomParserProvider;
 import com.github.owlcs.ontapi.internal.ONTObject;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import com.github.owlcs.ontapi.jena.model.OntStatement;
 import de.fuberlin.wiwiss.d2rq.SystemLoader;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -82,7 +82,7 @@ public class PSModelTest {
         JenaModelUtils.print(o.asGraphModel());
 
         // in memory, no duplicates:
-        OntGraphModel data = OWLUtils.toMemory(o.asGraphModel());
+        OntModel data = OWLUtils.toMemory(o.asGraphModel());
         // axioms:
         List<OWLAxiom> axioms = AxiomType.AXIOM_TYPES.stream()
                 .map(AxiomParserProvider::get)
@@ -104,7 +104,7 @@ public class PSModelTest {
         Mapping m = psDataSource.getMapping();
         // reload using mapping only
         Ontology o = OntManagers.createONT().addOntology(D2RQGraphDocumentSource.wrap(m).getGraph());
-        OntGraphModel data = OWLUtils.toVirtual(o.asGraphModel());
+        OntModel data = OWLUtils.toVirtual(o.asGraphModel());
         LOGGER.debug("Scheme+Data:");
         JenaModelUtils.print(data);
         validatePSDatabase(data);
@@ -133,7 +133,7 @@ public class PSModelTest {
         OWLUtils.closeConnections(reloaded);
     }
 
-    private void validatePSDatabase(OntGraphModel model) {
+    private void validatePSDatabase(OntModel model) {
         boolean isInMemory = OWLUtils.isInMemory(model.getGraph());
         LOGGER.info("Validate data from pk_table ({})", isInMemory ? "InMemory" : "Virtual");
         List<String> pkTableColumns = Arrays.asList("id", "numeric_column", "text_column");

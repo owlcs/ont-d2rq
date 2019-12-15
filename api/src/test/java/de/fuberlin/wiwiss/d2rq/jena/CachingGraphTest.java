@@ -2,10 +2,9 @@ package de.fuberlin.wiwiss.d2rq.jena;
 
 import com.github.owlcs.ontapi.jena.OntModelFactory;
 import com.github.owlcs.ontapi.jena.UnionGraph;
-import com.github.owlcs.ontapi.jena.model.OntCE;
 import com.github.owlcs.ontapi.jena.model.OntClass;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
 import com.github.owlcs.ontapi.jena.model.OntIndividual;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import com.github.owlcs.ontapi.jena.vocabulary.OWL;
 import com.github.owlcs.ontapi.jena.vocabulary.RDF;
 import com.github.owlcs.ontapi.utils.ReadWriteUtils;
@@ -48,7 +47,7 @@ public class CachingGraphTest {
     @SuppressWarnings("SameParameterValue")
     private static void validateCachingGraphWithCoverage(boolean containsByFind) {
         ReadStatsGraph rsg = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
-        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(rsg));
+        OntModel m = OntModelFactory.createModel(new CachingGraph(rsg));
 
         performSomeReadActionsOnPizza(m);
 
@@ -87,7 +86,7 @@ public class CachingGraphTest {
     @SuppressWarnings("SameParameterValue")
     private static void validateInternalGraphCachingBuckets(boolean containsByFind) {
         String uri = "http://x";
-        OntGraphModel m1 = OntModelFactory.createModel()
+        OntModel m1 = OntModelFactory.createModel()
                 .setNsPrefixes(OntModelFactory.STANDARD).setNsPrefix("x", uri + "#");
         m1.setID(uri);
         OntClass c = m1.createOntClass(uri + "#NamedClass01");
@@ -134,11 +133,11 @@ public class CachingGraphTest {
         });
     }
 
-    private static void performSomeReadActionsOnPizza(OntGraphModel pizza) {
+    private static void performSomeReadActionsOnPizza(OntModel pizza) {
         Assert.assertEquals(100, pizza.classes().count());
-        Assert.assertEquals(332, pizza.ontObjects(OntCE.class).count());
+        Assert.assertEquals(332, pizza.ontObjects(OntClass.class).count());
         Assert.assertEquals(5, pizza.ontObjects(OntIndividual.class).count());
-        OntClass c = pizza.getOntEntity(OntClass.class, pizza.expandPrefix(":AnchoviesTopping"));
+        OntClass c = pizza.getOntClass(pizza.expandPrefix(":AnchoviesTopping"));
         Assert.assertNotNull(c);
         Assert.assertEquals(1, c.superClasses().count());
         Assert.assertEquals(2, c.disjointClasses().count());
@@ -165,7 +164,7 @@ public class CachingGraphTest {
 
     @Test
     public void testCannotModify() {
-        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph()));
+        OntModel m = OntModelFactory.createModel(new CachingGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph()));
         try {
             m.createOntClass("x");
             Assert.fail("Possible to add class");
@@ -196,7 +195,7 @@ public class CachingGraphTest {
         int timeoutInMs = 5000;
 
         ReadStatsGraph rsg = new ReadStatsGraph(JenaModelUtils.loadTurtle("/pizza.ttl").getGraph());
-        OntGraphModel m = OntModelFactory.createModel(new CachingGraph(new ReadStatsGraph(rsg)));
+        OntModel m = OntModelFactory.createModel(new CachingGraph(new ReadStatsGraph(rsg)));
 
         ExecutorService service = Executors.newFixedThreadPool(threadsNum);
         AtomicBoolean stop = new AtomicBoolean(false);
@@ -236,14 +235,14 @@ public class CachingGraphTest {
 
         int individuals = 1000;
         String ns = "http://xxx#";
-        OntGraphModel orig = OntModelFactory.createModel().setNsPrefixes(OntModelFactory.STANDARD);
+        OntModel orig = OntModelFactory.createModel().setNsPrefixes(OntModelFactory.STANDARD);
         for (int i = 0; i < individuals; i++) {
             orig.getOWLThing().createIndividual(ns + "Individual#" + i);
         }
 
         ReadStatsGraph rsg = new ReadStatsGraph(orig.getBaseGraph());
         CachingGraph cg = new CachingGraph(rsg, size, length);
-        OntGraphModel m = OntModelFactory.createModel(cg);
+        OntModel m = OntModelFactory.createModel(cg);
         Assert.assertEquals(individuals, m.individuals().count());
         Assert.assertEquals(size, cg.tooLongChains.size());
         Assert.assertEquals(0, rsg.getContainsStats().size());
@@ -253,14 +252,14 @@ public class CachingGraphTest {
     public void testLargeGraphWithLargeCacheListIndividuals() {
         int individuals = 10000;
         String ns = "http://x#";
-        OntGraphModel orig = OntModelFactory.createModel().setNsPrefixes(OntModelFactory.STANDARD);
+        OntModel orig = OntModelFactory.createModel().setNsPrefixes(OntModelFactory.STANDARD);
         for (int i = 0; i < individuals; i++) {
             orig.getOWLThing().createIndividual(ns + "I#" + i);
         }
 
         ReadStatsGraph rsg = new ReadStatsGraph(orig.getBaseGraph());
         CachingGraph cg = new CachingGraph(rsg, 10000, 100_000_000);
-        OntGraphModel m = OntModelFactory.createModel(cg);
+        OntModel m = OntModelFactory.createModel(cg);
         Assert.assertEquals(individuals, m.individuals().count());
         Assert.assertEquals(0, cg.tooLongChains.size());
         Assert.assertEquals(0, rsg.getContainsStats().size());

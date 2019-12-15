@@ -2,8 +2,8 @@ package com.github.owlcs.d2rq;
 
 import com.github.owlcs.d2rq.conf.ConnectionData;
 import com.github.owlcs.ontapi.jena.OntModelFactory;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
 import com.github.owlcs.ontapi.jena.model.OntIndividual;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import com.github.owlcs.ontapi.jena.utils.Models;
 import de.fuberlin.wiwiss.d2rq.map.*;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
@@ -57,7 +57,7 @@ public class AssembleMappingTest {
         mapping.validate();
         MappingUtils.print(mapping);
 
-        OntGraphModel m = OntModelFactory.createModel(mapping.getData());
+        OntModel m = OntModelFactory.createModel(mapping.getData());
         JenaModelUtils.print(m);
         Assert.assertEquals(5, m.size());
     }
@@ -91,7 +91,7 @@ public class AssembleMappingTest {
 
         mapping.validate();
 
-        OntGraphModel full = OntModelFactory.createModel(mapping.getData());
+        OntModel full = OntModelFactory.createModel(mapping.getData());
         JenaModelUtils.print(full);
 
         MappingUtils.print(mapping);
@@ -136,7 +136,7 @@ public class AssembleMappingTest {
 
         mapping.validate();
 
-        OntGraphModel full = OntModelFactory.createModel(mapping.getData());
+        OntModel full = OntModelFactory.createModel(mapping.getData());
         JenaModelUtils.print(full);
 
         Assert.assertEquals(2, full.classes().count());

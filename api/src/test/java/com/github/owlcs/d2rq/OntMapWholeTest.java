@@ -8,9 +8,9 @@ import com.github.owlcs.map.spin.vocabulary.AVC;
 import com.github.owlcs.ontapi.OntologyManager;
 import com.github.owlcs.ontapi.jena.OntModelFactory;
 import com.github.owlcs.ontapi.jena.model.OntClass;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntDataProperty;
 import com.github.owlcs.ontapi.jena.model.OntIndividual;
-import com.github.owlcs.ontapi.jena.model.OntNDP;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import de.fuberlin.wiwiss.d2rq.jena.CachingGraph;
 import de.fuberlin.wiwiss.d2rq.jena.GraphD2RQ;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -50,57 +50,28 @@ public class OntMapWholeTest {
         return TestData.values();
     }
 
-    @Test
-    public void testCollectAddresses() throws OWLOntologyCreationException {
-        D2RQGraphDocumentSource source = test.makeSource();
-        Mapping d2rq = source.getMapping();
-        d2rq.getConfiguration().setWithCache(test.withCache());
-        Assert.assertEquals(test.withCache(), d2rq.getConfiguration().getWithCache());
-
-        OWLMapManager manager = Managers.createOWLMapManager();
-        OntGraphModel src = manager.loadOntologyFromOntologyDocument(source).asGraphModel();
-
-        OntGraphModel dst = assembleTarget(manager);
-
-        MapModel spin = assembleSpinMapping(manager, src, dst, test.getVocabulary());
-
-        LOGGER.debug("Run inference.");
-        Graph data = d2rq.getData();
-        Assert.assertTrue(test.getGraphType().isInstance(data));
-        manager.getInferenceEngine(spin).run(data, dst.getBaseGraph());
-        LOGGER.debug("Done.");
-
-        Assert.assertEquals(1, dst.individuals().count());
-
-        OntIndividual res = dst.individuals().findFirst().orElseThrow(AssertionError::new);
-        Assert.assertEquals(9, res.positiveAssertions().peek(x -> LOGGER.debug("Address: '{}'", x.getString())).count());
-        JenaModelUtils.print(dst);
-
-        source.close();
-    }
-
-    private static OntGraphModel assembleTarget(OntologyManager m) {
+    private static OntModel assembleTarget(OntologyManager m) {
         String dstURI = "http://test.ex/dst";
         String dstNS = dstURI + "#";
-        OntGraphModel res = m.createGraphModel(dstURI)
+        OntModel res = m.createGraphModel(dstURI)
                 .setNsPrefix("dst", dstNS).setNsPrefixes(OntModelFactory.STANDARD);
-        OntClass dstClass = res.createOntEntity(OntClass.class, dstNS + "Organizations");
-        OntNDP dstProp = res.createOntEntity(OntNDP.class, dstNS + "address");
+        OntClass dstClass = res.createOntClass(dstNS + "Organizations");
+        OntDataProperty dstProp = res.createDataProperty(dstNS + "address");
         dstProp.addDomain(dstClass);
         return res;
     }
 
-    private static MapModel assembleSpinMapping(MapManager m, OntGraphModel src, OntGraphModel dst, SchemaEntities voc) {
-        OntClass classOrganization = OWLUtils.findEntity(src, OntClass.class, voc.getOrganization());
-        OntClass classPerson = OWLUtils.findEntity(src, OntClass.class, voc.getPerson());
-        OntNDP propOrgStreet = OWLUtils.findEntity(src, OntNDP.class, voc.getOrganizationStreet());
-        OntNDP propOrgCountry = OWLUtils.findEntity(src, OntNDP.class, voc.getOrganizationCountry());
-        OntNDP propOrgCity = OWLUtils.findEntity(src, OntNDP.class, voc.getOrganizationCity());
-        OntNDP propOrgPcode = OWLUtils.findEntity(src, OntNDP.class, voc.getOrganizationPcode());
-        OntNDP propPersonAddress = OWLUtils.findEntity(src, OntNDP.class, voc.getPersonAddress());
+    private static MapModel assembleSpinMapping(MapManager m, OntModel src, OntModel dst, SchemaEntities voc) {
+        OntClass classOrganization = OWLUtils.findEntity(src, OntClass.Named.class, voc.getOrganization());
+        OntClass classPerson = OWLUtils.findEntity(src, OntClass.Named.class, voc.getPerson());
+        OntDataProperty propOrgStreet = OWLUtils.findEntity(src, OntDataProperty.class, voc.getOrganizationStreet());
+        OntDataProperty propOrgCountry = OWLUtils.findEntity(src, OntDataProperty.class, voc.getOrganizationCountry());
+        OntDataProperty propOrgCity = OWLUtils.findEntity(src, OntDataProperty.class, voc.getOrganizationCity());
+        OntDataProperty propOrgPcode = OWLUtils.findEntity(src, OntDataProperty.class, voc.getOrganizationPcode());
+        OntDataProperty propPersonAddress = OWLUtils.findEntity(src, OntDataProperty.class, voc.getPersonAddress());
 
-        OntClass classDst = OWLUtils.findEntity(dst, OntClass.class, "dst:Organizations");
-        OntNDP propDst = OWLUtils.findEntity(dst, OntNDP.class, "dst:address");
+        OntClass classDst = OWLUtils.findEntity(dst, OntClass.Named.class, "dst:Organizations");
+        OntDataProperty propDst = OWLUtils.findEntity(dst, OntDataProperty.class, "dst:address");
 
         MapFunction.Call target = m.getFunction(AVC.IRI).create()
                 .addLiteral(SP.arg1, dst.getNsPrefixURI("dst") + "Addresses").build();
@@ -120,6 +91,15 @@ public class OntMapWholeTest {
         res.createContext(classOrganization, classDst, target).addPropertyBridge(concat, propDst);
         res.createContext(classPerson, classDst, target).addPropertyBridge(same, propDst);
         return res;
+    }
+
+    private static D2RQGraphDocumentSource makePredefinedSource() {
+        Mapping d2rq = ISWCData.POSTGRES.loadMapping("http://test.ex/src/");
+        d2rq.getConfiguration().setControlOWL(true).setServeVocabulary(true);
+        OntModel src = OntModelFactory.createModel(d2rq.getSchema());
+        src.setID("http://test.ex/predefined");
+        src.setNsPrefix("x", "file:///Users/richard/D2RQ/workspace/D2RQ/doc/example/mapping-iswc.ttl#");
+        return D2RQGraphDocumentSource.wrap(d2rq);
     }
 
     private enum SchemaEntities {
@@ -212,13 +192,33 @@ public class OntMapWholeTest {
         abstract String getPersonAddress();
     }
 
-    private static D2RQGraphDocumentSource makePredefinedSource() {
-        Mapping d2rq = ISWCData.POSTGRES.loadMapping("http://test.ex/src/");
-        d2rq.getConfiguration().setControlOWL(true).setServeVocabulary(true);
-        OntGraphModel src = OntModelFactory.createModel(d2rq.getSchema());
-        src.setID("http://test.ex/predefined");
-        src.setNsPrefix("x", "file:///Users/richard/D2RQ/workspace/D2RQ/doc/example/mapping-iswc.ttl#");
-        return D2RQGraphDocumentSource.wrap(d2rq);
+    @Test
+    public void testCollectAddresses() throws OWLOntologyCreationException {
+        D2RQGraphDocumentSource source = test.makeSource();
+        Mapping d2rq = source.getMapping();
+        d2rq.getConfiguration().setWithCache(test.withCache());
+        Assert.assertEquals(test.withCache(), d2rq.getConfiguration().getWithCache());
+
+        OWLMapManager manager = Managers.createOWLMapManager();
+        OntModel src = manager.loadOntologyFromOntologyDocument(source).asGraphModel();
+
+        OntModel dst = assembleTarget(manager);
+
+        MapModel spin = assembleSpinMapping(manager, src, dst, test.getVocabulary());
+
+        LOGGER.debug("Run inference.");
+        Graph data = d2rq.getData();
+        Assert.assertTrue(test.getGraphType().isInstance(data));
+        manager.getInferenceEngine(spin).run(data, dst.getBaseGraph());
+        LOGGER.debug("Done.");
+
+        Assert.assertEquals(1, dst.individuals().count());
+
+        OntIndividual res = dst.individuals().findFirst().orElseThrow(AssertionError::new);
+        Assert.assertEquals(9, res.positiveAssertions().peek(x -> LOGGER.debug("Address: '{}'", x.getString())).count());
+        JenaModelUtils.print(dst);
+
+        source.close();
     }
 
     private static D2RQGraphDocumentSource makeDefaultSource() {

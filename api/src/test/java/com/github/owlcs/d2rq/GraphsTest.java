@@ -3,8 +3,7 @@ package com.github.owlcs.d2rq;
 import com.github.owlcs.d2rq.conf.ISWCData;
 import com.github.owlcs.ontapi.jena.OntModelFactory;
 import com.github.owlcs.ontapi.jena.model.OntClass;
-import com.github.owlcs.ontapi.jena.model.OntDT;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import com.github.owlcs.ontapi.jena.vocabulary.OWL;
 import com.github.owlcs.ontapi.jena.vocabulary.RDF;
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
@@ -82,16 +81,16 @@ public class GraphsTest {
     }
 
     @Test
-    public void testOntGraphModelModifyAndFindAll() {
+    public void testOntModelModifyAndFindAll() {
         try (Mapping mapping = ISWCData.MYSQL.loadMapping()) {
             mapping.getConfiguration().setControlOWL(true);
             Graph left = mapping.getSchema();
             // connection:
             Graph right = mapping.getDataModel().getGraph();
 
-            OntGraphModel u = OntModelFactory.createModel(new Union(left, right));
+            OntModel u = OntModelFactory.createModel(new Union(left, right));
 
-            u.createOntEntity(OntDT.class, u.expandPrefix("iswc:string"));
+            u.createDatatype(u.expandPrefix("iswc:string"));
 
             List<OntClass> classes = u.classes().collect(Collectors.toList());
 

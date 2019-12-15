@@ -11,9 +11,9 @@ import com.github.owlcs.ontapi.jena.UnionGraph;
 import com.github.owlcs.ontapi.jena.impl.OntIndividualImpl;
 import com.github.owlcs.ontapi.jena.impl.PersonalityModel;
 import com.github.owlcs.ontapi.jena.impl.conf.*;
-import com.github.owlcs.ontapi.jena.model.OntCE;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
+import com.github.owlcs.ontapi.jena.model.OntClass;
 import com.github.owlcs.ontapi.jena.model.OntIndividual;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import com.github.owlcs.ontapi.jena.model.OntStatement;
 import com.github.owlcs.ontapi.jena.utils.Iter;
 import com.github.owlcs.ontapi.jena.vocabulary.OWL;
@@ -79,8 +79,8 @@ public class D2RQSpinTest extends SpinMappingTest {
     }
 
     @Override
-    public void validate(OntGraphModel source, OntGraphModel target) {
-        OntGraphModel src = OWLUtils.toMemory(source);
+    public void validate(OntModel source, OntModel target) {
+        OntModel src = OWLUtils.toMemory(source);
         super.validate(src, target);
         Assert.assertEquals("Incorrect number of result individuals.", 7,
                 target.individuals().peek(x -> LOGGER.debug("Result Individual {}", x)).count());
@@ -109,7 +109,7 @@ public class D2RQSpinTest extends SpinMappingTest {
     }
 
     @Override
-    public OntGraphModel createSourceModel() {
+    public OntModel createSourceModel() {
         D2RQGraphDocumentSource source = createSource(data, "iswc");
         Ontology res;
         try {
@@ -162,7 +162,7 @@ public class D2RQSpinTest extends SpinMappingTest {
             OntFilter filter = OntFilter.URI
                     .and(new OntFilter.HasPredicate(RDF.type))
                     .and((s, g) -> Iter.asStream(g.asGraph().find(s, RDF.type.asNode(), Node.ANY)).map(Triple::getObject)
-                            .anyMatch(o -> PersonalityModel.canAs(OntCE.class, o, g)));
+                            .anyMatch(o -> PersonalityModel.canAs(OntClass.class, o, g)));
             return new CommonFactoryImpl(maker, finder, filter) {
                 @Override
                 public String toString() {

@@ -2,7 +2,10 @@ package com.github.owlcs.d2rq;
 
 import com.github.owlcs.d2rq.conf.ConnectionData;
 import com.github.owlcs.ontapi.jena.OntModelFactory;
-import com.github.owlcs.ontapi.jena.model.*;
+import com.github.owlcs.ontapi.jena.model.OntClass;
+import com.github.owlcs.ontapi.jena.model.OntIndividual;
+import com.github.owlcs.ontapi.jena.model.OntModel;
+import com.github.owlcs.ontapi.jena.model.OntStatement;
 import com.github.owlcs.ontapi.jena.vocabulary.OWL;
 import com.github.owlcs.ontapi.jena.vocabulary.RDF;
 import com.github.owlcs.ontapi.utils.ReadWriteUtils;
@@ -40,7 +43,7 @@ public class OWLMappingTest {
     private static final String JDBC_URI = ConnectionData.MYSQL.getJdbcConnectionString("iswc");
 
     private static void validateSQLConcatMappingData(Graph g) {
-        OntGraphModel m = OntModelFactory.createModel(g);
+        OntModel m = OntModelFactory.createModel(g);
         Assert.assertEquals(7, m.individuals()
                 .peek(x -> LOGGER.debug("Ind:::{}", x))
                 .peek(i -> {
@@ -58,7 +61,7 @@ public class OWLMappingTest {
         String ns = uri + "#";
 
         Mapping m = MappingFactory.create();
-        OntGraphModel o = OntModelFactory.createModel(m.getSchema());
+        OntModel o = OntModelFactory.createModel(m.getSchema());
 
         m.createClassMap(map_ns + "Papers")
                 .setDatabase(m.createDatabase(map_ns + "database")
@@ -144,7 +147,7 @@ public class OWLMappingTest {
         ConnectionData cd = ConnectionData.MYSQL;
         String ns = "http://m#";
         Mapping m = MappingFactory.create();
-        OntGraphModel o = OntModelFactory.createModel(m.getSchema());
+        OntModel o = OntModelFactory.createModel(m.getSchema());
 
         // add d2rq:ClassMap and owl:Class
         m.createClassMap(ns + "Y")
@@ -175,7 +178,7 @@ public class OWLMappingTest {
         Assert.assertEquals(expected, m.asModel().size());
 
         try {
-            OntGraphModel res = OntModelFactory.createModel(m.getData())
+            OntModel res = OntModelFactory.createModel(m.getData())
                     .setNsPrefix("schema", ns)
                     .setNsPrefix("iswc", ISWC.getURI());
             String txt = JenaModelUtils.toTurtleString(res);
@@ -186,7 +189,7 @@ public class OWLMappingTest {
             Assert.assertNotNull(c);
             OntIndividual i = res.getIndividual(res.expandPrefix("iswc:e-Business"));
             Assert.assertNotNull(i);
-            List<OntCE> classes = i.classes().collect(Collectors.toList());
+            List<OntClass> classes = i.classes().collect(Collectors.toList());
             Assert.assertEquals(1, classes.size());
             Assert.assertEquals(c, classes.get(0));
 

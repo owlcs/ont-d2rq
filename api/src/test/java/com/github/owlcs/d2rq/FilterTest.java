@@ -6,10 +6,10 @@ import com.github.owlcs.ontapi.ID;
 import com.github.owlcs.ontapi.OntManagers;
 import com.github.owlcs.ontapi.Ontology;
 import com.github.owlcs.ontapi.OntologyManager;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
 import com.github.owlcs.ontapi.jena.model.OntIndividual;
-import com.github.owlcs.ontapi.jena.model.OntOPE;
-import com.github.owlcs.ontapi.jena.model.OntPE;
+import com.github.owlcs.ontapi.jena.model.OntModel;
+import com.github.owlcs.ontapi.jena.model.OntObjectProperty;
+import com.github.owlcs.ontapi.jena.model.OntProperty;
 import de.fuberlin.wiwiss.d2rq.utils.JenaModelUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.Assert;
@@ -86,7 +86,7 @@ public class FilterTest {
 
         // creates a filter:
         LOGGER.info("Load the restricted model from db (class constraints)");
-        OntOPE p = full.asGraphModel().objectProperties().min(Comparator.comparing(Resource::getURI))
+        OntObjectProperty p = full.asGraphModel().objectProperties().min(Comparator.comparing(Resource::getURI))
                 .orElseThrow(() -> new AssertionError("Can't find any ont object property."));
         IRI class1 = p.ranges().map(Resource::getURI).map(IRI::create).sorted().findFirst()
                 .orElseThrow(() -> new AssertionError("Can't find range for " + p));
@@ -104,7 +104,7 @@ public class FilterTest {
         Assert.assertEquals("Expected three ontologies", 3, manager.ontologies().count());
         Assert.assertTrue("Can't find " + id3, manager.contains(id3));
         Assert.assertEquals("Expected two classes", 1, filteredByClasses.asGraphModel().classes().count());
-        List<OntPE> props = filteredByClasses.asGraphModel().ontObjects(OntPE.class).collect(Collectors.toList());
+        List<OntProperty> props = filteredByClasses.asGraphModel().ontObjects(OntProperty.class).collect(Collectors.toList());
         props.forEach(x -> LOGGER.debug("{}", x));
         Assert.assertFalse("No properties:", props.isEmpty());
         source3.close();
@@ -117,7 +117,7 @@ public class FilterTest {
         Assume.assumeNotNull(res);
         res.forEach((schema, expectedCount) -> {
             LOGGER.info("Test data for ontology {}", schema.getOntologyID());
-            OntGraphModel withData = OWLUtils.toMemory(schema.asGraphModel());
+            OntModel withData = OWLUtils.toMemory(schema.asGraphModel());
             Assert.assertEquals("Ontology IDs don't match", schema.asGraphModel().getID(), withData.getID());
 
             Set<OntIndividual> individuals = withData.ontObjects(OntIndividual.class).collect(Collectors.toSet());

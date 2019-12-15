@@ -9,9 +9,9 @@ import com.github.owlcs.map.OWLMapManager;
 import com.github.owlcs.ontapi.OntManagers;
 import com.github.owlcs.ontapi.jena.OntModelFactory;
 import com.github.owlcs.ontapi.jena.model.OntClass;
-import com.github.owlcs.ontapi.jena.model.OntDT;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
-import com.github.owlcs.ontapi.jena.model.OntNDP;
+import com.github.owlcs.ontapi.jena.model.OntDataProperty;
+import com.github.owlcs.ontapi.jena.model.OntDataRange;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import com.github.owlcs.ontapi.jena.vocabulary.XSD;
 import de.fuberlin.wiwiss.d2rq.map.Configuration;
 import de.fuberlin.wiwiss.d2rq.map.Mapping;
@@ -150,15 +150,15 @@ public class InferenceStrategies {
         return Math.round(a * 100.0) / 100.0;
     }
 
-    private static OntGraphModel deriveTargetFromDBWithOntMap(Consumer<Configuration> configure) throws OWLOntologyCreationException {
+    private static OntModel deriveTargetFromDBWithOntMap(Consumer<Configuration> configure) throws OWLOntologyCreationException {
         LOGGER.info("Test inference (number={}, withCache={})", NUMBER_OF_INDIVIDUALS, NO_CACHE != configure);
         D2RQGraphDocumentSource src = D2RQSpinTest.createSource(connection, DATABASE_NAME);
         configure.accept(src.getMapping().getConfiguration());
         MappingUtils.print(src.getMapping());
 
         OWLMapManager manager = Managers.createOWLMapManager();
-        OntGraphModel target = OntMapSimpleTest.createTargetModel(manager);
-        OntGraphModel source = manager.loadOntologyFromOntologyDocument(src).asGraphModel();
+        OntModel target = OntMapSimpleTest.createTargetModel(manager);
+        OntModel source = manager.loadOntologyFromOntologyDocument(src).asGraphModel();
         source.setID("http://source");
 
         runOntMapInference(manager, source, target, src.getMapping().getData(), target.getBaseGraph());
@@ -166,18 +166,18 @@ public class InferenceStrategies {
         return target;
     }
 
-    private static OntGraphModel deriveTargetFromGraph(Graph g) {
+    private static OntModel deriveTargetFromGraph(Graph g) {
         Assume.assumeNotNull(g);
-        OntGraphModel source = OntModelFactory.createModel(g);
+        OntModel source = OntModelFactory.createModel(g);
         OWLMapManager manager = Managers.createOWLMapManager();
-        OntGraphModel target = OntMapSimpleTest.createTargetModel(manager);
+        OntModel target = OntMapSimpleTest.createTargetModel(manager);
         runOntMapInference(manager, source, target, source.getBaseGraph(), target.getBaseGraph());
         return target;
     }
 
     private static void runOntMapInference(MapManager manager,
-                                           OntGraphModel sourceSchema,
-                                           OntGraphModel targetSchema,
+                                           OntModel sourceSchema,
+                                           OntModel targetSchema,
                                            Graph sourceData,
                                            Graph targetData) {
         LOGGER.debug("Run SPIN inference.");
@@ -190,12 +190,12 @@ public class InferenceStrategies {
         LOGGER.info("Create a memory graph with {} individuals", NUMBER_OF_INDIVIDUALS);
         String uri = "http://source";
         String ns = uri + "#";
-        OntGraphModel m = OntModelFactory.createModel().setNsPrefixes(OntModelFactory.STANDARD).setNsPrefix("src", ns);
+        OntModel m = OntModelFactory.createModel().setNsPrefixes(OntModelFactory.STANDARD).setNsPrefix("src", ns);
         m.setID(uri);
         OntClass c = m.createOntClass(ns + "Papers");
-        OntDT dt = m.getDatatype(XSD.integer);
-        OntNDP d1 = m.createDataProperty(ns + "title").addDomain(c).addRange(XSD.xstring);
-        OntNDP d2 = m.createDataProperty(ns + "year").addDomain(c).addRange(dt);
+        OntDataRange.Named dt = m.getDatatype(XSD.integer);
+        OntDataProperty d1 = m.createDataProperty(ns + "title").addDomain(c).addRange(XSD.xstring);
+        OntDataProperty d2 = m.createDataProperty(ns + "year").addDomain(c).addRange(dt);
         for (int i = 0; i < NUMBER_OF_INDIVIDUALS; i++) {
             c.createIndividual(ns + "Ind#" + i).addProperty(d1, "test-xxx-#" + i)
                     .addProperty(d2, dt.createLiteral(1944 + i));
@@ -208,7 +208,7 @@ public class InferenceStrategies {
         D2RQGraphDocumentSource src = D2RQSpinTest.createSource(connection, DATABASE_NAME);
         String uri = "http://source";
         String ns = uri + "#";
-        OntGraphModel m = OntManagers.createONT().loadOntologyFromOntologyDocument(src).asGraphModel();
+        OntModel m = OntManagers.createONT().loadOntologyFromOntologyDocument(src).asGraphModel();
         m.setNsPrefix("src", ns).setID(uri);
 
         Graph res = Factory.createGraphMem();
@@ -225,13 +225,14 @@ public class InferenceStrategies {
 
     @Test
     public void tesInference() throws Exception {
-        OntGraphModel target = testData.deriveTarget();
+        OntModel target = testData.deriveTarget();
 
         LOGGER.debug("Validate");
         long actual = target.individuals().peek(x -> LOGGER.debug("Individual:::{}", x))
                 .peek(i -> Assert.assertEquals("Incorrect number of assertions for individual " + i, 1,
                         i.positiveAssertions()
-                                .peek(x -> Assert.assertTrue(x.isData() && x.getObject().isLiteral())).count()))
+                                .peek(x -> Assert.assertTrue(x.getPredicate().canAs(OntDataProperty.class)
+                                        && x.getObject().isLiteral())).count()))
                 .count();
         LOGGER.info("{}::individuals::{}", testData, actual);
         Assert.assertEquals("Incorrect number of result individuals.", NUMBER_OF_INDIVIDUALS, actual);
@@ -259,7 +260,7 @@ public class InferenceStrategies {
             }
 
             @Override
-            public OntGraphModel deriveTarget() {
+            public OntModel deriveTarget() {
                 return deriveTargetFromGraph(tempSource);
             }
         },
@@ -267,13 +268,13 @@ public class InferenceStrategies {
         // use predefined D2RQ mapping
         DB_D2RQ_MAP {
             @Override
-            public OntGraphModel deriveTarget() {
+            public OntModel deriveTarget() {
                 String map_ns = "urn:map#";
                 String uri = "http://target.owlcs.github.com";
                 String ns = uri + "#";
 
                 Mapping m = MappingFactory.create();
-                OntGraphModel o = OntModelFactory.createModel(m.getSchema());
+                OntModel o = OntModelFactory.createModel(m.getSchema());
 
                 m.createClassMap(map_ns + "Papers")
                         .setDatabase(m.createDatabase(map_ns + "database")
@@ -298,7 +299,7 @@ public class InferenceStrategies {
         // run inference on default DB virtual graph
         DEF_DB_ONT_MAP_NO_CACHE {
             @Override
-            public OntGraphModel deriveTarget() throws Exception {
+            public OntModel deriveTarget() throws Exception {
                 return deriveTargetFromDBWithOntMap(NO_CACHE);
             }
         },
@@ -306,7 +307,7 @@ public class InferenceStrategies {
         // run inference on default DB virtual graph using default cache buffer
         DEF_DB_ONT_MAP_WITH_CACHE {
             @Override
-            public OntGraphModel deriveTarget() throws Exception {
+            public OntModel deriveTarget() throws Exception {
                 return deriveTargetFromDBWithOntMap(c -> c.setWithCache(true));
             }
         },
@@ -314,7 +315,7 @@ public class InferenceStrategies {
         // run inference on default DB virtual graph using big cache buffer
         DEF_DB_ONT_MAP_WITH_BIG_CACHE {
             @Override
-            public OntGraphModel deriveTarget() throws Exception {
+            public OntModel deriveTarget() throws Exception {
                 return deriveTargetFromDBWithOntMap(c -> {
                     long limit = c.getCacheLengthLimit();
                     int size = c.getCacheMaxSize();
@@ -326,7 +327,7 @@ public class InferenceStrategies {
         // run inference on default DB virtual graph using small cache buffer
         DEF_DB_ONT_MAP_WITH_SMALL_CACHE {
             @Override
-            public OntGraphModel deriveTarget() throws Exception {
+            public OntModel deriveTarget() throws Exception {
                 return deriveTargetFromDBWithOntMap(c -> {
                     long limit = c.getCacheLengthLimit();
                     int size = c.getCacheMaxSize();
@@ -338,14 +339,14 @@ public class InferenceStrategies {
         // put the default DB into mem first and only then run inference
         DEF_DB_IN_MEM_ONT_MAP {
             @Override
-            public OntGraphModel deriveTarget() throws Exception {
+            public OntModel deriveTarget() throws Exception {
                 Graph g = putDefaultDBInMem();
                 return deriveTargetFromGraph(g);
             }
         },
         ;
 
-        public abstract OntGraphModel deriveTarget() throws Exception;
+        public abstract OntModel deriveTarget() throws Exception;
 
         public void before() {
         }

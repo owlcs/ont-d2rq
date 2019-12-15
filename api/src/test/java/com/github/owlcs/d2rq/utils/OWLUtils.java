@@ -7,8 +7,8 @@ import com.github.owlcs.ontapi.jena.impl.PersonalityModel;
 import com.github.owlcs.ontapi.jena.impl.conf.OntModelConfig;
 import com.github.owlcs.ontapi.jena.impl.conf.OntPersonality;
 import com.github.owlcs.ontapi.jena.model.OntEntity;
-import com.github.owlcs.ontapi.jena.model.OntGraphModel;
 import com.github.owlcs.ontapi.jena.model.OntIndividual;
+import com.github.owlcs.ontapi.jena.model.OntModel;
 import com.github.owlcs.ontapi.jena.utils.Graphs;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.mem.GraphMem;
@@ -28,13 +28,13 @@ import java.util.stream.Collectors;
 public class OWLUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(OWLUtils.class);
 
-    public static <X extends OntEntity> X findEntity(OntGraphModel m, Class<X> type, String shortForm) {
+    public static <X extends OntEntity> X findEntity(OntModel m, Class<X> type, String shortForm) {
         X res = m.getOntEntity(type, m.expandPrefix(shortForm));
         Assert.assertNotNull("Can't find " + type.getSimpleName() + " " + shortForm, res);
         return res;
     }
 
-    public static void validateOWLEntities(OntGraphModel m,
+    public static void validateOWLEntities(OntModel m,
                                            int classes,
                                            int objectProperties,
                                            int dataProperties,
@@ -60,19 +60,19 @@ public class OWLUtils {
                 .peek(x -> LOGGER.debug("DatatypeProperty: {}", x)).count());
     }
 
-    public static OntGraphModel toMemory(OntGraphModel m) {
+    public static OntModel toMemory(OntModel m) {
         Assert.assertTrue(D2RQGraphUtils.isMappingGraph(m.getBaseGraph()));
         UnionGraph res = build(getUnionGraph(m), D2RQGraphUtils::toMemory);
         return OntModelFactory.createModel(res, getPersonality(m));
     }
 
-    public static OntGraphModel toVirtual(OntGraphModel m) {
+    public static OntModel toVirtual(OntModel m) {
         Assert.assertTrue(D2RQGraphUtils.isMappingGraph(m.getBaseGraph()));
         UnionGraph res = build(getUnionGraph(m), D2RQGraphUtils::toVirtual);
         return OntModelFactory.createModel(res, getPersonality(m));
     }
 
-    public static Graph getDataGraph(OntGraphModel m) {
+    public static Graph getDataGraph(OntModel m) {
         Assert.assertTrue(D2RQGraphUtils.isMappingGraph(m.getBaseGraph()));
         return D2RQGraphUtils.getDataGraph(m.getBaseGraph());
     }
@@ -106,13 +106,13 @@ public class OWLUtils {
     }
 
     /**
-     * Retrieves an {@link UnionGraph} from the {@link OntGraphModel}.
+     * Retrieves an {@link UnionGraph} from the {@link OntModel}.
      *
-     * @param m {@link OntGraphModel}
+     * @param m {@link OntModel}
      * @return {@link UnionGraph}
-     * @throws ClassCastException unexpected {@link OntGraphModel} implementation is specified
+     * @throws ClassCastException unexpected {@link OntModel} implementation is specified
      */
-    public static UnionGraph getUnionGraph(OntGraphModel m) throws ClassCastException {
+    public static UnionGraph getUnionGraph(OntModel m) throws ClassCastException {
         return (UnionGraph) m.getGraph();
     }
 
@@ -120,7 +120,7 @@ public class OWLUtils {
         return Graphs.baseGraphs(g).allMatch(GraphMem.class::isInstance);
     }
 
-    public static OntPersonality getPersonality(OntGraphModel m) {
+    public static OntPersonality getPersonality(OntModel m) {
         return m instanceof PersonalityModel ? ((PersonalityModel) m).getOntPersonality() :
                 OntModelConfig.ONT_PERSONALITY_LAX;
     }
@@ -129,7 +129,7 @@ public class OWLUtils {
         closeConnections(o.asGraphModel());
     }
 
-    public static void closeConnections(OntGraphModel m) {
+    public static void closeConnections(OntModel m) {
         D2RQGraphUtils.closeConnections(m.getGraph());
     }
 
