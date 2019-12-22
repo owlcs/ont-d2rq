@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
-import com.github.owlcs.ontapi.jena.utils.BuiltIn;
+import com.github.owlcs.ontapi.jena.OntVocabulary;
 import com.github.owlcs.ontapi.jena.utils.Graphs;
 import com.github.owlcs.ontapi.jena.utils.Iter;
 import de.fuberlin.wiwiss.d2rq.jena.VirtualGraph;
@@ -28,7 +28,7 @@ public class SchemaBuilder {
     private final Set<Node> reservedProperties, reservedClasses;
     private final boolean withEquivalent;
 
-    public SchemaBuilder(BuiltIn.Vocabulary voc, boolean withEquivalent) {
+    public SchemaBuilder(OntVocabulary voc, boolean withEquivalent) {
         this(getReservedClasses(voc), getReservedProperties(voc), withEquivalent);
     }
 
@@ -38,16 +38,16 @@ public class SchemaBuilder {
         this.withEquivalent = withEquivalent;
     }
 
-    public static Set<Node> getReservedClasses(BuiltIn.Vocabulary vocabulary) {
-        Set<Node> res = vocabulary.classes().stream()
+    public static Set<Node> getReservedClasses(OntVocabulary vocabulary) {
+        Set<Node> res = vocabulary.getBuiltinClasses().stream()
                 .map(FrontsNode::asNode).collect(Collectors.toSet());
         res.add(Nodes.OWL_CLASS);
         res.add(Nodes.OWL_NAMED_INDIVIDUAL);
         return Collections.unmodifiableSet(res);
     }
 
-    public static Set<Node> getReservedProperties(BuiltIn.Vocabulary vocabulary) {
-        return vocabulary.reservedProperties().stream()
+    public static Set<Node> getReservedProperties(OntVocabulary vocabulary) {
+        return vocabulary.getSystemProperties().stream()
                 .map(FrontsNode::asNode).collect(Iter.toUnmodifiableSet());
     }
 

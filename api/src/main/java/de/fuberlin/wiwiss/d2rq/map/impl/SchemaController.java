@@ -1,6 +1,6 @@
 package de.fuberlin.wiwiss.d2rq.map.impl;
 
-import com.github.owlcs.ontapi.jena.utils.BuiltIn;
+import com.github.owlcs.ontapi.jena.OntVocabulary;
 import com.github.owlcs.ontapi.jena.utils.Iter;
 import com.github.owlcs.ontapi.jena.vocabulary.OWL;
 import com.github.owlcs.ontapi.jena.vocabulary.RDF;
@@ -42,7 +42,7 @@ import java.util.function.Function;
 @SuppressWarnings("WeakerAccess")
 public class SchemaController {
 
-    private static SchemaController factory = createDefault(BuiltIn.OWL_VOCABULARY, true);
+    private static SchemaController factory = createDefault(OntVocabulary.Factory.OWL_VOCABULARY, true);
 
     private final VirtualGraph.DynamicTriples virtualGraphBuilder;
     private final BiPredicate<Graph, Triple> maskGraphBuilder;
@@ -97,11 +97,11 @@ public class SchemaController {
     /**
      * Creates a default factory instance.
      *
-     * @param vocabulary     {@link BuiltIn.Vocabulary}
+     * @param vocabulary     {@link OntVocabulary}
      * @param withEquivalent boolean to control {@code owl:equivalentClass} and {@code owl:equivalentProperty}
      * @return {@link SchemaController}, not {@code null}
      */
-    public static SchemaController createDefault(BuiltIn.Vocabulary vocabulary, boolean withEquivalent) {
+    public static SchemaController createDefault(OntVocabulary vocabulary, boolean withEquivalent) {
         SchemaBuilder builder = new SchemaBuilder(vocabulary, withEquivalent);
         Function<ClassMap, ExtendedIterator<Resource>> listClasses = c -> listClasses(builder, c);
         Function<PropertyBridge, ExtendedIterator<Resource>> listPropertyTypes = SchemaController::listPropertyTypes;
