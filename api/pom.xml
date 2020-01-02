@@ -5,13 +5,21 @@
     <parent>
         <artifactId>ontd2rq</artifactId>
         <groupId>com.github.owlcs</groupId>
-        <version>1.0.7-SNAPSHOT</version>
+        <version>1.0.8-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <description>D2RQ-API ::: A Database to OWL Mapper</description>
     <artifactId>d2rq-api</artifactId>
     <packaging>jar</packaging>
+
+    <repositories>
+        <!--only for tests, for ont-map:-->
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <!-- Tests: -->
@@ -46,18 +54,11 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- local installed ont-map -->
-        <dependency> <!--local installed -->
-            <groupId>com.github.owlcs</groupId>
-            <artifactId>ontmap</artifactId>
-            <version>1.0.12-SNAPSHOT</version>
-        </dependency>
         <!-- ont-map from jitpack -->
-        <!--
         <dependency>
             <groupId>com.github.owlcs</groupId>
             <artifactId>ont-map</artifactId>
-            <version>e3cd5d380e19fc388d8d0928e8b69d1f2346df11</version>
+            <version>1.0.12-SNAPSHOT</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -70,7 +71,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        -->
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-sdb</artifactId>
